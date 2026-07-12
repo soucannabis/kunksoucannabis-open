@@ -37,6 +37,7 @@ Operadores com só `Acolhimento`, `Produção`, etc. usam o **painel** (`app.`),
 | `/triagem/modulos` | Flags (docs/dados, etc.) | admin |
 | `/loja` | Índice da área Loja | admin |
 | `/loja/frete` | Frete no total, pacote, remetente | admin |
+| `/loja/status-pedidos` | Status de pedidos (`store.order_statuses`) | admin |
 | `/servicos-externos` | Enable/disable Loggi, Melhor Envio, … | admin |
 | `/servicos-externos/:service` | Assistente de credenciais + teste | admin |
 | `/usuarios` | Lista de operadores (`system_users`) | admin |
@@ -153,6 +154,7 @@ UI dedicada para checkout/frete e integrações. Spec: [`../kunk/pedidos/admin.m
 | Subárea | Rota | Persistência |
 |---|---|---|
 | Frete / loja | `/loja/frete` | `system_configs` `system=store` (`apply_to_total`, `ship_from`, `package`, **`content_declaration`**, `default_option`) |
+| Status pedidos | `/loja/status-pedidos` | `store.order_statuses` (Aguardando / Pagamento concluído + custom) |
 | Serviços externos | `/servicos-externos` | `system_configs` `system=modules` (flags) + `system_api_credentials` |
 | Assistente | `/servicos-externos/:service` | credentials criptografadas; teste via `/modules/{service}/test` |
 
