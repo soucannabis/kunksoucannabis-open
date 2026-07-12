@@ -1,0 +1,29 @@
+{
+  "name": "@kunk/admin",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 4256",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4256",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
+  },
+  "dependencies": {
+    "@kunk/api-client": "*",
+    "@kunk/auth-session": "*",
+    "@kunk/config": "*",
+    "@kunk/theme": "*",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.6.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@vitejs/plugin-react": "^6.0.3",
+    "pg": "^8.22.0",
+    "vite": "^8.1.1"
+  }
+}

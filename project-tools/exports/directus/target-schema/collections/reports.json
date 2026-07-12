@@ -1,0 +1,150 @@
+{
+  "table": "reports",
+  "old_table": "reports",
+  "fields": [
+    {
+      "name": "id",
+      "old_name": "id",
+      "pg_type": "INTEGER",
+      "is_primary_key": true,
+      "is_nullable": false,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "date_created",
+      "old_name": "date_created",
+      "pg_type": "TIMESTAMPTZ",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "date_updated",
+      "old_name": "date_updated",
+      "pg_type": "TIMESTAMPTZ",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "name",
+      "old_name": "name",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "report_code",
+      "old_name": "report_code",
+      "pg_type": "UUID",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "query_config",
+      "old_name": "obj_query",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "sql_query",
+      "old_name": "sql_query",
+      "pg_type": "TEXT",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "type",
+      "old_name": "type",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "dashboard_queries",
+      "old_name": "queries",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "layout_positions",
+      "old_name": "positions",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "chart_config",
+      "old_name": "chart_obj",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "created_by",
+      "old_name": "created_by",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "tags",
+      "old_name": "tags",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "column_maps",
+      "old_name": "field_maps",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "embedded_report_codes",
+      "old_name": "reports",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "favorites",
+      "old_name": "favorites",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    }
+  ]
+}

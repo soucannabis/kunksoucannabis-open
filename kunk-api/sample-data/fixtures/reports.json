@@ -1,0 +1,123 @@
+[
+  {
+    "date_created": "2026-07-01T23:42:25.360Z",
+    "date_updated": "2026-07-10T23:42:25.360Z",
+    "name": "Pedidos por status (demo)",
+    "report_code": "4337024d-9a7e-43e9-b760-869fb713d689",
+    "query_config": {
+      "source": "orders",
+      "group_by": "status"
+    },
+    "sql_query": "-- sample only; execução livre bloqueada na API",
+    "type": "table",
+    "dashboard_queries": {
+      "orders_by_status": true
+    },
+    "layout_positions": {
+      "x": 0,
+      "y": 0,
+      "w": 6,
+      "h": 4
+    },
+    "chart_config": {
+      "type": "bar",
+      "stacked": false
+    },
+    "created_by": "admin@demo.kunk.local",
+    "tags": [
+      {
+        "tag": "demo"
+      }
+    ],
+    "column_maps": {
+      "status": "Status",
+      "count": "Total"
+    },
+    "embedded_report_codes": [],
+    "favorites": {
+      "users": []
+    }
+  },
+  {
+    "date_created": "2026-07-02T23:42:25.360Z",
+    "date_updated": "2026-07-09T23:42:25.360Z",
+    "name": "Associados ativos (demo)",
+    "report_code": "a88bc51c-529f-426c-ad65-e2715c544b2a",
+    "query_config": {
+      "source": "users",
+      "filter": {
+        "status": "active"
+      }
+    },
+    "sql_query": "-- sample only",
+    "type": "table",
+    "dashboard_queries": {
+      "active_users": true
+    },
+    "layout_positions": {
+      "x": 6,
+      "y": 0,
+      "w": 6,
+      "h": 4
+    },
+    "chart_config": {
+      "type": "pie"
+    },
+    "created_by": "admin@demo.kunk.local",
+    "tags": [
+      {
+        "tag": "demo"
+      }
+    ],
+    "column_maps": {
+      "fullname": "Nome",
+      "status": "Status"
+    },
+    "embedded_report_codes": [],
+    "favorites": {
+      "users": []
+    }
+  },
+  {
+    "date_created": "2026-07-03T23:42:25.360Z",
+    "date_updated": "2026-07-08T23:42:25.360Z",
+    "name": "Dashboard operacional (demo)",
+    "report_code": "9ef0797e-498f-4fa9-a862-df15838f54fb",
+    "query_config": {
+      "widgets": [
+        "orders",
+        "services",
+        "reception"
+      ]
+    },
+    "sql_query": "-- sample only",
+    "type": "dashboard",
+    "dashboard_queries": {
+      "orders": true,
+      "services": true,
+      "reception": true
+    },
+    "layout_positions": {
+      "x": 0,
+      "y": 4,
+      "w": 12,
+      "h": 6
+    },
+    "chart_config": {
+      "type": "mixed"
+    },
+    "created_by": "admin@demo.kunk.local",
+    "tags": [
+      {
+        "tag": "demo"
+      }
+    ],
+    "column_maps": {},
+    "embedded_report_codes": [],
+    "favorites": {
+      "users": [
+        "admin@demo.kunk.local"
+      ]
+    }
+  }
+]

@@ -1,0 +1,156 @@
+'use strict';
+
+const { Router } = require('express');
+const usersService = require('../services/usersService');
+const registrationService = require('../services/registrationService');
+const { authenticate } = require('../middleware/authenticate');
+const { requireAssociate } = require('../middleware/requireAssociate');
+const { authorize } = require('../middleware/authorize');
+const { scopeFilterFor } = require('../schema/rbac');
+const { ok } = require('../utils/response');
+
+const router = Router();
+
+router.get('/exists', async (req, res, next) => {
+  try {
+    const data = await registrationService.usersExists(req.query.email);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/me', requireAssociate, async (req, res, next) => {
+  try {
+    const result = await registrationService.patchMe(req.associateRow, req.body || {});
+    res.json(ok(result.data, result.meta));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/me/patients', requireAssociate, async (req, res, next) => {
+  try {
+    const data = await registrationService.listMyPatients(req.associateRow);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/me/patients', requireAssociate, async (req, res, next) => {
+  try {
+    const result = await registrationService.createMyPatient(req.associateRow, req.body || {});
+    res.status(201).json(ok(result.data, result.meta));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/me/patients/:id', requireAssociate, async (req, res, next) => {
+  try {
+    const result = await registrationService.patchMyPatient(
+      req.associateRow,
+      req.params.id,
+      req.body || {}
+    );
+    res.json(ok(result.data, result.meta));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/me/documents/status', requireAssociate, async (req, res, next) => {
+  try {
+    const data = await registrationService.documentsStatus(req.associateRow);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/me/advance', requireAssociate, async (req, res, next) => {
+  try {
+    const data = await registrationService.advance(req.associateRow);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/me/complete', requireAssociate, async (req, res, next) => {
+  try {
+    const data = await registrationService.complete(req.associateRow);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.use(authenticate);
+
+router.get('/', authorize('users', 'read'), async (req, res, next) => {
+  try {
+    const scopeFilter = scopeFilterFor(req.user?.roles || req.user?.permissions, req.user);
+    const result = await usersService.list(req.query, { scopeFilter });
+    res.json(ok(result.data, result.meta));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/search', authorize('users', 'read'), async (req, res, next) => {
+  try {
+    const data = await usersService.searchUsers(req.query.q);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/by-code/:user_code', authorize('users', 'read'), async (req, res, next) => {
+  try {
+    const data = await usersService.getByCode(req.params.user_code, req.query);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/', authorize('users', 'create'), async (req, res, next) => {
+  try {
+    const data = await usersService.createUser(req.body || {});
+    res.status(201).json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/:id', authorize('users', 'update'), async (req, res, next) => {
+  try {
+    const data = await usersService.updateUser(req.params.id, req.body || {});
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:id/patients', authorize('users', 'read'), async (req, res, next) => {
+  try {
+    const data = await usersService.getPatients(req.params.id);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/handbook', authorize('users', 'update'), async (req, res, next) => {
+  try {
+    const data = await usersService.updateHandbook(req.params.id, req.body?.handbook);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+module.exports = router;

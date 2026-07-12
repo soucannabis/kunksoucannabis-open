@@ -1,0 +1,33 @@
+{
+  "table": "users_api",
+  "old_table": "Users_Api",
+  "fields": [
+    {
+      "name": "id",
+      "old_name": "id",
+      "pg_type": "INTEGER",
+      "is_primary_key": true,
+      "is_nullable": false,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "email",
+      "old_name": "email",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "token",
+      "old_name": "token",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    }
+  ]
+}

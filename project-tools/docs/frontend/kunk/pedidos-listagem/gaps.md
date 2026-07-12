@@ -1,0 +1,20 @@
+# Pedidos listagem — gaps
+
+## Fechado nesta entrega
+
+- [x] Layout cards + filtros + facets
+- [x] payment_date na transição de pagamento
+- [x] Bulk status/tags/labels
+- [x] Cancel Melhor Envio
+- [x] Status configuráveis no admin
+
+## Fora de escopo (intencional)
+
+- DC-e, WhatsApp, BeeViral, relatório de produção, SCP no pagamento
+- Modal de documentos completo do pedido (pode vir depois)
+- Filtro avançado por produtos / avatars de criadores (legado parcial)
+
+## Aberto
+
+- [ ] Edição de pedido no carrinho via `?p=` (cart já tem stub parcial)
+- [ ] Playwright e2e completo de bulk etiqueta live

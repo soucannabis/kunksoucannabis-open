@@ -1,0 +1,50 @@
+'use strict';
+
+const { Router } = require('express');
+const health = require('./health');
+const auth = require('./auth');
+const items = require('./items');
+const users = require('./users');
+const orders = require('./orders');
+const services = require('./services');
+const reception = require('./reception');
+const activity = require('./activity');
+const partners = require('./partners');
+const products = require('./products');
+const professionals = require('./professionals');
+const reports = require('./reports');
+const tags = require('./tags');
+const systemUsers = require('./systemUsers');
+const files = require('./files');
+const search = require('./search');
+const terms = require('./terms');
+const config = require('./config');
+const admin = require('./admin');
+const freight = require('./freight');
+const { router: modules } = require('./modules');
+
+const router = Router();
+
+router.use('/health', health);
+router.use('/config', config);
+router.use('/admin', admin);
+router.use('/auth', auth);
+router.use('/items', items);
+router.use('/users', users);
+router.use('/orders', orders);
+router.use('/freight', freight);
+router.use('/services', services);
+router.use('/reception', reception);
+router.use('/activity', activity);
+router.use('/partners', partners);
+router.use('/products', products);
+router.use('/professionals', professionals);
+router.use('/reports', reports);
+router.use('/tags', tags);
+router.use('/system-users', systemUsers);
+router.use('/files', files);
+router.use('/search', search);
+router.use('/terms', terms);
+router.use('/modules', modules);
+
+module.exports = router;

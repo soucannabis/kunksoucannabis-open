@@ -1,0 +1,37 @@
+[
+  {
+    "id": "eecac5ad-fbc8-441e-bab7-9ad50beb7f4e",
+    "filename": "demo-doc-01.pdf",
+    "mime_type": "application/pdf",
+    "storage_path": "sample-data/assets/demo-doc-01.pdf",
+    "created_at": "2026-06-11T23:42:25.347Z"
+  },
+  {
+    "id": "f840f65e-25d1-4032-a3cb-cc3a618b3f34",
+    "filename": "demo-doc-02.pdf",
+    "mime_type": "application/pdf",
+    "storage_path": "sample-data/assets/demo-doc-02.pdf",
+    "created_at": "2026-06-12T23:42:25.347Z"
+  },
+  {
+    "id": "ca53bfb8-deca-491f-9178-7cd128b97409",
+    "filename": "demo-doc-03.pdf",
+    "mime_type": "application/pdf",
+    "storage_path": "sample-data/assets/demo-doc-03.pdf",
+    "created_at": "2026-06-13T23:42:25.347Z"
+  },
+  {
+    "id": "329f1a12-e6f3-4004-99c0-1b7b88fd5961",
+    "filename": "demo-doc-04.pdf",
+    "mime_type": "application/pdf",
+    "storage_path": "sample-data/assets/demo-doc-04.pdf",
+    "created_at": "2026-06-14T23:42:25.347Z"
+  },
+  {
+    "id": "a77a0f24-4bb6-4a23-a99b-bc2f94742ede",
+    "filename": "demo-doc-05.pdf",
+    "mime_type": "application/pdf",
+    "storage_path": "sample-data/assets/demo-doc-05.pdf",
+    "created_at": "2026-06-15T23:42:25.347Z"
+  }
+]

@@ -1,0 +1,159 @@
+{
+  "table": "products",
+  "old_table": "Products",
+  "fields": [
+    {
+      "name": "id",
+      "old_name": "id",
+      "pg_type": "INTEGER",
+      "is_primary_key": true,
+      "is_nullable": false,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "status",
+      "old_name": "status",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": false,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "sort",
+      "old_name": "sort",
+      "pg_type": "INTEGER",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "user_created",
+      "old_name": "user_created",
+      "pg_type": "UUID",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "date_created",
+      "old_name": "date_created",
+      "pg_type": "TIMESTAMPTZ",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "user_updated",
+      "old_name": "user_updated",
+      "pg_type": "UUID",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "date_updated",
+      "old_name": "date_updated",
+      "pg_type": "TIMESTAMPTZ",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "name",
+      "old_name": "name",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "sku",
+      "old_name": "cod",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "type",
+      "old_name": "type",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "unit",
+      "old_name": "unity",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "concentration",
+      "old_name": "concentration",
+      "pg_type": "INTEGER",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "price",
+      "old_name": "price",
+      "pg_type": "REAL",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "amount",
+      "old_name": "amount",
+      "pg_type": "INTEGER",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "category",
+      "old_name": "category",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "photo",
+      "old_name": "photo",
+      "pg_type": "UUID",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "batch",
+      "old_name": "batch",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    }
+  ]
+}

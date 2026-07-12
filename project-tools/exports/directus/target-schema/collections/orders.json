@@ -1,0 +1,321 @@
+{
+  "table": "orders",
+  "old_table": "Orders",
+  "fields": [
+    {
+      "name": "id",
+      "old_name": "id",
+      "pg_type": "INTEGER",
+      "is_primary_key": true,
+      "is_nullable": false,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "sort",
+      "old_name": "sort",
+      "pg_type": "INTEGER",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "date_created",
+      "old_name": "date_created",
+      "pg_type": "TIMESTAMPTZ",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "date_updated",
+      "old_name": "date_updated",
+      "pg_type": "TIMESTAMPTZ",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "status",
+      "old_name": "status",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "total",
+      "old_name": "total",
+      "pg_type": "REAL",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "payment_method",
+      "old_name": "payment_form",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "tracking_code",
+      "old_name": "tracking_code",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "delivery_price",
+      "old_name": "delivery_price",
+      "pg_type": "REAL",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "associate_name",
+      "old_name": "name_associate",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "order_code",
+      "old_name": "order_code",
+      "pg_type": "UUID",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "user_code",
+      "old_name": "user_code",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "items",
+      "old_name": "items",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "created_date",
+      "old_name": "created_date",
+      "pg_type": "TIMESTAMP",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "discount",
+      "old_name": "discount",
+      "pg_type": "REAL",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "details",
+      "old_name": "details",
+      "pg_type": "TEXT",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "donation",
+      "old_name": "donation",
+      "pg_type": "REAL",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "prescriber",
+      "old_name": "prescriber",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "payment_link",
+      "old_name": "payment_link",
+      "pg_type": "TEXT",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "user",
+      "old_name": "user",
+      "pg_type": "INTEGER",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": "users",
+      "foreign_key_column": "id"
+    },
+    {
+      "name": "carrier_order_code",
+      "old_name": "code",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "payment_code",
+      "old_name": "payment_code",
+      "pg_type": "TEXT",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "order_notes",
+      "old_name": "info",
+      "pg_type": "TEXT",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "tags",
+      "old_name": "tags",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "delivery_notes",
+      "old_name": "delivery_text",
+      "pg_type": "TEXT",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "address",
+      "old_name": "address",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "whatsapp_message",
+      "old_name": "msg_whatsapp",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "prescriber_code",
+      "old_name": "prescriber_code",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "payment_date",
+      "old_name": "payment_date",
+      "pg_type": "TIMESTAMP",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "custom_payment",
+      "old_name": "custom_payment",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "production_owner",
+      "old_name": "in_production",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "tracking_code_date",
+      "old_name": "tracking_code_date",
+      "pg_type": "TIMESTAMP",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "last_tracking_date",
+      "old_name": "last_tracking_date",
+      "pg_type": "TIMESTAMP",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "address_validation",
+      "old_name": "address_validation",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "created_by_user_code",
+      "old_name": "kunk_user",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    }
+  ]
+}

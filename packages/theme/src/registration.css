@@ -1,0 +1,147 @@
+:root {
+  --kunk-bg: #132712;
+  --kunk-bg-overlay: 0.9;
+  --kunk-nav: #4e774d;
+  --kunk-sidebar-from: #e5e5e5;
+  --kunk-sidebar-to: #cfd6db;
+  --kunk-input-bg: #f0f5fa;
+  --kunk-contact: #e3bf0d;
+  --kunk-text-on-dark: #ffffff;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0 0 50px 0;
+  background-attachment: fixed !important;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--kunk-bg);
+  opacity: var(--kunk-bg-overlay);
+  z-index: -1;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--kunk-text-on-dark);
+}
+
+nav,
+.navbar {
+  background-color: var(--kunk-nav);
+  box-shadow: 0 0 10px #000;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, var(--kunk-sidebar-from), var(--kunk-sidebar-to));
+}
+
+.form-control,
+input.form-control,
+textarea.form-control,
+select.form-control {
+  background: var(--kunk-input-bg);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.btn-contact,
+.contact-cta {
+  background-color: var(--kunk-contact);
+  border-color: var(--kunk-contact);
+  color: #132712;
+}
+
+.vertical-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.content {
+  flex: 1;
+  padding: 1.5rem;
+}
+
+.form-label {
+  color: #fff;
+}
+
+.input-empty {
+  border-color: #dc3545 !important;
+}
+
+.label-upload {
+  display: block;
+  padding: 1.5rem;
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.progress-step.done {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.progress-step.current {
+  font-weight: 700;
+}
+
+.progress-step.locked {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.terms-dev-banner {
+  background: rgba(227, 191, 13, 0.2);
+  border: 1px solid var(--kunk-contact);
+  color: #fff;
+  padding: 1.25rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+/* International phone (react-phone-input-2) */
+.kunk-phone-input {
+  width: 100%;
+}
+
+.kunk-phone-input .form-control {
+  width: 100% !important;
+  height: calc(1.5em + 0.75rem + 2px) !important;
+  background: var(--kunk-input-bg) !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.kunk-phone-flag-btn {
+  background: var(--kunk-input-bg) !important;
+  border-radius: 0.375rem 0 0 0.375rem !important;
+}
+
+.kunk-phone-dropdown {
+  z-index: 20 !important;
+}
+
+.kunk-phone-input.is-invalid .form-control,
+.kunk-phone-input .form-control.is-invalid {
+  border-color: #dc3545 !important;
+}
+

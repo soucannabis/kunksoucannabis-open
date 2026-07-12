@@ -1,0 +1,616 @@
+{
+  "generated_at": "2026-07-08T14:54:40.183Z",
+  "scan_dirs": [
+    "src",
+    "kunkserver",
+    "cadastramento"
+  ],
+  "method": "Busca por literais de campo, acesso por propriedade e filtros Directus; campos genéricos exigem contexto da collection.",
+  "stats": {
+    "total_fields": 362,
+    "used": 313,
+    "weak": 9,
+    "metadata_only": 10,
+    "unused": 27,
+    "alias": 3
+  },
+  "unused": [
+    {
+      "collection": "Coupons",
+      "field": "created_in",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Coupons",
+      "field": "app_user",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Kunk_Users",
+      "field": "rg_emitter",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Kunk_Users",
+      "field": "number_street",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Kunk_Users",
+      "field": "council",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Kunk_Users",
+      "field": "associates",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Kunk_Users",
+      "field": "n_council",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Kunk_Users",
+      "field": "partner_link",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Kunk_Users",
+      "field": "pipefy_id",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Orders",
+      "field": "created_pipefy",
+      "type": "dateTime",
+      "data_type": "timestamp without time zone",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Orders",
+      "field": "at2",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Orders",
+      "field": "at3",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Orders",
+      "field": "total_products",
+      "type": "float",
+      "data_type": "real",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Orders",
+      "field": "survey_msg",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Partners",
+      "field": "associates",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Partners",
+      "field": "partners_finders",
+      "type": "json",
+      "data_type": "json",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Partners",
+      "field": "code_finder",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Partners",
+      "field": "finder_name",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Partners_files",
+      "field": "Partners_id",
+      "type": "integer",
+      "data_type": "integer",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Professionals",
+      "field": "finder_name",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Professionals",
+      "field": "beeviral_app_url",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Professionals",
+      "field": "app_user",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "reports",
+      "field": "details_query",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "services",
+      "field": "at3",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "services",
+      "field": "survey_msg",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Users",
+      "field": "gdrive_link",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    },
+    {
+      "collection": "Users",
+      "field": "bkp",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "unused",
+      "hits": [],
+      "totalScore": 0,
+      "hitCount": 0
+    }
+  ],
+  "metadata_only": [
+    {
+      "collection": "Orders",
+      "field": "institution",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "metadata_only",
+      "hits": [
+        {
+          "file": "src/components/inputs/reports/FieldSelector.jsx",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    },
+    {
+      "collection": "Orders",
+      "field": "cancel_info",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "metadata_only",
+      "hits": [
+        {
+          "file": "src/components/inputs/reports/FieldSelector.jsx",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    },
+    {
+      "collection": "Orders",
+      "field": "carrier",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "metadata_only",
+      "hits": [
+        {
+          "file": "src/components/inputs/reports/FieldSelector.jsx",
+          "fieldHits": 2,
+          "collHits": 0,
+          "score": 2
+        }
+      ],
+      "totalScore": 2,
+      "hitCount": 1
+    },
+    {
+      "collection": "Orders",
+      "field": "payment_account",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "metadata_only",
+      "hits": [
+        {
+          "file": "src/components/inputs/reports/FieldSelector.jsx",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    },
+    {
+      "collection": "Orders",
+      "field": "tracking_code_pb",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "metadata_only",
+      "hits": [
+        {
+          "file": "src/components/inputs/reports/FieldSelector.jsx",
+          "fieldHits": 2,
+          "collHits": 0,
+          "score": 2
+        }
+      ],
+      "totalScore": 2,
+      "hitCount": 1
+    },
+    {
+      "collection": "Orders",
+      "field": "message_check",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "metadata_only",
+      "hits": [
+        {
+          "file": "src/components/inputs/reports/FieldSelector.jsx",
+          "fieldHits": 2,
+          "collHits": 0,
+          "score": 2
+        }
+      ],
+      "totalScore": 2,
+      "hitCount": 1
+    },
+    {
+      "collection": "services",
+      "field": "professional_paid",
+      "type": "float",
+      "data_type": "real",
+      "usage": "metadata_only",
+      "hits": [
+        {
+          "file": "src/components/inputs/reports/FieldSelector.jsx",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    },
+    {
+      "collection": "Users",
+      "field": "secundary_number",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "metadata_only",
+      "hits": [
+        {
+          "file": "src/components/inputs/reports/FieldSelector.jsx",
+          "fieldHits": 2,
+          "collHits": 0,
+          "score": 2
+        }
+      ],
+      "totalScore": 2,
+      "hitCount": 1
+    },
+    {
+      "collection": "Users",
+      "field": "active_order",
+      "type": "json",
+      "data_type": "json",
+      "usage": "metadata_only",
+      "hits": [
+        {
+          "file": "src/components/inputs/reports/FieldSelector.jsx",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    },
+    {
+      "collection": "Users",
+      "field": "active_service",
+      "type": "json",
+      "data_type": "json",
+      "usage": "metadata_only",
+      "hits": [
+        {
+          "file": "src/components/inputs/reports/FieldSelector.jsx",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    }
+  ],
+  "weak": [
+    {
+      "collection": "Kunk_Users",
+      "field": "commission_value",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "weak",
+      "hits": [
+        {
+          "file": "kunkserver/routes/pagarme.js",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    },
+    {
+      "collection": "Kunk_Users",
+      "field": "transactions",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "weak",
+      "hits": [
+        {
+          "file": "kunkserver/routes/pagarme.js",
+          "fieldHits": 2,
+          "collHits": 0,
+          "score": 2
+        }
+      ],
+      "totalScore": 2,
+      "hitCount": 1
+    },
+    {
+      "collection": "Orders_files",
+      "field": "Orders_id",
+      "type": "integer",
+      "data_type": "integer",
+      "usage": "weak",
+      "hits": [
+        {
+          "file": "kunkserver/routes/directus/documents.js",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    },
+    {
+      "collection": "Partners",
+      "field": "commission_value",
+      "type": "integer",
+      "data_type": "integer",
+      "usage": "weak",
+      "hits": [
+        {
+          "file": "kunkserver/routes/pagarme.js",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    },
+    {
+      "collection": "Reception",
+      "field": "option2",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "weak",
+      "hits": [
+        {
+          "file": "src/components/inputs/customCard.jsx",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    },
+    {
+      "collection": "Reception",
+      "field": "isAssociate",
+      "type": "string",
+      "data_type": "character varying",
+      "usage": "weak",
+      "hits": [
+        {
+          "file": "src/components/inputs/AddReception.jsx",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    },
+    {
+      "collection": "services",
+      "field": "payment_info",
+      "type": "json",
+      "data_type": "json",
+      "usage": "weak",
+      "hits": [
+        {
+          "file": "src/components/modals/payment.jsx",
+          "fieldHits": 2,
+          "collHits": 0,
+          "score": 2
+        }
+      ],
+      "totalScore": 2,
+      "hitCount": 1
+    },
+    {
+      "collection": "services_files",
+      "field": "services_id",
+      "type": "integer",
+      "data_type": "integer",
+      "usage": "weak",
+      "hits": [
+        {
+          "file": "kunkserver/routes/directus/documents.js",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    },
+    {
+      "collection": "Users_files",
+      "field": "Users_id",
+      "type": "integer",
+      "data_type": "integer",
+      "usage": "weak",
+      "hits": [
+        {
+          "file": "kunkserver/routes/directus/documents.js",
+          "fieldHits": 1,
+          "collHits": 0,
+          "score": 1
+        }
+      ],
+      "totalScore": 1,
+      "hitCount": 1
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+:root {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #fff;
+}
+
+a {
+  color: inherit;
+}
+
+.progress-step.done {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.progress-step.current {
+  color: #132712;
+  font-weight: 700;
+}
+
+.progress-step.locked {
+  color: #888;
+}
+
+.label-upload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  min-height: 88px;
+  padding: 1rem;
+  background: #f0f5fa;
+  color: #132712;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-outline-primary.active,
+.btn-outline-light.active {
+  background: #4e774d;
+  border-color: #4e774d;
+  color: #fff;
+}
+
+.form-label {
+  color: #fff;
+}

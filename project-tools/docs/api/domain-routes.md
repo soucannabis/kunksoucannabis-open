@@ -1,0 +1,176 @@
+# Rotas de domínio
+
+Rotas além do CRUD genérico, para regras de negócio e fluxos do produto.  
+Prefixo: `/api/v1`.
+
+Estas rotas **complementam** `/items`; não substituem listagens simples.
+
+---
+
+## Auth
+
+Ver [authentication.md](./authentication.md).
+
+| Método | Path | Descrição |
+|---|---|---|
+| POST | `/auth/login` | Login painel (operador) |
+| POST | `/auth/logout` | Logout operador |
+| GET | `/auth/me` | Operador atual |
+| POST | `/auth/associate/register-email` | Cadastro e-mail (fase 1) + sessão associado |
+| POST | `/auth/associate/login` | Login associado |
+| POST | `/auth/associate/logout` | Logout associado |
+| GET | `/auth/associate/me` | Associado atual |
+| POST | `/auth/associate/forgot-password` | Reset: dispara e-mail |
+| POST | `/auth/associate/reset-password` | Reset: consome token |
+| POST | `/auth/tokens` | Criar API key (admin) |
+| GET | `/auth/tokens` | Listar API keys |
+| DELETE | `/auth/tokens/:id` | Revogar |
+
+---
+
+## Users (associados)
+
+| Método | Path | Descrição |
+|---|---|---|
+| GET | `/users` | Listar (`filter`/`sort`/`limit`; `?patients`; `include=responsible`) |
+| GET | `/users/search` | Busca global (nome, CPF, email, telefone) |
+| GET | `/users/by-code/:user_code` | Lookup por `user_code` |
+| GET | `/users/exists` | `?email=` → estado none / in_progress / associado |
+| POST | `/users` | Criar associado (admin/painel) |
+| PATCH | `/users/:id` | Atualizar (painel) |
+| PATCH | `/users/me` | Persistência parcial (sessão associado) |
+| GET | `/users/:id/patients` | Pacientes do associado (painel) |
+| GET | `/users/me/patients` | Pacientes do responsável logado |
+| POST | `/users/me/patients` | Criar paciente (funil) |
+| PATCH | `/users/me/patients/:id` | Atualizar paciente (funil) |
+| GET | `/users/me/documents/status` | Completude docs identidade (fase 3) |
+| POST | `/users/me/advance` | Avançar fase se pré-condições OK |
+| POST | `/users/me/complete` | Finalizar → `status=Associado` |
+| POST | `/users/:id/handbook` | Atualizar prontuário `handbook` |
+
+Relação paciente↔associado: `users.responsible_code` → `users.user_code`.
+
+Listagens genéricas também em `GET /items/users`.
+
+---
+
+## Terms (assinatura)
+
+> **Módulo em desenvolvimento** — fora da entrega do cadastramento. Stubs retornam `TERMS_MODULE_IN_DEVELOPMENT`.
+
+| Método | Path | Nesta entrega |
+|---|---|---|
+| POST | `/terms/contracts` | 501/503 stub |
+| GET | `/terms/status` | `{ status: "module_in_development" }` |
+
+Detalhe: [`../frontend/cadastramento/gaps.md`](../frontend/cadastramento/gaps.md) §5.
+---
+
+## Orders
+
+| Método | Path | Descrição |
+|---|---|---|
+| POST | `/orders` | Criar pedido (items, totais, estoque) |
+| PATCH | `/orders/:id/status` | Transição de status (máquina de estados) |
+| PATCH | `/orders/:id/production` | `production_owner` / finalizar produção |
+| POST | `/orders/:id/payment` | Registrar link/código de pagamento |
+| GET | `/orders/stats` | Contagens por status |
+
+---
+
+## Services
+
+| Método | Path | Descrição |
+|---|---|---|
+| GET | `/services` | Listar (`include=professional,associate`) |
+| POST | `/services` | Criar agendamento / serviço |
+| PATCH | `/services/:id` | Atualizar |
+| GET | `/services/by-professional/:id` | Por profissional (`include` suportado) |
+| GET | `/services/exists` | Existe associate+professional (legado) |
+
+---
+
+## Reception
+
+| Método | Path | Descrição |
+|---|---|---|
+| POST | `/reception` | Nova triagem |
+| PATCH | `/reception/:id/complete` | Fechar com `completion_reason` |
+| PATCH | `/reception/:id/attendant` | Atribuir atendente |
+
+---
+
+## Products / stock
+
+| Método | Path | Descrição |
+|---|---|---|
+| PATCH | `/products/:id/batch` | Atualizar lote |
+| POST | `/products/sync-batches` | Sync de lotes (se mantido no OSS) |
+
+---
+
+## Partners / Professionals
+
+| Método | Path | Descrição |
+|---|---|---|
+| GET | `/partners/by-code/:user_code` | Lookup |
+| PATCH | `/partners/:id/favorite` | `is_favorite` |
+| GET | `/professionals` | Lista com filtros de agenda |
+| PATCH | `/professionals/:id/donation-balance` | Ajuste de saldo |
+
+---
+
+## Reports
+
+| Método | Path | Descrição |
+|---|---|---|
+| POST | `/reports` | Salvar definição |
+| POST | `/reports/:id/run` | Executar query **sandboxed** (se permitido) |
+| POST | `/reports/:id/favorite` | Toggle favorito |
+
+> Execução de SQL arbitrário do cliente **não** deve existir. Se `sql_query` for mantido, restringir a admin + allowlist / parser seguro.
+
+---
+
+## System users (operadores)
+
+| Método | Path | Descrição |
+|---|---|---|
+| GET | `/system-users` | Listar operadores do painel |
+| POST | `/system-users` | Criar operador (admin) |
+
+CRUD genérico também em `/items/system_users` (ex-`kunk_users` / Directus `Kunk_Users`).
+
+---
+
+## Search global
+
+| Método | Path | Descrição |
+|---|---|---|
+| GET | `/search?q=&entity=` | Busca unificada (users, orders, …) |
+
+Equivalente ao `search.js` atual do kunkserver.
+
+---
+
+## Health
+
+| Método | Path | Descrição |
+|---|---|---|
+| GET | `/health` | Liveness (pode ficar fora de `/v1`) |
+
+---
+
+## Critério: items vs domínio
+
+| Usar `/items` | Usar rota de domínio |
+|---|---|
+| CRUD de tag, product simples | Criar order com items + estoque |
+| PATCH de um campo isolado | Mudança de status com regras |
+| Listagem filtrada | Relatório com join complexo / side effect |
+
+---
+
+## Migração a partir do kunkserver
+
+Ver [migration-from-directus.md](./migration-from-directus.md) para o mapa `/api/directus/...` → `/api/v1/...`.

@@ -1,0 +1,202 @@
+'use strict';
+
+/** Collections do schema alvo — espelha target-schema.sql */
+const TARGET_TABLES = [
+  'files',
+  'users',
+  'system_users',
+  'orders',
+  'orders_files',
+  'partners',
+  'products',
+  'professionals',
+  'reception',
+  'reports',
+  'services',
+  'services_files',
+  'tags',
+  'users_api',
+  'users_files',
+];
+
+const SENSITIVE_FIELDS = {
+  system_users: ['password', 'session_token', 'utalk_token'],
+  users: ['account_password', 'session_token', 'password_reset_token'],
+  partners: ['account_password'],
+  users_api: ['token'],
+};
+
+const READONLY_FIELDS = {
+  files: ['id', 'created_at'],
+  users: ['id'],
+  system_users: ['id'],
+  orders: ['id'],
+  orders_files: ['id'],
+  partners: ['id'],
+  products: ['id'],
+  professionals: ['id'],
+  reception: ['id'],
+  reports: ['id'],
+  services: ['id'],
+  services_files: ['id'],
+  tags: ['id'],
+  users_api: ['id'],
+  users_files: ['id'],
+};
+
+const SEARCHABLE = {
+  users: ['associate_name', 'associate_last_name', 'email', 'associate_cpf', 'mobile_number', 'fullname'],
+  system_users: ['name', 'last_name', 'email', 'cpf'],
+  orders: ['associate_name', 'order_code', 'status', 'tracking_code'],
+  partners: ['first_name', 'last_name', 'email', 'cpf'],
+  products: ['name', 'sku', 'batch', 'category'],
+  professionals: ['name', 'last_name', 'email', 'cpf', 'specialty'],
+  reception: ['name', 'last_name', 'email', 'phone', 'associate_name', 'full_name'],
+  reports: ['name', 'type', 'created_by'],
+  services: ['name', 'associate_name', 'professional_name', 'status'],
+  tags: ['tag', 'contexts'],
+  files: ['filename', 'mime_type'],
+  users_api: ['email'],
+  orders_files: [],
+  services_files: [],
+  users_files: [],
+};
+
+const COLUMNS = {
+  files: ['id', 'filename', 'mime_type', 'storage_path', 'created_at'],
+  users: [
+    'id', 'status', 'sort', 'date_created', 'date_updated', 'associate_name', 'associate_last_name',
+    'gender', 'nationality', 'associate_rg_issuer', 'marital_status', 'email', 'street', 'street_number',
+    'complement', 'neighborhood', 'proof_of_address', 'reason_treatment_text', 'responsible_type',
+    'city', 'state', 'cep', 'email_account', 'account_password', 'user_code', 'rg_proof', 'associate_cpf',
+    'associate_rg', 'mobile_number', 'associate_status', 'prescription', 'responsible_code',
+    'documents_folder_id', 'rg_patient_proof', 'patient_user_code', 'adhesion_term', 'invalid_fields',
+    'ciap_codes', 'associate_birth_date', 'preferred_products', 'date_prescription',
+    'annotations', 'handbook', 'created_date', 'avatar_url',
+    'prescriber', 'delivery_address', 'prescriber_code',
+    'session_token', 'session_expires', 'last_activity', 'is_session_active', 'fullname',
+    'password_reset_token', 'password_reset_expires',
+  ],
+  system_users: [
+    'id', 'date_created', 'date_updated', 'name', 'last_name', 'status', 'user_code', 'permissions',
+    'email', 'password', 'cpf', 'rg', 'birth_date', 'gender', 'nationality', 'marital_status',
+    'mobile_number', 'street', 'neighborhood', 'city', 'state', 'cep', 'pix_key', 'commission_value',
+    'transactions', 'commission_total', 'avatar_url', 'utalk_id', 'utalk_token', 'session_token',
+    'session_expires', 'last_activity', 'is_session_active', 'internal_code',
+  ],
+  orders: [
+    'id', 'sort', 'date_created', 'date_updated', 'status', 'total', 'payment_method', 'tracking_code',
+    'delivery_price', 'associate_name', 'order_code', 'user_code', 'items',
+    'created_date', 'discount', 'details', 'donation',
+    'prescriber', 'payment_link', 'user', 'carrier_order_code', 'payment_code', 'order_notes', 'tags',
+    'delivery_notes', 'address', 'whatsapp_message', 'prescriber_code',
+    'payment_date', 'custom_payment', 'production_owner',
+    'tracking_code_date', 'last_tracking_date',
+    'address_validation', 'created_by_user_code',
+    'freight_carrier', 'freight_option', 'dce',
+  ],
+  orders_files: ['id', 'order_id', 'file_id'],
+  partners: [
+    'id', 'status', 'sort', 'date_created', 'date_updated', 'first_name', 'last_name', 'email',
+    'account_password', 'mobile_number', 'user_code', 'documents_folder_id', 'commission_value',
+    'commission_total', 'type', 'pix_key', 'commission_transactions', 'cpf',
+    'is_favorite', 'contest_reports',
+  ],
+  products: [
+    'id', 'status', 'sort', 'user_created', 'date_created', 'user_updated', 'date_updated', 'name',
+    'sku', 'type', 'unit', 'concentration', 'price', 'amount', 'category', 'photo', 'batch',
+  ],
+  professionals: [
+    'id', 'sort', 'date_created', 'name', 'last_name', 'type', 'services_description', 'phone',
+    'state', 'city', 'cpf', 'email', 'specialty', 'active', 'is_prescriber', 'is_collaborator',
+    'professional_code', 'fingerprint', 'contest_reports', 'met_us', 'recipient_id',
+    'donation_balance', 'calendar_id',
+  ],
+  reception: [
+    'id', 'date_created', 'name', 'last_name', 'email', 'phone', 'option1', 'option2', 'is_associate',
+    'message', 'code', 'chat_id', 'status', 'associate_name', 'associate_code', 'date_updated',
+    'avatar_url', 'patient_name', 'attendant', 'tags', 'completion_reason', 'is_prescriber',
+    'at', 'full_name',
+  ],
+  reports: [
+    'id', 'date_created', 'date_updated', 'name', 'report_code', 'query_config', 'sql_query', 'type',
+    'dashboard_queries', 'layout_positions', 'chart_config', 'created_by', 'tags', 'column_maps',
+    'embedded_report_codes', 'favorites',
+  ],
+  services: [
+    'id', 'sort', 'type', 'date_created', 'name', 'professional_id', 'status', 'price', 'associate_name',
+    'associate_user_code', 'associate_email', 'professional_name', 'event_link', 'consultation_date',
+    'payment_link', 'event_id', 'price_paid', 'donation', 'booking_group_code', 'patient_name',
+    'professional_email', 'service_code', 'observations', 'payment_type', 'tags', 'created_by_user_code',
+    'payment_code', 'payment_info',
+  ],
+  services_files: ['id', 'service_id', 'file_id'],
+  tags: ['id', 'tag', 'contexts', 'color'],
+  users_api: ['id', 'email', 'token'],
+  users_files: ['id', 'user_id', 'file_id', 'doc_type', 'side', 'subject', 'doc_kind'],
+};
+
+const PK = {
+  files: { name: 'id', type: 'uuid' },
+  users: { name: 'id', type: 'serial' },
+  system_users: { name: 'id', type: 'serial' },
+  orders: { name: 'id', type: 'serial' },
+  orders_files: { name: 'id', type: 'serial' },
+  partners: { name: 'id', type: 'serial' },
+  products: { name: 'id', type: 'serial' },
+  professionals: { name: 'id', type: 'serial' },
+  reception: { name: 'id', type: 'serial' },
+  reports: { name: 'id', type: 'serial' },
+  services: { name: 'id', type: 'serial' },
+  services_files: { name: 'id', type: 'serial' },
+  tags: { name: 'id', type: 'serial' },
+  users_api: { name: 'id', type: 'serial' },
+  users_files: { name: 'id', type: 'serial' },
+};
+
+/** Colunas que precisam de aspas no SQL (reservadas) */
+const QUOTED_COLUMNS = new Set(['user']);
+
+function quoteIdent(name) {
+  if (QUOTED_COLUMNS.has(name)) return `"${name}"`;
+  return name;
+}
+
+function getCollection(name) {
+  if (!TARGET_TABLES.includes(name)) return null;
+  return {
+    name,
+    columns: COLUMNS[name],
+    pk: PK[name],
+    sensitive: SENSITIVE_FIELDS[name] || [],
+    readonly: READONLY_FIELDS[name] || [],
+    searchable: SEARCHABLE[name] || [],
+  };
+}
+
+function stripSensitive(collectionName, row) {
+  if (!row) return row;
+  const sensitive = SENSITIVE_FIELDS[collectionName] || [];
+  const out = { ...row };
+  for (const field of sensitive) {
+    delete out[field];
+  }
+  return out;
+}
+
+function isKnownColumn(collectionName, column) {
+  return (COLUMNS[collectionName] || []).includes(column);
+}
+
+module.exports = {
+  TARGET_TABLES,
+  SENSITIVE_FIELDS,
+  READONLY_FIELDS,
+  SEARCHABLE,
+  COLUMNS,
+  PK,
+  quoteIdent,
+  getCollection,
+  stripSensitive,
+  isKnownColumn,
+};

@@ -1,0 +1,88 @@
+'use strict';
+
+const { describe, it, before } = require('node:test');
+const assert = require('node:assert/strict');
+const request = require('supertest');
+const { loginAsAdmin } = require('../../helpers/auth');
+const { v4: uuidv4 } = require('uuid');
+
+describe('domain/orders listagem', () => {
+  let app;
+  let cookie;
+  let orderId;
+
+  before(async () => {
+    const session = await loginAsAdmin();
+    app = session.app;
+    cookie = session.cookie;
+
+    const created = await request(app)
+      .post('/api/v1/orders')
+      .set('Cookie', cookie)
+      .send({
+        associate_name: 'Teste Pedidos',
+        user_code: uuidv4(),
+        status: 'Aguardando pagamento',
+        items: [{ code: 'T1', name: 'Item', amount: 10, quantity: 1 }],
+        total: 10,
+        delivery_price: 0,
+        discount: 0,
+        donation: 0,
+        tags: ['facet-tag'],
+      });
+    assert.equal(created.status, 201, JSON.stringify(created.body));
+    orderId = created.body.data.id;
+  });
+
+  it('GET /orders/status-config returns defaults', async () => {
+    const res = await request(app).get('/api/v1/orders/status-config').set('Cookie', cookie);
+    assert.equal(res.status, 200);
+    assert.ok(Array.isArray(res.body.data.statuses));
+    assert.equal(res.body.data.awaiting, 'Aguardando pagamento');
+    assert.equal(res.body.data.paid, 'Pagamento concluído');
+  });
+
+  it('GET /orders and /facets', async () => {
+    const list = await request(app).get('/api/v1/orders?limit=10').set('Cookie', cookie);
+    assert.equal(list.status, 200, JSON.stringify(list.body));
+    assert.ok(Array.isArray(list.body.data));
+
+    const facets = await request(app).get('/api/v1/orders/facets').set('Cookie', cookie);
+    assert.equal(facets.status, 200, JSON.stringify(facets.body));
+    assert.ok(facets.body.data.statusCounts);
+  });
+
+  it('PATCH status sets and clears payment_date', async () => {
+    const paid = await request(app)
+      .patch(`/api/v1/orders/${orderId}/status`)
+      .set('Cookie', cookie)
+      .send({ status: 'Pagamento concluído' });
+    assert.equal(paid.status, 200, JSON.stringify(paid.body));
+    assert.ok(paid.body.data.payment_date);
+
+    const back = await request(app)
+      .patch(`/api/v1/orders/${orderId}/status`)
+      .set('Cookie', cookie)
+      .send({ status: 'Aguardando pagamento' });
+    assert.equal(back.status, 200, JSON.stringify(back.body));
+    assert.equal(back.body.data.payment_date, null);
+  });
+
+  it('POST /orders/bulk status', async () => {
+    const res = await request(app)
+      .post('/api/v1/orders/bulk')
+      .set('Cookie', cookie)
+      .send({ ids: [orderId], action: 'status', status: 'Pagamento concluído' });
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body.data.results[0].ok, true);
+  });
+
+  it('POST /orders/bulk tags_add', async () => {
+    const res = await request(app)
+      .post('/api/v1/orders/bulk')
+      .set('Cookie', cookie)
+      .send({ ids: [orderId], action: 'tags_add', tags: ['bulk-test'] });
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body.data.results[0].ok, true);
+  });
+});

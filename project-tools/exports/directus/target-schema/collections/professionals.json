@@ -1,0 +1,213 @@
+{
+  "table": "professionals",
+  "old_table": "Professionals",
+  "fields": [
+    {
+      "name": "id",
+      "old_name": "id",
+      "pg_type": "INTEGER",
+      "is_primary_key": true,
+      "is_nullable": false,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "sort",
+      "old_name": "sort",
+      "pg_type": "INTEGER",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "date_created",
+      "old_name": "date_created",
+      "pg_type": "TIMESTAMPTZ",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "name",
+      "old_name": "name",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "last_name",
+      "old_name": "lastname",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "type",
+      "old_name": "type",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "services_description",
+      "old_name": "services",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "phone",
+      "old_name": "phone",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "state",
+      "old_name": "state",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "city",
+      "old_name": "city",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "cpf",
+      "old_name": "cpf",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "email",
+      "old_name": "email",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "specialty",
+      "old_name": "specialty",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "active",
+      "old_name": "active",
+      "pg_type": "INTEGER",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "is_prescriber",
+      "old_name": "is_prescriber",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "is_collaborator",
+      "old_name": "is_collaborator",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "professional_code",
+      "old_name": "professional_code",
+      "pg_type": "UUID",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "fingerprint",
+      "old_name": "fingerprint",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "contest_reports",
+      "old_name": "info_report",
+      "pg_type": "JSONB",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "met_us",
+      "old_name": "met_us",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "recipient_id",
+      "old_name": "recipient_id",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "donation_balance",
+      "old_name": "donation_balance",
+      "pg_type": "INTEGER",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    },
+    {
+      "name": "calendar_id",
+      "old_name": "calendar_id",
+      "pg_type": "VARCHAR(255)",
+      "is_primary_key": false,
+      "is_nullable": true,
+      "foreign_key_table": null,
+      "foreign_key_column": null
+    }
+  ]
+}

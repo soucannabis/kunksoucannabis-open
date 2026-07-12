@@ -1,0 +1,168 @@
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import { getKunkPublicConfig, mergeKunkPublicConfigFromApi } from '@kunk/config';
+
+const STORAGE_KEY = 'selectedTheme';
+
+const KunkConfigContext = createContext({
+  config: getKunkPublicConfig(),
+  configErrors: [],
+  configReady: false,
+  themeMode: 'dark',
+  setThemeMode: () => {},
+});
+
+/**
+ * Apply appearance tokens to :root based on config + active theme mode.
+ * @param {ReturnType<typeof getKunkPublicConfig>} config
+ * @param {'dark'|'light'} themeMode
+ */
+export function applyKunkAppearanceVars(config, themeMode) {
+  const root = document.documentElement;
+  const isLight = themeMode === 'light';
+
+  const appBg = isLight ? config.lightBg : config.darkBg;
+  const primary = isLight ? config.lightPrimary : config.darkPrimary;
+  const accent = isLight ? config.lightAccent : config.darkAccent;
+  const accentHover = isLight ? config.lightAccentHover : config.darkAccentHover;
+
+  const useImage = config.bgMode === 'image' && Boolean(config.bgImage);
+
+  root.dataset.theme = themeMode;
+  root.style.setProperty('--kunk-app-bg', useImage ? 'transparent' : appBg);
+  root.style.setProperty('--kunk-menu-bg', config.menuBg || primary);
+  root.style.setProperty('--kunk-menu-text', config.menuText);
+  root.style.setProperty('--kunk-menu-hover-bg', config.menuHoverBg);
+  root.style.setProperty('--kunk-menu-hover-text', config.menuHoverText);
+  root.style.setProperty('--kunk-primary', primary);
+  root.style.setProperty('--kunk-accent', accent);
+  root.style.setProperty('--kunk-accent-hover', accentHover);
+  root.style.setProperty('--kunk-bg-image', useImage ? `url(${config.bgImage})` : 'none');
+
+  if (useImage) {
+    document.body.style.backgroundImage = `url(${config.bgImage})`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
+    document.body.style.backgroundColor = appBg;
+  } else {
+    document.body.style.backgroundImage = '';
+    document.body.style.backgroundSize = '';
+    document.body.style.backgroundPosition = '';
+    document.body.style.backgroundAttachment = '';
+    document.body.style.backgroundColor = appBg;
+  }
+}
+
+function resolveInitialTheme(defaultTheme) {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === 'light' || saved === 'dark') return saved;
+    // Legacy legado values
+    if (saved === 'light-mode') return 'light';
+    if (saved === 'default') return 'dark';
+  } catch {
+    /* ignore */
+  }
+  return defaultTheme === 'light' ? 'light' : 'dark';
+}
+
+export function KunkConfigProvider({ api, children }) {
+  const bootstrap = useMemo(() => getKunkPublicConfig(), []);
+  const [config, setConfig] = useState(bootstrap);
+  const [configErrors, setConfigErrors] = useState([]);
+  const [configReady, setConfigReady] = useState(false);
+  const [themeMode, setThemeModeState] = useState(() =>
+    resolveInitialTheme(bootstrap.defaultTheme),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const json = await api.get('/config/public?system=kunk');
+        const data = json?.data || {};
+        if (cancelled) return;
+        const merged = mergeKunkPublicConfigFromApi(bootstrap, data.values);
+        setConfig(merged);
+        setConfigErrors(Array.isArray(data.errors) ? data.errors : []);
+        // Only apply admin default if user has no stored preference
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (!saved) {
+            setThemeModeState(merged.defaultTheme === 'light' ? 'light' : 'dark');
+          }
+        } catch {
+          /* ignore */
+        }
+      } catch {
+        if (cancelled) return;
+        setConfig(bootstrap);
+        setConfigErrors([]);
+      } finally {
+        if (!cancelled) setConfigReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [api, bootstrap]);
+
+  useEffect(() => {
+    applyKunkAppearanceVars(config, themeMode);
+  }, [config, themeMode]);
+
+  useEffect(() => {
+    if (config.title) {
+      document.title = config.title;
+    }
+  }, [config.title]);
+
+  useEffect(() => {
+    const href = config.logo || '/kunkLogo.png';
+    let link = document.querySelector("link[rel='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.setAttribute('rel', 'icon');
+      document.head.appendChild(link);
+    }
+    const type = href.endsWith('.svg')
+      ? 'image/svg+xml'
+      : href.endsWith('.ico')
+        ? 'image/x-icon'
+        : 'image/png';
+    link.setAttribute('type', type);
+    link.setAttribute('href', href);
+  }, [config.logo]);
+
+  const setThemeMode = useCallback((mode) => {
+    const next = mode === 'light' ? 'light' : 'dark';
+    setThemeModeState(next);
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const value = useMemo(
+    () => ({ config, configErrors, configReady, themeMode, setThemeMode }),
+    [config, configErrors, configReady, themeMode, setThemeMode],
+  );
+
+  return (
+    <KunkConfigContext.Provider value={value}>
+      {children}
+    </KunkConfigContext.Provider>
+  );
+}
+
+export function useKunkConfig() {
+  return useContext(KunkConfigContext);
+}

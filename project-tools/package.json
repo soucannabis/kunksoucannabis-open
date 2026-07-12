@@ -1,0 +1,15 @@
+{
+  "name": "kunk-project-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scripts, migrations e documentação técnica para observação e evolução do Kunk open source",
+  "scripts": {
+    "directus:extract": "node scripts/extract-directus-schema.js",
+    "fields:unused": "node scripts/analyze-unused-fields.js",
+    "schema:target": "node scripts/build-target-schema.js"
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "dotenv": "^16.3.1"
+  }
+}

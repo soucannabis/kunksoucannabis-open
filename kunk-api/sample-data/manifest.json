@@ -1,0 +1,47 @@
+{
+  "version": "1.0.0",
+  "description": "Sample data fictício para demo/instalação do Kunk OSS",
+  "demo_login": {
+    "email": "admin@demo.kunk.local",
+    "password": "DemoAdmin123!"
+  },
+  "counts": {
+    "system_users": 3,
+    "users": 100,
+    "partners": 10,
+    "professionals": 10,
+    "products": 12,
+    "tags": 8,
+    "orders": 50,
+    "services": 20,
+    "reception": 15,
+    "reports": 3,
+    "files": 5,
+    "users_files": 5,
+    "orders_files": 5,
+    "services_files": 3,
+    "users_api": 1
+  },
+  "seed_order": [
+    "files",
+    "system_users",
+    "users",
+    "partners",
+    "professionals",
+    "products",
+    "tags",
+    "orders",
+    "services",
+    "reception",
+    "reports",
+    "users_api",
+    "users_files",
+    "orders_files",
+    "services_files"
+  ],
+  "notes": [
+    "Todos os dados são fictícios — não copiar produção/Directus.",
+    "Produtos usam catálogo KNK-* (mg/SKU), sem padrão de cores/proporções do Directus.",
+    "Rodar com: npm run seed:sample"
+  ]
+}

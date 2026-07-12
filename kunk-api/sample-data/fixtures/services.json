@@ -1,0 +1,802 @@
+[
+  {
+    "sort": 1,
+    "type": "consulta",
+    "date_created": "2026-06-11T23:42:25.358Z",
+    "name": "Atendimento demo #1",
+    "professional_id": "ee54d72a-f48a-4722-b4bb-07b93563e699",
+    "status": "pending",
+    "price": 150,
+    "associate_name": "Ana Almeida",
+    "associate_user_code": "231416cb-8b77-4922-822d-5a38a82acd93",
+    "associate_email": "associate001@demo.kunk.local",
+    "professional_name": "Lucas Nogueira",
+    "event_link": "https://meet.demo.kunk.local/s/1",
+    "consultation_date": "2026-06-21T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/1",
+    "event_id": "evt-demo-1",
+    "price_paid": 0,
+    "donation": 30,
+    "booking_group_code": "0d7714aa-7e61-4eba-9682-0534d952e0b2",
+    "patient_name": "Ana Almeida",
+    "professional_email": "pro01@demo.kunk.local",
+    "service_code": "a79237c8-dcaf-4e56-9741-5e05e1f2ef5c",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "pix",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-1",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": false
+    }
+  },
+  {
+    "sort": 2,
+    "type": "retorno",
+    "date_created": "2026-06-12T23:42:25.358Z",
+    "name": "Atendimento demo #2",
+    "professional_id": "d040bef7-8ad4-4c1c-a288-07c4502e7ac6",
+    "status": "confirmed",
+    "price": 200,
+    "associate_name": "Bruno Dias",
+    "associate_user_code": "d9386b2d-9aaf-409a-83cb-12bfda229cfa",
+    "associate_email": "associate002@demo.kunk.local",
+    "professional_name": "Marina Oliveira",
+    "event_link": "https://meet.demo.kunk.local/s/2",
+    "consultation_date": "2026-06-22T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/2",
+    "event_id": "evt-demo-2",
+    "price_paid": 200,
+    "donation": 0,
+    "booking_group_code": "0730eff5-850a-4711-bbec-cb6cee4bf779",
+    "patient_name": "Bruno Dias",
+    "professional_email": "pro02@demo.kunk.local",
+    "service_code": "3ce2154e-ba21-43b9-999c-254e2d13bfc5",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "credit_card",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-2",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": true
+    }
+  },
+  {
+    "sort": 3,
+    "type": "avaliação",
+    "date_created": "2026-06-13T23:42:25.358Z",
+    "name": "Atendimento demo #3",
+    "professional_id": "28877253-7e63-417a-af33-fe590b081114",
+    "status": "completed",
+    "price": 250,
+    "associate_name": "Carla Gomes",
+    "associate_user_code": "beeb2aaf-9498-43e0-a698-621b0723fc04",
+    "associate_email": "associate003@demo.kunk.local",
+    "professional_name": "Nuno Pereira",
+    "event_link": "https://meet.demo.kunk.local/s/3",
+    "consultation_date": "2026-06-23T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/3",
+    "event_id": "evt-demo-3",
+    "price_paid": 250,
+    "donation": 0,
+    "booking_group_code": "662e4fbd-1443-4fcf-84f7-59f0d13eda7d",
+    "patient_name": "Carla Gomes",
+    "professional_email": "pro03@demo.kunk.local",
+    "service_code": "dedfaf30-3b07-4e79-9c8b-55a4d3c86f07",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "cash",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-3",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": true
+    }
+  },
+  {
+    "sort": 4,
+    "type": "consulta",
+    "date_created": "2026-06-14T23:42:25.358Z",
+    "name": "Atendimento demo #4",
+    "professional_id": "4715690c-e819-48f8-b9cc-23e420d70f12",
+    "status": "canceled",
+    "price": 300,
+    "associate_name": "Diego Junqueira",
+    "associate_user_code": "9506cfec-eda8-4492-8cff-920830d90104",
+    "associate_email": "associate004@demo.kunk.local",
+    "professional_name": "Olívia Queiroz",
+    "event_link": "https://meet.demo.kunk.local/s/4",
+    "consultation_date": "2026-06-24T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/4",
+    "event_id": "evt-demo-4",
+    "price_paid": 0,
+    "donation": 0,
+    "booking_group_code": "82390f8c-3be7-437f-a0ee-319e4c82fb27",
+    "patient_name": "Diego Junqueira",
+    "professional_email": "pro04@demo.kunk.local",
+    "service_code": "a5cabfcb-6abf-4d16-8fdb-779154f608b7",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "pix",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-4",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": false
+    }
+  },
+  {
+    "sort": 5,
+    "type": "retorno",
+    "date_created": "2026-06-15T23:42:25.358Z",
+    "name": "Atendimento demo #5",
+    "professional_id": "edbb912b-5379-49c6-bcc8-06a2f4f17b0a",
+    "status": "pending",
+    "price": 350,
+    "associate_name": "Elena Mendes",
+    "associate_user_code": "d9febb14-3b24-40e9-886b-9d24a48b295b",
+    "associate_email": "associate005@demo.kunk.local",
+    "professional_name": "Paulo Ramos",
+    "event_link": "https://meet.demo.kunk.local/s/5",
+    "consultation_date": "2026-06-25T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/5",
+    "event_id": "evt-demo-5",
+    "price_paid": 0,
+    "donation": 0,
+    "booking_group_code": "c6988515-74f9-4b93-9713-56df27a1acec",
+    "patient_name": "Elena Mendes",
+    "professional_email": "pro05@demo.kunk.local",
+    "service_code": "9c25f778-42f2-4b3e-908c-bbb89604da04",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "credit_card",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-5",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": false
+    }
+  },
+  {
+    "sort": 6,
+    "type": "avaliação",
+    "date_created": "2026-06-16T23:42:25.358Z",
+    "name": "Atendimento demo #6",
+    "professional_id": "13d453ea-2510-48ce-8c12-cbb3396dbd51",
+    "status": "confirmed",
+    "price": 150,
+    "associate_name": "Fábio Pereira",
+    "associate_user_code": "69abb390-b275-4e45-a470-0f07219d4d8e",
+    "associate_email": "associate006@demo.kunk.local",
+    "professional_name": "Queila Silva",
+    "event_link": "https://meet.demo.kunk.local/s/6",
+    "consultation_date": "2026-06-26T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/6",
+    "event_id": "evt-demo-6",
+    "price_paid": 150,
+    "donation": 30,
+    "booking_group_code": "8343ec10-3571-4f5e-a233-da7ba3c23c66",
+    "patient_name": "Fábio Pereira",
+    "professional_email": "pro06@demo.kunk.local",
+    "service_code": "959a23e2-d81d-4fea-8310-10b28db8b35f",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "cash",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-6",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": true
+    }
+  },
+  {
+    "sort": 7,
+    "type": "consulta",
+    "date_created": "2026-06-17T23:42:25.358Z",
+    "name": "Atendimento demo #7",
+    "professional_id": "dac7f491-4895-4a6a-b8a7-50447ce69b2b",
+    "status": "completed",
+    "price": 200,
+    "associate_name": "Gabriela Silva",
+    "associate_user_code": "430e5d0a-5014-414a-ac15-1287a96ecbd8",
+    "associate_email": "associate007@demo.kunk.local",
+    "professional_name": "Rafael Teixeira",
+    "event_link": "https://meet.demo.kunk.local/s/7",
+    "consultation_date": "2026-06-27T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/7",
+    "event_id": "evt-demo-7",
+    "price_paid": 200,
+    "donation": 0,
+    "booking_group_code": "5d0b269a-1f48-4c80-a64f-00165afc4d4c",
+    "patient_name": "Gabriela Silva",
+    "professional_email": "pro07@demo.kunk.local",
+    "service_code": "ef980c54-00e1-4598-a410-c29dd477a983",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "pix",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-7",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": true
+    }
+  },
+  {
+    "sort": 8,
+    "type": "retorno",
+    "date_created": "2026-06-18T23:42:25.358Z",
+    "name": "Atendimento demo #8",
+    "professional_id": "f761f61e-546c-48ae-82c0-7c311431e5d3",
+    "status": "canceled",
+    "price": 250,
+    "associate_name": "Hugo Vieira",
+    "associate_user_code": "c346f0c7-0e1d-47c3-980f-c2d784ecad76",
+    "associate_email": "associate008@demo.kunk.local",
+    "professional_name": "Sofia Uchoa",
+    "event_link": "https://meet.demo.kunk.local/s/8",
+    "consultation_date": "2026-06-28T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/8",
+    "event_id": "evt-demo-8",
+    "price_paid": 0,
+    "donation": 0,
+    "booking_group_code": "92d3def9-a414-4234-882f-4fb3aaa2a2cc",
+    "patient_name": "Hugo Vieira",
+    "professional_email": "pro08@demo.kunk.local",
+    "service_code": "69513b7e-4bd4-462c-9f60-fae94b1ab562",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "credit_card",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-8",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": false
+    }
+  },
+  {
+    "sort": 9,
+    "type": "avaliação",
+    "date_created": "2026-06-19T23:42:25.358Z",
+    "name": "Atendimento demo #9",
+    "professional_id": "8c52283c-b202-4909-8425-fe5e4a5141a8",
+    "status": "pending",
+    "price": 300,
+    "associate_name": "Iris Yamamoto",
+    "associate_user_code": "e97bad9a-baa5-4f01-8189-f9c5c4c4cf4e",
+    "associate_email": "associate009@demo.kunk.local",
+    "professional_name": "Tiago Vieira",
+    "event_link": "https://meet.demo.kunk.local/s/9",
+    "consultation_date": "2026-06-29T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/9",
+    "event_id": "evt-demo-9",
+    "price_paid": 0,
+    "donation": 0,
+    "booking_group_code": "6aeed2fe-ca0c-40a7-bbee-826e7739ea5a",
+    "patient_name": "Iris Yamamoto",
+    "professional_email": "pro09@demo.kunk.local",
+    "service_code": "1cbfa2fa-653a-4da6-bfe6-b1fc65430128",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "cash",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-9",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": false
+    }
+  },
+  {
+    "sort": 10,
+    "type": "consulta",
+    "date_created": "2026-06-20T23:42:25.358Z",
+    "name": "Atendimento demo #10",
+    "professional_id": "647bc7a7-cc7d-4c7e-9362-945d9efbef30",
+    "status": "confirmed",
+    "price": 350,
+    "associate_name": "João Barbosa",
+    "associate_user_code": "a6532388-54f3-497e-9c9a-55bac77b6a29",
+    "associate_email": "associate010@demo.kunk.local",
+    "professional_name": "Úrsula Wagner",
+    "event_link": "https://meet.demo.kunk.local/s/10",
+    "consultation_date": "2026-06-30T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/10",
+    "event_id": "evt-demo-10",
+    "price_paid": 350,
+    "donation": 0,
+    "booking_group_code": "969e45cc-2dbc-4b79-be4f-c8df456a7730",
+    "patient_name": "João Barbosa",
+    "professional_email": "pro10@demo.kunk.local",
+    "service_code": "68e95b13-879b-455e-9da7-682a406037bf",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "pix",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-10",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": true
+    }
+  },
+  {
+    "sort": 11,
+    "type": "retorno",
+    "date_created": "2026-06-21T23:42:25.358Z",
+    "name": "Atendimento demo #11",
+    "professional_id": "ee54d72a-f48a-4722-b4bb-07b93563e699",
+    "status": "completed",
+    "price": 150,
+    "associate_name": "Karen Esteves",
+    "associate_user_code": "0ccbc150-43ce-485a-862c-95a685b09595",
+    "associate_email": "associate011@demo.kunk.local",
+    "professional_name": "Lucas Nogueira",
+    "event_link": "https://meet.demo.kunk.local/s/11",
+    "consultation_date": "2026-07-01T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/11",
+    "event_id": "evt-demo-11",
+    "price_paid": 150,
+    "donation": 30,
+    "booking_group_code": "febf3c09-4639-4d40-8fd5-6f219b1744dd",
+    "patient_name": "Karen Esteves",
+    "professional_email": "pro01@demo.kunk.local",
+    "service_code": "8ddb64fa-84e1-489b-8c8b-07bd8a68c7ba",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "credit_card",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-11",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": true
+    }
+  },
+  {
+    "sort": 12,
+    "type": "avaliação",
+    "date_created": "2026-06-22T23:42:25.358Z",
+    "name": "Atendimento demo #12",
+    "professional_id": "d040bef7-8ad4-4c1c-a288-07c4502e7ac6",
+    "status": "canceled",
+    "price": 200,
+    "associate_name": "Lucas Henrique",
+    "associate_user_code": "8664ea3a-dd4c-4f80-8b32-ab69df2356d0",
+    "associate_email": "associate012@demo.kunk.local",
+    "professional_name": "Marina Oliveira",
+    "event_link": "https://meet.demo.kunk.local/s/12",
+    "consultation_date": "2026-07-02T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/12",
+    "event_id": "evt-demo-12",
+    "price_paid": 0,
+    "donation": 0,
+    "booking_group_code": "12fc6528-8011-4d80-91c7-2b402166c568",
+    "patient_name": "Lucas Henrique",
+    "professional_email": "pro02@demo.kunk.local",
+    "service_code": "c7d52880-abd9-4fe7-93ff-52d7ec39c2b9",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "cash",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-12",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": false
+    }
+  },
+  {
+    "sort": 13,
+    "type": "consulta",
+    "date_created": "2026-06-23T23:42:25.358Z",
+    "name": "Atendimento demo #13",
+    "professional_id": "28877253-7e63-417a-af33-fe590b081114",
+    "status": "pending",
+    "price": 250,
+    "associate_name": "Marina Klein",
+    "associate_user_code": "90e4bcd0-96fa-4df1-abf1-1e8e8a264640",
+    "associate_email": "associate013@demo.kunk.local",
+    "professional_name": "Nuno Pereira",
+    "event_link": "https://meet.demo.kunk.local/s/13",
+    "consultation_date": "2026-07-03T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/13",
+    "event_id": "evt-demo-13",
+    "price_paid": 0,
+    "donation": 0,
+    "booking_group_code": "0bcca480-7225-41c1-b686-20260ccb2503",
+    "patient_name": "Marina Klein",
+    "professional_email": "pro03@demo.kunk.local",
+    "service_code": "7a722d1e-3796-4f95-92dc-8ac21058c5a1",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "pix",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-13",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": false
+    }
+  },
+  {
+    "sort": 14,
+    "type": "retorno",
+    "date_created": "2026-06-24T23:42:25.358Z",
+    "name": "Atendimento demo #14",
+    "professional_id": "4715690c-e819-48f8-b9cc-23e420d70f12",
+    "status": "confirmed",
+    "price": 300,
+    "associate_name": "Nuno Nogueira",
+    "associate_user_code": "f97c3d2a-a2e5-4eb2-9467-47baef3eeff1",
+    "associate_email": "associate014@demo.kunk.local",
+    "professional_name": "Olívia Queiroz",
+    "event_link": "https://meet.demo.kunk.local/s/14",
+    "consultation_date": "2026-07-04T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/14",
+    "event_id": "evt-demo-14",
+    "price_paid": 300,
+    "donation": 0,
+    "booking_group_code": "47a42a3f-e596-4e1f-82fb-7ebfd9cd3ff4",
+    "patient_name": "Nuno Nogueira",
+    "professional_email": "pro04@demo.kunk.local",
+    "service_code": "3b783949-0bf5-49a3-a314-1350905bb170",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "credit_card",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-14",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": true
+    }
+  },
+  {
+    "sort": 15,
+    "type": "avaliação",
+    "date_created": "2026-06-25T23:42:25.358Z",
+    "name": "Atendimento demo #15",
+    "professional_id": "edbb912b-5379-49c6-bcc8-06a2f4f17b0a",
+    "status": "completed",
+    "price": 350,
+    "associate_name": "Olívia Queiroz",
+    "associate_user_code": "85a5feb0-f040-4296-8fc4-586feb9aaab6",
+    "associate_email": "associate015@demo.kunk.local",
+    "professional_name": "Paulo Ramos",
+    "event_link": "https://meet.demo.kunk.local/s/15",
+    "consultation_date": "2026-07-05T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/15",
+    "event_id": "evt-demo-15",
+    "price_paid": 350,
+    "donation": 0,
+    "booking_group_code": "16a7e3c6-eac4-4337-aee1-ac11e4e2c99f",
+    "patient_name": "Olívia Queiroz",
+    "professional_email": "pro05@demo.kunk.local",
+    "service_code": "9d44d674-8d96-4ffb-ab1f-732d08a585de",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "cash",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-15",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": true
+    }
+  },
+  {
+    "sort": 16,
+    "type": "consulta",
+    "date_created": "2026-06-26T23:42:25.358Z",
+    "name": "Atendimento demo #16",
+    "professional_id": "13d453ea-2510-48ce-8c12-cbb3396dbd51",
+    "status": "canceled",
+    "price": 150,
+    "associate_name": "Paulo Teixeira",
+    "associate_user_code": "d193471f-98c4-4e1b-ab1e-d26827add69c",
+    "associate_email": "associate016@demo.kunk.local",
+    "professional_name": "Queila Silva",
+    "event_link": "https://meet.demo.kunk.local/s/16",
+    "consultation_date": "2026-06-21T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/16",
+    "event_id": "evt-demo-16",
+    "price_paid": 0,
+    "donation": 30,
+    "booking_group_code": "316404b2-b278-4076-a141-05636ef8fffd",
+    "patient_name": "Paulo Teixeira",
+    "professional_email": "pro06@demo.kunk.local",
+    "service_code": "6c682105-0a32-40e2-b2e3-c07869b9b81e",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "pix",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-16",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": false
+    }
+  },
+  {
+    "sort": 17,
+    "type": "retorno",
+    "date_created": "2026-06-27T23:42:25.358Z",
+    "name": "Atendimento demo #17",
+    "professional_id": "dac7f491-4895-4a6a-b8a7-50447ce69b2b",
+    "status": "pending",
+    "price": 200,
+    "associate_name": "Queila Wagner",
+    "associate_user_code": "8fc5a03e-89f3-46fa-b16e-de8eb480ff4e",
+    "associate_email": "associate017@demo.kunk.local",
+    "professional_name": "Rafael Teixeira",
+    "event_link": "https://meet.demo.kunk.local/s/17",
+    "consultation_date": "2026-06-22T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/17",
+    "event_id": "evt-demo-17",
+    "price_paid": 0,
+    "donation": 0,
+    "booking_group_code": "1bf32126-9ff7-47f1-adc3-0e8c41c42746",
+    "patient_name": "Queila Wagner",
+    "professional_email": "pro07@demo.kunk.local",
+    "service_code": "994823be-f029-4bd8-88b9-591f0c110012",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "credit_card",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-17",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": false
+    }
+  },
+  {
+    "sort": 18,
+    "type": "avaliação",
+    "date_created": "2026-06-28T23:42:25.358Z",
+    "name": "Atendimento demo #18",
+    "professional_id": "f761f61e-546c-48ae-82c0-7c311431e5d3",
+    "status": "confirmed",
+    "price": 250,
+    "associate_name": "Rafael Zanetti",
+    "associate_user_code": "5cde9698-22ab-45ad-a06f-b6876f22364e",
+    "associate_email": "associate018@demo.kunk.local",
+    "professional_name": "Sofia Uchoa",
+    "event_link": "https://meet.demo.kunk.local/s/18",
+    "consultation_date": "2026-06-23T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/18",
+    "event_id": "evt-demo-18",
+    "price_paid": 250,
+    "donation": 0,
+    "booking_group_code": "4612f177-2336-40c7-b0ee-be5ef8cb49dc",
+    "patient_name": "Rafael Zanetti",
+    "professional_email": "pro08@demo.kunk.local",
+    "service_code": "0071f6fa-2394-46f8-92d4-d86a7d28baa1",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "cash",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-18",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": true
+    }
+  },
+  {
+    "sort": 19,
+    "type": "consulta",
+    "date_created": "2026-06-29T23:42:25.358Z",
+    "name": "Atendimento demo #19",
+    "professional_id": "8c52283c-b202-4909-8425-fe5e4a5141a8",
+    "status": "completed",
+    "price": 300,
+    "associate_name": "Sofia Cardoso",
+    "associate_user_code": "675260e1-a897-4385-bbca-5f484a736820",
+    "associate_email": "associate019@demo.kunk.local",
+    "professional_name": "Tiago Vieira",
+    "event_link": "https://meet.demo.kunk.local/s/19",
+    "consultation_date": "2026-06-24T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/19",
+    "event_id": "evt-demo-19",
+    "price_paid": 300,
+    "donation": 0,
+    "booking_group_code": "3d079913-3fbd-4d75-9d71-69e5328298c4",
+    "patient_name": "Sofia Cardoso",
+    "professional_email": "pro09@demo.kunk.local",
+    "service_code": "9c92268a-82ee-4e7d-89ee-91dc61ca40bf",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "pix",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-19",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": true
+    }
+  },
+  {
+    "sort": 20,
+    "type": "retorno",
+    "date_created": "2026-06-30T23:42:25.358Z",
+    "name": "Atendimento demo #20",
+    "professional_id": "647bc7a7-cc7d-4c7e-9362-945d9efbef30",
+    "status": "canceled",
+    "price": 350,
+    "associate_name": "Tiago Freitas",
+    "associate_user_code": "e2f62d0d-122f-43a0-ad6d-c1aa17f60c11",
+    "associate_email": "associate020@demo.kunk.local",
+    "professional_name": "Úrsula Wagner",
+    "event_link": "https://meet.demo.kunk.local/s/20",
+    "consultation_date": "2026-06-25T23:42:25.358Z",
+    "payment_link": "https://pay.demo.kunk.local/s/20",
+    "event_id": "evt-demo-20",
+    "price_paid": 0,
+    "donation": 0,
+    "booking_group_code": "625b4010-1761-4515-9701-dd0589bd8cb8",
+    "patient_name": "Tiago Freitas",
+    "professional_email": "pro10@demo.kunk.local",
+    "service_code": "fcd5eec5-7755-47e4-a6e1-3a67d1e0b99b",
+    "observations": "Agendamento fictício com campos completos (sample-data).",
+    "payment_type": "credit_card",
+    "tags": [
+      {
+        "tag": "demo"
+      },
+      {
+        "tag": "teleconsulta"
+      }
+    ],
+    "created_by_user_code": "KNK-ACOL",
+    "payment_code": "SVCPAY-20",
+    "payment_info": {
+      "demo": true,
+      "gateway": "demo-gateway",
+      "paid": false
+    }
+  }
+]
