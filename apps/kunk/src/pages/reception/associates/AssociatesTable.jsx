@@ -1,0 +1,99 @@
+import React from 'react';
+import {
+  Avatar,
+  Box,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import { displayName, formatCreated, statusLabel } from './associatesStatus.js';
+
+const GREEN = '#5a7a5b';
+
+export default function AssociatesTable({
+  rows,
+  localQ,
+  onLocalQ,
+  onOpen,
+  onSendTriage,
+  patientNames,
+}) {
+  return (
+    <Box>
+      <TextField
+        size="small"
+        placeholder="Pesquisar..."
+        value={localQ}
+        onChange={(e) => onLocalQ(e.target.value)}
+        sx={{ mb: 1, minWidth: 280, bgcolor: '#fff' }}
+      />
+      <TableContainer component={Paper} className="pageContainerTable">
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ bgcolor: GREEN }}>
+              {['', 'Nome', 'E-mail', 'Telefone', 'Status', 'Criado', ''].map((h) => (
+                <TableCell key={h || 'a'} sx={{ color: '#fff', fontWeight: 600 }}>
+                  {h}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {(rows || []).map((u) => {
+              const patientSub = patientNames?.[u.user_code] || patientNames?.[String(u.id)];
+              return (
+                <TableRow key={u.id} hover>
+                  <TableCell>
+                    <Avatar
+                      src={u.avatar_url || undefined}
+                      sx={{ width: 36, height: 36, cursor: 'pointer', bgcolor: GREEN }}
+                      onClick={() => onOpen(u)}
+                    >
+                      {(displayName(u) || '?').charAt(0)}
+                    </Avatar>
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="body2"
+                      sx={{ cursor: 'pointer', fontWeight: 600 }}
+                      onClick={() => onOpen(u)}
+                    >
+                      {displayName(u)}
+                    </Typography>
+                    {patientSub ? (
+                      <Typography variant="caption" color="text.secondary">
+                        Paciente: {patientSub}
+                      </Typography>
+                    ) : null}
+                  </TableCell>
+                  <TableCell>{u.email_account || u.email || '—'}</TableCell>
+                  <TableCell>{u.mobile_number || '—'}</TableCell>
+                  <TableCell>{statusLabel(u)}</TableCell>
+                  <TableCell>{formatCreated(u)}</TableCell>
+                  <TableCell>
+                    {String(u.status) === 'Associado' ? (
+                      <Tooltip title="Enviar para triagem">
+                        <IconButton size="small" onClick={() => onSendTriage(u)} sx={{ color: GREEN }}>
+                          <LocalHospitalIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    ) : null}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+}

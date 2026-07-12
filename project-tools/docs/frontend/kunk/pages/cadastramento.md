@@ -1,6 +1,7 @@
 # Cadastramento (associados)
 
-> Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
+> Documentação funcional da página legada — base para o inventário.
+> **Spec de implementação OSS:** [../associados/README.md](../associados/README.md).
 > Fonte: `kunksoucannabis`.
 
 ## Identificação
@@ -9,55 +10,52 @@
 |---|---|
 | **Rota** | `/app/acolhimento/cadastramento` |
 | **Componente** | `Dash` |
-| **Arquivo legado** | `src/components/master/dash.jsx (+ table.jsx, UserModal, createAssociate, contract, charts)` |
-| **Permissões** | Administrador | Acolhimento | Produção |
+| **Arquivo legado** | `src/components/master/dash.jsx (+ table.jsx, UserModal, createAssociate, contract)` |
+| **Permissões** | Administrador | Acolhimento | Produção (via `role_pages`) |
 
 ## Descrição
 
-Página principal de gestão de associados: listagem, filtros de status, criação e modal completo de edição. Uma das **quatro páginas principais** do Kunk.
+Página principal de gestão de associados: listagem dos últimos cadastros, filtros de status do funil, criação e modal completo de edição. Uma das **quatro páginas principais** do Kunk. Também recebe deep links do **search global** (`?a=`).
 
 ## Funcionalidades
 
 - Listar associados (paginação ~60; query `?a=` para código)
-- Filtrar por status (Associado, termo, erros de cadastro, etc.)
-- Criar novo associado
-- Abrir UserModal: dados pessoais, documentos, receita, produtos, anotações
-- Gerar/enviar contrato (termo de responsabilidade)
-- Gráficos/resumo de cadastramento
-- Integração com fluxo de onboarding do app de cadastramento público
+- Filtrar / cards por status (fases OSS 1–5 + Associado)
+- Criar novo associado (e-mail)
+- Modal: dados, pacientes, prescritor, anotações, documentos, histórico
+- Termo de adesão (UI stub — módulo em desenvolvimento)
+- Enviar para triagem
+- Integração com funil do app de cadastramento público
 
 ## Integrações externas e serviços
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus Users / documents** | CRUD de associados e arquivos |
-| **DocuSeal** | `/api/docuseal/create-contract` via contract.jsx — a substituir por módulo nativo de termos no OSS |
-| **E-mail** | envio indireto via módulos do modal |
+| **users / users_files** | CRUD associados, pacientes, arquivos |
+| **Módulo termos** | Stub — sem DocuSeal nesta entrega |
+| **Search global** | [../search-global/README.md](../search-global/README.md) |
 
 ## Dependências de outras páginas / módulos
 
-- Triagem
-- Pedidos
-- Serviços
-- Carrinho
-- App cadastramento público
+- Triagem, Pedidos, Serviços
+- App cadastramento público ([`../../cadastramento/`](../../cadastramento/flow.md))
+- FileUpload / documentKinds
 
 ## Observações
 
-- Rota irmã `/app/associados` usa o mesmo Dash com `associatesTable` (lista completa limit=-1)
-- Domínio cannabis: receita médica, termo, status específicos da SouCannabis
+- Rota irmã `/app/associados` usa a mesma tela com limite alto
+- Aba Parceiro **não** portar; só Prescritor
+- Paciente ativo global **removido** do painel — seleção do beneficiário em Serviços
 
 ## Decisão open-source
 
-> Preencher na revisão de escopo.
-
 | Opção | Escolha |
 |---|---|
-| **Manter** | |
-| **Remover** | |
-| **Modificar** | |
-| **Notas** | Core associacional. DocuSeal → módulo termos nativo. Revisar campos/status SC-específicos. |
+| **Manter** | Lista, modal tabbed, filtros, deep link, criar associado |
+| **Remover** | Parceiro no modal, DocuSeal, Beeviral, Tornar/Remover Ativo |
+| **Modificar** | Fases 1–5; termo stub; beneficiário em serviços |
+| **Notas** | Spec completa em [associados/](../associados/README.md) |
 
 ## Status
 
-`documentado` — aguardando definição de escopo OSS.
+`spec pronta` — ver [associados/gaps.md](../associados/gaps.md).

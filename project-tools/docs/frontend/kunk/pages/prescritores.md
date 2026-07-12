@@ -1,57 +1,40 @@
-# Prescritores
+# Prescritores / Profissionais
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
 > Fonte: `kunksoucannabis`.
+> **Gestão OSS:** [`../servicos/admin.md`](../servicos/admin.md) · rota `/app/profissionais`.
 
 ## Identificação
 
 | Campo | Valor |
 |---|---|
-| **Rota** | `/app/prescritores` |
-| **Componente** | `PrescribersPage` |
-| **Arquivo legado** | `src/components/master/PrescribersPage.jsx` |
+| **Rota legada** | `/app/prescritores` |
+| **Rota OSS** | `/app/profissionais` |
+| **Componente legado** | `PrescribersPage` / `ProfessionalsAndPartners` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição
 
-Ranking e CRUD de prescritores (professionals), com pedidos e serviços vinculados.
+Mesma tabela `professionals`, dois papéis:
 
-## Funcionalidades
+- **Colaboradores** (`is_collaborator`) — atendimento da associação; aparecem em Serviços; agenda secundária Google.
+- **Prescritores** (`is_prescriber`) — emitem receitas usadas em pedidos; podem ser da associação ou cadastrados a partir de receita que o associado apresentou (sem contato com o médico).
 
-- Ranking paginado
-- CRUD de profissionais
-- Ver pedidos e serviços do prescritor
-- CreateRecipientModal → recebedor Pagar.me (split de pagamento)
+## Funcionalidades legadas
 
-## Integrações externas e serviços
-
-| Serviço | Uso nesta página |
-|---|---|
-| **Directus** | professionals ranking/CRUD; orders/services by professional |
-| **Pagar.me** | recipients / split |
-
-## Dependências de outras páginas / módulos
-
-- Serviços
-- Pedidos
-- Relatórios externos
-- Cupons
-
-## Observações
-
-- —
+- Ranking paginado / CRUD
+- Flag colaborador (“Mostrar em Serviços”)
+- CreateRecipientModal → Pagar.me (não portar)
 
 ## Decisão open-source
 
-> Preencher na revisão de escopo.
-
 | Opção | Escolha |
 |---|---|
-| **Manter** | |
-| **Remover** | |
-| **Modificar** | |
-| **Notas** | Core no domínio cannabis medicinal; Pagar.me recipients = módulo. |
+| **Manter** | Uma tabela; flags colaborador + prescritor; filtros claros na UI |
+| **Remover** | Ranking Pagar.me / CreateRecipientModal |
+| **Modificar** | Página **Profissionais** com chips Todos / Colaboradores / Prescritores / Ambos; agenda secundária no dialog |
+| **Notas** | [`../servicos/`](../servicos/README.md) |
 
 ## Status
 
-`documentado` — aguardando definição de escopo OSS.
+`especificado` — coberto pela spec de Serviços.

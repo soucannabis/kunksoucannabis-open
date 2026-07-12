@@ -1,56 +1,47 @@
 # Painel de análise institucional
 
-> Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
+> Documentação funcional da página legada — base para o Dashboard Analytics no Kunk open-source.
 > Fonte: `kunksoucannabis`.
 
 ## Identificação
 
 | Campo | Valor |
 |---|---|
-| **Rota** | `/app/painel-analise` |
-| **Componente** | `PainelAnaliseInstitucional → PainelAnalisePage (surface=painel)` |
+| **Rota legada** | `/app/painel-analise` |
+| **Componente legado** | `PainelAnaliseInstitucional → PainelAnalisePage (surface=painel)` |
 | **Arquivo legado** | `src/components/master/painelAnaliseInstitucional.jsx + painelAnalisePage.jsx + config/painelAnalise.layout.json` |
-| **Permissões** | Administrador | Acolhimento | Produção |
+| **Permissões** | Administrador \| Acolhimento \| Produção |
 
 ## Descrição
 
 Dashboard analítico institucional com KPIs de associados, serviços, pedidos e triagem.
 
-## Funcionalidades
+## Implementação OSS
 
-- Blocos KPI / gráficos / tabelas configuráveis via layout JSON
-- Filtros de período e abas
-- Embed/consulta Beeviral Analytics
-- Query analytics via Directus proxy
-
-## Integrações externas e serviços
-
-| Serviço | Uso nesta página |
+| Campo | Valor |
 |---|---|
-| **Directus analytics** | `/api/directus/analytics/items-query` |
-| **Beeviral Analytics** | API de participantes/campanhas |
-| **kunk-user maps** | mapeamento de operadores |
+| **Rota** | `/app/relatorios/dashboard` |
+| **Menu** | Relatórios → Dashboard |
+| **Spec** | [../analytics/README.md](../analytics/README.md) |
+| **Página** | `apps/kunk/src/pages/analytics/AnalyticsDashboardPage.jsx` |
+| **API** | `GET /api/v1/analytics/{associates,services,orders,reception}` |
 
-## Dependências de outras páginas / módulos
+## Funcionalidades (legado → OSS)
 
-- Beeviral Analytics
-- Dados de Users/Orders/Services/Reception
-
-## Observações
-
-- Engine genérico; layout de KPIs muito SC
+- Blocos KPI / gráficos / rankings — **mantidos** (layout declarativo + Recharts)
+- Filtros de período e abas — **mantidos** + filtros locais por bloco
+- Embed Beeviral Analytics — **removido**
+- Query via Directus proxy — **substituído** por agregação SQL no `kunk-api`
 
 ## Decisão open-source
 
-> Preencher na revisão de escopo.
-
 | Opção | Escolha |
 |---|---|
-| **Manter** | |
-| **Remover** | |
-| **Modificar** | |
-| **Notas** | Híbrido — engine genérico; layout SC. Beeviral embed = remover/opcional. |
+| **Manter** | KPIs/charts por domínio (associados, serviços, pedidos, triagem) |
+| **Modificar** | Agregação no backend; filtros por bloco; menu sob Relatórios |
+| **Remover** | Beeviral embed; Directus analytics proxy |
+| **Notas** | Ver [analytics/](../analytics/) |
 
 ## Status
 
-`documentado` — aguardando definição de escopo OSS.
+`implementado` — Dashboard Analytics OSS.

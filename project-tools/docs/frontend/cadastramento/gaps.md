@@ -130,9 +130,11 @@ Client e server validam; **server é a fonte de verdade** de `invalid_fields`.
 
 | Método | Path | Função |
 |---|---|---|
-| `POST /users/me/patients` | Cria paciente (`status=patient`, vínculos); ou primeiro save parcial |
+| `POST /users/me/patients` | Cria paciente (`status=patient`, `responsible_code`); seta `patient_user_code` no responsável (ponteiro do **funil**) |
 | `PATCH /users/me/patients/:id` | Persistência parcial do paciente |
 | `GET /users/me/patients` | Lista (0 ou 1 no funil típico) |
+
+Semântica de `patient_user_code` (funil vs `services.patient_user_code` no atendimento): [fields.md §3](./fields.md#semântica-canônica-de-patient_user_code-dois-contextos).
 
 Atualizar [`../../api/domain-routes.md`](../../api/domain-routes.md) na mesma entrega.
 

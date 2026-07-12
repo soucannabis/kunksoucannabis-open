@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import GlobalStyles from '@mui/joy/GlobalStyles';
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
@@ -19,6 +19,7 @@ import Groups2Icon from '@mui/icons-material/Groups2';
 import { useNavigate } from 'react-router-dom';
 import { useOperatorAuth } from '@kunk/auth-session';
 import { MENU_SECTIONS } from '../app/menuConfig.js';
+import { allowedPagesForRoles, filterMenuSections } from '../lib/rolePages.js';
 import { useKunkConfig } from '../config/KunkConfigProvider.jsx';
 import { closeSidebar } from './utils.js';
 
@@ -48,14 +49,18 @@ function Toggler({ open, renderToggle, children }) {
   );
 }
 
-export default function Sidebar({ collapsed, setCollapsed, onTagsModalOpen, isAdmin }) {
-  const { user, roles, logout } = useOperatorAuth();
+export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
+  const { user, roles, rolePages, logout } = useOperatorAuth();
   const { config } = useKunkConfig();
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(null);
   const sectionRefs = useRef({});
 
   const admin = isAdmin ?? roles.includes('Administrador');
+  const menuSections = useMemo(() => {
+    const allowed = allowedPagesForRoles(rolePages, roles);
+    return filterMenuSections(MENU_SECTIONS, allowed);
+  }, [rolePages, roles]);
   const menuText = config.menuText || '#ffffff';
   const menuBg = config.menuBg || 'var(--kunk-menu-bg)';
   const menuHoverBg = config.menuHoverBg || '#fff';
@@ -200,7 +205,7 @@ export default function Sidebar({ collapsed, setCollapsed, onTagsModalOpen, isAd
             '--ListItem-radius': (theme) => theme.vars.radius.sm,
           }}
         >
-          {MENU_SECTIONS.map((section) => {
+          {menuSections.map((section) => {
             const Icon = SECTION_ICONS[section.id] || GroupRoundedIcon;
             const items = section.items.filter((item) => !item.adminOnly || admin);
             return (
@@ -239,10 +244,6 @@ export default function Sidebar({ collapsed, setCollapsed, onTagsModalOpen, isAd
                             className="ListItemButton"
                             role="menuitem"
                             onClick={() => {
-                              if (item.action === 'tags') {
-                                onTagsModalOpen?.();
-                                return;
-                              }
                               if (item.path) navigate(item.path);
                             }}
                           >

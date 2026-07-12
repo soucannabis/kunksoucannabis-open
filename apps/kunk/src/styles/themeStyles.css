@@ -11,6 +11,7 @@
   --kunk-accent-hover: #684c68;
   --kunk-bg-image: none;
   --kunk-logo-size: 120px;
+  --kunk-sidebar-offset: 220px;
 }
 
 #root,

@@ -6,7 +6,12 @@ const fs = require('fs');
 const path = require('path');
 const { TARGET_TABLES, getCollection } = require('../../src/schema/collections');
 
-const NON_ITEMS_TABLES = new Set(['system_configs', 'system_activity', 'system_api_credentials']);
+const NON_ITEMS_TABLES = new Set([
+  'system_configs',
+  'system_activity',
+  'system_api_credentials',
+  'product_stock_movements',
+]);
 
 describe('collections.registry', () => {
   it('TARGET_TABLES matches items tables from target-schema.sql', () => {

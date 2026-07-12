@@ -1,6 +1,10 @@
 /** UI helpers for registration forms. */
 
 async function checkCiap(page, code) {
+  const addBtn = page.getByRole('button', { name: /Adicionar CIAP/i });
+  if (await addBtn.count()) {
+    await addBtn.first().click();
+  }
   const checkbox = page
     .locator('label.d-block')
     .filter({ hasText: code })

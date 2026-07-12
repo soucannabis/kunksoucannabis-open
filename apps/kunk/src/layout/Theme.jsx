@@ -1,12 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CssVarsProvider } from '@mui/joy/styles';
 import CssBaseline from '@mui/joy/CssBaseline';
 import Box from '@mui/joy/Box';
 import Button from '@mui/joy/Button';
 import Typography from '@mui/joy/Typography';
-import Modal from '@mui/joy/Modal';
-import ModalDialog from '@mui/joy/ModalDialog';
-import ModalClose from '@mui/joy/ModalClose';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useOperatorAuth } from '@kunk/auth-session';
 import Sidebar from './Sidebar.jsx';
@@ -14,6 +11,7 @@ import Header from './Header.jsx';
 import QuickNavMenu from './QuickNavMenu.jsx';
 import ThemeSettings from './ThemeSettings.jsx';
 import ActivityNotifications from '../components/ActivityNotifications.jsx';
+import GlobalAppSearch from '../components/search/GlobalAppSearch.jsx';
 import { pageTitleFromPath } from '../auth/roleRedirect.js';
 import '../styles/themeStyles.css';
 
@@ -21,8 +19,16 @@ export default function Theme() {
   const { roles } = useOperatorAuth();
   const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [tagsModalOpen, setTagsModalOpen] = useState(false);
   const title = pageTitleFromPath(location.pathname);
+  const sidebarOffset = sidebarCollapsed ? '60px' : '220px';
+
+  // Dialogs portal to body — expose offset so modals center in the content area.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--kunk-sidebar-offset', sidebarOffset);
+    return () => {
+      document.documentElement.style.removeProperty('--kunk-sidebar-offset');
+    };
+  }, [sidebarOffset]);
 
   return (
     <CssVarsProvider disableTransitionOnChange>
@@ -39,10 +45,10 @@ export default function Theme() {
         }}
       >
         <Header />
+        <GlobalAppSearch />
         <Sidebar
           collapsed={sidebarCollapsed}
           setCollapsed={setSidebarCollapsed}
-          onTagsModalOpen={() => setTagsModalOpen(true)}
           isAdmin={roles.includes('Administrador')}
         />
         <Box
@@ -64,7 +70,7 @@ export default function Theme() {
             minWidth: 0,
             height: '100dvh',
             gap: 1,
-            marginLeft: sidebarCollapsed ? '60px' : '220px',
+            marginLeft: sidebarOffset,
             transition: 'margin-left 0.3s',
           }}
         >
@@ -100,14 +106,6 @@ export default function Theme() {
           <Outlet />
         </Box>
       </Box>
-
-      <Modal open={tagsModalOpen} onClose={() => setTagsModalOpen(false)}>
-        <ModalDialog>
-          <ModalClose />
-          <Typography level="h4">Tags</Typography>
-          <Typography level="body-lg">Module under development</Typography>
-        </ModalDialog>
-      </Modal>
     </CssVarsProvider>
   );
 }

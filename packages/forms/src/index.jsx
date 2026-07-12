@@ -1,6 +1,19 @@
 import React, { useMemo, useState } from 'react';
 import PhoneInputImport from 'react-phone-input-2';
 import 'react-phone-input-2/lib/bootstrap.css';
+import {
+  CIAP2_OPTIONS as CIAP2_CATALOG,
+  normalizeCiapCodes,
+  resolveCiapCodes,
+} from './ciap2Catalog.js';
+
+export {
+  CIAP2_OPTIONS,
+  flattenCiapOptions,
+  normalizeCiapCodes,
+  resolveCiapCodes,
+  serializeCiapCodes,
+} from './ciap2Catalog.js';
 
 // CJS/ESM interop: Vite may nest default export as { default: Component }
 const PhoneInputLib = PhoneInputImport?.default || PhoneInputImport;
@@ -61,20 +74,6 @@ export const MARITAL_OPTIONS = ['Solteiro', 'Casado', 'União-Estável', 'Viúvo
 
 export const UF_OPTIONS = [
   'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
-];
-
-/** Minimal CIAP-2 sample; full catalog can be expanded from legacy CIAP2Select. */
-export const CIAP2_OPTIONS = [
-  { value: 'A01', label: 'Dor generalizada /múltipla', category: 'GERAL E INESPECÍFICO' },
-  { value: 'A04', label: 'Debilidade/cansaço geral/fadiga', category: 'GERAL E INESPECÍFICO' },
-  { value: 'P01', label: 'Sensação de ansiedade/nervosismo/tensão', category: 'PSICOLÓGICO' },
-  { value: 'P76', label: 'Perturbações depressivas', category: 'PSICOLÓGICO' },
-  { value: 'L01', label: 'Sinais/sintomas do pescoço', category: 'MUSCULOSQUELÉTICO' },
-  { value: 'L03', label: 'Sinais/sintomas da região lombar', category: 'MUSCULOSQUELÉTICO' },
-  { value: 'N01', label: 'Cefaleia', category: 'NEUROLÓGICO' },
-  { value: 'R05', label: 'Tosse', category: 'RESPIRATÓRIO' },
-  { value: 'D01', label: 'Dor abdominal generalizada/cólicas', category: 'DIGESTIVO' },
-  { value: 'T90', label: 'Diabetes não-insulino-dependente', category: 'ENDÓCRINO' },
 ];
 
 /** CPF with 000.000.000-00 mask; onChange receives digits only. */
@@ -164,39 +163,130 @@ export function GenderSelect({ value, onChange, name = 'gender', className = 'fo
   );
 }
 
+/**
+ * CIAP-2 multi-select (Bootstrap) — UX alinhada ao Kunk/cadastramento legado:
+ * chips selecionados + “Adicionar CIAP” + busca + categorias com checkboxes.
+ */
 export function Ciap2Select({ value = [], onChange, max = 10 }) {
   const [q, setQ] = useState('');
-  const selected = Array.isArray(value) ? value : [];
-  const filtered = useMemo(() => {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [openCat, setOpenCat] = useState(null);
+  const selected = normalizeCiapCodes(value);
+  const selectedItems = useMemo(() => resolveCiapCodes(selected), [selected]);
+
+  const filteredCategories = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return CIAP2_OPTIONS;
-    return CIAP2_OPTIONS.filter(
-      (o) => o.label.toLowerCase().includes(term) || o.value.toLowerCase().includes(term)
-    );
+    return CIAP2_CATALOG.map((cat) => ({
+      ...cat,
+      subcategories: (cat.subcategories || []).filter((sub) => {
+        if (!term) return true;
+        return (
+          String(sub.label || '').toLowerCase().includes(term) ||
+          String(sub.value || '').toLowerCase().includes(term) ||
+          String(cat.category || '').toLowerCase().includes(term)
+        );
+      }),
+    })).filter((cat) => cat.subcategories.length > 0);
   }, [q]);
 
+  function addCode(code) {
+    if (selected.includes(code) || selected.length >= max) return;
+    onChange([...selected, code]);
+  }
+
+  function removeCode(code) {
+    onChange(selected.filter((c) => c !== code));
+  }
+
   function toggle(code) {
-    if (selected.includes(code)) onChange(selected.filter((c) => c !== code));
-    else if (selected.length < max) onChange([...selected, code]);
+    if (selected.includes(code)) removeCode(code);
+    else addCode(code);
   }
 
   return (
-    <div>
-      <div className="text-white mb-1">{selected.length}/{max}</div>
-      <input className="form-control mb-2" placeholder="Buscar CIAP-2" value={q} onChange={(e) => setQ(e.target.value)} />
-      <div style={{ maxHeight: 220, overflow: 'auto', background: '#fff', borderRadius: 4, padding: 8 }}>
-        {filtered.map((o) => (
-          <label key={o.value} className="d-block">
-            <input type="checkbox" checked={selected.includes(o.value)} onChange={() => toggle(o.value)} />{' '}
-            {o.value} — {o.label}
-          </label>
+    <div className="kunk-ciap2">
+      <div className="d-flex flex-wrap gap-1 align-items-center mb-2">
+        {selectedItems.map((item) => (
+          <span
+            key={item.value}
+            className="badge text-bg-primary"
+            title={item.category || undefined}
+            style={{ fontWeight: 500 }}
+          >
+            {item.value} - {item.label}
+            <button
+              type="button"
+              className="btn-close btn-close-white ms-1"
+              aria-label={`Remover ${item.value}`}
+              style={{ fontSize: '0.55rem' }}
+              onClick={() => removeCode(item.value)}
+            />
+          </span>
         ))}
+        {selected.length < max && !pickerOpen ? (
+          <button type="button" className="btn btn-sm btn-success" onClick={() => setPickerOpen(true)}>
+            + Adicionar CIAP
+          </button>
+        ) : null}
       </div>
+      <div className="text-muted small mb-1">
+        {selected.length}/{max} motivos
+      </div>
+      {pickerOpen ? (
+        <div className="border rounded p-2 bg-white">
+          <label className="form-label">Pesquise pelo motivo do tratamento:</label>
+          <input
+            className="form-control mb-2"
+            placeholder="Motivo do tratamento"
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setOpenCat('all');
+            }}
+          />
+          <div className="fw-semibold text-center mb-2">Selecione as opções abaixo</div>
+          <div style={{ maxHeight: 280, overflow: 'auto' }}>
+            {filteredCategories.map((cat, index) => {
+              const catKey = `cat-${index}`;
+              const expanded = openCat === 'all' || openCat === catKey || Boolean(q.trim());
+              return (
+                <div key={cat.category} className="mb-2 border-bottom pb-1">
+                  <button
+                    type="button"
+                    className="btn btn-link text-decoration-none p-0 fw-semibold text-start w-100"
+                    onClick={() => setOpenCat((prev) => (prev === catKey ? null : catKey))}
+                  >
+                    {cat.category}
+                  </button>
+                  {expanded ? (
+                    <div className="ps-1 mt-1">
+                      {cat.subcategories.map((sub) => (
+                        <label key={sub.value} className="d-block">
+                          <input
+                            type="checkbox"
+                            checked={selected.includes(sub.value)}
+                            disabled={!selected.includes(sub.value) && selected.length >= max}
+                            onChange={() => toggle(sub.value)}
+                          />{' '}
+                          {sub.value} — {sub.label}
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+          <button type="button" className="btn btn-sm btn-outline-secondary mt-2" onClick={() => setPickerOpen(false)}>
+            Fechar seletor
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-export function validateAssociateForm(form) {
+export function validateAssociateForm(form, { ciap2Enabled = true } = {}) {
   const invalid = [];
   const required = [
     'responsible_type', 'associate_name', 'associate_last_name', 'associate_birth_date',
@@ -207,8 +297,11 @@ export function validateAssociateForm(form) {
   for (const key of required) {
     if (form[key] === undefined || form[key] === null || String(form[key]).trim() === '') invalid.push(key);
   }
-  if (!Array.isArray(form.ciap_codes) || form.ciap_codes.length < 1) invalid.push('ciap_codes');
-  if (Array.isArray(form.ciap_codes) && form.ciap_codes.length > 10) invalid.push('ciap_codes');
+  if (ciap2Enabled) {
+    const codes = normalizeCiapCodes(form.ciap_codes);
+    if (codes.length < 1) invalid.push('ciap_codes');
+    if (codes.length > 10) invalid.push('ciap_codes');
+  }
   if (form.associate_cpf && !isValidCpf(form.associate_cpf)) invalid.push('associate_cpf');
   if (form.cep && !isValidCep(form.cep)) invalid.push('cep');
   if (form.mobile_number && !isValidPhoneBr(form.mobile_number)) invalid.push('mobile_number');

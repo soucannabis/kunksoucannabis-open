@@ -50,7 +50,7 @@ Detalhes em [authentication.md](./authentication.md).
 
 Fonte: [`../directus/target-schema/README.md`](../directus/target-schema/README.md) e [`../../sql/target-schema.sql`](../../sql/target-schema.sql).
 
-`users`, `system_users`, `orders`, `orders_files`, `partners`, `products`, `professionals`, `reception`, `reports`, `services`, `services_files`, `tags`, `users_api`, `users_files`, `files`
+`users`, `system_users`, `orders`, `orders_files`, `partners`, `institutional_clients`, `products`, `professionals`, `reception`, `reports`, `services`, `services_files`, `tags`, `users_api`, `users_files`, `files`
 
 ## Relação com o manifesto
 

@@ -78,6 +78,27 @@ function assertShipFrom(shipFrom) {
   }
 }
 
+/** Remetente completo exigido para etiqueta Loggi (nome, telefone, documento). */
+function assertShipFromForLabel(shipFrom) {
+  assertShipFrom(shipFrom);
+  const missing = [];
+  if (!String(shipFrom.name || '').trim()) missing.push('store.ship_from.name');
+  if (!String(shipFrom.phone || shipFrom.phoneNumber || '').replace(/\D/g, '')) {
+    missing.push('store.ship_from.phone');
+  }
+  if (!String(shipFrom.document || shipFrom.federalTaxId || shipFrom.cnpj || '').replace(/\D/g, '')) {
+    missing.push('store.ship_from.document');
+  }
+  if (missing.length) {
+    throw new AppError(
+      400,
+      'CONFIG_INCOMPLETE',
+      'Remetente incompleto para etiqueta Loggi (nome, telefone e CPF/CNPJ). Ajuste em Serviços externos → Dados de envio.',
+      { missing }
+    );
+  }
+}
+
 function assertPackage(pkg) {
   if (!pkg || typeof pkg !== 'object') {
     throw new AppError(400, 'CONFIG_INCOMPLETE', 'store.freight.package não configurado', {
@@ -124,49 +145,117 @@ function normalizePackage(pkg) {
   };
 }
 
-function shipFromToLoggi(shipFrom) {
-  const line1 = [shipFrom.street, shipFrom.number, shipFrom.neighborhood]
+function onlyDigits(v) {
+  return String(v || '').replace(/\D/g, '');
+}
+
+/** Telefone Loggi: DDI 55 + DDD + número (legado). */
+function toLoggiPhone(phone) {
+  let d = onlyDigits(phone);
+  if (!d) return '';
+  if (d.length === 10 || d.length === 11) d = `55${d}`;
+  return d;
+}
+
+/**
+ * SISUs homologados (Sales Engineering Loggi).
+ * Preferência: system_configs → LOGGI_EXTERNAL_SERVICE_IDS (csv).
+ */
+function resolveLoggiExternalServiceIds(cfg) {
+  const fromCfg = Array.isArray(cfg?.loggi_external_service_ids)
+    ? cfg.loggi_external_service_ids
+    : [];
+  const cleaned = fromCfg.map((s) => String(s || '').trim()).filter(Boolean);
+  if (cleaned.length) return cleaned;
+  return String(process.env.LOGGI_EXTERNAL_SERVICE_IDS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function pickLoggiExternalServiceId(...candidates) {
+  for (const c of candidates) {
+    const s = String(c || '').trim();
+    if (s) return s;
+  }
+  return null;
+}
+
+function buildLoggiLineAddress(addr) {
+  const line1 = [addr.street, addr.number || addr.street_number, addr.neighborhood]
     .map((p) => String(p || '').trim())
     .filter(Boolean)
     .join(' - ');
   return {
-    lines: {
-      addressLine1: line1,
-      addressLine2: String(shipFrom.complement || '').trim(),
-      postalCode: String(shipFrom.cep || '').replace(/\D/g, ''),
-      city: String(shipFrom.city || '').trim(),
-      state: String(shipFrom.state || '').trim(),
-      country: 'Brasil',
+    addressLine1: line1,
+    addressLine2: String(addr.complement || '').trim(),
+    postalCode: onlyDigits(addr.cep || addr.postal_code),
+    city: String(addr.city || '').trim(),
+    state: String(addr.state || '').trim(),
+    country: 'Brasil',
+  };
+}
+
+/** Formato Loggi para cotação (`/quotations`) — só `lines`. */
+function shipFromToLoggi(shipFrom) {
+  return { lines: buildLoggiLineAddress(shipFrom || {}) };
+}
+
+function addressToShipTo(address) {
+  return { lines: buildLoggiLineAddress(address || {}) };
+}
+
+/**
+ * Formato Loggi para etiqueta (`/async-shipments`).
+ * Exige name, phoneNumber, federalTaxId e address.lineAddress.
+ */
+function personToLoggiShipment({
+  name,
+  phone,
+  document,
+  email,
+  address,
+  instructions = '',
+}) {
+  return {
+    name: String(name || '').trim() || 'Destinatário',
+    phoneNumber: toLoggiPhone(phone),
+    federalTaxId: onlyDigits(document),
+    ...(email ? { email: String(email).trim() } : {}),
+    address: {
+      instructions: String(instructions || '').trim() || undefined,
+      lineAddress: buildLoggiLineAddress(address || {}),
     },
   };
 }
 
-function addressToShipTo(address) {
-  const line1 = [address.street, address.number, address.neighborhood]
-    .map((p) => String(p || '').trim())
-    .filter(Boolean)
-    .join(' - ');
-  return {
-    lines: {
-      addressLine1: line1,
-      addressLine2: String(address.complement || '').trim(),
-      postalCode: String(address.cep || '').replace(/\D/g, ''),
-      city: String(address.city || '').trim(),
-      state: String(address.state || '').trim(),
-      country: 'Brasil',
-    },
-  };
+function shipFromToLoggiShipment(shipFrom) {
+  return personToLoggiShipment({
+    name: shipFrom.name || shipFrom.company_name,
+    phone: shipFrom.phone || shipFrom.phoneNumber,
+    document: shipFrom.document || shipFrom.federalTaxId || shipFrom.cnpj || shipFrom.cpf,
+    email: shipFrom.email,
+    address: shipFrom,
+    instructions: shipFrom.instructions || 'Remetente',
+  });
 }
 
 module.exports = {
   getStoreFreightConfig,
   getModuleFreightFlags,
   assertShipFrom,
+  assertShipFromForLabel,
   assertPackage,
   assertContentDeclaration,
   normalizePackage,
   shipFromToLoggi,
   addressToShipTo,
+  personToLoggiShipment,
+  shipFromToLoggiShipment,
+  buildLoggiLineAddress,
+  resolveLoggiExternalServiceIds,
+  pickLoggiExternalServiceId,
+  toLoggiPhone,
   parseJson,
   asBool,
 };

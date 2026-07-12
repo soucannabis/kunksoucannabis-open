@@ -581,3 +581,112 @@ table.data th { color: var(--admin-muted); font-weight: 600; }
   .table-toolbar { flex-direction: column; align-items: stretch; }
   .table-toolbar .btn-icon { align-self: flex-end; }
 }
+
+/* Melhor Envio / external services */
+.cred-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  padding: 0.55rem 0.7rem;
+  background: #121812;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  min-height: 2.4rem;
+}
+.cred-value-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+  word-break: break-all;
+  flex: 1;
+}
+.cred-edit-link {
+  background: none;
+  border: none;
+  color: var(--admin-accent);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+.cred-edit-link:hover { filter: brightness(1.1); }
+
+.me-prod-block {
+  margin-top: 1.75rem;
+  padding: 1.25rem 1.35rem;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background:
+    linear-gradient(145deg, rgba(255, 214, 102, 0.08), transparent 55%),
+    #171d18;
+}
+.me-prod-block.is-production {
+  background:
+    linear-gradient(145deg, rgba(165, 214, 167, 0.1), transparent 55%),
+    #171d18;
+}
+.me-prod-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--admin-muted);
+}
+.me-prod-title {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+.me-steps {
+  list-style: none;
+  margin: 0 0 1.15rem;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+.me-step {
+  display: grid;
+  grid-template-columns: 1.75rem 1fr;
+  gap: 0.7rem;
+  align-items: start;
+}
+.me-step-num {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: rgba(255, 214, 102, 0.18);
+  color: var(--admin-accent);
+}
+.me-step-body {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--admin-text);
+}
+.me-step-body a { color: var(--admin-accent); }
+.me-env-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(165, 214, 167, 0.15);
+  color: #a5d6a7;
+}
+.me-env-pill.is-production {
+  background: rgba(255, 214, 102, 0.18);
+  color: var(--admin-accent);
+}
+.me-oauth-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+}

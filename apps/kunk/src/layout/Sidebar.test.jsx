@@ -15,7 +15,7 @@ vi.mock('@kunk/auth-session', () => ({
 function renderSidebar(props = {}) {
   return render(
     <MemoryRouter>
-      <Sidebar collapsed={false} setCollapsed={() => {}} onTagsModalOpen={() => {}} isAdmin {...props} />
+      <Sidebar collapsed={false} setCollapsed={() => {}} isAdmin {...props} />
     </MemoryRouter>
   );
 }
@@ -26,14 +26,16 @@ describe('Sidebar', () => {
     expect(screen.getByText('Kunk SouCannabis')).toBeInTheDocument();
     expect(screen.getByText('Acolhimento')).toBeInTheDocument();
     expect(screen.getByText('Loja')).toBeInTheDocument();
-    expect(screen.getByText('Parceiros e Prescritores')).toBeInTheDocument();
+    expect(screen.getAllByText('Profissionais').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Relatórios')).toBeInTheDocument();
+    expect(screen.getByText('Sistema')).toBeInTheDocument();
+    expect(screen.getByText('Tags')).toBeInTheDocument();
   });
 
   it('does not render removed section labels', () => {
     renderSidebar();
-    expect(screen.queryByText('Dashboard')).not.toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.queryByText('Serviço Social')).not.toBeInTheDocument();
-    expect(screen.queryByText('Relatórios')).not.toBeInTheDocument();
     expect(screen.queryByText('Usuários')).not.toBeInTheDocument();
     expect(screen.queryByText('Painel geral')).not.toBeInTheDocument();
     expect(screen.queryByText('Beeviral Analytics')).not.toBeInTheDocument();

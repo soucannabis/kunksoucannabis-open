@@ -22,3 +22,37 @@ export async function testExternalService(api, service) {
   const res = await api.testExternalService(service);
   return res.data;
 }
+
+export async function startMelhorEnvioOAuth(api) {
+  const res = await api.melhorEnvioOAuthAuthorize();
+  const url = res.data?.url;
+  if (!url) throw new Error('URL OAuth Melhor Envio ausente');
+  return url;
+}
+
+export async function getMelhorEnvioOAuthStatus(api) {
+  const res = await api.melhorEnvioOAuthStatus();
+  return res.data;
+}
+
+export async function activateMelhorEnvioProduction(api) {
+  const res = await api.activateMelhorEnvioProduction();
+  return res.data;
+}
+
+export async function activateMelhorEnvioSandbox(api) {
+  const res = await api.activateMelhorEnvioSandbox();
+  return res.data;
+}
+
+export async function startGoogleCalendarOAuth(api) {
+  const res = await api.googleCalendarOAuthAuthorizeUrl();
+  const url = res.data?.url;
+  if (!url) throw new Error('URL OAuth Google Calendar ausente');
+  return url;
+}
+
+export async function getGoogleCalendarOAuthStatus(api) {
+  const res = await api.googleCalendarOAuthStatus();
+  return res.data;
+}

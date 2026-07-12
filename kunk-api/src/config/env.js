@@ -43,6 +43,7 @@ const env = {
     scp: bool(process.env.MODULE_SCP_ENABLED),
     nibo: bool(process.env.MODULE_NIBO_ENABLED),
     geoapify: bool(process.env.MODULE_GEOAPIFY_ENABLED),
+    ciap2: bool(process.env.MODULE_CIAP2_ENABLED, true),
   },
 };
 

@@ -51,7 +51,12 @@ describe('contract/api-structure', () => {
     );
     const fromSql = [...sql.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]);
     // Managed outside /items whitelist (dedicated routes)
-    const NON_ITEMS_TABLES = new Set(['system_configs', 'system_activity', 'system_api_credentials']);
+    const NON_ITEMS_TABLES = new Set([
+      'system_configs',
+      'system_activity',
+      'system_api_credentials',
+      'product_stock_movements',
+    ]);
     const fromSqlItems = fromSql.filter((t) => !NON_ITEMS_TABLES.has(t));
     assert.deepEqual([...COLLECTIONS].sort(), [...fromSqlItems].sort());
     assert.deepEqual(COLLECTIONS, TARGET_TABLES);

@@ -14,15 +14,15 @@
 
 ## Descrição
 
-Layout operacional do Kunk: sidebar, header, changelog, busca global, modal de tags e rotas internas. **O novo Kunk deve copiar esta estrutura de theme sem alterações de layout.**
+Layout operacional do Kunk: sidebar, header, changelog, busca global e rotas internas. **O novo Kunk deve copiar esta estrutura de theme sem alterações de layout.**
 
 ## Funcionalidades
 
 - Sidebar com menus (Acolhimento, Loja, Serviço Social, Relatórios, Parceiros/Prescritores, Usuários, Dashboards de análise)
-- Header com busca global, tema, usuário
+- Header / FAB com **busca global** — spec: [../search-global/README.md](../search-global/README.md)
 - QuickNav (atalhos Triagem / Pedidos / Serviços)
 - Modal de acknowledgment de changelog
-- Modal de Tags
+- Página **Tags** em Sistema (`/app/tags`) — CRUD do catálogo
 - Redirect inicial por papel: Produção→pedidos; Acolhimento→triagem; Admin→cadastramento
 - Lazy-load das páginas internas
 

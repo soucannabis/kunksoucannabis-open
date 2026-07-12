@@ -70,9 +70,12 @@ Atualizar [`../structure.md`](../structure.md) e [`../README.md`](../README.md) 
 | Tabela | `system_users` |
 | Roles | Array em `permissions`; catálogo fixo alinhado a `authorization.md` / `rbac.js` |
 | Matriz RBAC collection×role | **Não** editável no UI no MVP (código da API) |
+| **Páginas do Kunk por role** | **Criar** — `kunk.role_pages`; default `"*"` (todas) para todas as roles staff; UI em `/usuarios/paginas` |
 | Último admin | Server bloqueia remoção/desativação do último `Administrador` (`LAST_ADMIN`) |
 | Senha | Mín. 8; bcrypt; campo write-only na UI |
-| Delete | MVP: permitir DELETE com confirmação **ou** só `status` inativo — preferir **desativar** + delete opcional |
+| Delete | MVP: preferir **desativar** + delete opcional |
+
+Spec: [`../kunk/servicos/admin.md`](../kunk/servicos/admin.md#3-páginas-do-kunk-por-role).
 
 ### 6. Segurança
 
@@ -95,6 +98,7 @@ Atualizar [`../structure.md`](../structure.md) e [`../README.md`](../README.md) 
 - [ ] Browser CRUD de collections + FKs + arquivos
 - [ ] UI `system_configs` por sistema
 - [ ] CRUD operadores + editor de roles
+- [ ] **Páginas do Kunk por role** (`role_pages`, default allow-all)
 - [ ] Docker compose / script `dev:admin` na raiz (padrão registration)
 - [ ] CORS/proxy apontando para `kunk-api`
 

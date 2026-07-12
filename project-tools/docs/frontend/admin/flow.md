@@ -43,6 +43,8 @@ Operadores com só `Acolhimento`, `Produção`, etc. usam o **painel** (`app.`),
 | `/usuarios` | Lista de operadores (`system_users`) | admin |
 | `/usuarios/novo` | Criar operador | admin |
 | `/usuarios/:id` | Editar / permissões / status | admin |
+| `/usuarios/paginas` | Páginas do Kunk permitidas por role (default: todas; role `Profissional` → só relatório de serviços) | admin |
+| `/configs/services` ou `/servicos/tipos` | Tipos + taxas + switch “descontar doação” + preço padrão | admin |
 
 ---
 
@@ -192,7 +194,21 @@ Campo `system_users.permissions` — JSON array de roles, alinhado a [`../../api
 
 UI: multi-select / chips das roles conhecidas. Pelo menos um operador `Administrador` deve permanecer ativo (guard no server ao remover a própria role ou ao deletar o último admin).
 
-Matriz collection×role: referência em authorization.md; o admin **não** precisa editar a matriz no MVP (código/config da API). Só atribui roles aos usuários.
+Matriz collection×role: referência em authorization.md; o admin **não** edita a matriz CRUD no MVP (código da API). Só atribui roles aos usuários.
+
+### Páginas do painel Kunk por role (**criar**)
+
+Hoje **não existe** UI nem config role → páginas. Staff vê o menu inteiro.
+
+| Item | Decisão |
+|---|---|
+| Onde | Admin `/usuarios/paginas` (ou aba em Usuários) |
+| Config | `system_configs` `system=kunk` `key=role_pages` |
+| Default | `"*"` (todas as páginas) para cada role staff |
+| Consumo | `apps/kunk` filtra menu + rotas |
+| Spec | [`../kunk/servicos/admin.md`](../kunk/servicos/admin.md#3-páginas-do-kunk-por-role) |
+
+Produção, Acolhimento e Administrador partem com acesso a **todas** as páginas (incl. Serviços), até o admin restringir.
 
 ---
 

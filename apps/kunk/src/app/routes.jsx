@@ -12,8 +12,11 @@ const InstitutionalClientsPage = lazy(() => import('../pages/reception/Instituti
 const OrdersPage = lazy(() => import('../pages/store/OrdersPage.jsx'));
 const CartPage = lazy(() => import('../pages/store/CartPage.jsx'));
 const ProductsPage = lazy(() => import('../pages/store/ProductsPage.jsx'));
-const PrescribersPage = lazy(() => import('../pages/PrescribersPage.jsx'));
+const ProfessionalsPage = lazy(() => import('../pages/ProfessionalsPage.jsx'));
 const SystemHistoryPage = lazy(() => import('../pages/SystemHistoryPage.jsx'));
+const TagsPage = lazy(() => import('../pages/TagsPage.jsx'));
+const ServicesReportPage = lazy(() => import('../pages/ServicesReportPage.jsx'));
+const AnalyticsDashboardPage = lazy(() => import('../pages/analytics/AnalyticsDashboardPage.jsx'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage.jsx'));
 
 /** Flat list of app routes for tests and docs (path = Portuguese segment under /app). */
@@ -29,8 +32,12 @@ export const APP_ROUTE_DEFS = [
   { path: 'loja/novo-pedido', fullPath: PATHS.newOrder, element: 'CartPage' },
   { path: 'loja/pedidos', fullPath: PATHS.orders, element: 'OrdersPage' },
   { path: 'loja/produtos', fullPath: PATHS.products, element: 'ProductsPage' },
-  { path: 'prescritores', fullPath: PATHS.prescribers, element: 'PrescribersPage' },
+  { path: 'profissionais', fullPath: PATHS.professionals, element: 'ProfessionalsPage' },
+  { path: 'prescritores', fullPath: PATHS.prescribers, element: 'redirect' },
+  { path: 'relatorios/servicos', fullPath: PATHS.servicesReport, element: 'ServicesReportPage' },
+  { path: 'relatorios/dashboard', fullPath: PATHS.analyticsDashboard, element: 'AnalyticsDashboardPage' },
   { path: 'historico', fullPath: PATHS.systemHistory, element: 'SystemHistoryPage' },
+  { path: 'tags', fullPath: PATHS.tags, element: 'TagsPage' },
 ];
 
 export function AppIndexRedirect({ roles }) {
@@ -55,8 +62,12 @@ export function buildAppRoutes({ roles }) {
       <Route path="loja/novo-pedido" element={<CartPage />} />
       <Route path="loja/pedidos" element={<OrdersPage />} />
       <Route path="loja/produtos" element={<ProductsPage />} />
-      <Route path="prescritores" element={<PrescribersPage />} />
+      <Route path="profissionais" element={<ProfessionalsPage />} />
+      <Route path="prescritores" element={<Navigate to={PATHS.professionals} replace />} />
+      <Route path="relatorios/servicos" element={<ServicesReportPage mode="staff" />} />
+      <Route path="relatorios/dashboard" element={<AnalyticsDashboardPage />} />
       <Route path="historico" element={<SystemHistoryPage />} />
+      <Route path="tags" element={<TagsPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Route>
   );

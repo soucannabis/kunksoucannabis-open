@@ -41,7 +41,7 @@ const ORDER_STATUSES = [
   'Aguardando pagamento', 'Pagamento concluído', 'Em produção', 'Produção Finalizada',
   'Adicionado no sistema', 'Enviado', 'Entregue', 'Cancelado',
 ];
-const SERVICE_STATUSES = ['pending', 'confirmed', 'completed', 'canceled'];
+const SERVICE_STATUSES = ['Aguardando Pagamento', 'Pagamento Concluído'];
 /** Alinhado a triage.statuses OSS (`waiting` / `done`). */
 const RECEPTION_STATUSES = ['waiting', 'waiting', 'waiting', 'done', 'waiting'];
 const CIAP = ['A98', 'P76', 'L18', 'N01', 'R74', 'T90', 'K86'];
@@ -278,7 +278,7 @@ async function buildDataset(passwordHash) {
       date_created: daysAgo(45 - i),
       name: first,
       last_name: last,
-      type: i % 3 === 0 ? 'physician' : 'therapist',
+      type: i % 3 === 0 ? 'medic' : 'therapist',
       services_description: 'Atendimento clínico demo Kunk OSS',
       phone: fakePhone(300 + i),
       state,
@@ -466,7 +466,7 @@ async function buildDataset(passwordHash) {
       carrier_order_code: shipped ? `CARRIER-${7000 + i}` : `CARRIER-PENDING-${7000 + i}`,
       payment_code: paid ? `PAY-${8000 + i}` : `PAY-PENDING-${8000 + i}`,
       order_notes: 'Observação interna fictícia do pedido.',
-      tags: [{ tag: 'demo' }, ...(i % 3 === 0 ? [{ tag: 'urgente' }] : [])],
+      tags: ['demo', ...(i % 3 === 0 ? ['urgente'] : [])],
       delivery_notes: shipped ? 'Entregar em horário comercial (demo).' : 'Aguardando despacho.',
       address: user.delivery_address,
       whatsapp_message: 'Mensagem WhatsApp fictícia do pedido demo.',
@@ -504,11 +504,11 @@ async function buildDataset(passwordHash) {
       associate_user_code: user.user_code,
       associate_email: user.email,
       professional_name: `${pro.name} ${pro.last_name}`,
-      event_link: `https://meet.demo.kunk.local/s/${i + 1}`,
+      event_link: null,
       consultation_date: daysAgo(20 - (i % 15)),
       payment_link: `https://pay.demo.kunk.local/s/${i + 1}`,
-      event_id: `evt-demo-${i + 1}`,
-      price_paid: status === 'completed' || status === 'confirmed' ? price : 0,
+      event_id: null,
+      price_paid: status === 'Pagamento Concluído' ? price : 0,
       donation: i % 5 === 0 ? 30 : 0,
       booking_group_code: uuid(),
       patient_name: user.fullname,
@@ -522,7 +522,7 @@ async function buildDataset(passwordHash) {
       payment_info: {
         demo: true,
         gateway: 'demo-gateway',
-        paid: status === 'completed' || status === 'confirmed',
+        paid: status === 'Pagamento Concluído',
       },
     };
   });
@@ -546,7 +546,8 @@ async function buildDataset(passwordHash) {
       chat_id: `chat-demo-${i + 1}`,
       status,
       associate_name: i % 3 === 0 ? user.fullname : `${first} ${last}`,
-      associate_code: i % 3 === 0 ? String(user.user_code) : `LEAD-${i + 1}`,
+      // associate_code só quando vinculado a um users.user_code real (nunca LEAD-*)
+      associate_code: i % 3 === 0 ? String(user.user_code) : null,
       date_updated: daysAgo(10 - (i % 8)),
       avatar_url: `https://cdn.demo.kunk.local/avatars/reception-${i + 1}.png`,
       patient_name: i % 2 === 0 ? `${first} ${last}` : user.fullname,
@@ -620,11 +621,25 @@ async function buildDataset(passwordHash) {
     },
   ];
 
+  const icFixturePath = path.join(FIXTURES_DIR, 'institutional_clients.json');
+  const institutional_clients = (
+    fs.existsSync(icFixturePath)
+      ? JSON.parse(fs.readFileSync(icFixturePath, 'utf8'))
+      : []
+  )
+    .slice(0, counts.institutional_clients || 10)
+    .map((row, i) => ({
+      ...row,
+      date_created: row.date_created || daysAgo(20 - i),
+      date_updated: row.date_updated || daysAgo(Math.max(0, 5 - i)),
+    }));
+
   return {
     files,
     system_users,
     users,
     partners,
+    institutional_clients,
     professionals,
     products,
     tags,
@@ -648,7 +663,8 @@ async function truncateAll(client) {
   await client.query(`
     TRUNCATE TABLE
       orders_files, services_files, users_files,
-      orders, services, reception, reports, tags, products, partners, professionals,
+      orders, services, reception, reports, tags, products, partners, institutional_clients,
+      professionals,
       users, system_users, users_api, files
     RESTART IDENTITY CASCADE
   `);
@@ -697,6 +713,11 @@ async function seedDatabase(dataset, { truncate }) {
       await insertObject(client, 'partners', row);
     }
     console.log(`partners: ${dataset.partners.length}`);
+
+    for (const row of dataset.institutional_clients || []) {
+      await insertObject(client, 'institutional_clients', row);
+    }
+    console.log(`institutional_clients: ${(dataset.institutional_clients || []).length}`);
 
     for (const row of dataset.professionals) {
       await insertObject(client, 'professionals', row);
@@ -806,6 +827,7 @@ async function seedDatabase(dataset, { truncate }) {
       SELECT 'users' AS t, COUNT(*)::int AS c FROM users
       UNION ALL SELECT 'orders', COUNT(*)::int FROM orders
       UNION ALL SELECT 'partners', COUNT(*)::int FROM partners
+      UNION ALL SELECT 'institutional_clients', COUNT(*)::int FROM institutional_clients
       UNION ALL SELECT 'professionals', COUNT(*)::int FROM professionals
       UNION ALL SELECT 'products', COUNT(*)::int FROM products
       UNION ALL SELECT 'services', COUNT(*)::int FROM services

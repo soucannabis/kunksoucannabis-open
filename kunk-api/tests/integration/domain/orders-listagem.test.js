@@ -10,11 +10,25 @@ describe('domain/orders listagem', () => {
   let app;
   let cookie;
   let orderId;
+  let productSku;
 
   before(async () => {
     const session = await loginAsAdmin();
     app = session.app;
     cookie = session.cookie;
+
+    productSku = `T1-${uuidv4().slice(0, 8)}`;
+    const product = await request(app)
+      .post('/api/v1/items/products')
+      .set('Cookie', cookie)
+      .send({
+        status: 'published',
+        name: 'Item Listagem',
+        sku: productSku,
+        price: 10,
+        amount: 100,
+      });
+    assert.equal(product.status, 201, JSON.stringify(product.body));
 
     const created = await request(app)
       .post('/api/v1/orders')
@@ -23,12 +37,28 @@ describe('domain/orders listagem', () => {
         associate_name: 'Teste Pedidos',
         user_code: uuidv4(),
         status: 'Aguardando pagamento',
-        items: [{ code: 'T1', name: 'Item', amount: 10, quantity: 1 }],
+        items: [
+          {
+            product_id: product.body.data.id,
+            code: productSku,
+            name: 'Item',
+            amount: 10,
+            quantity: 1,
+          },
+        ],
         total: 10,
         delivery_price: 0,
         discount: 0,
         donation: 0,
         tags: ['facet-tag'],
+        address: {
+          street: 'Rua Listagem',
+          street_number: '1',
+          neighborhood: 'Centro',
+          city: 'São Paulo',
+          state: 'SP',
+          cep: '01001000',
+        },
       });
     assert.equal(created.status, 201, JSON.stringify(created.body));
     orderId = created.body.data.id;

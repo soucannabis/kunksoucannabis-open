@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { createApiClient } from '@kunk/api-client';
+import { useErrorModal } from '../components/errors/ErrorModalProvider.jsx';
 import { getKunkPublicConfig } from '@kunk/config';
 import { PATHS } from '../app/menuConfig.js';
 
@@ -71,13 +72,12 @@ export default function SystemHistoryPage() {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { showError } = useErrorModal();
   const [action, setAction] = useState('');
   const [actor, setActor] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       const params = new URLSearchParams({ limit: '100', offset: '0' });
       if (action) params.set('action', action);
@@ -86,12 +86,12 @@ export default function SystemHistoryPage() {
       setRows(res.data || []);
       setTotal(res.meta?.filter_count ?? (res.data || []).length);
     } catch (err) {
-      setError(err.message || 'Falha ao carregar histórico');
+      showError(err.message || 'Falha ao carregar histórico');
       setRows([]);
     } finally {
       setLoading(false);
     }
-  }, [api, action, actor]);
+  }, [api, action, actor, showError]);
 
   useEffect(() => {
     load();
@@ -139,10 +139,6 @@ export default function SystemHistoryPage() {
             {total} registro{total === 1 ? '' : 's'}
           </Typography>
         </Paper>
-
-        {error ? (
-          <Typography sx={{ color: '#b71c1c', mb: 1 }}>{error}</Typography>
-        ) : null}
 
         <TableContainer
           component={Paper}

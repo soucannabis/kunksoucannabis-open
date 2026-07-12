@@ -56,7 +56,21 @@ async function quote({ address, cepTo }) {
     );
 
   if (!options.length) {
-    throw new AppError(400, 'FREIGHT_NO_QUOTE', 'Nenhuma cotação Melhor Envio para este CEP');
+    const carrierErrors = [
+      ...new Set(
+        list
+          .map((row) => row.error)
+          .filter(Boolean)
+          .map((msg) => String(msg).trim())
+      ),
+    ];
+    const hint = carrierErrors.length
+      ? carrierErrors.slice(0, 3).join(' · ')
+      : 'Nenhuma cotação Melhor Envio para este CEP';
+    throw new AppError(400, 'FREIGHT_NO_QUOTE', hint, {
+      cep: to,
+      carrier_errors: carrierErrors,
+    });
   }
   return { options, raw: response };
 }

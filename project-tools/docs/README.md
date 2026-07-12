@@ -30,7 +30,7 @@ A documentação de frontend descreve a estrutura compartilhada **e** cada app. 
 
 1. [`frontend/kunk/README.md`](./frontend/kunk/README.md) — índice de rotas + app novo
 2. [`frontend/kunk/removed-from-v1.md`](./frontend/kunk/removed-from-v1.md) — o que saiu do menu v1
-3. Páginas principais: [cadastramento](./frontend/kunk/pages/cadastramento.md), [triagem](./frontend/kunk/pages/triagem.md) ([**spec**](./frontend/kunk/triagem/README.md)), [pedidos](./frontend/kunk/pages/pedidos.md) ([**spec carrinho/frete**](./frontend/kunk/pedidos/README.md)), [servicos](./frontend/kunk/pages/servicos.md)
+3. Páginas principais: [cadastramento](./frontend/kunk/pages/cadastramento.md), [triagem](./frontend/kunk/pages/triagem.md) ([**spec**](./frontend/kunk/triagem/README.md)), [pedidos](./frontend/kunk/pages/pedidos.md) ([**spec carrinho/frete**](./frontend/kunk/pedidos/README.md)), [servicos](./frontend/kunk/pages/servicos.md) ([**spec serviços**](./frontend/kunk/servicos/README.md)), [relatório de serviços](./frontend/kunk/pages/relatorios-servicos.md) ([**spec**](./frontend/kunk/relatorios-servicos/README.md))
 4. Demais páginas em [`frontend/kunk/pages/`](./frontend/kunk/pages/)
 
 ## Ordem sugerida de leitura (triagem — implementação)
@@ -45,6 +45,14 @@ A documentação de frontend descreve a estrutura compartilhada **e** cada app. 
 2. [`flow.md`](./frontend/kunk/pedidos/flow.md) → [`fields.md`](./frontend/kunk/pedidos/fields.md) → [`admin.md`](./frontend/kunk/pedidos/admin.md)
 3. [`api.md`](./frontend/kunk/pedidos/api.md) + [`ui-ux.md`](./frontend/kunk/pedidos/ui-ux.md) + [`gaps.md`](./frontend/kunk/pedidos/gaps.md)
 4. Módulos: [`api/modules/loggi.md`](./api/modules/loggi.md) · [`melhorenvio.md`](./api/modules/melhorenvio.md) · [`credentials.md`](./api/modules/credentials.md)
+
+## Ordem sugerida de leitura (serviços / profissionais / Google Calendar — implementação)
+
+1. [`frontend/kunk/servicos/README.md`](./frontend/kunk/servicos/README.md) — escopo OSS (sem checkout Pagar.me)
+2. [`ui-ux.md`](./frontend/kunk/servicos/ui-ux.md) — layout igual ao legado (obrigatório)
+3. [`flow.md`](./frontend/kunk/servicos/flow.md) → [`fields.md`](./frontend/kunk/servicos/fields.md) → [`admin.md`](./frontend/kunk/servicos/admin.md)
+4. [`api.md`](./frontend/kunk/servicos/api.md) + [`gaps.md`](./frontend/kunk/servicos/gaps.md)
+5. Módulo: [`api/modules/google_calendar.md`](./api/modules/google_calendar.md) · [`credentials.md`](./api/modules/credentials.md)
 
 ## Ordem sugerida de leitura (cadastramento)
 

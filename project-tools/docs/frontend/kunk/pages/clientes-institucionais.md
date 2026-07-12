@@ -1,52 +1,25 @@
 # Clientes institucionais
 
-> Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
+> Documentação funcional — implementação OSS.
 
 ## Identificação
 
 | Campo | Valor |
 |---|---|
 | **Rota** | `/app/acolhimento/clientesinstitucionais` |
-| **Componente** | `InstitutionalClients` |
-| **Arquivo legado** | `src/components/master/institutionalclients.jsx` |
-| **Permissões** | Administrador | Acolhimento | Produção |
+| **Componente** | `InstitutionalClientsPage` |
+| **Arquivo** | `apps/kunk/src/pages/reception/InstitutionalClientsPage.jsx` |
+| **Tabela** | `institutional_clients` |
+| **Permissões** | Administrador · Acolhimento (CRUD) · Produção (leitura) |
 
 ## Descrição
 
-CRUD de clientes institucionais (subset da collection Users).
+CRUD de clientes institucionais (não associados) que podem fazer pedidos. Empresa opcional + representante com CPF obrigatório. Pedidos/etiquetas usam CNPJ da empresa ou CPF do representante.
 
-## Funcionalidades
+## Documentação detalhada
 
-- Listar clientes institucionais (`/api/directus/users/institutional`)
-- Criar via createInstitutionalClient
-- Editar via Form compartilhado
-
-## Integrações externas e serviços
-
-| Serviço | Uso nesta página |
-|---|---|
-| **Directus Users** | subset institucional |
-
-## Dependências de outras páginas / módulos
-
-- Cadastramento / Users
-
-## Observações
-
-- —
-
-## Decisão open-source
-
-> Preencher na revisão de escopo.
-
-| Opção | Escolha |
-|---|---|
-| **Manter** | |
-| **Remover** | |
-| **Modificar** | |
-| **Notas** | Híbrido — útil genérico; naming/fluxo pode ser SC. |
+Ver pasta [`../clientes-institucionais/`](../clientes-institucionais/README.md).
 
 ## Status
 
-`documentado` — aguardando definição de escopo OSS.
+`implementado` — tabela própria + página + vínculo em pedidos/etiquetas.

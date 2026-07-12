@@ -45,7 +45,16 @@ async function quoteAll(address) {
         errors,
       });
     }
-    throw new AppError(400, 'FREIGHT_NO_QUOTE', 'Nenhuma cotação disponível', { errors });
+    const providerMsg = errors
+      .map((e) => e.message)
+      .filter(Boolean)
+      .join(' · ');
+    throw new AppError(
+      400,
+      'FREIGHT_NO_QUOTE',
+      providerMsg || 'Nenhuma cotação disponível',
+      { errors }
+    );
   }
 
   const defaultKey = cfg.default_option?.option_key || null;
@@ -93,6 +102,27 @@ async function getServiceOptions() {
   return { options };
 }
 
+async function getQuoteAvailability() {
+  const flags = await storeFreight.getModuleFreightFlags();
+  const providers = [];
+  if (flags.loggi.enabled && flags.loggi.use_for_quote) providers.push('loggi');
+  if (flags.melhorenvio.enabled && flags.melhorenvio.use_for_quote) {
+    providers.push('melhorenvio');
+  }
+  return {
+    quote_enabled: providers.length > 0,
+    providers,
+  };
+}
+
+async function getLabelAvailability() {
+  const flags = await storeFreight.getModuleFreightFlags();
+  return {
+    loggi: Boolean(flags.loggi.enabled && flags.loggi.use_for_label),
+    melhorenvio: Boolean(flags.melhorenvio.enabled && flags.melhorenvio.use_for_label),
+  };
+}
+
 async function getDefaultOption() {
   const cfg = await storeFreight.getStoreFreightConfig();
   return { default_option: cfg.default_option };
@@ -125,6 +155,8 @@ async function setDefaultOption(option, actor) {
 module.exports = {
   quoteAll,
   getServiceOptions,
+  getQuoteAvailability,
+  getLabelAvailability,
   getDefaultOption,
   setDefaultOption,
 };

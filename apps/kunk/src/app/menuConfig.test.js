@@ -12,7 +12,8 @@ describe('menuConfig v1', () => {
     expect(MENU_SECTIONS.map((s) => s.label)).toEqual([
       'Acolhimento',
       'Loja',
-      'Parceiros e Prescritores',
+      'Profissionais',
+      'Relatórios',
       'Sistema',
     ]);
   });
@@ -24,10 +25,13 @@ describe('menuConfig v1', () => {
     expect(paths).toContain(PATHS.orders);
     expect(paths).not.toContain(PATHS.newOrder);
     expect(paths).toContain(PATHS.services);
-    expect(paths).toContain(PATHS.prescribers);
+    expect(paths).toContain(PATHS.professionals);
     expect(paths).toContain(PATHS.products);
     expect(paths).toContain(PATHS.institutionalClients);
+    expect(paths).toContain(PATHS.servicesReport);
+    expect(paths).toContain(PATHS.analyticsDashboard);
     expect(paths).toContain(PATHS.systemHistory);
+    expect(paths).toContain(PATHS.tags);
   });
 
   it('does not include removed item labels', () => {
@@ -39,8 +43,12 @@ describe('menuConfig v1', () => {
     }
   });
 
-  it('includes Tags as action item', () => {
+  it('includes Tags under Sistema as navigable path', () => {
     const tags = flattenMenuItems().find((i) => i.id === 'tags');
-    expect(tags).toMatchObject({ label: 'Tags', action: 'tags' });
+    expect(tags).toMatchObject({ label: 'Tags', path: PATHS.tags });
+    expect(tags.action).toBeUndefined();
+    const sistema = MENU_SECTIONS.find((s) => s.id === 'sistema');
+    expect(sistema.items.map((i) => i.id)).toEqual(['historico', 'tags']);
+    expect(getNavigablePaths()).toContain(PATHS.tags);
   });
 });

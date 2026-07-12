@@ -36,6 +36,7 @@ export function UsuariosPage({ api }) {
           <p className="muted">Operadores (`system_users`) e permissões.</p>
         </div>
         <Link className="btn btn-primary" to="/usuarios/novo">Novo operador</Link>
+        <Link className="btn" to="/usuarios/paginas">Páginas por role</Link>
       </div>
       {error ? <div className="alert alert-error">{error}</div> : null}
       <div className="card table-wrap">

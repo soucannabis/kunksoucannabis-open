@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
+import { useErrorModal } from '../components/errors/ErrorModalProvider.jsx';
 import { getKunkPublicConfig } from '@kunk/config';
 
 function FieldInput({ field, value, onChange }) {
@@ -85,7 +86,7 @@ export default function PublicQueuePage() {
   const [form, setForm] = useState({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const { showError } = useErrorModal();
   const [done, setDone] = useState(false);
 
   useEffect(() => {
@@ -102,7 +103,7 @@ export default function PublicQueuePage() {
         }
         setForm(initial);
       } catch (err) {
-        if (!cancelled) setError(err.message || 'Falha ao carregar formulário');
+        if (!cancelled) showError(err.message || 'Falha ao carregar formulário');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -113,12 +114,11 @@ export default function PublicQueuePage() {
   async function onSubmit(e) {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
     try {
       await api.createPublicReception(form);
       setDone(true);
     } catch (err) {
-      setError(err.message || 'Não foi possível enviar');
+      showError(err.message || 'Não foi possível enviar');
     } finally {
       setSubmitting(false);
     }
@@ -179,7 +179,6 @@ export default function PublicQueuePage() {
         ) : null}
         {!loading && enabled && !done ? (
           <form onSubmit={onSubmit}>
-            {error ? <p className="fila-error">{error}</p> : null}
             {fields.map((field) => (
               <FieldInput
                 key={field.id}

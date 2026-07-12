@@ -5,7 +5,8 @@
   "type": "module",
   "main": "./src/index.jsx",
   "exports": {
-    ".": "./src/index.jsx"
+    ".": "./src/index.jsx",
+    "./ciap2": "./src/ciap2Catalog.js"
   },
   "dependencies": {
     "react-phone-input-2": "^2.15.1"

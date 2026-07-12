@@ -15,19 +15,21 @@ function expand(mask) {
 const MATRIX = {
   Administrador: Object.fromEntries(
     [
-      'users', 'system_users', 'orders', 'services', 'products', 'partners', 'professionals',
+      'users', 'system_users', 'orders', 'services', 'products', 'partners', 'institutional_clients',
+      'professionals',
       'reception', 'tags', 'reports', 'files', 'orders_files', 'services_files', 'users_files',
       'users_api', 'system_activity',
     ].map((c) => [c, expand('CRUD')])
   ),
   Acolhimento: {
-    users: expand('CRU'),
+    users: expand('CRUD'),
     system_users: expand('R'),
     orders: expand('CRUD'),
     services: expand('CRUD'),
     products: expand('R'),
     partners: expand('R'),
-    professionals: expand('RU'),
+    institutional_clients: expand('CRUD'),
+    professionals: expand('CRUD'),
     reception: expand('CRUD'),
     tags: expand('CRUD'),
     reports: expand('R'),
@@ -39,19 +41,23 @@ const MATRIX = {
   },
   Produção: {
     users: expand('R'),
+    institutional_clients: expand('R'),
     orders: expand('RU'),
+    services: expand('RU'),
     products: expand('RU'),
+    professionals: expand('R'),
     reception: expand('RU'),
     tags: expand('R'),
     reports: expand('R'),
     files: expand('R'),
     orders_files: expand('R'),
-    services_files: expand('R'),
+    services_files: expand('RU'),
     users_files: expand('R'),
     system_activity: expand('R'),
   },
   Financeiro: {
     users: expand('R'),
+    institutional_clients: expand('R'),
     orders: expand('RU'),
     services: expand('RU'),
     products: expand('R'),
@@ -75,9 +81,17 @@ const MATRIX = {
     professionals: expand('R'),
     reports: expand('R'),
   },
+  /** Portal do relatório de serviços — escopo via internal_code = professional_code */
+  Profissional: {
+    services: expand('R'),
+    professionals: expand('RU'),
+    services_files: expand('R'),
+    files: expand('R'),
+  },
   api: Object.fromEntries(
     [
-      'users', 'system_users', 'orders', 'services', 'products', 'partners', 'professionals',
+      'users', 'system_users', 'orders', 'services', 'products', 'partners', 'institutional_clients',
+      'professionals',
       'reception', 'tags', 'reports', 'files', 'orders_files', 'services_files', 'users_files',
       'users_api', 'system_activity',
     ].map((c) => [c, expand('CRUD')])
@@ -87,6 +101,8 @@ const MATRIX = {
 const SCOPED_ROLES = {
   // partner_code removido do schema; escopo Parceiro redesenhado depois
   Prescritor: { field: 'prescriber_code', fromUser: 'internal_code' },
+  // services.professional_id = professionals.professional_code
+  Profissional: { field: 'professional_id', fromUser: 'internal_code' },
 };
 
 function parseRoles(permissions) {

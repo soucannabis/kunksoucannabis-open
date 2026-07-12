@@ -1,6 +1,6 @@
 # Associados (lista completa)
 
-> Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
+> Inventário legado. **Spec de implementação:** [../associados/README.md](../associados/README.md) (mesma página que cadastramento).
 > Fonte: `kunksoucannabis`.
 
 ## Identificação
@@ -14,38 +14,21 @@
 
 ## Descrição
 
-Mesma tela de cadastramento com listagem completa (`limit=-1`).
+Mesma tela de cadastramento com listagem ampla (`limit` alto / `-1`). Preferir unificar no OSS com a rota de cadastramento e um modo “lista completa”.
 
 ## Funcionalidades
 
-- Mesmas funcionalidades de [Cadastramento](./cadastramento.md)
-- Carrega todos os associados (sem o limite padrão da listagem)
-
-## Integrações externas e serviços
-
-| Serviço | Uso nesta página |
-|---|---|
-| **Ver cadastramento** | Directus Users, DocuSeal, e-mail |
-
-## Dependências de outras páginas / módulos
-
-- [Cadastramento](./cadastramento.md)
-
-## Observações
-
-- —
+- Mesmas de [Cadastramento](./cadastramento.md) / [associados/](../associados/README.md)
 
 ## Decisão open-source
 
-> Preencher na revisão de escopo.
-
 | Opção | Escolha |
 |---|---|
-| **Manter** | |
-| **Remover** | |
-| **Modificar** | |
-| **Notas** | Core — unificar ou manter atalho conforme UX. |
+| **Manter** | Atalho opcional ou filtro “todos” na mesma página |
+| **Remover** | Duplicar componente só por rota |
+| **Modificar** | Unificar UX |
+| **Notas** | Core — ver spec [associados/](../associados/README.md) |
 
 ## Status
 
-`documentado` — aguardando definição de escopo OSS.
+`spec pronta` — unificar com cadastramento.

@@ -46,8 +46,23 @@ router.post('/logout', async (req, res, next) => {
   }
 });
 
-router.get('/me', authenticate, async (req, res) => {
-  res.json(ok({ user: req.user }));
+router.get('/me', authenticate, async (req, res, next) => {
+  try {
+    const { query } = require('../db/pool');
+    let rolePages = null;
+    try {
+      const result = await query(
+        `SELECT value FROM system_configs WHERE system = 'kunk' AND key = 'role_pages' LIMIT 1`
+      );
+      const raw = result.rows[0]?.value;
+      if (raw) rolePages = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    } catch {
+      rolePages = null;
+    }
+    res.json(ok({ user: req.user, role_pages: rolePages }));
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post('/tokens', authenticate, authorizeAdmin, async (req, res, next) => {
@@ -73,6 +88,26 @@ router.delete('/tokens/:id', authenticate, authorizeAdmin, async (req, res, next
   try {
     const result = await authRepository.revokeApiToken(req.params.id);
     res.json(ok(result));
+  } catch (err) {
+    next(err);
+  }
+});
+
+const professionalPortalAccess = require('../services/professionalPortalAccess');
+
+router.get('/system-invite/preview', async (req, res, next) => {
+  try {
+    const data = await professionalPortalAccess.previewInvite(req.query.token);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/system-invite/accept', async (req, res, next) => {
+  try {
+    const data = await professionalPortalAccess.acceptInvite(req.body || {});
+    res.json(ok(data));
   } catch (err) {
     next(err);
   }

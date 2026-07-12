@@ -10,7 +10,6 @@ import {
   IconButton,
   MenuItem,
   Modal,
-  Paper,
   Radio,
   RadioGroup,
   Stack,
@@ -30,11 +29,11 @@ import EditIcon from '@mui/icons-material/Edit';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonIcon from '@mui/icons-material/Person';
 import SaveIcon from '@mui/icons-material/Save';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
-import { useOperatorAuth } from '@kunk/auth-session';
 import { PATHS } from '../../app/menuConfig.js';
+import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
 import AddressEditDialog from '../../components/store/AddressEditDialog.jsx';
 import DatePrescriptionEdit from '../../components/store/DatePrescriptionEdit.jsx';
 
@@ -99,11 +98,63 @@ function formatPhone(phone) {
 
 function associateDisplayName(u) {
   if (!u) return '';
-  const full = [u.name || u.first_name || u.associate_name, u.last_name || u.lastname_associate]
+  if (u.__kind === 'institutional') {
+    if (u.is_company && u.company_name) return String(u.company_name).trim();
+    return [u.representative_name, u.representative_last_name].filter(Boolean).join(' ').trim()
+      || u.display_name
+      || u.client_code
+      || '';
+  }
+  const full = [
+    u.name || u.first_name || u.associate_name,
+    u.last_name || u.associate_last_name || u.lastname_associate,
+  ]
     .filter(Boolean)
     .join(' ')
     .trim();
   return full || u.email_account || u.email || u.user_code || '';
+}
+
+function institutionalReceiverName(u) {
+  if (!u) return '';
+  return [u.representative_name, u.representative_last_name].filter(Boolean).join(' ').trim()
+    || associateDisplayName(u);
+}
+
+function clientContactEmail(u) {
+  if (!u) return '';
+  if (u.__kind === 'institutional') {
+    return u.company_email || u.representative_email || '';
+  }
+  return u.email_account || u.email || '';
+}
+
+function clientContactPhone(u) {
+  if (!u) return '';
+  if (u.__kind === 'institutional') {
+    return u.company_phone || u.representative_mobile || '';
+  }
+  return u.mobile_number || '';
+}
+
+/** Normaliza itens do pedido para a tabela do carrinho (legado: qnt/amount). */
+function normalizeCartItems(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((it) => {
+      const code = String(it?.code || it?.sku || '').toLowerCase();
+      const name = String(it?.name || '').toLowerCase();
+      return code !== 'frete' && name !== 'frete' && it != null;
+    })
+    .map((it) => ({
+      product_id: it.product_id || it.id || null,
+      code: it.code || it.sku || String(it.product_id || it.id || ''),
+      name: it.name || it.code || 'Item',
+      amount: Number(it.amount ?? it.price ?? it.value) || 0,
+      quantity: Math.max(1, Number(it.quantity ?? it.qnt ?? it.qty) || 1),
+      batch: it.batch || null,
+      stock_at_order: it.stock_at_order != null ? Number(it.stock_at_order) : null,
+    }));
 }
 
 function prescriptionBanner(u) {
@@ -132,12 +183,16 @@ function statusPill(status) {
 export default function CartPage() {
   const bootstrap = getKunkPublicConfig();
   const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
-  const { user: operator } = useOperatorAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const userCodeFromQuery = (searchParams.get('u') || '').trim();
+  const institutionalCodeFromQuery = (searchParams.get('ic') || '').trim();
+  const orderRefFromQuery = (searchParams.get('p') || '').trim();
 
   const [associate, setAssociate] = useState(null);
-  const [loadingAssociate, setLoadingAssociate] = useState(Boolean(userCodeFromQuery));
+  const [loadingAssociate, setLoadingAssociate] = useState(
+    Boolean(userCodeFromQuery || institutionalCodeFromQuery)
+  );
 
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
@@ -165,9 +220,10 @@ export default function CartPage() {
   const [selectedFreight, setSelectedFreight] = useState(null);
   const [applyToTotal, setApplyToTotal] = useState(true);
   const [freightLoading, setFreightLoading] = useState(false);
+  const [freightQuoteEnabled, setFreightQuoteEnabled] = useState(false);
 
+  const { showError } = useErrorModal();
   const [history, setHistory] = useState([]);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState(null);
@@ -182,12 +238,61 @@ export default function CartPage() {
     customPayment,
   });
 
-  const rx = prescriptionBanner(associate);
+  const rx = associate?.__kind === 'institutional'
+    ? { ok: true, label: 'Cliente institucional (sem prescrição)' }
+    : prescriptionBanner(associate);
   const deliveryAddr = getDeliveryAddress(associate);
+  const hasOwnerQuery = Boolean(userCodeFromQuery || institutionalCodeFromQuery);
+  const associateReady = Boolean(
+    associate && (associate.id || associate.user_code || associate.client_code || associate.__from_order_stub)
+  );
+
+  async function fetchOrderByRef(ref) {
+    if (!ref) return null;
+    if (/^\d+$/.test(ref)) {
+      const res = await api.getOrder(ref);
+      return res.data || null;
+    }
+    const res = await api.listOrders(`q=${encodeURIComponent(ref)}&limit=50`);
+    return (
+      (res.data || []).find(
+        (o) => String(o.order_code) === ref || String(o.id) === ref
+      ) || null
+    );
+  }
+
+  function stubAssociateFromOrder(order, fallbackUserCode) {
+    const addr = order?.address && typeof order.address === 'object' ? order.address : null;
+    return {
+      id: order?.user || null,
+      user_code: order?.user_code || fallbackUserCode || null,
+      associate_name: order?.associate_name || order?.receiver_name || 'Associado',
+      associate_last_name: '',
+      delivery_address: addr,
+      street: addr?.street || null,
+      street_number: addr?.street_number || addr?.number || null,
+      number: addr?.number || addr?.street_number || null,
+      complement: addr?.complement || null,
+      neighborhood: addr?.neighborhood || null,
+      city: addr?.city || null,
+      state: addr?.state || null,
+      cep: addr?.cep || null,
+      __from_order_stub: true,
+    };
+  }
 
   async function applyAssociate(u) {
     if (!u) return;
     setAssociate(u);
+    if (u.__kind === 'institutional' && u.id) {
+      try {
+        const hist = await api.getInstitutionalClientHistory(u.id);
+        setHistory(hist.data?.orders || []);
+      } catch {
+        setHistory([]);
+      }
+      return;
+    }
     if (u.user_code) {
       try {
         const hist = await api.ordersByUser(u.user_code);
@@ -199,7 +304,7 @@ export default function CartPage() {
   }
 
   useEffect(() => {
-    if (!userCodeFromQuery) {
+    if (!userCodeFromQuery && !institutionalCodeFromQuery) {
       setAssociate(null);
       setLoadingAssociate(false);
       return undefined;
@@ -207,15 +312,47 @@ export default function CartPage() {
     let cancelled = false;
     (async () => {
       setLoadingAssociate(true);
-      setError('');
       try {
+        if (institutionalCodeFromQuery) {
+          const res = await api.getInstitutionalClientByCode(institutionalCodeFromQuery);
+          if (!cancelled) {
+            await applyAssociate({ ...res.data, __kind: 'institutional' });
+          }
+          return;
+        }
         const res = await api.getUserByCode(userCodeFromQuery);
         if (!cancelled) await applyAssociate(res.data);
       } catch (err) {
-        if (!cancelled) {
-          setAssociate(null);
-          setError(err.message || `Associado ${userCodeFromQuery} não encontrado`);
+        if (cancelled) return;
+        // Pedido em edição (?p=): monta associado a partir do pedido se o cadastro não existir
+        if (orderRefFromQuery && userCodeFromQuery) {
+          try {
+            const order = await fetchOrderByRef(orderRefFromQuery);
+            if (order && !cancelled) {
+              await applyAssociate(stubAssociateFromOrder(order, userCodeFromQuery));
+              applyOrderToCart(order, { asEdit: true });
+              setSuccess(
+                `Editando pedido #${order.id} (cadastro do associado não encontrado — usando dados do pedido)`
+              );
+              return;
+            }
+          } catch {
+            /* cai no erro abaixo */
+          }
         }
+        setAssociate(null);
+        if (institutionalCodeFromQuery) {
+          showError(
+            err.message || `Cliente institucional ${institutionalCodeFromQuery} não encontrado`
+          );
+          return;
+        }
+        const looksLikeLead = /^LEAD-/i.test(userCodeFromQuery);
+        showError(
+          looksLikeLead
+            ? 'Use o código do usuário (user_code), não o código de lead da triagem. Vincule o associado na triagem e abra o pedido de novo.'
+            : err.message || `Associado ${userCodeFromQuery} não encontrado`
+        );
       } finally {
         if (!cancelled) setLoadingAssociate(false);
       }
@@ -223,10 +360,10 @@ export default function CartPage() {
     return () => {
       cancelled = true;
     };
-  }, [api, userCodeFromQuery]);
+  }, [api, userCodeFromQuery, institutionalCodeFromQuery, orderRefFromQuery]);
 
   useEffect(() => {
-    if (!userCodeFromQuery) return undefined;
+    if (!userCodeFromQuery && !institutionalCodeFromQuery && !orderRefFromQuery) return undefined;
     (async () => {
       setProductsLoading(true);
       try {
@@ -250,8 +387,14 @@ export default function CartPage() {
       } catch {
         setTagOptions([]);
       }
+      try {
+        const res = await api.freightQuoteAvailability();
+        setFreightQuoteEnabled(Boolean(res.data?.quote_enabled));
+      } catch {
+        setFreightQuoteEnabled(false);
+      }
     })();
-  }, [api, userCodeFromQuery]);
+  }, [api, userCodeFromQuery, institutionalCodeFromQuery, orderRefFromQuery]);
 
   const filteredProducts = useMemo(() => {
     const term = productFilter.trim().toLowerCase();
@@ -262,11 +405,18 @@ export default function CartPage() {
   function addProduct(product) {
     const key = product.sku || String(product.id);
     const qty = Math.max(1, Number(qtyBySku[key]) || 1);
+    const stock = Number(product.amount);
     setItems((prev) => {
       const existing = prev.find((i) => i.code === key || i.product_id === product.id);
       if (existing) {
         return prev.map((i) =>
-          i === existing ? { ...i, quantity: Number(i.quantity) + qty } : i
+          i === existing
+            ? {
+                ...i,
+                quantity: Number(i.quantity) + qty,
+                stock_at_order: Number.isFinite(stock) ? stock : i.stock_at_order,
+              }
+            : i
         );
       }
       return [
@@ -277,10 +427,46 @@ export default function CartPage() {
           name: product.name,
           amount: Number(product.price) || 0,
           quantity: qty,
+          stock_at_order: Number.isFinite(stock) ? stock : null,
         },
       ];
     });
   }
+
+  const productsById = useMemo(() => {
+    const map = new Map();
+    for (const p of products) map.set(p.id, p);
+    for (const p of products) {
+      if (p.sku) map.set(p.sku, p);
+    }
+    return map;
+  }, [products]);
+
+  function stockForItem(it) {
+    const p =
+      (it.product_id != null && productsById.get(it.product_id)) ||
+      (it.code && productsById.get(it.code)) ||
+      null;
+    if (p && p.amount != null) return Number(p.amount);
+    if (it.stock_at_order != null) return Number(it.stock_at_order);
+    return null;
+  }
+
+  const zeroStockItems = useMemo(() => {
+    return items.filter((it) => {
+      const p =
+        (it.product_id != null && productsById.get(it.product_id)) ||
+        (it.code && productsById.get(it.code)) ||
+        null;
+      const stock =
+        p && p.amount != null
+          ? Number(p.amount)
+          : it.stock_at_order != null
+            ? Number(it.stock_at_order)
+            : null;
+      return stock != null && stock <= 0;
+    });
+  }, [items, productsById]);
 
   function updateItemQty(idx, quantity) {
     setItems((prev) =>
@@ -296,15 +482,14 @@ export default function CartPage() {
 
   async function quoteFreight() {
     if (!associate) {
-      setError('Selecione um associado');
+      showError('Selecione um associado');
       return;
     }
     setFreightLoading(true);
-    setError('');
     const address = getDeliveryAddress(associate) || cadastralAddress(associate);
     if (!address?.cep) {
       setFreightLoading(false);
-      setError('Associado sem CEP para cotar frete');
+      showError('Associado sem CEP para cotar frete');
       return;
     }
     try {
@@ -317,28 +502,29 @@ export default function CartPage() {
         (res.data?.options || [])[0] ||
         null;
       setSelectedFreight(sel);
+      const quoteErrors = res.data?.errors;
+      if (quoteErrors?.length && !(res.data?.options || []).length) {
+        showError(quoteErrors.map((e) => `${e.provider}: ${e.message}`).join(' · '));
+      } else if (quoteErrors?.length) {
+        showError(`Algumas cotações falharam: ${quoteErrors.map((e) => e.provider).join(', ')}`);
+      }
     } catch (err) {
       setFreightOptions([]);
       setSelectedFreight(null);
-      setError(err.message || 'Falha ao cotar frete');
+      const incomplete =
+        err.code === 'CONFIG_INCOMPLETE' ||
+        /CONFIG_INCOMPLETE|não configurado|incompleto/i.test(err.message || '');
+      const providerDetail = (err.details?.errors || err.errors || [])
+        .map((e) => e.message)
+        .filter(Boolean)
+        .join(' · ');
+      showError(
+        incomplete
+          ? `${err.message || 'Configuração de frete incompleta'}. Preencha em Admin → Serviços externos → Dados de envio.`
+          : providerDetail || err.message || 'Falha ao cotar frete'
+      );
     } finally {
       setFreightLoading(false);
-    }
-  }
-
-  async function setAsDefault() {
-    if (!selectedFreight) return;
-    try {
-      await api.putFreightDefaultOption({
-        default_option: {
-          option_key: selectedFreight.option_key,
-          provider: selectedFreight.provider,
-          service_label: selectedFreight.service_label,
-        },
-      });
-      setSuccess('Favorito de frete atualizado');
-    } catch (err) {
-      setError(err.message || 'Falha ao definir padrão');
     }
   }
 
@@ -356,7 +542,7 @@ export default function CartPage() {
       setShowPrescriberModal(false);
       setNewPrescriber({ name: '', last_name: '', email: '' });
     } catch (err) {
-      setError(err.message || 'Falha ao criar prescritor');
+      showError(err.message || 'Falha ao criar prescritor');
     }
   }
 
@@ -374,26 +560,51 @@ export default function CartPage() {
     setShowCustomPayment(false);
   }
 
+  const freightReady = !freightQuoteEnabled || Boolean(selectedFreight);
+  const canSubmitOrder = items.length > 0 && freightReady && !submitting;
+
   async function submitOrder({ forceWrongTotal = false } = {}) {
-    setError('');
     setSuccess('');
     if (!associate) {
-      setError('Selecione um associado');
+      showError('Selecione um associado ou cliente institucional');
       return;
     }
     if (!items.length) {
-      setError('Adicione itens');
+      showError('Adicione itens');
       return;
+    }
+    if (freightQuoteEnabled && !selectedFreight) {
+      showError('Calcule e selecione o frete antes de criar o pedido');
+      return;
+    }
+    if (zeroStockItems.length > 0) {
+      const names = zeroStockItems.map((it) => it.name || it.code).join(', ');
+      const ok = window.confirm(
+        `Atenção: pedido com estoque 0 (ou negativo): ${names}.\n\nDeseja continuar mesmo assim?`
+      );
+      if (!ok) return;
     }
     setSubmitting(true);
     try {
       const address = getDeliveryAddress(associate) || cadastralAddress(associate);
+      const isIc = associate.__kind === 'institutional';
       const body = {
-        user: associate.id,
-        user_code: associate.user_code,
-        name_associate: associateDisplayName(associate),
-        email: associate.email_account || associate.email,
-        address,
+        ...(isIc
+          ? {
+              institutional_client_id: associate.id,
+              institutional_client_code: associate.client_code,
+              name_associate: associateDisplayName(associate),
+              receiver_name: institutionalReceiverName(associate),
+              email: clientContactEmail(associate),
+            }
+          : {
+              ...(associate.id ? { user: associate.id } : {}),
+              user_code: associate.user_code,
+              name_associate: associateDisplayName(associate),
+              receiver_name: associate.receiver_name || associateDisplayName(associate),
+              email: associate.email_account || associate.email,
+            }),
+        address: address?.street ? address : associate.delivery_address || address,
         items,
         total: forceWrongTotal ? totals.total + 99 : totals.total,
         delivery_price: selectedFreight ? Number(selectedFreight.price) || 0 : 0,
@@ -407,7 +618,6 @@ export default function CartPage() {
         info,
         tags: orderTags,
         status: 'Aguardando pagamento',
-        kunk_user: operator?.email || operator?.name,
       };
       let res;
       if (editingOrderId) {
@@ -417,28 +627,60 @@ export default function CartPage() {
       }
       setSuccess(`Pedido ${res.data?.order_code || res.data?.id} salvo`);
       setEditingOrderId(null);
-      if (associate.user_code) {
-        const hist = await api.ordersByUser(associate.user_code);
-        setHistory(hist.data || []);
-      }
+      navigate(PATHS.orders);
     } catch (err) {
-      setError(err?.errors?.[0]?.message || err.message || 'Falha ao salvar pedido');
+      showError(err?.errors?.[0]?.message || err.message || 'Falha ao salvar pedido');
     } finally {
       setSubmitting(false);
     }
   }
 
-  function loadHistoryOrder(o) {
-    setEditingOrderId(o.id);
-    setItems(o.items || []);
-    setDiscount(o.discount || 0);
-    setDonation(o.donation || 0);
-    setCustomPayment(o.custom_payment || []);
-    setInfo(o.info || o.details || '');
-    setOrderTags(Array.isArray(o.tags) ? o.tags.map((t) => (typeof t === 'string' ? t : t.tag)).filter(Boolean) : []);
+  function applyOrderToCart(o, { asEdit = true } = {}) {
+    if (!o) return;
+    setEditingOrderId(asEdit ? o.id : null);
+    setItems(normalizeCartItems(o.items));
+    setDiscount(Number(o.discount) || 0);
+    setDonation(Number(o.donation) || 0);
+    setCustomPayment(Array.isArray(o.custom_payment) ? o.custom_payment : []);
+    setShowCustomPayment(Array.isArray(o.custom_payment) && o.custom_payment.length > 0);
+    setInfo(o.info || o.details || o.order_notes || '');
+    setOrderTags(
+      Array.isArray(o.tags)
+        ? o.tags.map((t) => (typeof t === 'string' ? t : t?.tag)).filter(Boolean)
+        : []
+    );
     setSelectedFreight(o.freight_option || null);
-    setSuccess(`Editando pedido #${o.id}`);
+    setApplyToTotal(true);
+    if (o.prescriber) setPrescriber(o.prescriber);
+    if (o.prescriber_code) setPrescriberCode(o.prescriber_code);
+    setSuccess(asEdit ? `Editando pedido #${o.id}` : `Itens do pedido #${o.id} carregados`);
   }
+
+  function loadHistoryOrder(o) {
+    applyOrderToCart(o, { asEdit: true });
+  }
+
+  useEffect(() => {
+    if (!orderRefFromQuery) return undefined;
+    // Se o stub do associado já aplicou o pedido, ainda assim re-sincroniza
+    let cancelled = false;
+    (async () => {
+      try {
+        const order = await fetchOrderByRef(orderRefFromQuery);
+        if (cancelled) return;
+        if (!order) {
+          showError(`Pedido ${orderRefFromQuery} não encontrado`);
+          return;
+        }
+        applyOrderToCart(order, { asEdit: true });
+      } catch (err) {
+        if (!cancelled) showError(err.message || 'Falha ao carregar pedido no carrinho');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [api, orderRefFromQuery, userCodeFromQuery, institutionalCodeFromQuery]);
 
   const headCell = {
     color: '#fff',
@@ -451,15 +693,11 @@ export default function CartPage() {
   return (
     <ThemeProvider theme={muiTheme}>
       <Box data-testid="cart-page" sx={{ width: '100%', pb: 4 }}>
-        {error && (
-          <Alert severity="error" data-testid="cart-error" sx={{ mb: 2, ml: '20px', mr: 2 }} onClose={() => setError('')}>
-            {error}
-          </Alert>
-        )}
-        {!userCodeFromQuery && (
+        {!hasOwnerQuery && (
           <Alert severity="warning" data-testid="cart-missing-user" sx={{ mb: 2, ml: '20px', mr: 2 }}>
-            Novo pedido exige o código do associado na URL (<code>?u=</code>). Abra a partir da triagem ou do cadastro
-            do associado.
+            Novo pedido exige o código do associado (<code>?u=</code>) ou do cliente institucional (
+            <code>?ic=</code>) na URL. Abra a partir da triagem, do cadastro do associado ou de clientes
+            institucionais.
           </Alert>
         )}
         {success && (
@@ -467,8 +705,14 @@ export default function CartPage() {
             {success}
           </Alert>
         )}
+        {associate?.__from_order_stub && (
+          <Alert severity="warning" sx={{ mb: 2, ml: '20px', mr: 2 }}>
+            Associado <code>{associate.user_code}</code> não encontrado no cadastro. O carrinho está
+            usando nome/endereço salvos no pedido #{editingOrderId || orderRefFromQuery}.
+          </Alert>
+        )}
 
-        {userCodeFromQuery && (
+        {hasOwnerQuery && (
           <>
         {/* Toolbar prescritor — legado */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', mb: 1, ml: '20px', pr: 2 }}>
@@ -545,23 +789,36 @@ export default function CartPage() {
           </Box>
         )}
 
-        {/* Painel associado */}
-        {associate?.id && (
+        {/* Painel associado / cliente institucional */}
+        {associateReady && (
           <Box className="pageContainerOptions" sx={{ mb: '20px', ml: '20px', mr: 2 }}>
             <Grid container spacing={2}>
               <Grid item xs={12} md={4}>
                 <Typography variant="h6" gutterBottom>
-                  Dados Pessoais
+                  {associate.__kind === 'institutional' ? 'Cliente institucional' : 'Dados Pessoais'}
                 </Typography>
                 <Typography variant="body1" data-testid="associate-selected">
                   <strong>Nome:</strong> {associateDisplayName(associate)}
                 </Typography>
+                {associate.__kind === 'institutional' && associate.is_company ? (
+                  <Typography variant="body1">
+                    <strong>Representante:</strong> {institutionalReceiverName(associate)}
+                  </Typography>
+                ) : null}
                 <Typography variant="body1">
-                  <strong>Email:</strong> {associate.email_account || associate.email || '—'}
+                  <strong>Email:</strong> {clientContactEmail(associate) || '—'}
                 </Typography>
                 <Typography variant="body1">
-                  <strong>Telefone:</strong> {formatPhone(associate.mobile_number)}
+                  <strong>Telefone:</strong> {formatPhone(clientContactPhone(associate))}
                 </Typography>
+                {associate.__kind === 'institutional' ? (
+                  <Typography variant="body1">
+                    <strong>Documento:</strong>{' '}
+                    {associate.is_company
+                      ? `CNPJ ${associate.company_cnpj || '—'}`
+                      : `CPF ${associate.representative_cpf || '—'}`}
+                  </Typography>
+                ) : null}
               </Grid>
               <Grid item xs={12} md={5}>
                 <Typography variant="h6" gutterBottom>
@@ -595,6 +852,8 @@ export default function CartPage() {
                 )}
               </Grid>
               <Grid item xs={12} md={3} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {associate.__kind !== 'institutional' && associate.id && !associate.__from_order_stub ? (
+                  <>
                 <Button
                   variant="outlined"
                   size="small"
@@ -638,19 +897,28 @@ export default function CartPage() {
                     setSuccess(date ? 'Data da prescrição atualizada' : 'Data da prescrição removida');
                   }}
                 />
+                  </>
+                ) : null}
                 <Button
                   variant="contained"
                   size="small"
                   startIcon={<PersonIcon />}
                   sx={{ backgroundColor: GREEN, color: 'white', '&:hover': { bgcolor: GREEN_HOVER } }}
                   onClick={() => {
+                    if (associate.__kind === 'institutional') {
+                      window.open(
+                        `${window.location.origin}${PATHS.institutionalClients}?ic=${encodeURIComponent(associate.client_code || '')}`,
+                        '_blank'
+                      );
+                      return;
+                    }
                     window.open(
                       `${window.location.origin}${PATHS.registration}?a=${encodeURIComponent(associate.user_code || '')}`,
                       '_blank'
                     );
                   }}
                 >
-                  Ver Associado
+                  {associate.__kind === 'institutional' ? 'Ver Cliente' : 'Ver Associado'}
                 </Button>
               </Grid>
               <Grid
@@ -667,7 +935,13 @@ export default function CartPage() {
                 }}
               >
                 <Typography variant="body1" sx={{ color: 'white', fontWeight: 500 }}>
-                  <strong>Data da Prescrição:</strong> {rx.label}
+                  {associate.__kind === 'institutional' ? (
+                    <strong>{rx.label}</strong>
+                  ) : (
+                    <>
+                      <strong>Data da Prescrição:</strong> {rx.label}
+                    </>
+                  )}
                 </Typography>
               </Grid>
             </Grid>
@@ -675,14 +949,14 @@ export default function CartPage() {
         )}
 
         {/* Split 7/5 — só com associado (ou após fechar modal se já tiver) */}
-        {associate?.id && (
+        {associateReady && (
           <Grid container spacing={2}>
             {/* ESQUERDA: carrinho + checkout + histórico */}
             <Grid item xs={12} md={7}>
               <Table className="pageContainerTable" sx={{ ml: '20px', width: 'calc(100% - 20px)' }}>
                 <TableHead sx={{ bgcolor: GREEN }}>
                   <TableRow>
-                    {['#', 'Produto', 'Qnt', 'Preço', 'Excluir'].map((h) => (
+                    {['#', 'Produto', 'Estoque', 'Qnt', 'Preço', 'Excluir'].map((h) => (
                       <TableCell key={h} sx={headCell}>
                         {h}
                       </TableCell>
@@ -692,17 +966,39 @@ export default function CartPage() {
                 <TableBody>
                   {items.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                      <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                         Selecione um produto
                       </TableCell>
                     </TableRow>
                   )}
-                  {items.map((it, idx) => (
+                  {zeroStockItems.length > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} sx={{ py: 1 }}>
+                        <Alert severity="warning" sx={{ py: 0 }}>
+                          Pedido com estoque 0: {zeroStockItems.map((it) => it.name || it.code).join(', ')}
+                        </Alert>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {items.map((it, idx) => {
+                    const stock = stockForItem(it);
+                    const zero = stock != null && stock <= 0;
+                    return (
                     <TableRow key={`${it.code}-${idx}`} sx={{ bgcolor: ZEBRA }}>
                       <TableCell align="center" sx={{ fontSize: 18 }}>
                         {idx + 1}
                       </TableCell>
                       <TableCell sx={{ fontSize: 18 }}>{it.name}</TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          fontSize: 16,
+                          fontWeight: 700,
+                          color: zero ? '#c62828' : GREEN,
+                        }}
+                      >
+                        {stock != null ? stock : '—'}
+                      </TableCell>
                       <TableCell align="center">
                         <TextField
                           size="small"
@@ -722,11 +1018,12 @@ export default function CartPage() {
                         </IconButton>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
 
                   {/* Desconto + Doação */}
                   <TableRow>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={6}>
                       <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', py: 1 }}>
                         <TextField
                           size="small"
@@ -752,6 +1049,72 @@ export default function CartPage() {
                     </TableCell>
                   </TableRow>
 
+                  {/* Frete — botão + opções no fim da tabela, acima do total */}
+                  {freightQuoteEnabled && (
+                    <TableRow data-testid="freight-simulation">
+                      <TableCell colSpan={6} sx={{ py: 1.5 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            data-testid="quote-freight"
+                            onClick={quoteFreight}
+                            disabled={freightLoading || items.length === 0}
+                            sx={{ borderColor: GREEN, color: GREEN }}
+                          >
+                            {freightLoading ? 'Calculando…' : 'Calcular frete'}
+                          </Button>
+                          {freightLoading && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <CircularProgress size={18} sx={{ color: GREEN }} />
+                              <Typography variant="body2">Consultando modalidades…</Typography>
+                            </Box>
+                          )}
+                          {freightOptions.length > 0 && (
+                            <RadioGroup
+                              data-testid="freight-option"
+                              value={selectedFreight?.option_key || ''}
+                              onChange={(e) => {
+                                const opt = freightOptions.find((o) => o.option_key === e.target.value);
+                                setSelectedFreight(opt || null);
+                              }}
+                              sx={{ width: '100%' }}
+                            >
+                              {freightOptions.map((o) => {
+                                const providerLabel =
+                                  o.provider === 'loggi'
+                                    ? 'Loggi'
+                                    : o.provider === 'melhorenvio'
+                                      ? 'Melhor Envio'
+                                      : o.provider || 'Frete';
+                                let service = String(o.service_label || '').trim();
+                                if (o.provider === 'loggi') {
+                                  service = service.replace(/^Loggi\s+/i, '');
+                                }
+                                return (
+                                  <FormControlLabel
+                                    key={o.option_key}
+                                    value={o.option_key}
+                                    control={<Radio size="small" />}
+                                    label={`${providerLabel}${service ? ` · ${service}` : ''} — R$ ${Number(o.price).toFixed(2)}${
+                                      o.eta_days != null ? ` · ${o.eta_days} dia(s)` : ''
+                                    }`}
+                                    sx={{
+                                      m: 0.25,
+                                      px: 1,
+                                      borderRadius: 1,
+                                      bgcolor: o.provider === 'loggi' ? '#1262FE22' : '#FFD40033',
+                                    }}
+                                  />
+                                );
+                              })}
+                            </RadioGroup>
+                          )}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  )}
+
                   {/* Total */}
                   <TableRow>
                     <TableCell colSpan={3} />
@@ -767,7 +1130,13 @@ export default function CartPage() {
                         <Box sx={{ mt: 1, fontSize: 14 }}>
                           {applyToTotal && totals.freight > 0 && (
                             <span style={{ color: 'white', display: 'block' }}>
-                              Frete R${totals.freight.toFixed(2)}
+                              Frete
+                              {selectedFreight?.provider === 'loggi'
+                                ? ' Loggi'
+                                : selectedFreight?.provider === 'melhorenvio'
+                                  ? ' Melhor Envio'
+                                  : ''}{' '}
+                              R${totals.freight.toFixed(2)}
                             </span>
                           )}
                           {totals.discount > 0 && (
@@ -792,7 +1161,7 @@ export default function CartPage() {
 
                   {/* Info, tags, prescritor, custom pay, frete, criar */}
                   <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ verticalAlign: 'top' }}>
+                    <TableCell colSpan={6} align="center" sx={{ verticalAlign: 'top' }}>
                       <TextField
                         label="Informações do pedido"
                         variant="outlined"
@@ -942,83 +1311,10 @@ export default function CartPage() {
                         </Box>
                       )}
 
-                      {/* Frete */}
-                      <Paper
-                        variant="outlined"
-                        sx={{ p: 2, mb: 2, borderColor: GREEN, borderRadius: 1, textAlign: 'left' }}
-                      >
-                        <Typography variant="subtitle1" fontWeight={700}>
-                          Simulação de frete
-                        </Typography>
-                        <Typography variant="caption" display="block" sx={{ mb: 1 }}>
-                          {applyToTotal
-                            ? 'O valor selecionado entra no total do pedido.'
-                            : 'Valores estimados — não entram no total do pedido.'}
-                        </Typography>
-                        <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            data-testid="quote-freight"
-                            onClick={quoteFreight}
-                            disabled={freightLoading}
-                            sx={{ borderColor: GREEN, color: GREEN }}
-                          >
-                            {freightLoading ? 'Calculando…' : 'Calcular frete'}
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="text"
-                            data-testid="set-default-freight"
-                            onClick={setAsDefault}
-                            disabled={!selectedFreight}
-                            sx={{ color: PURPLE }}
-                          >
-                            Definir como padrão
-                          </Button>
-                        </Stack>
-                        {freightLoading && (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, my: 1 }}>
-                            <CircularProgress size={20} sx={{ color: GREEN }} />
-                            <Typography variant="body2">Consultando modalidades…</Typography>
-                          </Box>
-                        )}
-                        <RadioGroup
-                          data-testid="freight-option"
-                          value={selectedFreight?.option_key || ''}
-                          onChange={(e) => {
-                            const opt = freightOptions.find((o) => o.option_key === e.target.value);
-                            setSelectedFreight(opt || null);
-                          }}
-                        >
-                          {freightOptions.map((o) => (
-                            <FormControlLabel
-                              key={o.option_key}
-                              value={o.option_key}
-                              control={<Radio size="small" />}
-                              label={`${o.service_label} — R$ ${Number(o.price).toFixed(2)}${
-                                o.eta_days != null ? ` · ${o.eta_days} dia(s)` : ''
-                              }`}
-                              sx={{
-                                m: 0.5,
-                                px: 1,
-                                borderRadius: 1,
-                                bgcolor: o.provider === 'loggi' ? '#1262FE22' : '#FFD40033',
-                              }}
-                            />
-                          ))}
-                        </RadioGroup>
-                        {!freightOptions.length && !freightLoading && (
-                          <Typography variant="body2" color="text.secondary">
-                            Clique em calcular frete para ver modalidades.
-                          </Typography>
-                        )}
-                      </Paper>
-
                       <Button
                         variant="contained"
                         data-testid="submit-order"
-                        disabled={submitting || items.length === 0}
+                        disabled={!canSubmitOrder}
                         onClick={() => submitOrder()}
                         startIcon={
                           submitting ? (
@@ -1030,10 +1326,10 @@ export default function CartPage() {
                           )
                         }
                         sx={{
-                          backgroundColor: items.length === 0 ? '#ccc' : GREEN,
+                          backgroundColor: !canSubmitOrder ? '#ccc' : GREEN,
                           color: 'white',
                           mt: '25px',
-                          '&:hover': { bgcolor: items.length === 0 ? '#ccc' : GREEN_HOVER },
+                          '&:hover': { bgcolor: !canSubmitOrder ? '#ccc' : GREEN_HOVER },
                         }}
                       >
                         {submitting
@@ -1100,7 +1396,7 @@ export default function CartPage() {
                               <Button
                                 size="small"
                                 variant="outlined"
-                                onClick={() => loadHistoryOrder(o)}
+                                onClick={() => applyOrderToCart(o, { asEdit: false })}
                                 sx={{ borderColor: GREEN, color: GREEN }}
                               >
                                 Comprar Novamente
@@ -1158,7 +1454,7 @@ export default function CartPage() {
                     <Table>
                       <TableHead>
                         <TableRow sx={{ bgcolor: GREEN }}>
-                          {['Nome', 'Qnt', 'Carrinho'].map((h) => (
+                          {['Nome', 'Estoque', 'Qnt', 'Carrinho'].map((h) => (
                             <TableCell key={h} sx={headCell}>
                               {h}
                             </TableCell>
@@ -1168,6 +1464,8 @@ export default function CartPage() {
                       <TableBody>
                         {filteredProducts.map((p) => {
                           const key = p.sku || String(p.id);
+                          const stock = Number(p.amount);
+                          const zero = Number.isFinite(stock) && stock <= 0;
                           return (
                             <TableRow key={p.id} sx={{ '&:hover': { bgcolor: '#e0e0e0' } }}>
                               <TableCell sx={{ maxWidth: 120, fontSize: '0.9em', textAlign: 'left' }}>
@@ -1175,6 +1473,26 @@ export default function CartPage() {
                                 <br />
                                 <br />
                                 Preço: <strong>R${Number(p.price || 0).toFixed(2)}</strong>
+                                {zero ? (
+                                  <>
+                                    <br />
+                                    <Typography
+                                      component="span"
+                                      sx={{ color: '#c62828', fontWeight: 700, fontSize: '0.85em' }}
+                                    >
+                                      Estoque 0
+                                    </Typography>
+                                  </>
+                                ) : null}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  textAlign: 'center',
+                                  fontWeight: 700,
+                                  color: zero ? '#c62828' : 'inherit',
+                                }}
+                              >
+                                {Number.isFinite(stock) ? stock : '—'}
                               </TableCell>
                               <TableCell sx={{ textAlign: 'center' }}>
                                 <input
@@ -1203,7 +1521,7 @@ export default function CartPage() {
                                   data-testid={`product-${p.id}`}
                                   onClick={() => addProduct(p)}
                                   sx={{
-                                    bgcolor: GREEN,
+                                    bgcolor: zero ? '#c62828' : GREEN,
                                     '&:hover': { bgcolor: PURPLE_HOVER },
                                   }}
                                 >

@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Container, TextField, Button, Box, Typography, Grid } from '@mui/material';
 import { useOperatorAuth } from '@kunk/auth-session';
 import { useKunkConfig } from '../config/KunkConfigProvider.jsx';
-import { KUNK_STAFF_ROLES } from '../app/menuConfig.js';
+import { KUNK_APP_ROLES } from '../app/menuConfig.js';
 import { hasAnyRole, roleHomePath } from '../auth/roleRedirect.js';
 
 /** Credenciais do sample seed (`kunk-api/sample-data`). */
@@ -68,7 +68,7 @@ export function LoginPage() {
     try {
       const res = await login(username.trim(), password);
       const userRoles = parseRoles(res.data?.user?.permissions || res.data?.user?.roles);
-      if (!hasAnyRole(userRoles, KUNK_STAFF_ROLES)) {
+      if (!hasAnyRole(userRoles, KUNK_APP_ROLES)) {
         navigate('/unauthorized');
         return;
       }

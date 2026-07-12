@@ -109,6 +109,36 @@ CREATE TABLE IF NOT EXISTS system_users (
   internal_code VARCHAR(255)
 );
 
+-- Institutional clients → institutional_clients
+CREATE TABLE IF NOT EXISTS institutional_clients (
+  id SERIAL PRIMARY KEY,
+  client_code UUID UNIQUE NOT NULL,
+  status VARCHAR(255) NOT NULL DEFAULT 'active',
+  sort INTEGER,
+  date_created TIMESTAMPTZ,
+  date_updated TIMESTAMPTZ,
+  annotations JSONB,
+  is_company BOOLEAN NOT NULL DEFAULT false,
+  company_name VARCHAR(255),
+  company_trade_name VARCHAR(255),
+  company_cnpj VARCHAR(255),
+  company_email VARCHAR(255),
+  company_phone VARCHAR(255),
+  representative_name VARCHAR(255) NOT NULL,
+  representative_last_name VARCHAR(255),
+  representative_cpf VARCHAR(255) NOT NULL,
+  representative_email VARCHAR(255),
+  representative_mobile VARCHAR(255),
+  street VARCHAR(255),
+  street_number VARCHAR(255),
+  complement VARCHAR(255),
+  neighborhood VARCHAR(255),
+  city VARCHAR(255),
+  state VARCHAR(255),
+  cep VARCHAR(255),
+  delivery_address JSONB
+);
+
 -- Orders → orders
 CREATE TABLE IF NOT EXISTS orders (
   id SERIAL PRIMARY KEY,
@@ -121,6 +151,7 @@ CREATE TABLE IF NOT EXISTS orders (
   tracking_code VARCHAR(255),
   delivery_price REAL,
   associate_name VARCHAR(255),
+  receiver_name VARCHAR(255),
   order_code UUID,
   user_code VARCHAR(255),
   items JSONB,
@@ -131,6 +162,8 @@ CREATE TABLE IF NOT EXISTS orders (
   prescriber VARCHAR(255),
   payment_link TEXT,
   "user" INTEGER,
+  institutional_client_id INTEGER,
+  institutional_client_code VARCHAR(255),
   carrier_order_code VARCHAR(255),
   payment_code TEXT,
   order_notes TEXT,
@@ -149,7 +182,9 @@ CREATE TABLE IF NOT EXISTS orders (
   freight_carrier VARCHAR(32),
   freight_option JSONB,
   dce JSONB,
-  CONSTRAINT fk_orders_user FOREIGN KEY ("user") REFERENCES users(id)
+  stock_debited_at TIMESTAMPTZ,
+  CONSTRAINT fk_orders_user FOREIGN KEY ("user") REFERENCES users(id),
+  CONSTRAINT fk_orders_institutional_client FOREIGN KEY (institutional_client_id) REFERENCES institutional_clients(id)
 );
 
 -- Orders_files → orders_files
@@ -206,6 +241,19 @@ CREATE TABLE IF NOT EXISTS products (
   batch VARCHAR(255)
 );
 
+-- Product stock movements (histórico de uso / ajustes)
+CREATE TABLE IF NOT EXISTS product_stock_movements (
+  id SERIAL PRIMARY KEY,
+  product_id INTEGER NOT NULL REFERENCES products(id),
+  order_id INTEGER REFERENCES orders(id),
+  quantity INTEGER NOT NULL,
+  kind VARCHAR(32) NOT NULL,
+  note TEXT,
+  date_created TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_psm_product ON product_stock_movements(product_id);
+CREATE INDEX IF NOT EXISTS idx_psm_order ON product_stock_movements(order_id);
+
 -- Professionals → professionals
 CREATE TABLE IF NOT EXISTS professionals (
   id SERIAL PRIMARY KEY,
@@ -230,7 +278,8 @@ CREATE TABLE IF NOT EXISTS professionals (
   met_us VARCHAR(255),
   recipient_id VARCHAR(255),
   donation_balance INTEGER,
-  calendar_id VARCHAR(255)
+  calendar_id VARCHAR(255),
+  consultation_price NUMERIC(12, 2) DEFAULT 0
 );
 
 -- Reception → reception
@@ -303,6 +352,7 @@ CREATE TABLE IF NOT EXISTS services (
   donation REAL,
   booking_group_code VARCHAR(255),
   patient_name VARCHAR(255),
+  patient_user_code UUID,
   professional_email VARCHAR(255),
   service_code UUID,
   observations TEXT,
@@ -311,8 +361,10 @@ CREATE TABLE IF NOT EXISTS services (
   created_by_user_code VARCHAR(255),
   payment_code TEXT,
   payment_info JSONB,
+  commission_validation VARCHAR(32),
   CONSTRAINT fk_services_professional_id FOREIGN KEY (professional_id) REFERENCES professionals(professional_code) ON DELETE SET NULL,
-  CONSTRAINT fk_services_associate_user_code FOREIGN KEY (associate_user_code) REFERENCES users(user_code) ON DELETE SET NULL
+  CONSTRAINT fk_services_associate_user_code FOREIGN KEY (associate_user_code) REFERENCES users(user_code) ON DELETE SET NULL,
+  CONSTRAINT fk_services_patient_user_code FOREIGN KEY (patient_user_code) REFERENCES users(user_code) ON DELETE SET NULL
 );
 
 -- services_files → services_files

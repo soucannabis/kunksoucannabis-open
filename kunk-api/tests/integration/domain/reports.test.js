@@ -58,8 +58,12 @@ describe('domain/reports-tags-system-users-search', () => {
   });
 
   it('global search', async () => {
-    const res = await request(app).get('/api/v1/search').query({ q: 'Dom' }).set('Cookie', cookie);
+    const res = await request(app)
+      .get('/api/v1/search')
+      .query({ q: 'Dom', entity: 'users' })
+      .set('Cookie', cookie);
     assert.equal(res.status, 200);
-    assert.ok(res.body.data.users);
+    assert.ok(Array.isArray(res.body.data));
+    assert.ok(res.body.meta);
   });
 });

@@ -4,10 +4,11 @@ import { PATHS, getNavigablePaths } from './menuConfig.js';
 import { roleHomePath } from '../auth/roleRedirect.js';
 
 describe('routes map', () => {
-  it('defines all Portuguese fullPaths from PATHS', () => {
+  it('defines all Portuguese fullPaths from PATHS (app routes)', () => {
     const fullPaths = APP_ROUTE_DEFS.map((r) => r.fullPath);
-    expect(fullPaths).toEqual(expect.arrayContaining(Object.values(PATHS)));
-    expect(fullPaths).toHaveLength(Object.keys(PATHS).length);
+    const appPaths = Object.values(PATHS).filter((p) => String(p).startsWith('/app/'));
+    expect(fullPaths).toEqual(expect.arrayContaining(appPaths));
+    expect(fullPaths.filter((p) => String(p).startsWith('/app/'))).toHaveLength(appPaths.length);
   });
 
   it('every navigable menu path has a route def', () => {

@@ -78,6 +78,31 @@ export function isStoreFreightIncomplete(values) {
   return !shipOk || !pkgOk || !declOk;
 }
 
+/** @returns {{ incomplete: boolean, missing: string[] }} */
+export function getStoreFreightGaps(values) {
+  const ship = values?.shipFrom || {};
+  const pkg = values?.package || {};
+  const decl = values?.contentDeclaration || {};
+  const missing = [];
+  if (!['street', 'number', 'city', 'state', 'cep'].every((k) => String(ship[k] || '').trim())) {
+    missing.push('remetente (dados de envio)');
+  }
+  if (
+    !(
+      Number(pkg.weight_g) > 0 &&
+      Number(pkg.length_cm) > 0 &&
+      Number(pkg.width_cm) > 0 &&
+      Number(pkg.height_cm) > 0
+    )
+  ) {
+    missing.push('caixa / dimensões');
+  }
+  if (!(String(decl.description || '').trim() && Number(decl.total_value) > 0)) {
+    missing.push('declaração de conteúdo');
+  }
+  return { incomplete: missing.length > 0, missing };
+}
+
 export async function loadStoreFreightConfig(api) {
   const defaults = getStoreFreightDefaults();
   const itemsByKey = {};

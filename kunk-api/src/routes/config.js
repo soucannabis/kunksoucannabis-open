@@ -5,6 +5,7 @@ const { ok, fail } = require('../utils/response');
 const systemConfigService = require('../services/systemConfigService');
 const { authenticate } = require('../middleware/authenticate');
 const { requireRole } = require('../middleware/authorize');
+const professionalTypesConfig = require('../services/professionalTypesConfig');
 
 const router = Router();
 
@@ -26,6 +27,45 @@ router.get('/public', async (req, res, next) => {
 });
 
 const admin = [authenticate, requireRole('Administrador')];
+const anyAuth = [authenticate];
+
+/** Tipos de profissional — leitura autenticada; escrita admin */
+router.get('/services/professional-types', ...anyAuth, async (req, res, next) => {
+  try {
+    const data = await professionalTypesConfig.loadProfessionalTypes();
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/services/professional-types', ...admin, async (req, res, next) => {
+  try {
+    const list = Array.isArray(req.body) ? req.body : req.body?.types;
+    const data = await professionalTypesConfig.saveProfessionalTypes(list);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/services/report-settings', ...anyAuth, async (req, res, next) => {
+  try {
+    const data = await professionalTypesConfig.loadReportSettings();
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/services/report-settings', ...admin, async (req, res, next) => {
+  try {
+    const data = await professionalTypesConfig.saveReportSettings(req.body || {});
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.get('/systems', ...admin, async (req, res, next) => {
   try {

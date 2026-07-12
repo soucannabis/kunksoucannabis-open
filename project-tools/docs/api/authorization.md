@@ -21,7 +21,8 @@ Toda rota autenticada passa por autorização baseada em **role** (sessão) ou *
 | `Produção` | Orders (produção), products |
 | `Financeiro` | Orders/services (leitura + validação comissão) |
 | `Parceiro` | Relatórios / dados do parceiro (escopo a redesenhar; sem `partner_code` no schema) |
-| `Prescritor` | Relatórios / dados do próprio `prescriber_code` |
+| `Prescritor` | Relatórios / dados do próprio `prescriber_code` (pedidos — fora do módulo de serviços v1) |
+| `Profissional` | Portal de relatório de serviços; escopo `internal_code` = `professional_code` |
 | `api` | Reservado a tokens de integração |
 
 Os nomes podem permanecer compatíveis com o JSON atual de `permissions` no kunkserver.
@@ -43,7 +44,9 @@ Os nomes podem permanecer compatíveis com o JSON atual de `permissions` no kunk
 | `files` / `*_files` | CRUD | CRUD | R | R | — | — |
 | `users_api` / tokens | CRUD | — | — | — | — | — |
 
-`R*` = leitura **escopada** ao próprio código (prescriber; parceiro pendente de redesenho), não lista global.
+`R*` = leitura **escopada** ao próprio código (`Prescritor` / `Profissional`; parceiro pendente de redesenho), não lista global.
+
+Role `Profissional` (portal de serviços): ver [`../frontend/kunk/relatorios-servicos/api.md`](../frontend/kunk/relatorios-servicos/api.md) — tipicamente `services` R*, `professionals` R* (próprio), sem CRUD staff.
 
 ## Middleware
 
@@ -85,7 +88,8 @@ Mapeamento:
 Além do RBAC de collection, aplicar **filtros obrigatórios** no repositório:
 
 - Role `Parceiro` → sem filtro automático por enquanto (`partner_code` removido do schema)
-- Role `Prescritor` → `WHERE prescriber_code = …`
+- Role `Prescritor` → `WHERE prescriber_code = …` (pedidos; fora do relatório de serviços v1)
+- Role `Profissional` → `WHERE services.professional_id = system_users.internal_code` (relatório de serviços)
 - Tokens com scope restrito → mesmo princípio se o token estiver vinculado a um parceiro
 
 Isso evita vazamento mesmo se o cliente omitir o filter.

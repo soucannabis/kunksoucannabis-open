@@ -125,15 +125,21 @@ Inserir rows com `encrypted_value=NULL` e `env_fallback` preenchido para o assis
 | melhorenvio | api_base_url | MELHOR_ENVIO_API_URL | false |
 | melhorenvio | access_token | — | true |
 | melhorenvio | refresh_token | — | true |
+| geoapify | api_key | GEOAPIFY_API_KEY | true |
+| google_calendar | client_id | GOOGLE_CLIENT_ID | true |
+| google_calendar | client_secret | GOOGLE_CLIENT_SECRET | true |
+| google_calendar | redirect_uri | GOOGLE_REDIRECT_URI | false |
+| google_calendar | access_token | — | true |
+| google_calendar | refresh_token | — | true |
 
-Tokens ME são preenchidos só pelo callback OAuth (não pelo form manual, exceto “limpar”).
+Tokens ME e Google Calendar são preenchidos só pelo callback OAuth (não pelo form manual, exceto “limpar”).
 
 ## Assistente — regras
 
 1. Schema de campos vem da API (`fields_schema` no GET do serviço).
 2. Campos required vazios (sem db e sem env) → bloqueia “Concluir”.
 3. Ao salvar secrets → teste obrigatório; **falha = não grava**.
-4. Se precisar de OAuth (Melhor Envio), o assistente tem passo “Autorizar” antes do teste completo.
+4. Se precisar de OAuth (Melhor Envio, Google Calendar), o assistente tem passo “Autorizar” antes do teste completo.
 5. Resultado do teste exibido inline; falhas não revelam pedaços do secret.
 
 ## Segurança
@@ -154,10 +160,13 @@ system_configs (system=modules)
   modules.loggi.enabled
   modules.loggi.use_for_quote
   modules.loggi.use_for_label
+  modules.google_calendar.enabled
+  modules.google_calendar.use_for_scheduling
+  modules.google_calendar.primary_calendar_id
   …
 
-system_api_credentials (service=loggi)
-  client_id, client_secret, company_id, …
+system_api_credentials (service=loggi | google_calendar | …)
+  client_id, client_secret, …
 ```
 
 Flags e papéis ≠ secrets. O módulo lê ambos no bootstrap da request.

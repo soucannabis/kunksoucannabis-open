@@ -33,6 +33,24 @@ router.post('/quote', requireCartRole, async (req, res, next) => {
   }
 });
 
+router.get('/quote-availability', requireCartRole, async (req, res, next) => {
+  try {
+    const data = await freightService.getQuoteAvailability();
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/label-availability', requireCartRole, async (req, res, next) => {
+  try {
+    const data = await freightService.getLabelAvailability();
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/service-options', requireCartRole, async (req, res, next) => {
   try {
     const data = await freightService.getServiceOptions();

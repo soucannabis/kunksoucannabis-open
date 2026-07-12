@@ -2,10 +2,19 @@
 
 const { query } = require('../db/pool');
 const itemsRepository = require('../repositories/itemsRepository');
+const filesRepository = require('../repositories/filesRepository');
 const receptionService = require('./receptionService');
 const storeFreight = require('./storeFreightConfig');
 const orderStatuses = require('./orderStatusesService');
 const { computeExpectedTotal } = require('./orderTotals');
+const {
+  hasStreetAddress,
+  deliveryAddressFromUser,
+  pickDisplayTracking,
+  isDisplayTrackingCode,
+} = require('./orderAddressTracking');
+const institutional = require('./institutionalClientsService');
+const stockService = require('./stockService');
 const { AppError } = require('../utils/response');
 const { v4: uuidv4 } = require('uuid');
 
@@ -64,13 +73,23 @@ async function validateAndNormalizeCheckout(payload) {
     associate_email,
     associate_code,
     name_associate,
+    info,
+    kunk_user,
     ...rest
   } = payload;
+
+  const associateName = rest.associate_name || name_associate || rest.associate_name || null;
+  const receiverName =
+    rest.receiver_name != null && String(rest.receiver_name).trim() !== ''
+      ? String(rest.receiver_name).trim()
+      : associateName;
 
   return {
     body: {
       ...rest,
-      associate_name: rest.associate_name || name_associate || rest.associate_name,
+      associate_name: associateName,
+      receiver_name: receiverName,
+      details: info !== undefined ? info : rest.details,
       total: breakdown.expected_total,
       discount: breakdown.discount,
       donation: breakdown.donation,
@@ -86,22 +105,129 @@ async function validateAndNormalizeCheckout(payload) {
   };
 }
 
+async function loadUserForOrder(payload) {
+  if (payload?.user) {
+    const byId = await query(
+      `SELECT id, user_code, associate_name, associate_last_name, associate_cpf, mobile_number,
+              email, email_account, delivery_address, street, street_number, complement,
+              neighborhood, city, state, cep
+       FROM users WHERE id = $1 LIMIT 1`,
+      [payload.user]
+    );
+    if (byId.rows[0]) return byId.rows[0];
+  }
+  if (payload?.user_code) {
+    const byCode = await query(
+      `SELECT id, user_code, associate_name, associate_last_name, associate_cpf, mobile_number,
+              email, email_account, delivery_address, street, street_number, complement,
+              neighborhood, city, state, cep
+       FROM users WHERE user_code = $1 LIMIT 1`,
+      [payload.user_code]
+    );
+    if (byCode.rows[0]) return byCode.rows[0];
+  }
+  return null;
+}
+
+async function resolveOrderAddress(body) {
+  if (hasStreetAddress(body.address)) return body.address;
+  const client = await institutional.loadClientForOrder(body);
+  if (client) return institutional.deliveryAddressFromClient(client);
+  const user = await loadUserForOrder(body);
+  return deliveryAddressFromUser(user);
+}
+
+function associateDisplayName(user) {
+  if (!user) return null;
+  return `${user.associate_name || ''} ${user.associate_last_name || ''}`.trim() || null;
+}
+
+function assertOrderOwnerXor(body) {
+  const hasUser = Boolean(body.user || body.user_code);
+  const hasIc = Boolean(body.institutional_client_id || body.institutional_client_code || body.client_code);
+  if (hasUser && hasIc) {
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'Pedido deve vincular associado OU cliente institucional, não ambos'
+    );
+  }
+  if (!hasUser && !hasIc) {
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'Pedido sem associado nem cliente institucional'
+    );
+  }
+}
+
 async function createOrder(payload, actor) {
   const { body, triage } = await validateAndNormalizeCheckout(payload || {});
+  assertOrderOwnerXor(body);
+
+  const address = await resolveOrderAddress(body);
+  if (!hasStreetAddress(address)) {
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'Pedido sem endereço. Preencha o endereço de entrega ou informe address no pedido.'
+    );
+  }
+
+  let associateName = body.associate_name;
+  let receiverName = body.receiver_name;
+  const client = await institutional.loadClientForOrder(body);
+  const user = client ? null : await loadUserForOrder(body);
+
+  if (client) {
+    associateName = institutional.displayName(client) || associateName || null;
+    receiverName = institutional.receiverName(client) || receiverName || associateName;
+    body.institutional_client_id = client.id;
+    body.institutional_client_code = client.client_code;
+    body.user = null;
+    body.user_code = null;
+  } else {
+    const display = associateDisplayName(user);
+    // Prefere nome completo do cadastro (associate_name + associate_last_name).
+    if (display) {
+      const payloadName = String(associateName || '').trim();
+      associateName = display;
+      if (!receiverName || String(receiverName).trim() === payloadName) {
+        receiverName = display;
+      }
+    } else {
+      associateName = associateName || null;
+      receiverName = receiverName || associateName;
+    }
+    body.institutional_client_id = null;
+    body.institutional_client_code = null;
+  }
+
+  delete body.client_code;
+
+  const stockSnap = await stockService.snapshotItemsStock(body.items || []);
+  body.items = stockSnap.items;
+
   const orderBody = {
     ...body,
+    address,
+    associate_name: associateName,
+    receiver_name: receiverName || associateName,
     order_code: body.order_code || uuidv4(),
     date_created: new Date().toISOString(),
-    created_by_user_code: body.created_by_user_code || actor?.user_code || actor?.internal_code,
+    created_by_user_code:
+      body.created_by_user_code || actor?.internal_code || actor?.user_code || null,
   };
   const order = await itemsRepository.createItem('orders', orderBody);
   try {
-    await receptionService.completeOpenByAssociate({
-      email: triage.email,
-      associate_code: triage.associate_code,
-      completion_reason: 'Pedido',
-      actor,
-    });
+    if (!client) {
+      await receptionService.completeOpenByAssociate({
+        email: triage.email,
+        associate_code: triage.associate_code,
+        completion_reason: 'Pedido',
+        actor,
+      });
+    }
   } catch {
     /* non-blocking */
   }
@@ -111,12 +237,236 @@ async function createOrder(payload, actor) {
 async function updateOrder(id, payload, actor) {
   const existing = await itemsRepository.getItem('orders', id);
   if (!existing) throw new AppError(404, 'NOT_FOUND', 'Pedido não encontrado');
+
+  // Edição pelo carrinho: se já havia baixa de estoque (pagamento concluído), estorna antes de alterar itens/status.
+  if (existing.stock_debited_at) {
+    await stockService.reverseSaleForOrder(id);
+  }
+
   const merged = { ...existing, ...payload, id: existing.id };
   const { body } = await validateAndNormalizeCheckout(merged);
+  // Pedido já existente: address do payload (ou o já salvo) tem prioridade sobre o do usuário.
+  if (hasStreetAddress(payload?.address)) {
+    body.address = payload.address;
+  } else if (hasStreetAddress(existing.address)) {
+    body.address = existing.address;
+  } else {
+    body.address = await resolveOrderAddress({ ...existing, ...body });
+  }
+  if (!body.receiver_name) {
+    body.receiver_name = existing.receiver_name || body.associate_name || existing.associate_name;
+  }
+
+  const stockSnap = await stockService.snapshotItemsStock(body.items || []);
+  body.items = stockSnap.items;
+
   return itemsRepository.updateItem('orders', id, {
     ...body,
+    stock_debited_at: null,
     date_updated: new Date().toISOString(),
   });
+}
+
+/** Patch leve do modal de detalhes (sem revalidar total do checkout). */
+async function updateOrderDetails(id, payload = {}) {
+  const existing = await itemsRepository.getItem('orders', id);
+  if (!existing) throw new AppError(404, 'NOT_FOUND', 'Pedido não encontrado');
+
+  const patch = { date_updated: new Date().toISOString() };
+  if (payload.receiver_name !== undefined) {
+    patch.receiver_name = String(payload.receiver_name || '').trim() || existing.associate_name;
+  }
+  if (payload.details !== undefined || payload.info !== undefined) {
+    patch.details = payload.details !== undefined ? payload.details : payload.info;
+  }
+  if (payload.address !== undefined) {
+    if (payload.address && !hasStreetAddress(payload.address)) {
+      throw new AppError(400, 'VALIDATION_ERROR', 'Endereço do pedido incompleto (rua obrigatória)');
+    }
+    patch.address = payload.address;
+  }
+  if (payload.address_validation !== undefined) {
+    patch.address_validation = payload.address_validation;
+  }
+
+  return itemsRepository.updateItem('orders', id, patch);
+}
+
+async function getOrderDetails(id) {
+  const order = await itemsRepository.getItem('orders', id);
+  if (!order) throw new AppError(404, 'NOT_FOUND', 'Pedido não encontrado');
+
+  const client = await institutional.loadClientForOrder(order);
+  const user = client ? null : await loadUserForOrder(order);
+  const files = await listOrderFiles(id);
+  return {
+    ...order,
+    display_tracking_code: pickDisplayTracking(order.tracking_code),
+    associate: user
+      ? {
+          id: user.id,
+          user_code: user.user_code,
+          name: associateDisplayName(user),
+          phone: user.mobile_number || null,
+          cpf: user.associate_cpf || null,
+          email: user.email_account || user.email || null,
+        }
+      : null,
+    institutional_client: client
+      ? {
+          id: client.id,
+          client_code: client.client_code,
+          is_company: Boolean(client.is_company),
+          name: institutional.displayName(client),
+          receiver_name: institutional.receiverName(client),
+          document: institutional.shippingDocument(client) || null,
+          phone: institutional.shippingPhone(client) || null,
+          email: institutional.shippingEmail(client) || null,
+        }
+      : null,
+    files,
+  };
+}
+
+async function listOrderFiles(orderId) {
+  const result = await query(
+    `SELECT f.id, f.filename, f.mime_type, f.storage_path, f.created_at, of.id AS link_id
+     FROM orders_files of
+     JOIN files f ON f.id = of.file_id
+     WHERE of.order_id = $1
+     ORDER BY f.created_at DESC NULLS LAST, f.id DESC`,
+    [orderId]
+  );
+  return result.rows.map((row) => ({
+    ...row,
+    url: `/api/v1/files/${row.id}/download`,
+  }));
+}
+
+/**
+ * Anexa comprovante ao pedido. Se status = aguardando pagamento, marca como pago.
+ */
+async function attachOrderFile(orderId, fileId, { confirmPayment = true } = {}) {
+  const order = await itemsRepository.getItem('orders', orderId);
+  if (!order) throw new AppError(404, 'NOT_FOUND', 'Pedido não encontrado');
+
+  await filesRepository.attachFile(fileId, 'orders', orderId);
+  const file = await filesRepository.getFile(fileId);
+
+  let updated = order;
+  if (confirmPayment) {
+    const statuses = await orderStatuses.getOrderStatuses();
+    const awaiting = orderStatuses.getAwaitingValue(statuses);
+    const paid = orderStatuses.getPaidValue(statuses);
+    if (order.status === awaiting) {
+      updated = await updateStatus(orderId, paid);
+    }
+  }
+
+  return {
+    file,
+    order: updated,
+    payment_confirmed: updated.status !== order.status,
+  };
+}
+
+async function getOrderTracking(id) {
+  const order = await itemsRepository.getItem('orders', id);
+  if (!order) throw new AppError(404, 'NOT_FOUND', 'Pedido não encontrado');
+
+  const carrier = String(order.freight_carrier || order.freight_option?.provider || '').toLowerCase();
+  const now = new Date().toISOString();
+
+  if (carrier === 'loggi') {
+    const loggiLabel = require('./loggi/label');
+    const code =
+      pickDisplayTracking(order.tracking_code) ||
+      order.tracking_code ||
+      order.carrier_order_code;
+    if (!code) {
+      throw new AppError(400, 'VALIDATION_ERROR', 'Pedido sem código Loggi para rastrear');
+    }
+    try {
+      const data = await loggiLabel.getPackages({
+        trackingCode: pickDisplayTracking(order.tracking_code) || order.tracking_code,
+        loggiKey: order.carrier_order_code,
+      });
+      const pkg = data.package || data.packages?.[0] || data;
+      const tracking =
+        pickDisplayTracking(pkg?.trackingCode, data?.trackingCode, order.tracking_code) || null;
+      if (tracking && tracking !== order.tracking_code) {
+        await itemsRepository.updateItem('orders', id, {
+          tracking_code: tracking,
+          last_tracking_date: now,
+          date_updated: now,
+        });
+      } else {
+        await itemsRepository.updateItem('orders', id, { last_tracking_date: now }).catch(() => {});
+      }
+      return {
+        provider: 'loggi',
+        tracking_code: tracking || pickDisplayTracking(order.tracking_code) || code,
+        carrier_order_code: order.carrier_order_code,
+        package: pkg,
+        trackingPartial: Boolean(data.trackingPartial),
+      };
+    } catch (err) {
+      // Pacote recém-criado via async-shipments pode ainda não existir no GET /packages.
+      const notFound =
+        err?.status === 404 ||
+        err?.code === 'LOGGI_NOT_FOUND' ||
+        /não encontrado|not found/i.test(err?.message || '');
+      if (notFound) {
+        return {
+          provider: 'loggi',
+          tracking_code: pickDisplayTracking(order.tracking_code) || code,
+          carrier_order_code: order.carrier_order_code,
+          package: null,
+          pending: true,
+          message:
+            'Código de rastreio gerado, mas a Loggi ainda não disponibilizou o histórico. Tente novamente em alguns minutos.',
+        };
+      }
+      throw err;
+    }
+  }
+
+  if (carrier === 'melhorenvio') {
+    const meLabel = require('./melhorenvio/label');
+    const shipmentId = order.carrier_order_code;
+    if (!shipmentId) {
+      throw new AppError(400, 'VALIDATION_ERROR', 'Pedido sem id Melhor Envio (carrier_order_code)');
+    }
+    const data = await meLabel.getShipmentDetails(shipmentId);
+    const tracking = pickDisplayTracking(
+      data?.tracking,
+      data?.self_tracking,
+      data?.[shipmentId]?.tracking,
+      order.tracking_code
+    );
+    const patch = { last_tracking_date: now, date_updated: now };
+    if (tracking && tracking !== order.tracking_code) {
+      patch.tracking_code = tracking;
+      patch.tracking_code_date = now;
+    }
+    await itemsRepository.updateItem('orders', id, patch);
+    return {
+      provider: 'melhorenvio',
+      tracking_code: tracking,
+      carrier_order_code: order.carrier_order_code,
+      shipment: data,
+      tracking_url: data?.tracking_url || (tracking ? `https://www.melhorrastreio.com.br/rastreio/${tracking}` : null),
+    };
+  }
+
+  return {
+    provider: carrier || null,
+    tracking_code: pickDisplayTracking(order.tracking_code),
+    carrier_order_code: order.carrier_order_code,
+    shipment: null,
+    package: null,
+    message: 'Transportadora sem integração de rastreio neste pedido',
+  };
 }
 
 function normalizeEndDate(endDate) {
@@ -173,8 +523,24 @@ function buildListWhere(queryParams = {}) {
 
   const tags = parseTagsParam(queryParams.tags);
   for (const tag of tags) {
-    params.push(JSON.stringify([tag]));
-    parts.push(`COALESCE(tags, '[]'::jsonb) @> $${params.length}::jsonb`);
+    params.push(tag);
+    const i = params.length;
+    parts.push(`EXISTS (
+      SELECT 1
+      FROM jsonb_array_elements(
+        CASE WHEN jsonb_typeof(COALESCE(tags, '[]'::jsonb)) = 'array'
+          THEN COALESCE(tags, '[]'::jsonb)
+          ELSE '[]'::jsonb
+        END
+      ) AS elem
+      WHERE (
+        (jsonb_typeof(elem) = 'string' AND TRIM(elem #>> '{}') = $${i})
+        OR (jsonb_typeof(elem) = 'object' AND (
+          TRIM(COALESCE(elem->>'tag', '')) = $${i}
+          OR TRIM(COALESCE(elem->>'name', '')) = $${i}
+        ))
+      )
+    )`);
   }
 
   const where = parts.length ? `WHERE ${parts.join(' AND ')}` : '';
@@ -196,8 +562,13 @@ async function listOrders(queryParams = {}) {
     listParams
   );
 
+  const data = (result.rows || []).map((row) => ({
+    ...row,
+    tags: normalizeTags(row.tags),
+  }));
+
   return {
-    data: result.rows,
+    data,
     meta: {
       filter_count: countResult.rows[0].total,
       total_count: countResult.rows[0].total,
@@ -225,15 +596,21 @@ async function facets(queryParams = {}) {
   const tagResult = await query(
     `SELECT tag, COUNT(*)::int AS count
      FROM (
-       SELECT jsonb_array_elements_text(
+       SELECT CASE
+         WHEN jsonb_typeof(elem) = 'string' THEN TRIM(elem #>> '{}')
+         WHEN jsonb_typeof(elem) = 'object' THEN TRIM(COALESCE(elem->>'tag', elem->>'name', ''))
+         ELSE NULL
+       END AS tag
+       FROM orders
+       CROSS JOIN LATERAL jsonb_array_elements(
          CASE
-           WHEN jsonb_typeof(tags) = 'array' THEN tags
+           WHEN jsonb_typeof(COALESCE(tags, '[]'::jsonb)) = 'array' THEN COALESCE(tags, '[]'::jsonb)
            ELSE '[]'::jsonb
          END
-       ) AS tag
-       FROM orders ${where}
+       ) AS elem
+       ${where}
      ) t
-     WHERE tag IS NOT NULL AND TRIM(tag) <> ''
+     WHERE tag IS NOT NULL AND tag <> ''
      GROUP BY tag
      ORDER BY count DESC
      LIMIT 100`,
@@ -268,20 +645,44 @@ async function updateStatus(id, status) {
     throw new AppError(400, 'VALIDATION_ERROR', `Status não permitido: ${status}`);
   }
 
-  const existing = await itemsRepository.getItem('orders', id);
-  if (!existing) throw new AppError(404, 'NOT_FOUND', 'Pedido não encontrado');
-
   const awaiting = orderStatuses.getAwaitingValue(statuses);
   const paid = orderStatuses.getPaidValue(statuses);
-  const patch = { status, date_updated: new Date().toISOString() };
 
-  if (status === paid && existing.status === awaiting) {
-    patch.payment_date = new Date().toISOString();
-  } else if (status === awaiting && existing.status === paid) {
-    patch.payment_date = null;
-  }
+  return stockService.withTransaction(async (client) => {
+    const existingRes = await client.query(`SELECT * FROM orders WHERE id = $1 FOR UPDATE`, [id]);
+    const existing = existingRes.rows[0];
+    if (!existing) throw new AppError(404, 'NOT_FOUND', 'Pedido não encontrado');
 
-  return itemsRepository.updateItem('orders', id, patch);
+    // Baixa/estorno: qualquer transição para pago aplica (idempotente via stock_debited_at);
+    // qualquer transição para aguardando estorna se havia baixa.
+    // Também repara pedido já pago sem stock_debited_at (legado / falha anterior).
+    if (status === paid) {
+      await stockService.applySaleForOrder(id, client);
+    } else if (status === awaiting) {
+      await stockService.reverseSaleForOrder(id, client);
+    } else if (existing.status === paid && !existing.stock_debited_at) {
+      await stockService.applySaleForOrder(id, client);
+    }
+
+    const now = new Date().toISOString();
+    const sets = ['status = $1', 'date_updated = $2'];
+    const params = [status, now];
+
+    if (status === paid && existing.status !== paid) {
+      sets.push(`payment_date = $${params.length + 1}`);
+      params.push(now);
+    } else if (status === awaiting && existing.status === paid) {
+      sets.push(`payment_date = $${params.length + 1}`);
+      params.push(null);
+    }
+
+    params.push(id);
+    const updated = await client.query(
+      `UPDATE orders SET ${sets.join(', ')} WHERE id = $${params.length} RETURNING *`,
+      params
+    );
+    return updated.rows[0];
+  });
 }
 
 async function updateProduction(id, payload) {
@@ -385,9 +786,9 @@ async function bulkAction(payload = {}) {
             order_id: id,
             order_code: order.order_code,
             address: order.address,
-            name_associate: order.associate_name,
+            name_associate: order.receiver_name || order.associate_name,
             freight_option: order.freight_option,
-            user: { name: order.associate_name },
+            user: { name: order.receiver_name || order.associate_name },
           };
           data =
             provider === 'loggi'
@@ -398,7 +799,9 @@ async function bulkAction(payload = {}) {
             provider === 'loggi'
               ? await loggiLabel.cancelPackage({
                   orderId: id,
-                  tracking_code: order.tracking_code || order.carrier_order_code,
+                  tracking_code: order.tracking_code || null,
+                  loggi_key: order.carrier_order_code || null,
+                  order,
                 })
               : await meLabel.cancelLabel({ orderId: id, order });
         }
@@ -420,6 +823,11 @@ async function bulkAction(payload = {}) {
 module.exports = {
   createOrder,
   updateOrder,
+  updateOrderDetails,
+  getOrderDetails,
+  listOrderFiles,
+  attachOrderFile,
+  getOrderTracking,
   updateStatus,
   updateProduction,
   registerPayment,
@@ -431,4 +839,6 @@ module.exports = {
   deleteOrder,
   bulkAction,
   validateAndNormalizeCheckout,
+  isDisplayTrackingCode,
+  pickDisplayTracking,
 };

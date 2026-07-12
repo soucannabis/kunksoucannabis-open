@@ -119,7 +119,8 @@ router.get('/by-code/:user_code', authorize('users', 'read'), async (req, res, n
 
 router.post('/', authorize('users', 'create'), async (req, res, next) => {
   try {
-    const data = await usersService.createUser(req.body || {});
+    const body = { ...(req.body || {}), panel: true };
+    const data = await usersService.createUser(body);
     res.status(201).json(ok(data));
   } catch (err) {
     next(err);
@@ -135,9 +136,67 @@ router.patch('/:id', authorize('users', 'update'), async (req, res, next) => {
   }
 });
 
+router.post('/:id/make-associate', authorize('users', 'update'), async (req, res, next) => {
+  try {
+    const data = await usersService.makeAssociate(req.params.id);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/:id', authorize('users', 'delete'), async (req, res, next) => {
+  try {
+    const data = await usersService.deleteUser(req.params.id);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/:id/patients', authorize('users', 'read'), async (req, res, next) => {
   try {
     const data = await usersService.getPatients(req.params.id);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/patients', authorize('users', 'create'), async (req, res, next) => {
+  try {
+    const data = await usersService.createPatient(req.params.id, req.body || {});
+    res.status(201).json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/:id/patients/:patientId', authorize('users', 'update'), async (req, res, next) => {
+  try {
+    const data = await usersService.updatePatient(
+      req.params.id,
+      req.params.patientId,
+      req.body || {}
+    );
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/:id/patients/:patientId', authorize('users', 'delete'), async (req, res, next) => {
+  try {
+    const data = await usersService.deletePatient(req.params.id, req.params.patientId);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:id/history', authorize('users', 'read'), async (req, res, next) => {
+  try {
+    const data = await usersService.getHistory(req.params.id);
     res.json(ok(data));
   } catch (err) {
     next(err);

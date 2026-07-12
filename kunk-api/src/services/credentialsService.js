@@ -35,36 +35,55 @@ async function listRows(service) {
 }
 
 /**
+ * Resolve plaintext from an already-fetched row (no extra DB round-trip).
+ * Cascade: DB encrypted → env_fallback → null
+ */
+function resolveFromRow(row) {
+  if (!row) return { value: null, source: 'empty', row: null };
+  if (row.encrypted_value) {
+    try {
+      return { value: decryptValue(row.encrypted_value), source: 'db', row };
+    } catch {
+      throw new AppError(
+        500,
+        'CREDENTIAL_INVALID',
+        `Falha ao descriptografar ${row.service}.${row.field_key}`
+      );
+    }
+  }
+  if (row.env_fallback && process.env[row.env_fallback]) {
+    return { value: process.env[row.env_fallback], source: 'env', row };
+  }
+  return { value: null, source: 'empty', row };
+}
+
+/** Presence only — avoids PBKDF2 decrypt when plaintext is not needed. */
+function hasValueFromRow(row) {
+  if (!row) return false;
+  if (row.encrypted_value) return true;
+  return Boolean(row.env_fallback && process.env[row.env_fallback]);
+}
+
+/**
  * Resolve plaintext for a credential field (server-only).
  * Cascade: DB encrypted → env_fallback → null
  */
 async function resolveField(service, fieldKey) {
   const result = await query(
-    `SELECT encrypted_value, env_fallback, is_secret
+    `SELECT id, service, field_key, encrypted_value, env_fallback, is_secret,
+            description, last_tested_at, last_test_ok, date_created, date_updated
      FROM system_api_credentials
      WHERE service = $1 AND field_key = $2`,
     [service, fieldKey]
   );
-  const row = result.rows[0];
-  if (row?.encrypted_value) {
-    try {
-      return { value: decryptValue(row.encrypted_value), source: 'db', row };
-    } catch {
-      throw new AppError(500, 'CREDENTIAL_INVALID', `Falha ao descriptografar ${service}.${fieldKey}`);
-    }
-  }
-  if (row?.env_fallback && process.env[row.env_fallback]) {
-    return { value: process.env[row.env_fallback], source: 'env', row };
-  }
-  return { value: null, source: 'empty', row: row || null };
+  return resolveFromRow(result.rows[0]);
 }
 
 async function resolveAll(service) {
   const rows = await listRows(service);
   const out = {};
   for (const row of rows) {
-    const resolved = await resolveField(service, row.field_key);
-    out[row.field_key] = resolved.value;
+    out[row.field_key] = resolveFromRow(row).value;
   }
   return out;
 }
@@ -76,7 +95,7 @@ function toPublicMeta(row, resolved) {
   if (hasDb) source = 'db';
   else if (envPresent) source = 'env';
 
-  return {
+  const meta = {
     service: row.service,
     field_key: row.field_key,
     is_secret: Boolean(row.is_secret),
@@ -88,18 +107,36 @@ function toPublicMeta(row, resolved) {
     last_tested_at: row.last_tested_at,
     last_test_ok: row.last_test_ok,
   };
+  // Non-secrets may be shown in admin (redirect_uri, api_base_url, company_id, …)
+  if (!meta.is_secret && resolved?.value) {
+    meta.value = resolved.value;
+  }
+  return meta;
 }
 
 async function listPublic(service) {
   const rows = await listRows(service);
-  return rows.map((row) => toPublicMeta(row));
+  return rows.map((row) => {
+    // Secrets: presence only — decrypt is expensive (PBKDF2) and unused in admin UI
+    if (row.is_secret) {
+      const source = row.encrypted_value
+        ? 'db'
+        : row.env_fallback && process.env[row.env_fallback]
+          ? 'env'
+          : 'empty';
+      return toPublicMeta(row, { source, value: null });
+    }
+    return toPublicMeta(row, resolveFromRow(row));
+  });
 }
 
 async function requireFields(service, fieldKeys) {
+  const rows = await listRows(service);
+  const byKey = Object.fromEntries(rows.map((r) => [r.field_key, r]));
   const missing = [];
   const values = {};
   for (const key of fieldKeys) {
-    const resolved = await resolveField(service, key);
+    const resolved = resolveFromRow(byKey[key]);
     if (!resolved.value) missing.push(key);
     else values[key] = resolved.value;
   }
@@ -131,7 +168,26 @@ async function putCredentials(service, fields, { runTest = true, testFn = null }
     if (!meta) {
       throw new AppError(400, 'VALIDATION_ERROR', `Campo desconhecido: ${fieldKey}`);
     }
-    pending.push({ fieldKey, plaintext: String(raw), isSecret: Boolean(meta.is_secret) });
+    let plaintext = String(raw).trim();
+    // Avoid accidental // in paths (common with ngrok host + /api/…)
+    if (fieldKey === 'redirect_uri' || fieldKey === 'api_base_url' || fieldKey === 'token_url') {
+      plaintext = plaintext.replace(/([^:]\/)\/+/g, '$1');
+    }
+    if (service === 'melhorenvio' && (fieldKey === 'api_base_url' || fieldKey === 'environment')) {
+      const meAuth = require('./melhorenvio/auth');
+      if (fieldKey === 'environment') {
+        plaintext = meAuth.resolveEnvironmentKey(plaintext);
+      } else {
+        // Pin to official URL for the chosen / current environment
+        const envFromPayload =
+          fields.environment != null
+            ? meAuth.resolveEnvironmentKey(fields.environment)
+            : null;
+        const envKey = envFromPayload || meAuth.detectEnvironmentFromApiBase(plaintext);
+        plaintext = meAuth.ME_ENVIRONMENTS[envKey].api_base_url;
+      }
+    }
+    pending.push({ fieldKey, plaintext, isSecret: Boolean(meta.is_secret) });
   }
 
   if (!pending.length) {
@@ -197,6 +253,8 @@ module.exports = {
   listRows,
   listPublic,
   resolveField,
+  resolveFromRow,
+  hasValueFromRow,
   resolveAll,
   requireFields,
   putCredentials,

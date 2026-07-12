@@ -6,10 +6,21 @@ import { PATHS } from '../app/menuConfig.js';
  */
 export function roleHomePath(roles = []) {
   const list = Array.isArray(roles) ? roles : [];
+  if (list.includes('Profissional') && !list.some((r) => ['Administrador', 'Acolhimento', 'Produção'].includes(r))) {
+    return PATHS.professionalServicesReport;
+  }
   if (list.includes('Produção')) return PATHS.orders;
   if (list.includes('Acolhimento')) return PATHS.triage;
   if (list.includes('Administrador')) return PATHS.registration;
   return PATHS.registration;
+}
+
+export function isProfessionalOnly(roles = []) {
+  const list = Array.isArray(roles) ? roles : [];
+  return (
+    list.includes('Profissional') &&
+    !list.some((r) => ['Administrador', 'Acolhimento', 'Produção', 'Financeiro'].includes(r))
+  );
 }
 
 export function hasAnyRole(roles = [], allowed = []) {
@@ -28,7 +39,13 @@ export function pageTitleFromPath(pathname = '') {
     'novo-pedido': 'Novo pedido',
     produtos: 'Produtos',
     prescritores: 'Prescritores',
+    profissionais: 'Profissionais',
     historico: 'Histórico do sistema',
+    tags: 'Tags',
+    servicos: 'Serviços',
   };
+  if (pathname.includes('/relatorios/servicos') || pathname.includes('/relatorio/servicos')) {
+    return 'Relatório de serviços';
+  }
   return map[part] || part;
 }

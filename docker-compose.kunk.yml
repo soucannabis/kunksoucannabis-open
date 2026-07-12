@@ -14,6 +14,8 @@ services:
       HOST: "0.0.0.0"
       NODE_ENV: development
       STORAGE_PATH: /app/storage
+      # URL pública da API (OAuth redirect). Nunca use o hostname Docker (kunk-api).
+      PUBLIC_API_URL: "http://localhost:4250"
       CORS_ORIGIN: "http://localhost:4255,http://localhost:4256,http://localhost:4257,http://admin:4256,http://kunk:4257"
       CHOKIDAR_USEPOLLING: "true"
       CHOKIDAR_INTERVAL: "1000"

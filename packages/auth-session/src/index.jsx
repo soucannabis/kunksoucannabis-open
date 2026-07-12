@@ -102,6 +102,7 @@ export function OperatorAuthProvider({
   children,
 }) {
   const [user, setUser] = useState(null);
+  const [rolePages, setRolePages] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const roles = useMemo(() => parseRoles(user?.permissions || user?.roles), [user]);
@@ -114,9 +115,11 @@ export function OperatorAuthProvider({
     try {
       const res = await api.me();
       setUser(res.data?.user || null);
+      setRolePages(res.data?.role_pages || null);
       return res.data?.user || null;
     } catch {
       setUser(null);
+      setRolePages(null);
       return null;
     }
   }, [api]);
@@ -140,6 +143,7 @@ export function OperatorAuthProvider({
     user,
     loading,
     roles,
+    rolePages,
     hasRequiredRole,
     requiredRole,
     allowedRoles,
@@ -148,6 +152,13 @@ export function OperatorAuthProvider({
     async login(email, password) {
       const res = await api.login(email, password);
       setUser(res.data?.user || null);
+      // role_pages filled on next refresh/me
+      try {
+        const me = await api.me();
+        setRolePages(me.data?.role_pages || null);
+      } catch {
+        setRolePages(null);
+      }
       return res;
     },
     async logout() {
@@ -155,6 +166,7 @@ export function OperatorAuthProvider({
         await api.logout();
       } finally {
         setUser(null);
+        setRolePages(null);
       }
     },
   };

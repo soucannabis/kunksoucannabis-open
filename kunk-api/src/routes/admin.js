@@ -27,6 +27,7 @@ const ROLE_DESCRIPTIONS = {
   Financeiro: 'Painel operacional (financeiro)',
   Parceiro: 'Escopo parceiro (a redesenhar)',
   Prescritor: 'Escopo do próprio prescritor',
+  Profissional: 'Portal do relatório de serviços (próprios dados)',
   api: 'Reservado a tokens de integração',
 };
 

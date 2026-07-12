@@ -23,7 +23,11 @@ import {
   ServicosExternosIndexPage,
   ServicoExternoDetailPage,
 } from './pages/ServicosExternosPages.jsx';
+import { ServicosExternosEnvioPage } from './pages/ServicosExternosEnvioPage.jsx';
 import { UsuariosPage, UsuarioFormPage } from './pages/UsuariosPages.jsx';
+import { RolePagesPage } from './pages/RolePagesPage.jsx';
+import { Ciap2ModulePage } from './pages/Ciap2ModulePage.jsx';
+import { ServicesTypesPage } from './pages/ServicesTypesPage.jsx';
 
 export default function App() {
   const bootstrap = getPublicConfig();
@@ -50,6 +54,8 @@ export default function App() {
             <Route path="/arquivos" element={<ArquivosPage api={api} />} />
             <Route path="/arquivos/:id" element={<ArquivosPage api={api} />} />
             <Route path="/configs" element={<ConfigsIndexPage api={api} />} />
+            <Route path="/configs/ciap2" element={<Ciap2ModulePage api={api} />} />
+            <Route path="/configs/services-types" element={<ServicesTypesPage api={api} />} />
             <Route path="/configs/:system" element={<ConfigsSystemPage api={api} />} />
             <Route path="/aparencia" element={<AparenciaPage api={api} />} />
             <Route path="/triagem" element={<TriageShell />}>
@@ -65,9 +71,11 @@ export default function App() {
             </Route>
             <Route path="/servicos-externos" element={<ServicosExternosShell />}>
               <Route index element={<ServicosExternosIndexPage api={api} />} />
+              <Route path="envio" element={<ServicosExternosEnvioPage api={api} />} />
               <Route path=":service" element={<ServicoExternoDetailPage api={api} />} />
             </Route>
             <Route path="/usuarios" element={<UsuariosPage api={api} />} />
+            <Route path="/usuarios/paginas" element={<RolePagesPage api={api} />} />
             <Route path="/usuarios/novo" element={<UsuarioFormPage api={api} isNew />} />
             <Route path="/usuarios/:id" element={<UsuarioFormPage api={api} />} />
           </Route>

@@ -4,7 +4,7 @@ const { Router } = require('express');
 const ordersService = require('../services/ordersService');
 const { authenticate } = require('../middleware/authenticate');
 const { authorize } = require('../middleware/authorize');
-const { ok } = require('../utils/response');
+const { ok, AppError } = require('../utils/response');
 
 const router = Router();
 router.use(authenticate);
@@ -66,6 +66,54 @@ router.post('/', authorize('orders', 'create'), async (req, res, next) => {
 router.get('/by-user/:userCode', authorize('orders', 'read'), async (req, res, next) => {
   try {
     const data = await ordersService.listByUser(req.params.userCode);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:id', authorize('orders', 'read'), async (req, res, next) => {
+  try {
+    const data = await ordersService.getOrderDetails(req.params.id);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:id/files', authorize('orders', 'read'), async (req, res, next) => {
+  try {
+    const data = await ordersService.listOrderFiles(req.params.id);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/files', authorize('orders', 'update'), async (req, res, next) => {
+  try {
+    const fileId = req.body?.file_id || req.body?.fileId;
+    if (!fileId) throw new AppError(400, 'VALIDATION_ERROR', 'file_id é obrigatório');
+    const confirmPayment = req.body?.confirm_payment !== false;
+    const data = await ordersService.attachOrderFile(req.params.id, fileId, { confirmPayment });
+    res.status(201).json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:id/tracking', authorize('orders', 'read'), async (req, res, next) => {
+  try {
+    const data = await ordersService.getOrderTracking(req.params.id);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/:id/details', authorize('orders', 'update'), async (req, res, next) => {
+  try {
+    const data = await ordersService.updateOrderDetails(req.params.id, req.body || {});
     res.json(ok(data));
   } catch (err) {
     next(err);

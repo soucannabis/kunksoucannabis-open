@@ -61,7 +61,8 @@ Quando o usuário **avança** de fase, o router **não** permite reabrir etapas 
      ├── responsible_type = "another"
      │         [/cadastro-paciente]  (ainda fase 2)
      │         cria/atualiza registro filho status="patient"
-     │         liga patient_user_code no responsável
+     │         liga patient_user_code no responsável  ← ponteiro do FUNIL
+     │         (responsible_code no filho = user_code do responsável)
      │         form paciente completo → segue para fase 3
      │
      └── himself | pet → fase 3
@@ -119,6 +120,8 @@ O progresso **`associate_status` 1–5** roda no **responsável** (quem tem logi
 O registro **paciente** não tem funil próprio: é criado/atualizado na **fase 2**, recebe docs na **fase 3**, e permanece `status = "patient"`.
 
 > **Nota:** a ideia antiga de um progresso string `patient_data` no responsável foi **descartada**. Fase 2 cobre dados do responsável e, se `another`, os do paciente.
+
+> **Painel / Serviços:** `users.patient_user_code` no responsável é só o ponteiro do funil. Atendimento operacional grava `services.patient_user_code`. Semântica completa em [fields.md §3](./fields.md#semântica-canônica-de-patient_user_code-dois-contextos) e [`../kunk/associados/`](../kunk/associados/README.md).
 
 ---
 

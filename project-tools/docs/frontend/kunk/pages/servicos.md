@@ -2,6 +2,7 @@
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
 > Fonte: `kunksoucannabis`.
+> **Spec de implementação OSS:** [`../servicos/README.md`](../servicos/README.md).
 
 ## Identificação
 
@@ -14,19 +15,16 @@
 
 ## Descrição
 
-Agendamento e gestão de serviços (consultas/atendimentos) com calendário e pagamento. Uma das **quatro páginas principais** do Kunk.
+Agendamento e gestão de serviços (consultas/atendimentos) com calendário. Uma das **quatro páginas principais** do Kunk.
 
 ## Funcionalidades
 
 - CRUD de serviços
-- Seleção de profissionais/prescritores
+- Seleção de profissionais/prescritores (`is_collaborator`)
+- Agrupamento por `code` / `booking_group_code` (vários profissionais no mesmo associado)
+- Modal de infos / observações
 - Sincronizar Google Calendar (create/update/delete)
-- Observações CIAP2 (motivo de tratamento)
 - Anexar documentos
-- Aplicar cupons
-- WhatsApp (ServiceWhatsappDialog + Utalk)
-- PaymentModal (Pagar.me)
-- Marcar como pago
 - Tags
 - Finalizar triagem vinculada
 
@@ -34,34 +32,24 @@ Agendamento e gestão de serviços (consultas/atendimentos) com calendário e pa
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus** | services, professionals, users, coupons, reception |
-| **Google Calendar** | `/api/googleCalendar/` |
-| **Utalk** | mensagens WhatsApp |
-| **Pagar.me** | pagamento |
-| **CIAP2** | módulo local de classificação |
+| **Directus / kunk-api** | services, professionals, users, reception |
+| **Google Calendar** | `/modules/google_calendar/` (legado `/api/googleCalendar/`) |
 
 ## Dependências de outras páginas / módulos
 
 - Triagem
-- Prescritores
-- Cupons
-- Relatórios de serviços
-
-## Observações
-
-- CIAP2 = domínio saúde/cannabis
+- Profissionais (`/app/profissionais`)
+- Admin → Serviços externos (Google Calendar)
 
 ## Decisão open-source
 
-> Preencher na revisão de escopo.
-
 | Opção | Escolha |
 |---|---|
-| **Manter** | |
-| **Remover** | |
-| **Modificar** | |
-| **Notas** | Core serviços. Calendar/Utalk/Pagar.me = módulos. CIAP2 = avaliar remoção/opcional. |
+| **Manter** | Lista + filtros + layout legado; agrupamento por código; modal Info; multi-profissional; Google Calendar; tags; comprovante; valores manuais |
+| **Remover** | PaymentModal / Pagar.me / `payment_link`; toggle pago-pendente; Beeviral; cupons; Utalk no v1 |
+| **Modificar** | Status sem checkout; `consultation_price` no profissional; agenda editável na gestão de profissionais; calendário principal no admin |
+| **Notas** | Spec completa em [`../servicos/`](../servicos/README.md). Layout visual = requisito. |
 
 ## Status
 
-`documentado` — aguardando definição de escopo OSS.
+`especificado` — pronto para implementação ([servicos/](../servicos/README.md)).

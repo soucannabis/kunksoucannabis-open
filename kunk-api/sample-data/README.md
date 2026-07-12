@@ -9,6 +9,7 @@ Dados **fictícios** para popular o schema alvo em demos e instalação com samp
 | users | 100 |
 | orders | 50 |
 | partners | 10 |
+| institutional_clients | 10 |
 | professionals | 10 |
 | products | 12 |
 | services | 20 |

@@ -95,12 +95,23 @@ export function createApiClient({ baseUrl }) {
       request('DELETE', `/admin/external-services/${service}/credentials/${fieldKey}`),
     testExternalService: (service) =>
       request('POST', `/admin/external-services/${service}/test`, {}),
+    activateMelhorEnvioProduction: () =>
+      request('POST', '/admin/external-services/melhorenvio/activate-production', {}),
+    activateMelhorEnvioSandbox: () =>
+      request('POST', '/admin/external-services/melhorenvio/activate-sandbox', {}),
     freightQuote: (body) => request('POST', '/freight/quote', body),
+    freightQuoteAvailability: () => request('GET', '/freight/quote-availability'),
+    freightLabelAvailability: () => request('GET', '/freight/label-availability'),
     freightServiceOptions: () => request('GET', '/freight/service-options'),
     getFreightDefaultOption: () => request('GET', '/freight/default-option'),
     putFreightDefaultOption: (body) => request('PUT', '/freight/default-option', body),
     createOrder: (body) => request('POST', '/orders', body),
     updateOrder: (id, body) => request('PATCH', `/orders/${id}`, body),
+    updateOrderDetails: (id, body) => request('PATCH', `/orders/${id}/details`, body),
+    getOrder: (id) => request('GET', `/orders/${id}`),
+    listOrderFiles: (id) => request('GET', `/orders/${id}/files`),
+    attachOrderFile: (id, body) => request('POST', `/orders/${id}/files`, body),
+    getOrderTracking: (id) => request('GET', `/orders/${id}/tracking`),
     deleteOrder: (id) => request('DELETE', `/orders/${id}`),
     listOrders: (qs = '') => request('GET', `/orders${qs ? `?${qs}` : ''}`),
     ordersFacets: (qs = '') => request('GET', `/orders/facets${qs ? `?${qs}` : ''}`),
@@ -110,8 +121,91 @@ export function createApiClient({ baseUrl }) {
     ordersByUser: (userCode) => request('GET', `/orders/by-user/${encodeURIComponent(userCode)}`),
     createLoggiLabel: (body) => request('POST', '/modules/loggi/create-label', body),
     cancelLoggiLabel: (body) => request('POST', '/modules/loggi/cancel', body),
+    getLoggiPackages: (body) => request('POST', '/modules/loggi/packages', body),
+    getGeoapifyStatus: () => request('GET', '/modules/geoapify/status'),
+    getCiap2Status: () => request('GET', '/modules/ciap2/status'),
+    patchCiap2Status: (body) => request('PATCH', '/modules/ciap2', body),
+    validateGeoapifyAddress: (body) =>
+      request('POST', '/modules/geoapify/validate-address', body),
     createMelhorEnvioLabel: (body) => request('POST', '/modules/melhorenvio/create-label', body),
     cancelMelhorEnvioLabel: (body) => request('POST', '/modules/melhorenvio/cancel', body),
+    getMelhorEnvioShipmentDetails: (body) =>
+      request('POST', '/modules/melhorenvio/shipment-details', body),
+    melhorEnvioOAuthAuthorize: () => request('GET', '/modules/melhorenvio/oauth/authorize'),
+    melhorEnvioOAuthStatus: () => request('GET', '/modules/melhorenvio/oauth/status'),
+
+    // Services
+    listServices: (qs = '') => request('GET', `/services${qs ? `?${qs}` : ''}`),
+    createServices: (body) => request('POST', '/services', body),
+    updateService: (id, body) => request('PATCH', `/services/${id}`, body),
+    deleteService: (id) => request('DELETE', `/services/${id}`),
+    listServicesByGroup: (code) =>
+      request('GET', `/services/by-group/${encodeURIComponent(code)}`),
+    scheduleService: (id) => request('POST', `/services/${id}/schedule`, {}),
+    unscheduleService: (id) => request('DELETE', `/services/${id}/schedule`),
+    markServicePaid: (id) => request('POST', `/services/${id}/mark-paid`, {}),
+
+    // Professionals
+    listProfessionals: (qs = '') => {
+      const q =
+        typeof qs === 'string'
+          ? qs
+          : qs && typeof qs === 'object'
+            ? new URLSearchParams(
+                Object.entries(qs)
+                  .filter(([, v]) => v != null && v !== '')
+                  .map(([k, v]) => [k, String(v)])
+              ).toString()
+            : '';
+      return request('GET', `/professionals${q ? `?${q}` : ''}`);
+    },
+    getProfessional: (id) => request('GET', `/professionals/${id}`),
+    createProfessional: (body) => request('POST', '/professionals', body),
+    updateProfessional: (id, body) => request('PATCH', `/professionals/${id}`, body),
+    deleteProfessional: (id) => request('DELETE', `/professionals/${id}`),
+
+    // Google Calendar
+    getGoogleCalendarStatus: () => request('GET', '/modules/google_calendar/status'),
+    listGoogleCalendars: () => request('GET', '/modules/google_calendar/calendars'),
+    createGoogleCalendarEvent: (body) => request('POST', '/modules/google_calendar/events', body),
+    updateGoogleCalendarEvent: (eventId, body) =>
+      request('PATCH', `/modules/google_calendar/events/${encodeURIComponent(eventId)}`, body),
+    deleteGoogleCalendarEvent: (eventId, calendarId) =>
+      request(
+        'DELETE',
+        `/modules/google_calendar/events/${encodeURIComponent(eventId)}?calendarId=${encodeURIComponent(calendarId)}`
+      ),
+    googleCalendarOAuthAuthorizeUrl: () =>
+      request('GET', '/modules/google_calendar/oauth/authorize?redirect=0'),
+    googleCalendarOAuthStatus: () => request('GET', '/modules/google_calendar/oauth/status'),
+
+    getProfessionalTypes: () => request('GET', '/config/services/professional-types'),
+    putProfessionalTypes: (types) => request('PUT', '/config/services/professional-types', types),
+    getServiceReportSettings: () => request('GET', '/config/services/report-settings'),
+    putServiceReportSettings: (body) => request('PUT', '/config/services/report-settings', body),
+    getServicesReport: (qs = '') =>
+      request('GET', `/services/reports${qs ? (qs.startsWith('?') ? qs : `?${qs}`) : ''}`),
+    getAnalyticsAssociates: (qs = '') =>
+      request('GET', `/analytics/associates${qs ? (qs.startsWith('?') ? qs : `?${qs}`) : ''}`),
+    getAnalyticsServices: (qs = '') =>
+      request('GET', `/analytics/services${qs ? (qs.startsWith('?') ? qs : `?${qs}`) : ''}`),
+    getAnalyticsOrders: (qs = '') =>
+      request('GET', `/analytics/orders${qs ? (qs.startsWith('?') ? qs : `?${qs}`) : ''}`),
+    getAnalyticsReception: (qs = '') =>
+      request('GET', `/analytics/reception${qs ? (qs.startsWith('?') ? qs : `?${qs}`) : ''}`),
+    validateServicesReport: (body) => request('POST', '/services/reports/validate', body),
+    addProfessionalContestReport: (id, body) =>
+      request('POST', `/professionals/${id}/contest-reports`, body),
+    deleteProfessionalContestReport: (id, index) =>
+      request('DELETE', `/professionals/${id}/contest-reports/${index}`),
+    createProfessionalPortalAccess: (id, body = {}) =>
+      request('POST', `/professionals/${id}/portal-access`, body),
+    resendProfessionalPortalAccess: (id) =>
+      request('POST', `/professionals/${id}/portal-access/resend`, {}),
+    acceptSystemUserInvite: (body) => request('POST', '/auth/system-invite/accept', body),
+    previewSystemUserInvite: (token) =>
+      request('GET', `/auth/system-invite/preview?token=${encodeURIComponent(token || '')}`),
+
     listSystemUsers: () => request('GET', '/system-users'),
     getSystemUser: (id) => request('GET', `/system-users/${id}`),
     createSystemUser: (body) => request('POST', '/system-users', body),
@@ -129,6 +223,23 @@ export function createApiClient({ baseUrl }) {
     createItem: (collection, body) => request('POST', `/items/${collection}`, body),
     updateItem: (collection, id, body) => request('PATCH', `/items/${collection}/${id}`, body),
     deleteItem: (collection, id) => request('DELETE', `/items/${collection}/${id}`),
+
+    exportProductsCsv: async () => {
+      const res = await fetch(`${root}/products/export.csv`, { method: 'GET', credentials: 'include' });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        const err0 = (json.errors && json.errors[0]) || {};
+        throw new ApiError(res.status, err0.code || 'INTERNAL_ERROR', err0.message || res.statusText, err0.details, json.errors);
+      }
+      return res.text();
+    },
+    validateProductsImport: (body) => request('POST', '/products/import/validate', body),
+    importProducts: (body) => request('POST', '/products/import', body),
+    adjustProductStock: (id, body) => request('POST', `/products/${id}/stock`, body),
+    listProductMovements: (id, qs = '') =>
+      request('GET', `/products/${id}/movements${qs ? (qs.startsWith('?') ? qs : `?${qs}`) : ''}`),
+    updateProductBatch: (id, batch) => request('PATCH', `/products/${id}/batch`, { batch }),
+    syncProductBatches: (items) => request('POST', '/products/sync-batches', { items }),
 
     // Reception / triage
     receptionFormSchema: () => request('GET', '/reception/form-schema'),
@@ -148,8 +259,42 @@ export function createApiClient({ baseUrl }) {
       request('PATCH', `/reception/${id}/link`, { associate_code }),
     unlinkReceptionAssociate: (id) => request('PATCH', `/reception/${id}/unlink`, {}),
     searchUsers: (q) => request('GET', `/users/search?q=${encodeURIComponent(q)}`),
-    getUserByCode: (userCode) =>
-      request('GET', `/users/by-code/${encodeURIComponent(userCode)}`),
+    getUserByCode: (userCode, qs = '') =>
+      request(
+        'GET',
+        `/users/by-code/${encodeURIComponent(userCode)}${qs ? (qs.startsWith('?') ? qs : `?${qs}`) : ''}`
+      ),
+    listUsers: (qs = '') => request('GET', `/users${qs ? `?${qs}` : ''}`),
+    createUser: (body) => request('POST', '/users', body),
+    updateUser: (id, body) => request('PATCH', `/users/${id}`, body),
+    deleteUser: (id) => request('DELETE', `/users/${id}`),
+    makeAssociate: (id) => request('POST', `/users/${id}/make-associate`, {}),
+    getUserPatients: (id) => request('GET', `/users/${id}/patients`),
+    createUserPatient: (id, body) => request('POST', `/users/${id}/patients`, body),
+    updateUserPatient: (id, patientId, body) =>
+      request('PATCH', `/users/${id}/patients/${patientId}`, body),
+    deleteUserPatient: (id, patientId) => request('DELETE', `/users/${id}/patients/${patientId}`),
+    getUserHistory: (id) => request('GET', `/users/${id}/history`),
+    listInstitutionalClients: (qs = '') =>
+      request('GET', `/institutional-clients${qs ? `?${qs}` : ''}`),
+    searchInstitutionalClients: (q) =>
+      request('GET', `/institutional-clients/search?q=${encodeURIComponent(q)}`),
+    getInstitutionalClientByCode: (clientCode) =>
+      request('GET', `/institutional-clients/by-code/${encodeURIComponent(clientCode)}`),
+    getInstitutionalClient: (id) => request('GET', `/institutional-clients/${id}`),
+    getInstitutionalClientHistory: (id) =>
+      request('GET', `/institutional-clients/${id}/history`),
+    createInstitutionalClient: (body) => request('POST', '/institutional-clients', body),
+    updateInstitutionalClient: (id, body) =>
+      request('PATCH', `/institutional-clients/${id}`, body),
+    deleteInstitutionalClient: (id) => request('DELETE', `/institutional-clients/${id}`),
+    globalSearch: (params = {}) => {
+      const qs = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => {
+        if (v != null && v !== '') qs.set(k, String(v));
+      });
+      return request('GET', `/search?${qs.toString()}`);
+    },
 
     // System activity
     listActivity: (qs = '') => request('GET', `/activity${qs ? `?${qs}` : ''}`),

@@ -87,6 +87,10 @@ Detalhe: [`../frontend/cadastramento/gaps.md`](../frontend/cadastramento/gaps.md
 | PATCH | `/services/:id` | Atualizar |
 | GET | `/services/by-professional/:id` | Por profissional (`include` suportado) |
 | GET | `/services/exists` | Existe associate+professional (legado) |
+| GET | `/services/reports` | Relatório de serviços pagos (mês / profissional / `payable`) — ver [spec](../frontend/kunk/relatorios-servicos/api.md) |
+| POST | `/services/reports/validate` | Lote `commission_validation` (staff) |
+
+Portal do profissional (role `Profissional`): listagem escopada a `internal_code`. Contestações e tipos/taxas: mesma spec.
 
 ---
 
@@ -104,8 +108,15 @@ Detalhe: [`../frontend/cadastramento/gaps.md`](../frontend/cadastramento/gaps.md
 
 | Método | Path | Descrição |
 |---|---|---|
+| GET | `/products/export.csv` | Exportar catálogo CSV |
+| POST | `/products/import/validate` | Pré-validar importação CSV |
+| POST | `/products/import` | Importar/upsert por SKU |
+| GET | `/products/:id/movements` | Histórico de estoque do produto |
+| POST | `/products/:id/stock` | Ajuste manual de estoque (`delta`) |
 | PATCH | `/products/:id/batch` | Atualizar lote |
-| POST | `/products/sync-batches` | Sync de lotes (se mantido no OSS) |
+| POST | `/products/sync-batches` | Sync de lotes |
+
+Baixa automática de estoque ao passar pedido de **Aguardando pagamento** → **Pagamento concluído** (`orders.stock_debited_at` + `product_stock_movements`).
 
 ---
 
@@ -127,6 +138,19 @@ Detalhe: [`../frontend/cadastramento/gaps.md`](../frontend/cadastramento/gaps.md
 | POST | `/reports` | Salvar definição |
 | POST | `/reports/:id/run` | Executar query **sandboxed** (se permitido) |
 | POST | `/reports/:id/favorite` | Toggle favorito |
+
+---
+
+## Analytics (Dashboard)
+
+Agregações para Relatórios → Dashboard. Ver [spec](../frontend/kunk/analytics/api.md).
+
+| Método | Path | Descrição |
+|---|---|---|
+| GET | `/analytics/associates` | KPIs/séries de associados |
+| GET | `/analytics/services` | KPIs/séries de serviços (+ payable / taxa) |
+| GET | `/analytics/orders` | KPIs/séries de pedidos |
+| GET | `/analytics/reception` | KPIs/séries de triagem |
 
 > Execução de SQL arbitrário do cliente **não** deve existir. Se `sql_query` for mantido, restringir a admin + allowlist / parser seguro.
 

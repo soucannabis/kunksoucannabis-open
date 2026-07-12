@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useOperatorAuth } from '@kunk/auth-session';
+import { readRememberedAdminRoute, safeInternalPath } from '../lib/lastRoute.js';
 
 export function LoginPage() {
   const { user, loading, hasRequiredRole, login } = useOperatorAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  const nextPath = safeInternalPath(
+    searchParams.get('next') || readRememberedAdminRoute('/dados'),
+    '/dados'
+  );
+
   if (!loading && user && hasRequiredRole) {
-    return <Navigate to="/dados" replace />;
+    return <Navigate to={nextPath} replace />;
   }
   if (!loading && user && !hasRequiredRole) {
     return <Navigate to="/sem-permissao" replace />;
@@ -36,7 +43,7 @@ export function LoginPage() {
         navigate('/sem-permissao');
         return;
       }
-      navigate('/dados');
+      navigate(nextPath);
     } catch (err) {
       setError(err.message || 'Falha no login');
     } finally {

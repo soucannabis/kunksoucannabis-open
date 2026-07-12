@@ -22,7 +22,7 @@ Integrações de terceiros **desabilitadas por padrão**, ativáveis por env ou 
 | `brasilnfe` | `MODULE_BRASILNFE_ENABLED=true` | NF-e / DCE |
 | `scp` | `MODULE_SCP_ENABLED=true` | Estoque externo |
 | `nibo` | `MODULE_NIBO_ENABLED=true` | Financeiro |
-| `geoapify` | `MODULE_GEOAPIFY_ENABLED=true` | Geocoding |
+| `geoapify` | `MODULE_GEOAPIFY_ENABLED=true` | Geocoding / verificação de endereço (ViaCEP + Geoapify) |
 
 Lista alinhada ao kunkserver atual; o OSS pode reduzir o conjunto “core”.
 
@@ -81,6 +81,16 @@ Credenciais: [`modules/credentials.md`](./modules/credentials.md).
 | Loggi | Cotação retorna `FREIGHT_TYPE_ECONOMIC` / `FREIGHT_TYPE_EXPRESS`; `GET /modules/loggi/service-options` espelha o enum (não há list-services oficial) |
 | Melhor Envio | `GET /modules/melhorenvio/companies` + `/services` (upstream `/me/shipment/companies` e `/services`) |
 
+## Papéis no agendamento (Google Calendar)
+
+| Key | Default | Uso |
+|---|---|---|
+| `modules.google_calendar.use_for_scheduling` | `true` | Create/update/delete de eventos a partir de Serviços |
+| `modules.google_calendar.primary_calendar_id` | `null` | Calendário principal da aplicação (admin) |
+
+Spec: [`../frontend/kunk/servicos/README.md`](../frontend/kunk/servicos/README.md).  
+Módulo: [`modules/google_calendar.md`](./modules/google_calendar.md).
+
 ## Documentação por módulo
 
 | Módulo | Doc |
@@ -88,5 +98,7 @@ Credenciais: [`modules/credentials.md`](./modules/credentials.md).
 | Credenciais (todos) | [modules/credentials.md](./modules/credentials.md) |
 | `loggi` | [modules/loggi.md](./modules/loggi.md) |
 | `melhorenvio` | [modules/melhorenvio.md](./modules/melhorenvio.md) |
+| `geoapify` | [modules/geoapify.md](./modules/geoapify.md) |
+| `google_calendar` | [modules/google_calendar.md](./modules/google_calendar.md) |
 
 Demais módulos: criar `docs/api/modules/{name}.md` na implementação. Este arquivo define o **contrato de ativação** comum.

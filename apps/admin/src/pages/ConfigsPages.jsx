@@ -17,6 +17,7 @@ const SYSTEM_LABELS = {
   panel: 'Painel',
   terms: 'Termos',
   api: 'API',
+  modules: 'Módulos',
 };
 
 function systemLabel(name) {
@@ -46,6 +47,14 @@ export function ConfigsIndexPage({ api }) {
       <p className="muted">Variáveis agrupadas por sistema (cascata DB → env → hardcoded).</p>
       {error ? <div className="alert alert-error">{error}</div> : null}
       <div className="grid-2" style={{ marginTop: '1rem' }}>
+        <Link className="collection-link" to="/configs/ciap2">
+          <strong>CIAP-2</strong>
+          <div className="muted">Habilitar/desabilitar motivos de tratamento no Kunk e no cadastramento</div>
+        </Link>
+        <Link className="collection-link" to="/configs/services-types">
+          <strong>Tipos de profissional / relatório</strong>
+          <div className="muted">Taxas por tipo, preço padrão e desconto de doação no relatório</div>
+        </Link>
         {systems.map((s) => (
           <Link key={s.system} className="collection-link" to={`/configs/${encodeURIComponent(s.system)}`}>
             <strong>{systemLabel(s.system)}</strong>

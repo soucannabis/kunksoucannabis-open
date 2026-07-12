@@ -6,6 +6,7 @@ const { AppError } = require('../utils/response');
 const { isKnownColumn } = require('../schema/collections');
 const associateAuthRepository = require('../repositories/associateAuthRepository');
 const { env } = require('../config/env');
+const ciap2Config = require('./ciap2Config');
 
 const PATCHABLE = [
   'responsible_type', 'associate_name', 'associate_last_name', 'associate_birth_date',
@@ -88,9 +89,16 @@ function validateField(key, value, { requirePasswordHash = false } = {}) {
   return String(value).trim().length > 0;
 }
 
-function computeInvalidFields(row, requiredKeys) {
+async function resolveRequiredKeys(baseKeys) {
+  const enabled = await ciap2Config.isEnabled();
+  if (enabled) return baseKeys;
+  return baseKeys.filter((k) => k !== 'ciap_codes');
+}
+
+async function computeInvalidFields(row, requiredKeys) {
+  const keys = await resolveRequiredKeys(requiredKeys);
   const invalid = [];
-  for (const key of requiredKeys) {
+  for (const key of keys) {
     if (!fieldPresent(row, key)) {
       invalid.push(key);
       continue;
@@ -102,6 +110,15 @@ function computeInvalidFields(row, requiredKeys) {
     if (!validateField(key, row[key])) invalid.push(key);
   }
   return [...new Set(invalid)];
+}
+
+async function prepareCiapForSave(value) {
+  const codes = normalizeCiap(value);
+  if (!(await ciap2Config.isEnabled())) {
+    return { ok: true, value: codes.length ? codes.join(';') : null };
+  }
+  if (!validateField('ciap_codes', codes)) return { ok: false };
+  return { ok: true, value: codes.join(';') };
 }
 
 const PHASE5_PATCHABLE = new Set(['prescription', 'preferred_products', 'date_prescription']);
@@ -138,12 +155,12 @@ async function patchMe(associateRow, body) {
   for (const key of knownKeys) {
     let value = payload[key];
     if (key === 'ciap_codes') {
-      const codes = normalizeCiap(value);
-      if (!validateField(key, codes)) {
+      const prepared = await prepareCiapForSave(value);
+      if (!prepared.ok) {
         attemptedInvalid.push(key);
         continue;
       }
-      value = codes.join(';');
+      value = prepared.value;
     } else if (key === 'account_password') {
       if (!validateField(key, value)) {
         attemptedInvalid.push(key);
@@ -159,7 +176,7 @@ async function patchMe(associateRow, body) {
   }
 
   const merged = { ...associateRow, ...updates };
-  const invalidFields = computeInvalidFields(merged, REQUIRED_RESPONSIBLE);
+  const invalidFields = await computeInvalidFields(merged, REQUIRED_RESPONSIBLE);
 
   const setParts = [];
   const params = [];
@@ -218,12 +235,12 @@ async function createMyPatient(associateRow, body) {
     if (key === 'account_password' || key === 'responsible_type') continue;
     let value = payload[key];
     if (key === 'ciap_codes') {
-      const codes = normalizeCiap(value);
-      if (!validateField(key, codes)) {
+      const prepared = await prepareCiapForSave(value);
+      if (!prepared.ok) {
         attemptedInvalid.push(key);
         continue;
       }
-      value = codes.join(';');
+      value = prepared.value;
     } else if (!validateField(key, value)) {
       attemptedInvalid.push(key);
       continue;
@@ -233,7 +250,7 @@ async function createMyPatient(associateRow, body) {
   }
 
   const draft = { ...updates };
-  const invalidFields = computeInvalidFields(draft, REQUIRED_PATIENT);
+  const invalidFields = await computeInvalidFields(draft, REQUIRED_PATIENT);
   const userCode = uuidv4();
 
   const cols = [
@@ -289,12 +306,12 @@ async function patchMyPatient(associateRow, patientId, body) {
   for (const key of knownKeys) {
     let value = payload[key];
     if (key === 'ciap_codes') {
-      const codes = normalizeCiap(value);
-      if (!validateField(key, codes)) {
+      const prepared = await prepareCiapForSave(value);
+      if (!prepared.ok) {
         attemptedInvalid.push(key);
         continue;
       }
-      value = codes.join(';');
+      value = prepared.value;
     } else if (!validateField(key, value)) {
       attemptedInvalid.push(key);
       continue;
@@ -304,7 +321,7 @@ async function patchMyPatient(associateRow, patientId, body) {
   }
 
   const merged = { ...patient, ...updates };
-  const invalidFields = computeInvalidFields(merged, REQUIRED_PATIENT);
+  const invalidFields = await computeInvalidFields(merged, REQUIRED_PATIENT);
 
   const setParts = [];
   const params = [];
@@ -382,7 +399,7 @@ async function documentsStatus(associateRow) {
 }
 
 async function formComplete(row, required) {
-  return computeInvalidFields(row, required).length === 0;
+  return (await computeInvalidFields(row, required)).length === 0;
 }
 
 async function advance(associateRow) {
@@ -392,7 +409,7 @@ async function advance(associateRow) {
     const okForm = await formComplete(associateRow, REQUIRED_RESPONSIBLE);
     if (!okForm) {
       throw new AppError(400, 'VALIDATION_ERROR', 'Formulário do responsável incompleto', {
-        invalid_fields: computeInvalidFields(associateRow, REQUIRED_RESPONSIBLE),
+        invalid_fields: await computeInvalidFields(associateRow, REQUIRED_RESPONSIBLE),
       });
     }
     const result = await query(

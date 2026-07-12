@@ -12,7 +12,11 @@ import {
   TextField,
 } from '@mui/material';
 
+import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
+
 const GREEN = '#5a7a5b';
+const PURPLE = '#7A5B7A';
+const PURPLE_HOVER = '#4d2d4d';
 
 export default function OrdersBulkActions({
   selectedCount,
@@ -35,8 +39,9 @@ export default function OrdersBulkActions({
     <>
       <Button
         variant="contained"
+        startIcon={<PlaylistAddCheckIcon />}
         onClick={(e) => setAnchor(e.currentTarget)}
-        sx={{ bgcolor: GREEN }}
+        sx={{ bgcolor: PURPLE, '&:hover': { bgcolor: PURPLE_HOVER } }}
         data-testid="bulk-actions"
       >
         Ação em massa ({selectedCount})

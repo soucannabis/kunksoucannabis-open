@@ -15,9 +15,11 @@ describe('rbac', () => {
     assert.equal(can(['Produção'], 'users', 'read'), true);
   });
 
-  it('Parceiro has no auto scope after partner_code removal', () => {
-    const scope = scopeFilterFor(['Parceiro'], { internal_code: 'P1' });
-    assert.equal(scope, null);
+  it('Profissional scopes services by professional_id from internal_code', () => {
+    const scope = scopeFilterFor(['Profissional'], { internal_code: 'uuid-pro-1' });
+    assert.deepEqual(scope, { field: 'professional_id', value: 'uuid-pro-1' });
+    assert.equal(can(['Profissional'], 'services', 'read'), true);
+    assert.equal(can(['Profissional'], 'services', 'update'), false);
   });
 
   it('parses permissions JSON and CSV', () => {

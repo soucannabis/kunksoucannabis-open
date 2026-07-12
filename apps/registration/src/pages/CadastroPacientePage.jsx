@@ -25,6 +25,24 @@ export function CadastroPacientePage({ api }) {
   const [error, setError] = useState(null);
   const [invalid, setInvalid] = useState([]);
   const [busy, setBusy] = useState(false);
+  const [ciap2Enabled, setCiap2Enabled] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.getCiap2Status();
+        if (!cancelled && typeof res.data?.enabled === 'boolean') {
+          setCiap2Enabled(res.data.enabled);
+        }
+      } catch {
+        /* default on */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
 
   useEffect(() => {
     if (user?.responsible_type !== 'another') {
@@ -125,8 +143,12 @@ export function CadastroPacientePage({ api }) {
         </div>
       </div>
       <div className="mt-3">
-        <label className="form-label">CIAP-2</label>
-        <Ciap2Select value={form.ciap_codes} onChange={(v) => setField('ciap_codes', v)} />
+        {ciap2Enabled ? (
+          <>
+            <label className="form-label">CIAP-2</label>
+            <Ciap2Select value={form.ciap_codes} onChange={(v) => setField('ciap_codes', v)} />
+          </>
+        ) : null}
       </div>
       <div className="mt-3">
         <label className="form-label">Motivo</label>

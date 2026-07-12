@@ -10,8 +10,8 @@ router.use(authenticate);
 
 router.get('/', async (req, res, next) => {
   try {
-    const data = await searchService.globalSearch(req.query.q, req.query.entity);
-    res.json(ok(data));
+    const result = await searchService.globalSearch(req.query);
+    res.json(ok(result.data, result.meta));
   } catch (err) {
     next(err);
   }

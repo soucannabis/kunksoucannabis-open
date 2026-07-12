@@ -9,9 +9,10 @@ Nomes = tabelas do schema alvo ([target-schema.sql](../../sql/target-schema.sql)
 |---|---|---|
 | `users` | `id` | Associados / pacientes / responsáveis |
 | `system_users` | `id` | Operadores do painel |
-| `orders` | `id` | Pedidos; FK `"user"` → `users.id` |
+| `orders` | `id` | Pedidos; FK `"user"` → `users.id` (nullable) e/ou `institutional_client_id` |
 | `orders_files` | `id` | Junction pedido ↔ arquivo |
 | `partners` | `id` | Parceiros / afiliados |
+| `institutional_clients` | `id` | Clientes institucionais (não associados) |
 | `products` | `id` | Produtos / SKU |
 | `professionals` | `id` | Profissionais / prescritores |
 | `reception` | `id` | Triagem / acolhimento |
@@ -37,17 +38,31 @@ Nomes = tabelas do schema alvo ([target-schema.sql](../../sql/target-schema.sql)
 ### `users`
 - `user_code` — UUID público (UNIQUE)
 - `associate_name`, `associate_last_name`, `associate_cpf`
-- `responsible_code` — se preenchido, o registro é **paciente** e aponta ao `user_code` do associado responsável (FK)
-- `patient_user_code` — legado; não usar para a relação paciente↔associado
+- `responsible_code` — se preenchido, o registro é **paciente** e aponta ao `user_code` do associado responsável (FK canônica)
+- `patient_user_code` — no **responsável**: ponteiro do paciente criado no **funil** (`another`). Não é a FK paciente↔associado; não é “paciente ativo” do painel. Em Serviços, serve só para **pré-selecionar** beneficiário (ver docs associados/serviços)
 - `prescriber` / `prescriber_code`
-- `ciap_codes`, `handbook`
+- `ciap_codes`, `handbook`, `annotations`
+
+### `products`
+- `sku` (ex-`cod`), `unit` (ex-`unity`), `batch`, `concentration`
+- `amount` — estoque atual (inteiro)
+- Histórico de uso em `product_stock_movements` (serviço de domínio; sem CRUD `/items`)
 
 ### `orders`
 - `order_code` — UUID interno
 - `carrier_order_code` — código transportadora
-- `"user"` — FK inteira para `users.id` (nome reservado; serializar como `user` no JSON)
+- `"user"` — FK inteira para `users.id` (nome reservado; serializar como `user` no JSON); nullable se institucional
+- `institutional_client_id` / `institutional_client_code` — vínculo com cliente institucional (XOR com associado)
+- `associate_name` / `receiver_name` — snapshots de nome (empresa/associado vs recebedor)
 - `prescriber` / `prescriber_code`
 - `items` — JSON do carrinho
+- `stock_debited_at` — quando preenchido, a baixa de estoque da venda já foi aplicada (idempotência)
+
+### `institutional_clients`
+- `client_code` — UUID público
+- `is_company` — se true, exige `company_name` + `company_cnpj`
+- `representative_*` — representante (CPF sempre obrigatório)
+- Endereço cadastral + `delivery_address` (mesma lógica de associados)
 - `production_owner`, `address_validation`
 - `created_by_user_code`
 
@@ -55,13 +70,12 @@ Nomes = tabelas do schema alvo ([target-schema.sql](../../sql/target-schema.sql)
 - `service_code` — UUID
 - `booking_group_code` — grupo de agendamento
 - `professional_id` — UUID → `professionals.professional_code` (FK)
-- `associate_user_code` — UUID → `users.user_code` (FK)
+- `associate_user_code` — UUID → `users.user_code` (FK) — **sempre o responsável**
+- `patient_user_code` — UUID nullable → paciente beneficiário **deste** atendimento (`null` = atendimento ao responsável)
+- `patient_name` — snapshot do nome do paciente
 - `donation`, `payment_info`
 - `consultation_date` — data/hora da consulta
 - `include=professional,associate` embute os objetos relacionados
-
-### `products`
-- `sku` (ex-`cod`), `unit` (ex-`unity`), `batch`, `concentration`
 
 ### `tags`
 - `contexts` (ex-`session`) — escopos: `orders`, `services`, `reception`

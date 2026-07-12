@@ -105,7 +105,22 @@ Registro **filho** em `users`. O progresso 1–5 continua no **responsável**.
 | `responsible_code` | `user_code` do responsável | FK |
 | demográficos + CIAP2 | formulário | iguais ao responsável (sem senha) |
 
-No responsável: `patient_user_code` = `user_code` do paciente.
+No responsável: `patient_user_code` = `user_code` do paciente criado neste funil.
+
+### Semântica canônica de `patient_user_code` (dois contextos)
+
+| Contexto | Campo | Papel |
+|---|---|---|
+| **Funil** (`apps/registration`) | `users.patient_user_code` no **responsável** | Ponteiro do paciente cadastrado quando `responsible_type = another`. Liga o funil ao registro filho. **Não** significa “paciente ativo” editável no painel. |
+| **Relação estrutural** | `users.responsible_code` no **paciente** | FK canônica paciente → responsável. Usar para listar/CRUD de pacientes. |
+| **Atendimento** (painel Serviços) | `services.patient_user_code` | Beneficiário **daquele** serviço. Escolhido no modal Novo Serviço. Templates/calendário leem **só** este campo. |
+
+Regras cruzadas (painel Kunk — ver [`../kunk/associados/`](../kunk/associados/README.md) e [`../kunk/servicos/`](../kunk/servicos/README.md)):
+
+1. Painel **não** tem Tornar/Remover Ativo sobre `users.patient_user_code`.
+2. Pacientes adicionados depois na aba Pacientes usam só `responsible_code`; **não** precisam atualizar `users.patient_user_code` (esse campo permanece o do funil, se houver).
+3. Ao criar serviço com associado pré-carregado (`?u=`): se `users.patient_user_code` existir e o paciente tiver `responsible_code` = responsável → **pré-selecionar** esse paciente como beneficiário; o operador pode mudar.
+4. Não migrar em massa o ponteiro do funil para serviços antigos.
 
 Persistência parcial + `invalid_fields` no registro paciente (ou espelho no responsável — preferir no registro que está sendo editado).
 

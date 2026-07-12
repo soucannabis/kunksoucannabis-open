@@ -87,8 +87,25 @@ router.post('/cancel', async (req, res, next) => {
   }
 });
 
+router.post('/shipment-details', async (req, res, next) => {
+  try {
+    const id = req.body?.id || req.body?.shipment_id || req.body?.carrier_order_code;
+    const data = await meLabel.getShipmentDetails(id);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/oauth/authorize', async (req, res, next) => {
   try {
+    const credentialsService = require('../../services/credentialsService');
+    const { oauthRedirectUri } = require('../../utils/publicApiUrl');
+    await credentialsService.putCredentials(
+      'melhorenvio',
+      { redirect_uri: oauthRedirectUri('melhorenvio', req) },
+      { runTest: false }
+    );
     const url = await meAuth.buildAuthorizeUrl();
     res.json(ok({ url }));
   } catch (err) {
@@ -96,6 +113,7 @@ router.get('/oauth/authorize', async (req, res, next) => {
   }
 });
 
+/** Browser callback is registered publicly on /modules (before authenticate). */
 router.get('/oauth/callback', async (req, res, next) => {
   try {
     const code = req.query.code;

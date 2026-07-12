@@ -60,6 +60,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import AvatarGroup from '@mui/material/AvatarGroup';
 import { useOperatorAuth } from '@kunk/auth-session';
 import { createApiClient } from '@kunk/api-client';
+import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
 import {
   getEntryStatusValue,
   getKunkPublicConfig,
@@ -217,7 +218,7 @@ export default function TriagePage() {
   const [rows, setRows] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { showError } = useErrorModal();
   const [busyId, setBusyId] = useState(null);
   const [attendantBusyId, setAttendantBusyId] = useState(null);
 
@@ -324,15 +325,14 @@ export default function TriagePage() {
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       await Promise.all([loadCounts(), loadRows(activeStatus, searchQuery), loadAttendants()]);
     } catch (err) {
-      setError(err.message || 'Falha ao carregar triagem');
+      showError(err.message || 'Falha ao carregar triagem');
     } finally {
       setLoading(false);
     }
-  }, [loadCounts, loadRows, loadAttendants, activeStatus, searchQuery]);
+  }, [loadCounts, loadRows, loadAttendants, activeStatus, searchQuery, showError]);
 
   useEffect(() => {
     loadConfig();
@@ -346,12 +346,11 @@ export default function TriagePage() {
   async function changeStatus(row, status) {
     setAvatarMenu({ anchor: null, row: null });
     setBusyId(row.id);
-    setError('');
     try {
       await api.updateReceptionStatus(row.id, status);
       await refresh();
     } catch (err) {
-      setError(err.message || 'Falha ao atualizar status');
+      showError(err.message || 'Falha ao atualizar status');
     } finally {
       setBusyId(null);
     }
@@ -359,16 +358,15 @@ export default function TriagePage() {
 
   async function assumeContact(row) {
     if (!myCode) {
-      setError('Não foi possível identificar o usuário logado');
+      showError('Não foi possível identificar o usuário logado');
       return;
     }
     setAttendantBusyId(row.id);
-    setError('');
     try {
       await api.assignReceptionAttendant(row.id, myCode);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, attendant: myCode } : r)));
     } catch (err) {
-      setError(err.message || 'Falha ao assumir contato');
+      showError(err.message || 'Falha ao assumir contato');
     } finally {
       setAttendantBusyId(null);
     }
@@ -378,12 +376,11 @@ export default function TriagePage() {
     setTransferMenu({ anchor: null, row: null });
     if (!attendantCode) return;
     setAttendantBusyId(row.id);
-    setError('');
     try {
       await api.assignReceptionAttendant(row.id, attendantCode);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, attendant: attendantCode } : r)));
     } catch (err) {
-      setError(err.message || 'Falha ao transferir contato');
+      showError(err.message || 'Falha ao transferir contato');
     } finally {
       setAttendantBusyId(null);
     }
@@ -391,12 +388,11 @@ export default function TriagePage() {
 
   async function clearAttendant(row) {
     setAttendantBusyId(row.id);
-    setError('');
     try {
       await api.clearReceptionAttendant(row.id);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, attendant: null } : r)));
     } catch (err) {
-      setError(err.message || 'Falha ao remover atendente');
+      showError(err.message || 'Falha ao remover atendente');
     } finally {
       setAttendantBusyId(null);
     }
@@ -412,14 +408,27 @@ export default function TriagePage() {
     setActionMenu({ anchor: null, row: null });
     if (!row.associate_code) return;
     setBusyId(row.id);
-    setError('');
     try {
+      // ?u= deve ser users.user_code — não aceitar LEAD/códigos de atendimento
+      const userRes = await api.getUserByCode(row.associate_code);
+      const userCode = userRes.data?.user_code;
+      if (!userCode) {
+        throw new Error('Associado vinculado sem user_code');
+      }
       await api.completeReception(row.id, kind === 'order' ? 'Pedido' : 'Serviço');
       // Legado: Pedido → /app/loja/novo-pedido?u= ; Serviço → /app/acolhimento/servicos?u=
       const path = kind === 'order' ? PATHS.newOrder : PATHS.services;
-      navigate(`${path}?u=${encodeURIComponent(row.associate_code)}`);
+      navigate(`${path}?u=${encodeURIComponent(userCode)}`);
     } catch (err) {
-      setError(err.message || 'Falha ao concluir contato');
+      const notFound =
+        err.status === 404 ||
+        err.code === 'NOT_FOUND' ||
+        /não encontrado/i.test(err.message || '');
+      showError(
+        notFound
+          ? 'Vínculo inválido. Associe um usuário cadastrado (código do usuário) antes de abrir pedido/serviço.'
+          : err.message || 'Falha ao concluir contato'
+      );
       setBusyId(null);
     }
   }
@@ -430,7 +439,7 @@ export default function TriagePage() {
       await api.unlinkReceptionAssociate(row.id);
       await refresh();
     } catch (err) {
-      setError(err.message || 'Falha ao desvincular');
+      showError(err.message || 'Falha ao desvincular');
     } finally {
       setBusyId(null);
     }
@@ -460,7 +469,7 @@ export default function TriagePage() {
       setLinkResults([]);
       await refresh();
     } catch (err) {
-      setError(err.message || 'Falha ao vincular');
+      showError(err.message || 'Falha ao vincular');
     } finally {
       setLinkBusy(false);
     }
@@ -496,7 +505,7 @@ export default function TriagePage() {
         setDocsFiles(files);
       }
     } catch (err) {
-      setError(err.message || 'Falha ao carregar dados do associado');
+      showError(err.message || 'Falha ao carregar dados do associado');
     } finally {
       setDocsLoading(false);
     }
@@ -670,10 +679,6 @@ export default function TriagePage() {
             </Button>
           </Box>
         </Paper>
-
-        {error ? (
-          <Typography sx={{ ml: '20px', mb: 1, color: '#b71c1c' }}>{error}</Typography>
-        ) : null}
 
         <TableContainer
           component={Paper}

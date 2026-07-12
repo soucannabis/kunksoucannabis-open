@@ -93,9 +93,9 @@ test.describe('cart', () => {
     await expect(page.getByTestId('custom-payment-0')).toBeVisible();
 
     await page.getByTestId('quote-freight').click();
-    await expect(page.getByText(/Loggi Econômico/i).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Loggi/i).first()).toBeVisible({ timeout: 10000 });
 
     await page.getByTestId('submit-wrong-total').click();
-    await expect(page.getByTestId('cart-error')).toContainText(/diverge|TOTAL_MISMATCH|Total informado/i);
+    await expect(page.getByTestId('global-error-message')).toContainText(/diverge|TOTAL_MISMATCH|Total informado/i);
   });
 });

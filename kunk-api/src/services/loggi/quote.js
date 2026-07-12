@@ -56,8 +56,8 @@ async function buildQuoteBody(address) {
     ],
   };
 
-  const sisus = cfg.loggi_external_service_ids;
-  if (Array.isArray(sisus) && sisus.length) {
+  const sisus = storeFreight.resolveLoggiExternalServiceIds(cfg);
+  if (sisus.length) {
     body.externalServiceIds = sisus;
   }
 
@@ -68,6 +68,9 @@ async function quoteFreight(address) {
   if (!address?.cep) {
     throw new AppError(400, 'VALIDATION_ERROR', 'address.cep é obrigatório');
   }
+  const cfg = await storeFreight.getStoreFreightConfig();
+  const sisus = storeFreight.resolveLoggiExternalServiceIds(cfg);
+  const fallbackSisu = sisus[0] || null;
   const body = await buildQuoteBody(address);
   const response = await loggiRequest('/quotations', body, 'POST');
   const quotations = extractQuotations(response);
@@ -79,7 +82,10 @@ async function quoteFreight(address) {
         service_label: q.freightTypeLabel || q.freightType,
         price: q.totalAmount,
         eta_days: q.sloInDays,
-        external_service_id: q.externalServiceId,
+        external_service_id: storeFreight.pickLoggiExternalServiceId(
+          q.externalServiceId,
+          fallbackSisu
+        ),
       })
     );
 

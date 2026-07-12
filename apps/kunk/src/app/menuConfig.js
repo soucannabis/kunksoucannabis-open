@@ -1,5 +1,8 @@
-/** Staff roles allowed into the Kunk operational app. */
+/** Staff roles allowed into the Kunk operational app (`/app/*`). */
 export const KUNK_STAFF_ROLES = ['Administrador', 'Acolhimento', 'Produção'];
+
+/** Roles that may use the operator auth cookie on this app (staff + portal profissional). */
+export const KUNK_APP_ROLES = [...KUNK_STAFF_ROLES, 'Profissional'];
 
 /**
  * Portuguese URL paths (legacy Kunk parity).
@@ -13,8 +16,14 @@ export const PATHS = {
   orders: '/app/loja/pedidos',
   newOrder: '/app/loja/novo-pedido',
   products: '/app/loja/produtos',
+  professionals: '/app/profissionais',
+  /** @deprecated use PATHS.professionals */
   prescribers: '/app/prescritores',
   systemHistory: '/app/historico',
+  tags: '/app/tags',
+  servicesReport: '/app/relatorios/servicos',
+  analyticsDashboard: '/app/relatorios/dashboard',
+  professionalServicesReport: '/relatorio/servicos',
 };
 
 /**
@@ -29,7 +38,6 @@ export const MENU_SECTIONS = [
       { id: 'associados', label: 'Associados', path: PATHS.registration },
       { id: 'servicos', label: 'Serviços', path: PATHS.services },
       { id: 'triagem', label: 'Triagem', path: PATHS.triage },
-      { id: 'tags', label: 'Tags', action: 'tags' },
       {
         id: 'institutional-clients',
         label: 'Clientes Institucionais',
@@ -47,19 +55,29 @@ export const MENU_SECTIONS = [
   },
   {
     id: 'parceirosPrescritores',
-    label: 'Parceiros e Prescritores',
-    items: [{ id: 'prescritores', label: 'Prescritores', path: PATHS.prescribers }],
+    label: 'Profissionais',
+    items: [{ id: 'profissionais', label: 'Profissionais', path: PATHS.professionals }],
+  },
+  {
+    id: 'relatorios',
+    label: 'Relatórios',
+    items: [
+      { id: 'relatorios-dashboard', label: 'Dashboard', path: PATHS.analyticsDashboard },
+      { id: 'relatorios-servicos', label: 'Serviços', path: PATHS.servicesReport },
+    ],
   },
   {
     id: 'sistema',
     label: 'Sistema',
-    items: [{ id: 'historico', label: 'Histórico do sistema', path: PATHS.systemHistory }],
+    items: [
+      { id: 'historico', label: 'Histórico do sistema', path: PATHS.systemHistory },
+      { id: 'tags', label: 'Tags', path: PATHS.tags },
+    ],
   },
 ];
 
 /** Labels that must NOT appear in the v1 sidebar. */
 export const REMOVED_MENU_LABELS = [
-  'Dashboard',
   'Painel geral',
   'Beeviral Analytics',
   'Webmaster',
@@ -68,7 +86,6 @@ export const REMOVED_MENU_LABELS = [
   'Matérias primas',
   'Serviço Social',
   'Cupons',
-  'Relatórios',
   'Pagamentos',
   'Sou Analytics',
   'Dashboards',

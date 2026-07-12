@@ -24,10 +24,13 @@ Referência legada: [`kunksoucannabis/`](../../../../kunksoucannabis/) + [`kunks
 
 | Página | Rota | Doc |
 |---|---|---|
-| Cadastramento | `/app/acolhimento/cadastramento` | [pages/cadastramento.md](./pages/cadastramento.md) |
+| Cadastramento / Associados | `/app/acolhimento/cadastramento` | [pages/cadastramento.md](./pages/cadastramento.md) · **[spec implementação](./associados/README.md)** |
 | Triagem | `/app/acolhimento/triagem` | [pages/triagem.md](./pages/triagem.md) · **[spec implementação](./triagem/README.md)** |
 | Pedidos | `/app/loja/pedidos` | [pages/pedidos.md](./pages/pedidos.md) · **[spec carrinho/frete](./pedidos/README.md)** |
-| Serviços | `/app/acolhimento/servicos` | [pages/servicos.md](./pages/servicos.md) |
+| Serviços | `/app/acolhimento/servicos` | [pages/servicos.md](./pages/servicos.md) · **[spec implementação](./servicos/README.md)** |
+| Relatório de serviços | `/app/relatorios/servicos` | [pages/relatorios-servicos.md](./pages/relatorios-servicos.md) · **[spec implementação](./relatorios-servicos/README.md)** |
+| Dashboard Analytics | `/app/relatorios/dashboard` | [pages/painel-analise.md](./pages/painel-analise.md) · **[spec implementação](./analytics/README.md)** |
+| Search global | shell `/app/*` | **[spec implementação](./search-global/README.md)** |
 
 ## Índice completo por área
 
@@ -36,16 +39,19 @@ Referência legada: [`kunksoucannabis/`](../../../../kunksoucannabis/) + [`kunks
 
 | Página | Rota | Doc |
 |---|---|---|
-| Cadastramento (associados) | `/app/acolhimento/cadastramento` | [pages/cadastramento.md](./pages/cadastramento.md) |
+| Cadastramento (associados) | `/app/acolhimento/cadastramento` | [pages/cadastramento.md](./pages/cadastramento.md) · [associados/](./associados/README.md) |
 | Triagem / acolhimento | `/app/acolhimento/triagem` | [pages/triagem.md](./pages/triagem.md) · [triagem/](./triagem/README.md) |
 | Pedidos | `/app/loja/pedidos` | [pages/pedidos.md](./pages/pedidos.md) · [pedidos/](./pedidos/README.md) |
-| Serviços | `/app/acolhimento/servicos` | [pages/servicos.md](./pages/servicos.md) |
+| Serviços | `/app/acolhimento/servicos` | [pages/servicos.md](./pages/servicos.md) · [servicos/](./servicos/README.md) |
+| Relatório de serviços | `/app/relatorios/servicos` + `/relatorio/servicos` | [pages/relatorios-servicos.md](./pages/relatorios-servicos.md) · [relatorios-servicos/](./relatorios-servicos/README.md) |
+| Dashboard Analytics | `/app/relatorios/dashboard` | [pages/painel-analise.md](./pages/painel-analise.md) · [analytics/](./analytics/README.md) |
+| Search global | FAB no shell | [search-global/](./search-global/README.md) |
 
 ### Shell e auth
 
 | Página | Rota | Doc |
 |---|---|---|
-| Shell Theme (`/app/*`) | `/app/*` | [pages/theme-shell.md](./pages/theme-shell.md) |
+| Shell Theme (`/app/*`) | `/app/*` | [pages/theme-shell.md](./pages/theme-shell.md) · [search-global/](./search-global/README.md) |
 | Home / redirecionamento | `/` | [pages/home-redirect.md](./pages/home-redirect.md) |
 | Login | `/login` | [pages/login.md](./pages/login.md) |
 | Cadastro de usuário do sistema (convite) | `/cadastro` | [pages/cadastro-usuario-sistema.md](./pages/cadastro-usuario-sistema.md) |
@@ -58,8 +64,8 @@ Referência legada: [`kunksoucannabis/`](../../../../kunksoucannabis/) + [`kunks
 
 | Página | Rota | Doc |
 |---|---|---|
-| Associados (lista completa) | `/app/associados` | [pages/associados.md](./pages/associados.md) |
-| Clientes institucionais | `/app/acolhimento/clientesinstitucionais` | [pages/clientes-institucionais.md](./pages/clientes-institucionais.md) |
+| Associados (lista completa) | `/app/associados` | [pages/associados.md](./pages/associados.md) · [associados/](./associados/README.md) |
+| Clientes institucionais | `/app/acolhimento/clientesinstitucionais` | [pages/clientes-institucionais.md](./pages/clientes-institucionais.md) · [clientes-institucionais/](./clientes-institucionais/README.md) |
 | Pesquisas de satisfação | `/app/acolhimento/pesquisas-satisfacao` | [pages/pesquisas-satisfacao.md](./pages/pesquisas-satisfacao.md) |
 | Triagem (rota top-level) | `/triagem` | [pages/triagem-top-level.md](./pages/triagem-top-level.md) |
 
@@ -77,13 +83,13 @@ Referência legada: [`kunksoucannabis/`](../../../../kunksoucannabis/) + [`kunks
 | Página | Rota | Doc |
 |---|---|---|
 | Parceiros | `/app/parceiros` | [pages/parceiros.md](./pages/parceiros.md) |
-| Prescritores | `/app/prescritores` | [pages/prescritores.md](./pages/prescritores.md) |
+| Prescritores | `/app/prescritores` | [pages/prescritores.md](./pages/prescritores.md) — gestão OSS em [servicos/](./servicos/README.md) (`/app/profissionais`) |
 | Cupons (serviço social) | `/app/servico-social/cupons` | [pages/cupons.md](./pages/cupons.md) |
 | Parceiros — cadastro (top-level) | `/parceiros/cadastro` | [pages/parceiros-cadastro-top-level.md](./pages/parceiros-cadastro-top-level.md) |
 | Relatório de pedidos (externo) | `/relatorio/pedidos` | [pages/relatorio-pedidos-externo.md](./pages/relatorio-pedidos-externo.md) |
-| Relatório de serviços (externo) | `/relatorio/servicos` | [pages/relatorio-servicos-externo.md](./pages/relatorio-servicos-externo.md) |
-| Relatórios — pedidos (staff) | `/app/relatorios/pedidos` | [pages/relatorios-pedidos.md](./pages/relatorios-pedidos.md) |
-| Relatórios — serviços (staff) | `/app/relatorios/servicos` | [pages/relatorios-servicos.md](./pages/relatorios-servicos.md) |
+| Relatório de serviços (externo) | `/relatorio/servicos` | [pages/relatorio-servicos-externo.md](./pages/relatorio-servicos-externo.md) · **[spec](./relatorios-servicos/README.md)** |
+| Relatórios — pedidos (staff) | `/app/relatorios/pedidos` | [pages/relatorios-pedidos.md](./pages/relatorios-pedidos.md) — **fora do escopo v1 serviços** |
+| Relatórios — serviços (staff) | `/app/relatorios/servicos` | [pages/relatorios-servicos.md](./pages/relatorios-servicos.md) · **[spec](./relatorios-servicos/README.md)** |
 
 ### Financeiro e integrações
 

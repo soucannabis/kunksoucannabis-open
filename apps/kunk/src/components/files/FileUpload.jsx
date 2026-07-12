@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   Box,
   Button,
   CircularProgress,
@@ -21,6 +20,7 @@ import {
   buildDocumentFileName,
   getDocumentKind,
 } from '../../lib/documentKinds.js';
+import { useErrorModal } from '../errors/ErrorModalProvider.jsx';
 
 const GREEN = '#5a7a5b';
 const GREEN_HOVER = '#303B30';
@@ -52,7 +52,7 @@ export default function FileUpload({
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
+  const { showError } = useErrorModal();
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewMime, setPreviewMime] = useState('');
   const inputRef = useRef(null);
@@ -66,17 +66,16 @@ export default function FileUpload({
       return;
     }
     setLoading(true);
-    setError('');
     try {
       const res = await api.listUserFiles({ userId, docKind: listDocKind, limit: 50 });
       setFiles(res.data || []);
     } catch (err) {
-      setError(err.message || 'Falha ao listar arquivos');
+      showError(err.message || 'Falha ao listar arquivos');
       setFiles([]);
     } finally {
       setLoading(false);
     }
-  }, [api, userId, listDocKind]);
+  }, [api, userId, listDocKind, showError]);
 
   useEffect(() => {
     loadFiles();
@@ -104,18 +103,17 @@ export default function FileUpload({
       setPreviewMime(file.mime_type || blob.type || '');
       setPreviewUrl(URL.createObjectURL(blob));
     } catch (err) {
-      setError(err.message || 'Erro ao visualizar');
+      showError(err.message || 'Erro ao visualizar');
     }
   }
 
   async function handleUpload(fileList) {
     if (!api || !userId || !activeKind || !fileList?.length) return;
     if (!fixedKind && !pickerKind) {
-      setError('Selecione o tipo do documento.');
+      showError('Selecione o tipo do documento.');
       return;
     }
     setUploading(true);
-    setError('');
     try {
       for (const file of Array.from(fileList)) {
         const filename = buildDocumentFileName(activeKind, user, file.name);
@@ -141,7 +139,7 @@ export default function FileUpload({
       if (!fixedKind) setPickerKind('');
       await loadFiles();
     } catch (err) {
-      setError(err.message || 'Falha no upload');
+      showError(err.message || 'Falha no upload');
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';
@@ -151,13 +149,12 @@ export default function FileUpload({
   async function handleDelete(file) {
     if (!api || readOnly) return;
     if (!window.confirm(`Remover ${file.filename}?`)) return;
-    setError('');
     try {
       await api.deleteFile(file.id);
       onDeleted?.(file);
       await loadFiles();
     } catch (err) {
-      setError(err.message || 'Falha ao remover');
+      showError(err.message || 'Falha ao remover');
     }
   }
 
@@ -172,12 +169,6 @@ export default function FileUpload({
       <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
         {title}
       </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 1 }} onClose={() => setError('')}>
-          {error}
-        </Alert>
-      )}
 
       {!fixedKind && !readOnly && (
         <TextField

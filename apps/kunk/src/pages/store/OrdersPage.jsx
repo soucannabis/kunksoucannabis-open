@@ -5,12 +5,14 @@ import {
   Button,
   Checkbox,
   CircularProgress,
-  Stack,
+  Paper,
   Typography,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { useNavigate } from 'react-router-dom';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig, ORDER_STATUS_AWAITING, ORDER_STATUS_PAID } from '@kunk/config';
 import { PATHS } from '../../app/menuConfig.js';
@@ -18,9 +20,16 @@ import OrdersStatusChips from './orders/OrdersStatusChips.jsx';
 import OrdersFilters from './orders/OrdersFilters.jsx';
 import OrdersOrderCard from './orders/OrdersOrderCard.jsx';
 import OrdersBulkActions, { OrdersBulkResultDialog } from './orders/OrdersBulkActions.jsx';
+import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
+import OrderDetailsModal, { displayTrackingCode } from './orders/OrderDetailsModal.jsx';
+import AddressValidationDetailModal from './orders/AddressValidationDetailModal.jsx';
+import { processAutoAddressValidation } from '../../lib/addressValidation.js';
 
 const muiTheme = createTheme();
 const GREEN = '#5a7a5b';
+const GREEN_HOVER = '#406040';
+const PURPLE = '#7A5B7A';
+const PURPLE_HOVER = '#4d2d4d';
 const PAGE_SIZE = 50;
 
 function buildQs(filters, { limit = PAGE_SIZE, offset = 0 } = {}) {
@@ -40,11 +49,12 @@ export default function OrdersPage() {
   const bootstrap = getKunkPublicConfig();
   const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [orders, setOrders] = useState([]);
   const [meta, setMeta] = useState({ total_count: 0 });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { showError } = useErrorModal();
   const [msg, setMsg] = useState('');
 
   const [q, setQ] = useState('');
@@ -62,15 +72,19 @@ export default function OrdersPage() {
   });
   const [tagOptions, setTagOptions] = useState([]);
   const [labelFlags, setLabelFlags] = useState({ loggi: false, melhorenvio: false });
+  const [labelBusyId, setLabelBusyId] = useState(null);
 
   const [facetsLoaded, setFacetsLoaded] = useState(false);
   const [statusCounts, setStatusCounts] = useState({});
-  const [tagCounts, setTagCounts] = useState({});
   const [facetsLoading, setFacetsLoading] = useState(false);
 
   const [selected, setSelected] = useState(() => new Set());
   const [showOnlySelected, setShowOnlySelected] = useState(false);
   const [bulkResult, setBulkResult] = useState(null);
+  const [detailsOrderId, setDetailsOrderId] = useState(null);
+  const [addressValidationOrder, setAddressValidationOrder] = useState(null);
+  const [productStockMap, setProductStockMap] = useState(() => new Map());
+  const deepLinkP = (searchParams.get('p') || '').trim();
 
   const filters = useMemo(
     () => ({
@@ -84,20 +98,54 @@ export default function OrdersPage() {
     [q, statusFilter, tagFilter, dateFrom, dateTo, dateField]
   );
 
+  const loadProductStock = useCallback(async () => {
+    try {
+      const res = await api.listItems('products', 'limit=500&fields=id,sku,amount,name');
+      const map = new Map();
+      for (const p of res.data || []) {
+        if (p?.id != null) map.set(Number(p.id), Number(p.amount) || 0);
+        if (p?.sku) map.set(String(p.sku), Number(p.amount) || 0);
+      }
+      setProductStockMap(map);
+    } catch {
+      /* opcional para exibição */
+    }
+  }, [api]);
+
   const loadOrders = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       const res = await api.listOrders(buildQs(filters, { offset }));
-      setOrders(res.data || []);
-      setMeta(res.meta || { total_count: (res.data || []).length });
+      const list = res.data || [];
+      setOrders(list);
+      setMeta(res.meta || { total_count: list.length });
+
+      // Auto-validação em idle (não bloqueia a listagem)
+      const idle =
+        typeof window !== 'undefined' && window.requestIdleCallback
+          ? (cb) => window.requestIdleCallback(cb, { timeout: 2500 })
+          : (cb) => setTimeout(cb, 400);
+      idle(async () => {
+        try {
+          const { updated } = await processAutoAddressValidation(api, list);
+          if (updated.size) {
+            setOrders((prev) =>
+              prev.map((o) =>
+                updated.has(o.id) ? { ...o, address_validation: updated.get(o.id) } : o
+              )
+            );
+          }
+        } catch {
+          /* ignore */
+        }
+      });
     } catch (err) {
-      setError(err.message || 'Falha ao listar pedidos');
+      showError(err.message || 'Falha ao listar pedidos');
       setOrders([]);
     } finally {
       setLoading(false);
     }
-  }, [api, filters, offset]);
+  }, [api, filters, offset, showError]);
 
   const loadFacets = useCallback(async () => {
     setFacetsLoading(true);
@@ -109,14 +157,13 @@ export default function OrdersPage() {
       if (filters.dateField) p.set('date_field', filters.dateField);
       const res = await api.ordersFacets(p.toString());
       setStatusCounts(res.data?.statusCounts || {});
-      setTagCounts(res.data?.tagCounts || {});
       setFacetsLoaded(true);
     } catch (err) {
-      setError(err.message || 'Falha ao carregar contagens');
+      showError(err.message || 'Falha ao carregar contagens');
     } finally {
       setFacetsLoading(false);
     }
-  }, [api, filters]);
+  }, [api, filters, showError]);
 
   useEffect(() => {
     (async () => {
@@ -137,15 +184,13 @@ export default function OrdersPage() {
         setTagOptions([]);
       }
       try {
-        const mod = await api.configBySystem('modules');
-        const items = mod.data?.items || [];
-        const map = Object.fromEntries(items.map((i) => [i.key, i.value ?? i.resolved_value]));
+        const res = await api.freightLabelAvailability();
         setLabelFlags({
-          loggi: String(map['modules.loggi.use_for_label'] ?? 'true') === 'true',
-          melhorenvio: String(map['modules.melhorenvio.use_for_label'] ?? 'false') === 'true',
+          loggi: Boolean(res.data?.loggi),
+          melhorenvio: Boolean(res.data?.melhorenvio),
         });
       } catch {
-        setLabelFlags({ loggi: true, melhorenvio: false });
+        setLabelFlags({ loggi: false, melhorenvio: false });
       }
     })();
   }, [api]);
@@ -153,6 +198,36 @@ export default function OrdersPage() {
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
+
+  useEffect(() => {
+    loadProductStock();
+  }, [loadProductStock]);
+
+  useEffect(() => {
+    if (!deepLinkP || loading) return;
+    const match = orders.find(
+      (o) =>
+        String(o.order_code) === deepLinkP ||
+        String(o.id) === deepLinkP ||
+        String(o.carrier_order_code) === deepLinkP
+    );
+    if (match) {
+      setDetailsOrderId(match.id);
+      return;
+    }
+    // Fallback: busca ampla por q=order_code
+    (async () => {
+      try {
+        const res = await api.listOrders(`q=${encodeURIComponent(deepLinkP)}&limit=20`);
+        const hit = (res.data || []).find(
+          (o) => String(o.order_code) === deepLinkP || String(o.id) === deepLinkP
+        );
+        if (hit) setDetailsOrderId(hit.id);
+      } catch {
+        /* ignore */
+      }
+    })();
+  }, [deepLinkP, orders, loading, api]);
 
   const displayed = showOnlySelected
     ? orders.filter((o) => selected.has(o.id))
@@ -179,26 +254,26 @@ export default function OrdersPage() {
   }
 
   async function onStatusChange(order, status) {
-    setError('');
     try {
       await api.updateOrderStatus(order.id, status);
       setMsg(`Pedido #${order.id} → ${status}`);
-      await loadOrders();
+      await Promise.all([loadOrders(), loadProductStock()]);
       if (facetsLoaded) await loadFacets();
     } catch (err) {
-      setError(err.message || 'Falha ao atualizar status');
+      showError(err.message || 'Falha ao atualizar status');
     }
   }
 
   async function onCreateLabel(order, provider) {
-    setError('');
+    setMsg('');
+    setLabelBusyId(order.id);
     try {
       if (provider === 'loggi') {
         await api.createLoggiLabel({
           order_id: order.id,
           order_code: order.order_code,
           address: order.address,
-          name_associate: order.associate_name,
+          name_associate: order.receiver_name || order.associate_name,
           freight_option: order.freight_option,
         });
       } else {
@@ -206,24 +281,28 @@ export default function OrdersPage() {
           order_id: order.id,
           order_code: order.order_code,
           address: order.address,
-          name_associate: order.associate_name,
+          name_associate: order.receiver_name || order.associate_name,
           freight_option: order.freight_option,
         });
       }
-      setMsg(`Etiqueta ${provider} solicitada para #${order.id}`);
+      setMsg(`Etiqueta ${provider === 'melhorenvio' ? 'Melhor Envio' : 'Loggi'} gerada para #${order.id}`);
       await loadOrders();
     } catch (err) {
-      setError(err.message || 'Falha na etiqueta');
+      showError(err, { title: provider === 'loggi' ? 'Etiqueta Loggi' : 'Etiqueta Melhor Envio' });
+    } finally {
+      setLabelBusyId(null);
     }
   }
 
   async function onCancelLabel(order, provider) {
-    setError('');
+    setMsg('');
+    setLabelBusyId(order.id);
     try {
       if (provider === 'loggi') {
         await api.cancelLoggiLabel({
           orderId: order.id,
-          tracking_code: order.tracking_code || order.carrier_order_code,
+          tracking_code: displayTrackingCode(order) || order.tracking_code,
+          loggi_key: order.carrier_order_code || undefined,
         });
       } else {
         await api.cancelMelhorEnvioLabel({ orderId: order.id });
@@ -231,7 +310,9 @@ export default function OrdersPage() {
       setMsg(`Cancelamento ${provider} #${order.id}`);
       await loadOrders();
     } catch (err) {
-      setError(err.message || 'Falha ao cancelar');
+      showError(err, { title: 'Cancelar etiqueta' });
+    } finally {
+      setLabelBusyId(null);
     }
   }
 
@@ -242,43 +323,105 @@ export default function OrdersPage() {
       setMsg(`Pedido #${order.id} excluído`);
       await loadOrders();
     } catch (err) {
-      setError(err.message || 'Falha ao excluir');
+      showError(err.message || 'Falha ao excluir');
     }
   }
 
   function onOpenCart(order) {
+    const ic = order.institutional_client_code || '';
+    if (ic) {
+      navigate(
+        `${PATHS.newOrder}?ic=${encodeURIComponent(ic)}&p=${encodeURIComponent(order.id)}`
+      );
+      return;
+    }
     const u = order.user_code || '';
     navigate(`${PATHS.newOrder}?u=${encodeURIComponent(u)}&p=${encodeURIComponent(order.id)}`);
   }
 
   function onCopyTracking(order) {
-    const code = order.tracking_code || order.carrier_order_code || '';
+    const code = displayTrackingCode(order);
     if (code) navigator.clipboard?.writeText(String(code));
-    setMsg('Rastreio copiado');
+    setMsg(code ? 'Rastreio copiado' : 'Pedido sem código de rastreio');
   }
 
   async function runBulk(body) {
-    setError('');
     try {
       const res = await api.ordersBulk(body);
       setBulkResult({ title: `Bulk: ${body.action}`, results: res.data?.results || [] });
       await loadOrders();
       if (facetsLoaded) await loadFacets();
     } catch (err) {
-      setError(err.message || 'Falha na ação em massa');
+      showError(err.message || 'Falha na ação em massa');
     }
   }
 
+  function applySearch() {
+    setOffset(0);
+    loadOrders();
+  }
+
   const selectedIds = [...selected];
+  const total = meta.total_count || 0;
+  const pageFrom = total ? offset + 1 : 0;
+  const pageTo = Math.min(offset + PAGE_SIZE, total);
+  const allPageSelected =
+    displayed.length > 0 && displayed.every((o) => selected.has(o.id));
+  const somePageSelected = displayed.some((o) => selected.has(o.id));
 
   return (
     <ThemeProvider theme={muiTheme}>
-      <Box sx={{ p: 1, pb: 4 }} data-testid="orders-page">
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-          <Typography variant="h5" sx={{ color: GREEN, fontWeight: 700 }}>
-            Pedidos
-          </Typography>
-          <Stack direction="row" spacing={1} alignItems="center">
+      <Box sx={{ width: '100%', pb: 4 }} data-testid="orders-page">
+        {msg && (
+          <Alert severity="success" sx={{ mb: 1, ml: '10px', mr: 2 }} onClose={() => setMsg('')}>
+            {msg}
+          </Alert>
+        )}
+
+        <Box className="pageContainerOptions" sx={{ paddingTop: 1, paddingBottom: 1 }}>
+          <OrdersStatusChips
+            statusCounts={statusCounts}
+            statusFilter={statusFilter}
+            facetsLoaded={facetsLoaded}
+            loading={facetsLoading}
+            onLoadFacets={loadFacets}
+            onStatusClick={(s) => {
+              setOffset(0);
+              setStatusFilter((prev) => (prev === s ? '' : s));
+            }}
+          />
+
+          <OrdersFilters
+            q={q}
+            setQ={setQ}
+            statusFilter={statusFilter}
+            setStatusFilter={(v) => {
+              setOffset(0);
+              setStatusFilter(v);
+            }}
+            statusOptions={statusConfig.statuses}
+            tagFilter={tagFilter}
+            setTagFilter={(v) => {
+              setOffset(0);
+              setTagFilter(v);
+            }}
+            tagOptions={tagOptions}
+            dateFrom={dateFrom}
+            setDateFrom={setDateFrom}
+            dateTo={dateTo}
+            setDateTo={setDateTo}
+            dateField={dateField}
+            setDateField={setDateField}
+            onSearch={applySearch}
+            onClearDates={() => {
+              setDateFrom('');
+              setDateTo('');
+              setOffset(0);
+            }}
+          />
+
+          {/* Bulk + Atualizar — centralizados como Produção/Atualizar no legado */}
+          <Box display="flex" justifyContent="center" alignItems="center" gap={2} mb={1} flexWrap="wrap">
             <OrdersBulkActions
               selectedCount={selectedIds.length}
               statusOptions={statusConfig.statuses}
@@ -301,133 +444,196 @@ export default function OrdersPage() {
               onShowOnlySelected={() => setShowOnlySelected(true)}
             />
             <Button
-              variant="outlined"
+              variant="contained"
               startIcon={<RefreshIcon />}
               onClick={() => loadOrders()}
               data-testid="orders-refresh"
+              sx={{
+                bgcolor: PURPLE,
+                color: 'white',
+                minHeight: 36,
+                minWidth: 100,
+                marginTop: selectedIds.length ? 0 : 3,
+                boxShadow: '0 2px 8px #7A5B7A55',
+                '&:hover': { bgcolor: PURPLE_HOVER },
+              }}
             >
               Atualizar
             </Button>
-          </Stack>
-        </Stack>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 1 }} onClose={() => setError('')}>
-            {error}
-          </Alert>
-        )}
-        {msg && (
-          <Alert severity="success" sx={{ mb: 1 }} onClose={() => setMsg('')}>
-            {msg}
-          </Alert>
-        )}
-
-        <OrdersStatusChips
-          statusCounts={statusCounts}
-          tagCounts={tagCounts}
-          statusFilter={statusFilter}
-          tagFilter={tagFilter}
-          facetsLoaded={facetsLoaded}
-          loading={facetsLoading}
-          onLoadFacets={loadFacets}
-          onStatusClick={(s) => {
-            setOffset(0);
-            setStatusFilter((prev) => (prev === s ? '' : s));
-          }}
-          onTagClick={(t) => {
-            setOffset(0);
-            setTagFilter((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
-          }}
-        />
-
-        <OrdersFilters
-          q={q}
-          setQ={setQ}
-          statusFilter={statusFilter}
-          setStatusFilter={(v) => {
-            setOffset(0);
-            setStatusFilter(v);
-          }}
-          statusOptions={statusConfig.statuses}
-          tagFilter={tagFilter}
-          setTagFilter={(v) => {
-            setOffset(0);
-            setTagFilter(v);
-          }}
-          tagOptions={tagOptions}
-          dateFrom={dateFrom}
-          setDateFrom={setDateFrom}
-          dateTo={dateTo}
-          setDateTo={setDateTo}
-          dateField={dateField}
-          setDateField={setDateField}
-          onSearch={() => {
-            setOffset(0);
-            loadOrders();
-          }}
-        />
-
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-          <Checkbox
-            checked={displayed.length > 0 && displayed.every((o) => selected.has(o.id))}
-            indeterminate={
-              displayed.some((o) => selected.has(o.id)) &&
-              !displayed.every((o) => selected.has(o.id))
-            }
-            onChange={toggleSelectPage}
-            data-testid="select-page"
-          />
-          <Typography variant="body2">
-            {meta.total_count ?? displayed.length} registro(s)
-            {showOnlySelected ? ' (somente selecionados)' : ''}
-          </Typography>
-          {showOnlySelected && (
-            <Button size="small" onClick={() => setShowOnlySelected(false)}>
-              Mostrar todos
-            </Button>
-          )}
-        </Stack>
-
-        {loading ? (
-          <Box sx={{ py: 4, textAlign: 'center' }}>
-            <CircularProgress sx={{ color: GREEN }} />
           </Box>
-        ) : (
-          displayed.map((o, i) => (
-            <OrdersOrderCard
-              key={o.id}
-              order={o}
-              selected={selected.has(o.id)}
-              onToggleSelect={toggleSelect}
-              awaitingStatus={statusConfig.awaiting}
-              paidStatus={statusConfig.paid}
-              labelFlags={labelFlags}
-              onStatusChange={onStatusChange}
-              onCreateLabel={onCreateLabel}
-              onCancelLabel={onCancelLabel}
-              onOpenCart={onOpenCart}
-              onDelete={onDelete}
-              onCopyTracking={onCopyTracking}
-              zebra={i % 2 === 1}
-            />
-          ))
-        )}
 
-        {!loading && !showOnlySelected && (meta.total_count || 0) > PAGE_SIZE && (
-          <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }}>
-            <Button disabled={offset <= 0} onClick={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}>
+          <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1} flexWrap="wrap">
+            <Typography variant="body2" color="text.secondary">
+              {loading
+                ? 'Carregando registros...'
+                : `${displayed.length} de ${total} registro${total === 1 ? '' : 's'}`}
+              {!loading && showOnlySelected ? ' (apenas selecionados)' : ''}
+            </Typography>
+            {showOnlySelected && (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setShowOnlySelected(false)}
+                sx={{ color: PURPLE, borderColor: PURPLE }}
+              >
+                Mostrar todos
+              </Button>
+            )}
+          </Box>
+        </Box>
+
+        {/* Tabela / lista — legado pageContainerTable */}
+        <Paper className="pageContainerTable" elevation={0} sx={{ bgcolor: 'transparent', boxShadow: 'none' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              bgcolor: GREEN,
+              color: '#fff',
+              px: 2,
+              py: 1,
+              borderRadius: 2,
+              mb: 1.5,
+            }}
+          >
+            <Checkbox
+              checked={allPageSelected}
+              indeterminate={somePageSelected && !allPageSelected}
+              onChange={toggleSelectPage}
+              data-testid="select-page"
+              sx={{
+                color: '#fff',
+                '&.Mui-checked': { color: '#fff' },
+                '&.MuiCheckbox-indeterminate': { color: '#fff' },
+              }}
+            />
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              Pedidos
+            </Typography>
+          </Box>
+
+          {loading ? (
+            <Box sx={{ py: 6, textAlign: 'center' }}>
+              <CircularProgress sx={{ color: GREEN }} />
+            </Box>
+          ) : displayed.length === 0 ? (
+            <Typography align="center" color="text.secondary" sx={{ py: 4 }}>
+              Nenhum pedido encontrado.
+            </Typography>
+          ) : (
+            displayed.map((o, i) => (
+              <OrdersOrderCard
+                key={o.id}
+                order={o}
+                selected={selected.has(o.id)}
+                onToggleSelect={toggleSelect}
+                awaitingStatus={statusConfig.awaiting}
+                paidStatus={statusConfig.paid}
+                labelFlags={labelFlags}
+                labelBusy={labelBusyId === o.id}
+                onStatusChange={onStatusChange}
+                onCreateLabel={onCreateLabel}
+                onCancelLabel={onCancelLabel}
+                onOpenCart={onOpenCart}
+                onDelete={onDelete}
+                onCopyTracking={onCopyTracking}
+                onOpenDetails={(ord) => setDetailsOrderId(ord.id)}
+                onAddressValidationDetail={(ord) => setAddressValidationOrder(ord)}
+                zebra={i % 2 === 1}
+                dateField={dateField}
+                productStockMap={productStockMap}
+              />
+            ))
+          )}
+        </Paper>
+
+        <AddressValidationDetailModal
+          open={Boolean(addressValidationOrder)}
+          order={addressValidationOrder}
+          api={api}
+          onClose={() => setAddressValidationOrder(null)}
+          onOrderPatched={(patched) => {
+            if (!patched?.id) return;
+            setOrders((prev) => prev.map((o) => (o.id === patched.id ? { ...o, ...patched } : o)));
+            setAddressValidationOrder((prev) =>
+              prev?.id === patched.id ? { ...prev, ...patched } : prev
+            );
+          }}
+        />
+
+        <OrderDetailsModal
+          open={Boolean(detailsOrderId)}
+          orderId={detailsOrderId}
+          api={api}
+          statusOptions={(statusConfig.statuses || []).map((s) => s.value || s).filter(Boolean)}
+          awaitingStatus={statusConfig.awaiting}
+          paidStatus={statusConfig.paid}
+          onClose={() => setDetailsOrderId(null)}
+          onSaved={() => {
+            loadOrders();
+            if (facetsLoaded) loadFacets();
+          }}
+        />
+
+        {!loading && !showOnlySelected && total > PAGE_SIZE && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 2,
+              flexWrap: 'wrap',
+              mx: 'auto',
+              mt: 1,
+              mb: 3,
+              px: 2,
+              py: 1.25,
+              maxWidth: 520,
+              backgroundColor: PURPLE,
+              borderRadius: '30px',
+              boxShadow: '0 4px 14px rgba(74, 45, 74, 0.35)',
+              color: '#fff',
+            }}
+          >
+            <Button
+              size="small"
+              startIcon={<ChevronLeftIcon />}
+              disabled={offset <= 0}
+              onClick={() => {
+                setOffset((o) => Math.max(0, o - PAGE_SIZE));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              sx={{
+                color: '#fff',
+                bgcolor: GREEN,
+                '&:hover': { bgcolor: GREEN_HOVER },
+                '&.Mui-disabled': { color: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(0,0,0,0.15)' },
+              }}
+            >
               Anterior
             </Button>
-            <Typography sx={{ alignSelf: 'center' }}>
-              {offset + 1}–{Math.min(offset + PAGE_SIZE, meta.total_count)} de {meta.total_count}
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {pageFrom}–{pageTo} de {total}
             </Typography>
             <Button
-              disabled={offset + PAGE_SIZE >= meta.total_count}
-              onClick={() => setOffset((o) => o + PAGE_SIZE)}
+              size="small"
+              endIcon={<ChevronRightIcon />}
+              disabled={offset + PAGE_SIZE >= total}
+              onClick={() => {
+                setOffset((o) => o + PAGE_SIZE);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              sx={{
+                color: '#fff',
+                bgcolor: GREEN,
+                '&:hover': { bgcolor: GREEN_HOVER },
+                '&.Mui-disabled': { color: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(0,0,0,0.15)' },
+              }}
             >
               Próxima
             </Button>
-          </Stack>
+          </Box>
         )}
 
         <OrdersBulkResultDialog
