@@ -6,7 +6,7 @@
 
 ## Princípio
 
-Front só fala `/api/v1`. Sessão de **operador** via cookie **`session_token`**.  
+Front só fala `/api/v1`. Sessão de **operador** via cookie **`kunk_oss_session`**.  
 Todas as rotas abaixo (exceto login) exigem sessão + role **`Administrador`** (403 `FORBIDDEN` caso contrário).
 
 ---
@@ -15,7 +15,7 @@ Todas as rotas abaixo (exceto login) exigem sessão + role **`Administrador`** (
 
 | Método | Path | Notas |
 |---|---|---|
-| POST | `/auth/login` | `{ email, password }` → cookie `session_token` |
+| POST | `/auth/login` | `{ email, password }` → cookie `kunk_oss_session` |
 | POST | `/auth/logout` | Invalida sessão |
 | GET | `/auth/me` | Operador sem senha; inclui `permissions` |
 
@@ -185,7 +185,7 @@ Incluir origem do admin (ex. `https://admin.exemplo.ong.br` ou `http://localhost
 - CORS allowlist da `kunk-api`
 - `Domain` do cookie quando cross-subdomain (raiz da associação)
 
-Mesmo cookie `session_token` do painel.
+Mesmo cookie `kunk_oss_session` do painel.
 
 ---
 

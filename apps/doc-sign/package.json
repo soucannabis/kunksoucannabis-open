@@ -1,0 +1,31 @@
+{
+  "name": "@kunk/doc-sign",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 4258",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4258"
+  },
+  "dependencies": {
+    "@kunk/api-client": "*",
+    "@kunk/auth-session": "*",
+    "@kunk/config": "*",
+    "@kunk/theme": "*",
+    "@kunk/ui": "*",
+    "@tiptap/extension-placeholder": "^2.11.5",
+    "@tiptap/extension-text-align": "^2.11.5",
+    "@tiptap/extension-underline": "^2.11.5",
+    "@tiptap/pm": "^2.11.5",
+    "@tiptap/react": "^2.11.5",
+    "@tiptap/starter-kit": "^2.11.5",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.6.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.3",
+    "vite": "^8.1.1"
+  }
+}

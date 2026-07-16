@@ -37,6 +37,12 @@ function rejectForbidden(payload) {
 async function validateAndNormalizeCheckout(payload) {
   rejectForbidden(payload);
 
+  const { isModuleEnabled } = require('./moduleFlags');
+  const scOn = await isModuleEnabled('soucannabis_orders');
+  if (scOn) {
+    payload = { ...payload, delivery_price: 0 };
+  }
+
   const cfg = await storeFreight.getStoreFreightConfig();
   const breakdown = computeExpectedTotal({
     items: payload.items || [],
@@ -205,8 +211,19 @@ async function createOrder(payload, actor) {
 
   delete body.client_code;
 
-  const stockSnap = await stockService.snapshotItemsStock(body.items || []);
-  body.items = stockSnap.items;
+  const { isModuleEnabled } = require('./moduleFlags');
+  const scOn = await isModuleEnabled('soucannabis_orders');
+  if (!scOn) {
+    const stockSnap = await stockService.snapshotItemsStock(body.items || []);
+    body.items = stockSnap.items;
+  }
+
+  const statuses = await orderStatuses.getOrderStatuses();
+  const awaiting = orderStatuses.getAwaitingValue(statuses);
+  // Pedido local nunca nasce pago — sync SC só após pagamento.
+  if (body.status == null || body.status === orderStatuses.getPaidValue(statuses)) {
+    body.status = awaiting;
+  }
 
   const orderBody = {
     ...body,
@@ -257,14 +274,65 @@ async function updateOrder(id, payload, actor) {
     body.receiver_name = existing.receiver_name || body.associate_name || existing.associate_name;
   }
 
-  const stockSnap = await stockService.snapshotItemsStock(body.items || []);
-  body.items = stockSnap.items;
+  const { isModuleEnabled } = require('./moduleFlags');
+  const scOn = await isModuleEnabled('soucannabis_orders');
+  if (!scOn) {
+    const stockSnap = await stockService.snapshotItemsStock(body.items || []);
+    body.items = stockSnap.items;
+  }
 
-  return itemsRepository.updateItem('orders', id, {
+  const updated = await itemsRepository.updateItem('orders', id, {
     ...body,
     stock_debited_at: null,
     date_updated: new Date().toISOString(),
   });
+  try {
+    const syncOrders = require('./soucannabis_orders/syncOrders');
+    // Espelhar só o delta do request — o row completo zera campos null/vazios no legado.
+    const syncPatch = buildSoucannabisMirrorPatch(payload, updated);
+    if (Object.keys(syncPatch).length) {
+      await syncOrders.mirrorIfMapped(id, syncPatch);
+    }
+  } catch {
+    /* non-blocking */
+  }
+  return updated;
+}
+
+/** Campos do PATCH local que podem ir para a SC (evita mandar o pedido inteiro). */
+function buildSoucannabisMirrorPatch(payload = {}, updated = {}) {
+  const syncKeys = [
+    'status',
+    'items',
+    'total',
+    'associate_name',
+    'receiver_name',
+    'user_code',
+    'details',
+    'order_notes',
+    'delivery_price',
+    'discount',
+    'donation',
+    'tags',
+    'tracking_code',
+    'tracking_code_date',
+    'payment_date',
+    'payment_method',
+    'address',
+    'prescriber',
+    'prescriber_code',
+    'external_payment_info',
+    'external_delivery_type',
+  ];
+  const syncPatch = {};
+  for (const key of syncKeys) {
+    if (payload[key] === undefined) continue;
+    syncPatch[key] = updated[key] !== undefined ? updated[key] : payload[key];
+  }
+  if (payload.info !== undefined && syncPatch.details === undefined) {
+    syncPatch.details = updated.details !== undefined ? updated.details : payload.info;
+  }
+  return syncPatch;
 }
 
 /** Patch leve do modal de detalhes (sem revalidar total do checkout). */
@@ -289,7 +357,17 @@ async function updateOrderDetails(id, payload = {}) {
     patch.address_validation = payload.address_validation;
   }
 
-  return itemsRepository.updateItem('orders', id, patch);
+  const updated = await itemsRepository.updateItem('orders', id, patch);
+  try {
+    const syncOrders = require('./soucannabis_orders/syncOrders');
+    const syncPatch = buildSoucannabisMirrorPatch(patch, updated);
+    if (Object.keys(syncPatch).length) {
+      await syncOrders.mirrorIfMapped(id, syncPatch);
+    }
+  } catch {
+    /* non-blocking */
+  }
+  return updated;
 }
 
 async function getOrderDetails(id) {
@@ -359,7 +437,17 @@ async function attachOrderFile(orderId, fileId, { confirmPayment = true } = {}) 
     const awaiting = orderStatuses.getAwaitingValue(statuses);
     const paid = orderStatuses.getPaidValue(statuses);
     if (order.status === awaiting) {
-      updated = await updateStatus(orderId, paid);
+      updated = await updateStatus(orderId, paid, {
+        source: 'comprovante',
+        skipPaymentLock: true,
+        external_payment_info: {
+          provider: 'manual',
+          method: 'comprovante',
+          paid_at: new Date().toISOString(),
+          local_order_code: String(order.order_code || order.id),
+          file_id: fileId,
+        },
+      });
     }
   }
 
@@ -374,10 +462,30 @@ async function getOrderTracking(id) {
   const order = await itemsRepository.getItem('orders', id);
   if (!order) throw new AppError(404, 'NOT_FOUND', 'Pedido não encontrado');
 
-  const carrier = String(order.freight_carrier || order.freight_option?.provider || '').toLowerCase();
+  const carrier = String(
+    order.external_delivery_type || order.freight_carrier || order.freight_option?.provider || ''
+  ).toLowerCase();
   const now = new Date().toISOString();
 
+  let trackingAvail = { loggi: true, melhorenvio: true };
+  try {
+    const freightService = require('./freightService');
+    trackingAvail = await freightService.getTrackingAvailability();
+  } catch {
+    /* keep permissive fallback */
+  }
+
   if (carrier === 'loggi') {
+    if (!trackingAvail.loggi) {
+      return {
+        provider: 'loggi',
+        tracking_code: pickDisplayTracking(order.tracking_code),
+        carrier_order_code: order.carrier_order_code,
+        package: null,
+        message:
+          'Consulta Loggi desligada. Ative o módulo Loggi e a opção Tracking no Admin.',
+      };
+    }
     const loggiLabel = require('./loggi/label');
     const code =
       pickDisplayTracking(order.tracking_code) ||
@@ -411,7 +519,6 @@ async function getOrderTracking(id) {
         trackingPartial: Boolean(data.trackingPartial),
       };
     } catch (err) {
-      // Pacote recém-criado via async-shipments pode ainda não existir no GET /packages.
       const notFound =
         err?.status === 404 ||
         err?.code === 'LOGGI_NOT_FOUND' ||
@@ -432,10 +539,22 @@ async function getOrderTracking(id) {
   }
 
   if (carrier === 'melhorenvio') {
+    if (!trackingAvail.melhorenvio) {
+      const code = pickDisplayTracking(order.tracking_code);
+      return {
+        provider: 'melhorenvio',
+        tracking_code: code,
+        carrier_order_code: order.carrier_order_code,
+        shipment: null,
+        tracking_url: code ? `https://www.melhorrastreio.com.br/rastreio/${code}` : null,
+        message:
+          'Consulta Melhor Envio desligada. Ative o módulo e a opção Tracking no Admin.',
+      };
+    }
     const meLabel = require('./melhorenvio/label');
-    const shipmentId = order.carrier_order_code;
+    const shipmentId = order.carrier_order_code || pickDisplayTracking(order.tracking_code);
     if (!shipmentId) {
-      throw new AppError(400, 'VALIDATION_ERROR', 'Pedido sem id Melhor Envio (carrier_order_code)');
+      throw new AppError(400, 'VALIDATION_ERROR', 'Pedido sem id/código Melhor Envio para rastrear');
     }
     const data = await meLabel.getShipmentDetails(shipmentId);
     const tracking = pickDisplayTracking(
@@ -450,12 +569,14 @@ async function getOrderTracking(id) {
       patch.tracking_code_date = now;
     }
     await itemsRepository.updateItem('orders', id, patch);
+    const code = tracking || pickDisplayTracking(order.tracking_code);
     return {
       provider: 'melhorenvio',
-      tracking_code: tracking,
+      tracking_code: code,
       carrier_order_code: order.carrier_order_code,
       shipment: data,
-      tracking_url: data?.tracking_url || (tracking ? `https://www.melhorrastreio.com.br/rastreio/${tracking}` : null),
+      tracking_url:
+        data?.tracking_url || (code ? `https://www.melhorrastreio.com.br/rastreio/${code}` : null),
     };
   }
 
@@ -465,7 +586,9 @@ async function getOrderTracking(id) {
     carrier_order_code: order.carrier_order_code,
     shipment: null,
     package: null,
-    message: 'Transportadora sem integração de rastreio neste pedido',
+    message: carrier
+      ? 'Transportadora sem integração de rastreio neste pedido'
+      : 'Sem transportadora (external_delivery_type / freight_carrier) para consultar API',
   };
 }
 
@@ -638,7 +761,7 @@ async function statusConfig() {
   };
 }
 
-async function updateStatus(id, status) {
+async function updateStatus(id, status, options = {}) {
   if (!status) throw new AppError(400, 'VALIDATION_ERROR', 'status é obrigatório');
   const statuses = await orderStatuses.getOrderStatuses();
   if (!orderStatuses.isAllowedStatus(status, statuses)) {
@@ -647,21 +770,36 @@ async function updateStatus(id, status) {
 
   const awaiting = orderStatuses.getAwaitingValue(statuses);
   const paid = orderStatuses.getPaidValue(statuses);
+  const skipPaymentLock = options.skipPaymentLock === true;
+  const { isModuleEnabled } = require('./moduleFlags');
+  const scOn = await isModuleEnabled('soucannabis_orders');
+  const pagarmeOrders = require('./pagarme/orders');
 
-  return stockService.withTransaction(async (client) => {
+  const updated = await stockService.withTransaction(async (client) => {
     const existingRes = await client.query(`SELECT * FROM orders WHERE id = $1 FOR UPDATE`, [id]);
     const existing = existingRes.rows[0];
     if (!existing) throw new AppError(404, 'NOT_FOUND', 'Pedido não encontrado');
 
-    // Baixa/estorno: qualquer transição para pago aplica (idempotente via stock_debited_at);
-    // qualquer transição para aguardando estorna se havia baixa.
-    // Também repara pedido já pago sem stock_debited_at (legado / falha anterior).
-    if (status === paid) {
-      await stockService.applySaleForOrder(id, client);
-    } else if (status === awaiting) {
-      await stockService.reverseSaleForOrder(id, client);
-    } else if (existing.status === paid && !existing.stock_debited_at) {
-      await stockService.applySaleForOrder(id, client);
+    if (status === paid && existing.status !== paid && !skipPaymentLock) {
+      const total = Number(existing.total || 0);
+      if (total > 0 && (await pagarmeOrders.isSplitMode())) {
+        throw new AppError(
+          403,
+          'PAYMENT_LOCK',
+          'Com Pedidos SouCannabis ativo, confirme o pagamento via Pagar.me, comprovante ou total zero'
+        );
+      }
+    }
+
+    // Com SC: sem baixa/estorno de estoque local.
+    if (!scOn) {
+      if (status === paid) {
+        await stockService.applySaleForOrder(id, client);
+      } else if (status === awaiting) {
+        await stockService.reverseSaleForOrder(id, client);
+      } else if (existing.status === paid && !existing.stock_debited_at) {
+        await stockService.applySaleForOrder(id, client);
+      }
     }
 
     const now = new Date().toISOString();
@@ -676,13 +814,40 @@ async function updateStatus(id, status) {
       params.push(null);
     }
 
+    if (options.external_payment_info != null) {
+      sets.push(`external_payment_info = $${params.length + 1}::jsonb`);
+      params.push(JSON.stringify(options.external_payment_info));
+    }
+
     params.push(id);
-    const updated = await client.query(
+    const result = await client.query(
       `UPDATE orders SET ${sets.join(', ')} WHERE id = $${params.length} RETURNING *`,
       params
     );
-    return updated.rows[0];
+    return { row: result.rows[0], previous: existing };
   });
+
+  const row = updated.row;
+  const previous = updated.previous;
+  try {
+    const syncOrders = require('./soucannabis_orders/syncOrders');
+    if (syncOrders.isSkipped(id)) return row;
+    if (status === paid && previous.status !== paid) {
+      await syncOrders.createIfNeeded(id, {
+        external_payment_info: options.external_payment_info || row.external_payment_info,
+      });
+    } else if (status === awaiting && previous.status === paid) {
+      await syncOrders.mirrorIfMapped(id, {
+        status: awaiting,
+        payment_date: null,
+      });
+    } else if (previous.soucannabis_order_id || row.soucannabis_order_id) {
+      await syncOrders.mirrorIfMapped(id, { status });
+    }
+  } catch {
+    /* sync error already persisted on order */
+  }
+  return row;
 }
 
 async function updateProduction(id, payload) {
@@ -717,6 +882,9 @@ async function listByUser(userCode) {
 }
 
 async function deleteOrder(id) {
+  // Pedido já sincronizado: DELETE remoto na SC antes do local (falha remota bloqueia).
+  const syncOrders = require('./soucannabis_orders/syncOrders');
+  await syncOrders.deleteIfMapped(id);
   return itemsRepository.deleteItem('orders', id);
 }
 

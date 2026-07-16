@@ -20,14 +20,12 @@ Recriar o fluxo de **serviços** com:
 
 | Item | Motivo |
 |---|---|
-| Checkout / PaymentModal (Pagar.me) | Explicitamente excluído — não portar |
-| `payment_link` / `payment_code` / split | Dependem do módulo de pagamento |
 | Cupons no serviço | Fora do escopo de serviços v1 |
 | Beeviral (`bvid`) / parceiros | Específico SouCannabis — não portar |
 | Utalk / WhatsApp automático | Módulo separado (pode vir depois) |
-| CreateRecipientModal / Pagar.me recipients | Pagamento |
+| Sync Pedidos SouCannabis | Só pedidos — ver [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md) |
 
-Campos de valor (`price`, `donation`, `price_paid`), `payment_type` e status `Aguardando Pagamento` / `Pagamento Concluído` **permanecem** — toggle manual **ou** comprovante enviado (marca pago), sem gerar link de checkout.
+Campos de valor (`price`, `donation`, `price_paid`), `payment_type` e status `Aguardando Pagamento` / `Pagamento Concluído` **permanecem**. Toggle manual / comprovante continuam; **PaymentModal (Pagar.me)** entra quando o módulo `pagarme` estiver ativo — spec [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md). Split SouCannabis em v1 **não** se aplica a serviços.
 
 ## Índice
 
@@ -91,7 +89,7 @@ apps/admin
 | Valor de consulta default do profissional | Hardcode só por `type` sem campo no profissional |
 | Eventos na agenda cujo `calendar_id` está no profissional | Uma agenda única para todos sem seleção |
 | Secrets só se teste OAuth/API ok | Persistir refresh token inválido |
-| Registrar valores e tipo de pagamento manualmente | Importar PaymentModal / Pagar.me / payment_link |
+| Registrar valores e tipo de pagamento (manual / comprovante) | Beeviral / cupons; PaymentModal só se `pagarme` on ([spec](../pagamentos-soucannabis/README.md)) |
 
 ## Comportamento legado → OSS
 

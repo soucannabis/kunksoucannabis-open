@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
-import { ADMIN_EMAIL, ADMIN_PASSWORD } from './helpers/fixtures.js';
+import { ADMIN_EMAIL, ADMIN_PASSWORD, appUrl } from './helpers/fixtures.js';
 import { loginInBrowser } from './helpers/api.js';
 
 test.describe('loja frete', () => {
@@ -11,7 +11,7 @@ test.describe('loja frete', () => {
   test('campos obrigatórios e apply_to_total', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(page.getByText('Kunk Admin')).toBeVisible();
-    await page.goto('/loja/frete');
+    await page.goto(appUrl('/loja/frete'));
     await expect(page.getByRole('heading', { name: 'Frete da loja' })).toBeVisible();
 
     const apply = page.getByTestId('apply-to-total');

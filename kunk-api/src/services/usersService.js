@@ -29,7 +29,7 @@ async function searchUsers(q) {
   const term = `%${q}%`;
   const result = await query(
     `SELECT id, user_code, associate_name, associate_last_name, email, email_account, associate_cpf,
-            mobile_number, status, associate_status, patient_user_code, fullname,
+            mobile_number, status, associate_status, patient_user_code, fullname, adhesion_term,
             TRIM(CONCAT(COALESCE(associate_name, ''), ' ', COALESCE(associate_last_name, ''))) AS full_name
      FROM users
      WHERE associate_name ILIKE $1

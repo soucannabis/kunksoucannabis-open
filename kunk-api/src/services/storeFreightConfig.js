@@ -47,17 +47,20 @@ async function getStoreFreightConfig() {
 }
 
 async function getModuleFreightFlags() {
+  const { isModuleEnabled } = require('./moduleFlags');
   const map = await resolveMap('modules');
   return {
     loggi: {
-      enabled: env.modules.loggi === true,
+      enabled: await isModuleEnabled('loggi'),
       use_for_quote: asBool(map['modules.loggi.use_for_quote'], true),
       use_for_label: asBool(map['modules.loggi.use_for_label'], true),
+      use_for_tracking: asBool(map['modules.loggi.use_for_tracking'], false),
     },
     melhorenvio: {
-      enabled: env.modules.melhorenvio === true,
+      enabled: await isModuleEnabled('melhorenvio'),
       use_for_quote: asBool(map['modules.melhorenvio.use_for_quote'], true),
       use_for_label: asBool(map['modules.melhorenvio.use_for_label'], false),
+      use_for_tracking: asBool(map['modules.melhorenvio.use_for_tracking'], false),
     },
     label_provider: map['modules.freight.label_provider'] || 'loggi',
   };

@@ -45,6 +45,7 @@ const statusConfig = {
   'Entregue a transportadora': { icon: <LocalShippingIcon />, color: '#1976d2' },
   'Aguardando pagamento': { icon: <MonetizationOnIcon />, color: '#0092ff' },
   'Pagamento concluído': { icon: <PaidIcon />, color: '#388e3c' },
+  'Aguardando aprovação': { icon: <HourglassEmptyIcon />, color: '#1565c0' },
   'Produção Finalizada': { icon: <Inventory2Icon />, color: '#388e3c' },
   'Em produção': { icon: <Inventory2Icon />, color: '#1976d2' },
   Enviado: { icon: <LocalShippingIcon />, color: '#1976d2' },

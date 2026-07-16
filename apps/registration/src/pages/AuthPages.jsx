@@ -6,7 +6,7 @@ import { ApiError } from '@kunk/api-client';
 
 const MIN_PASSWORD_LENGTH = 8;
 
-export function CadastroPage() {
+export function SignupPage() {
   const { registerEmail } = useAssociateAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -135,7 +135,7 @@ export function LoginPage() {
   );
 }
 
-export function NovaSenhaPage({ api }) {
+export function NewPasswordPage({ api }) {
   const navigate = useNavigate();
   const params = new URLSearchParams(window.location.search);
   const [token, setToken] = useState(params.get('token') || '');

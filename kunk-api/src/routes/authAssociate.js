@@ -67,6 +67,17 @@ router.get('/me', requireAssociate, async (req, res) => {
 
 router.post('/forgot-password', async (req, res, next) => {
   try {
+    const { checkRateLimit } = require('../utils/rateLimit');
+    const { AppError } = require('../utils/response');
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const limited = checkRateLimit(`assoc-forgot:${ip}:${email}`, {
+      limit: 5,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!limited.ok) {
+      throw new AppError(429, 'RATE_LIMITED', 'Muitas tentativas. Aguarde alguns minutos.');
+    }
     const data = await associateAuthRepository.forgotPassword(req.body?.email);
     res.json(ok(data));
   } catch (err) {

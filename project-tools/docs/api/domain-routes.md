@@ -54,16 +54,18 @@ Listagens genéricas também em `GET /items/users`.
 
 ---
 
-## Terms (assinatura)
+## Doc-sign (assinatura de termos)
 
-> **Módulo em desenvolvimento** — fora da entrega do cadastramento. Stubs retornam `TERMS_MODULE_IN_DEVELOPMENT`.
+> Spec: [`../frontend/doc-sign/`](../frontend/doc-sign/README.md) · API: [`doc-sign.md`](./doc-sign.md)
 
-| Método | Path | Nesta entrega |
+| Método | Path | Status |
 |---|---|---|
-| POST | `/terms/contracts` | 501/503 stub |
-| GET | `/terms/status` | `{ status: "module_in_development" }` |
+| * | `/doc-sign/*` | Implementar na entrega do módulo |
+| POST | `/terms/contracts` | Alias deprecado → `/doc-sign/contracts` |
+| GET | `/terms/status` | Alias deprecado → `/doc-sign/status` |
 
-Detalhe: [`../frontend/cadastramento/gaps.md`](../frontend/cadastramento/gaps.md) §5.
+Stubs atuais retornam `TERMS_MODULE_IN_DEVELOPMENT` até a entrega.  
+**Sem webhook externo** — ao completar assinatura, a própria API atualiza `users.adhesion_term` e `associate_status` 4→5.
 ---
 
 ## Orders

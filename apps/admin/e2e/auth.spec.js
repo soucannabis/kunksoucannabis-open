@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
-import { ADMIN_EMAIL, ADMIN_PASSWORD } from './helpers/fixtures.js';
+import { ADMIN_EMAIL, ADMIN_PASSWORD, appUrl } from './helpers/fixtures.js';
 import { loginInBrowser } from './helpers/api.js';
 
 test.describe('auth', () => {
@@ -16,7 +16,7 @@ test.describe('auth', () => {
   });
 
   test('credencial inválida mostra erro', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto(appUrl('/login'));
     await page.getByLabel('E-mail').fill(ADMIN_EMAIL);
     await page.getByLabel('Senha').fill('wrong-password');
     await page.getByRole('button', { name: 'Entrar' }).click();

@@ -7,6 +7,7 @@ const { authenticate } = require('../middleware/authenticate');
 const { authorizeAdmin } = require('../middleware/authorize');
 const { ok } = require('../utils/response');
 const { env } = require('../config/env');
+const { OPERATOR_SESSION_COOKIE } = require('../constants/authCookies');
 
 const router = Router();
 
@@ -16,7 +17,7 @@ router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body || {};
     const { user, sessionToken, expires } = await authRepository.login(email, password);
-    res.cookie('session_token', sessionToken, {
+    res.cookie(OPERATOR_SESSION_COOKIE, sessionToken, {
       httpOnly: true,
       secure: env.cookieSecure,
       sameSite: 'lax',
@@ -30,10 +31,36 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
+router.post('/forgot-password', async (req, res, next) => {
+  try {
+    const { checkRateLimit } = require('../utils/rateLimit');
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const limited = checkRateLimit(`op-forgot:${ip}:${email}`, { limit: 5, windowMs: 15 * 60 * 1000 });
+    if (!limited.ok) {
+      const { AppError } = require('../utils/response');
+      throw new AppError(429, 'RATE_LIMITED', 'Muitas tentativas. Aguarde alguns minutos.');
+    }
+    const data = await authRepository.forgotPassword(email, req.body?.app);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/reset-password', async (req, res, next) => {
+  try {
+    const data = await authRepository.resetPassword(req.body?.token, req.body?.password);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/logout', async (req, res, next) => {
   try {
-    await authRepository.logout(req.cookies?.session_token);
-    res.cookie('session_token', '', {
+    await authRepository.logout(req.cookies?.[OPERATOR_SESSION_COOKIE]);
+    res.cookie(OPERATOR_SESSION_COOKIE, '', {
       httpOnly: true,
       secure: env.cookieSecure,
       sameSite: 'lax',
@@ -94,10 +121,11 @@ router.delete('/tokens/:id', authenticate, authorizeAdmin, async (req, res, next
 });
 
 const professionalPortalAccess = require('../services/professionalPortalAccess');
+const systemInviteService = require('../services/systemInviteService');
 
 router.get('/system-invite/preview', async (req, res, next) => {
   try {
-    const data = await professionalPortalAccess.previewInvite(req.query.token);
+    const data = await systemInviteService.previewInvite(req.query.token);
     res.json(ok(data));
   } catch (err) {
     next(err);
@@ -106,7 +134,7 @@ router.get('/system-invite/preview', async (req, res, next) => {
 
 router.post('/system-invite/accept', async (req, res, next) => {
   try {
-    const data = await professionalPortalAccess.acceptInvite(req.body || {});
+    const data = await systemInviteService.acceptInvite(req.body || {});
     res.json(ok(data));
   } catch (err) {
     next(err);

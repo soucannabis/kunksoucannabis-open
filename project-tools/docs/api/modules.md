@@ -12,7 +12,8 @@ Integrações de terceiros **desabilitadas por padrão**, ativáveis por env ou 
 
 | Módulo | Env de ativação (exemplo) | Função |
 |---|---|---|
-| `pagarme` | `MODULE_PAGARME_ENABLED=true` + tokens | Pagamentos |
+| `pagarme` | `MODULE_PAGARME_ENABLED=true` + tokens | Pagamentos (pedidos/serviços) — [pagarme.md](./modules/pagarme.md) |
+| `soucannabis_orders` | `MODULE_SOUCANNABIS_ORDERS_ENABLED=true` + OAuth | Pedidos SouCannabis (catálogo/tags/sync + split) — [soucannabis_orders.md](./modules/soucannabis_orders.md); **requer** `pagarme` |
 | `loggi` | `MODULE_LOGGI_ENABLED=true` | Frete / entrega |
 | `melhorenvio` | `MODULE_MELHORENVIO_ENABLED=true` | Frete |
 | `google_calendar` | `MODULE_GOOGLE_CALENDAR_ENABLED=true` | Agenda |
@@ -23,6 +24,7 @@ Integrações de terceiros **desabilitadas por padrão**, ativáveis por env ou 
 | `scp` | `MODULE_SCP_ENABLED=true` | Estoque externo |
 | `nibo` | `MODULE_NIBO_ENABLED=true` | Financeiro |
 | `geoapify` | `MODULE_GEOAPIFY_ENABLED=true` | Geocoding / verificação de endereço (ViaCEP + Geoapify) |
+| `email` | `MODULE_EMAIL_ENABLED` (padrão se Admin não definiu) | Envio de e-mails — Admin sobrescreve; ver [email.md](./modules/email.md) |
 
 Lista alinhada ao kunkserver atual; o OSS pode reduzir o conjunto “core”.
 
@@ -91,6 +93,23 @@ Credenciais: [`modules/credentials.md`](./modules/credentials.md).
 Spec: [`../frontend/kunk/servicos/README.md`](../frontend/kunk/servicos/README.md).  
 Módulo: [`modules/google_calendar.md`](./modules/google_calendar.md).
 
+## Papéis em pagamentos / Pedidos SouCannabis
+
+| Key | Default | Uso |
+|---|---|---|
+| `modules.pagarme.use_for_orders` | `true` | PaymentModal em pedidos |
+| `modules.pagarme.use_for_services` | `true` | PaymentModal em serviços |
+| `modules.pagarme.soucannabis_recipient_id` | `null` | Recipient SC no split |
+| `modules.soucannabis_orders.sync_products` | `true` | Catálogo remoto no carrinho |
+| `modules.soucannabis_orders.sync_tags` | `true` | Seção Tags SouCannabis |
+| `modules.soucannabis_orders.sync_orders` | `true` | Sync de pedidos (create só após pago) |
+
+Ativar SC exige conta Pagarme da associação **PSP** + `payment_percentage` **inteiro** (ver módulos).
+
+Spec: [`../frontend/kunk/pagamentos-soucannabis/README.md`](../frontend/kunk/pagamentos-soucannabis/README.md).  
+Contrato remoto SC: [`../external_apps_kunk_doc.md`](../external_apps_kunk_doc.md).  
+Módulos: [`modules/pagarme.md`](./modules/pagarme.md) · [`modules/soucannabis_orders.md`](./modules/soucannabis_orders.md).
+
 ## Documentação por módulo
 
 | Módulo | Doc |
@@ -100,5 +119,8 @@ Módulo: [`modules/google_calendar.md`](./modules/google_calendar.md).
 | `melhorenvio` | [modules/melhorenvio.md](./modules/melhorenvio.md) |
 | `geoapify` | [modules/geoapify.md](./modules/geoapify.md) |
 | `google_calendar` | [modules/google_calendar.md](./modules/google_calendar.md) |
+| `email` | [modules/email.md](./modules/email.md) |
+| `pagarme` | [modules/pagarme.md](./modules/pagarme.md) |
+| `soucannabis_orders` | [modules/soucannabis_orders.md](./modules/soucannabis_orders.md) |
 
 Demais módulos: criar `docs/api/modules/{name}.md` na implementação. Este arquivo define o **contrato de ativação** comum.

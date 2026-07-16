@@ -31,12 +31,14 @@ import EventBusyIcon from '@mui/icons-material/EventBusy';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import PaymentIcon from '@mui/icons-material/Payment';
 import { useSearchParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
 import NewServiceModal from './services/NewServiceModal.jsx';
 import ServiceInfoModal from './services/ServiceInfoModal.jsx';
+import PaymentModal from '../../components/PaymentModal.jsx';
 import {
   daysAgoIso,
   formatDateTime,
@@ -89,6 +91,25 @@ export default function ServicesPage() {
   const [confirmReplace, setConfirmReplace] = useState(null);
   const [highlightIso, setHighlightIso] = useState(() => searchParams.get('h') || '');
   const [eventMenu, setEventMenu] = useState(null); // { anchorEl, row }
+  const [pagarmeForServices, setPagarmeForServices] = useState(false);
+  const [paymentService, setPaymentService] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.getPagarmeStatus();
+        if (!cancelled) {
+          setPagarmeForServices(Boolean(res.data?.enabled && res.data?.use_for_services));
+        }
+      } catch {
+        if (!cancelled) setPagarmeForServices(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -384,6 +405,19 @@ export default function ServicesPage() {
                           <AccessTimeIcon color="primary" />
                         )}
                       </IconButton>
+                      {pagarmeForServices &&
+                        normalizeServiceStatus(row.status) === STATUS_AWAITING &&
+                        Number(row.price_paid || row.price || 0) > 0 && (
+                          <Tooltip title="Pagamento Pagar.me">
+                            <IconButton
+                              size="small"
+                              data-testid={`service-pay-${row.id}`}
+                              onClick={() => setPaymentService(row)}
+                            >
+                              <PaymentIcon fontSize="small" color="primary" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                       <Typography variant="caption" display="block">
                         {normalizeServiceStatus(row.status) || STATUS_AWAITING}
                       </Typography>
@@ -519,6 +553,15 @@ export default function ServicesPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <PaymentModal
+        open={Boolean(paymentService)}
+        onClose={() => setPaymentService(null)}
+        api={api}
+        context="service"
+        entity={paymentService}
+        onSuccess={() => load()}
+      />
     </ThemeProvider>
   );
 }

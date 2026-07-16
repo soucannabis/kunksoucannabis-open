@@ -5,12 +5,12 @@ import { AssociateAuthProvider } from '@kunk/auth-session';
 import { getPublicConfig } from '@kunk/config';
 import { PublicConfigProvider } from './config/PublicConfigProvider.jsx';
 import { AppShell, PhaseGuard, PhaseHomeRedirect, PublicLayout } from './layout/AppShell.jsx';
-import { CadastroPage, LoginPage, NovaSenhaPage } from './pages/AuthPages.jsx';
-import { BemVindoPage } from './pages/BemVindoPage.jsx';
-import { CadastroAssociadoPage } from './pages/CadastroAssociadoPage.jsx';
-import { CadastroPacientePage } from './pages/CadastroPacientePage.jsx';
-import { DocumentosPage } from './pages/DocumentosPage.jsx';
-import { CadastroConcluidoPage, ConsultaPage } from './pages/ConsultaPages.jsx';
+import { SignupPage, LoginPage, NewPasswordPage } from './pages/AuthPages.jsx';
+import { WelcomePage } from './pages/WelcomePage.jsx';
+import { AssociateRegistrationPage } from './pages/AssociateRegistrationPage.jsx';
+import { PatientRegistrationPage } from './pages/PatientRegistrationPage.jsx';
+import { DocumentsPage } from './pages/DocumentsPage.jsx';
+import { RegistrationCompletePage, ConsultationPage } from './pages/ConsultationPages.jsx';
 
 export default function App() {
   const bootstrap = getPublicConfig();
@@ -22,9 +22,9 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route element={<PublicLayout />}>
-              <Route path="/cadastro" element={<CadastroPage />} />
+              <Route path="/cadastro" element={<SignupPage />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/nova-senha" element={<NovaSenhaPage api={api} />} />
+              <Route path="/nova-senha" element={<NewPasswordPage api={api} />} />
             </Route>
 
             <Route element={<AppShell />}>
@@ -33,7 +33,7 @@ export default function App() {
                 path="/bem-vindo"
                 element={(
                   <PhaseGuard allow={[1]}>
-                    <BemVindoPage />
+                    <WelcomePage />
                   </PhaseGuard>
                 )}
               />
@@ -41,7 +41,7 @@ export default function App() {
                 path="/cadastro-associado"
                 element={(
                   <PhaseGuard allow={[1, 2]}>
-                    <CadastroAssociadoPage api={api} />
+                    <AssociateRegistrationPage api={api} />
                   </PhaseGuard>
                 )}
               />
@@ -49,7 +49,7 @@ export default function App() {
                 path="/cadastro-paciente"
                 element={(
                   <PhaseGuard allow={[2]}>
-                    <CadastroPacientePage api={api} />
+                    <PatientRegistrationPage api={api} />
                   </PhaseGuard>
                 )}
               />
@@ -57,7 +57,7 @@ export default function App() {
                 path="/documentos"
                 element={(
                   <PhaseGuard allow={[3, 4]}>
-                    <DocumentosPage api={api} />
+                    <DocumentsPage api={api} />
                   </PhaseGuard>
                 )}
               />
@@ -65,7 +65,7 @@ export default function App() {
                 path="/consulta"
                 element={(
                   <PhaseGuard allow={[5]}>
-                    <ConsultaPage api={api} />
+                    <ConsultationPage api={api} />
                   </PhaseGuard>
                 )}
               />
@@ -73,7 +73,7 @@ export default function App() {
                 path="/cadastro-concluido"
                 element={(
                   <PhaseGuard allow={['done', 5]}>
-                    <CadastroConcluidoPage />
+                    <RegistrationCompletePage />
                   </PhaseGuard>
                 )}
               />

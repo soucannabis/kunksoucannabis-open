@@ -24,7 +24,7 @@ Recriar a área de **associados** com:
 
 | Item | Motivo |
 |---|---|
-| Assinatura real de termo (DocuSeal / módulo nativo) | App/módulo ainda em desenvolvimento — interações nulas |
+| Assinatura real de termo (app **doc-sign**) | Spec [`../doc-sign/`](../doc-sign/README.md) — interações nulas até a entrega |
 | Parceiro no modal | Explicitamente: aba só **Prescritor** |
 | Beeviral / `bvid` | Específico SouCannabis |
 | Utalk / WhatsApp | Módulo separado |

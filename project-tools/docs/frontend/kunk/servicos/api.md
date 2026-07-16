@@ -79,7 +79,7 @@ Server:
 2. Valida associado; se `patient_user_code`, valida paciente do responsável.
 3. Para cada item: snapshot de `professional_name`, `professional_email`, `type`; `service_code` novo; `price` default se omitido; copia `associate_*` + `patient_*` do body.
 4. Status default `Aguardando Pagamento`.
-5. **Não** chama Pagar.me / não gera `payment_link`.
+5. Create do serviço **não** gera checkout Pagarme (`payment_link` fica null até PaymentModal, se `pagarme` on).
 6. Se `create_calendar_event: true` + `consultation_date` + profissional com `calendar_id` → cria evento e grava `event_id` / `event_link` (template com responsável+paciente se houver).
 
 Response: array criado (mesmo `booking_group_code`).

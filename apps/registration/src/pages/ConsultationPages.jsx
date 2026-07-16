@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAssociateAuth } from '@kunk/auth-session';
 import { AlertError, UploadLabel } from '@kunk/ui';
 
-export function ConsultaPage({ api }) {
+export function ConsultationPage({ api }) {
   const { refresh } = useAssociateAuth();
   const navigate = useNavigate();
   const [prescription, setPrescription] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('signed') === '1') {
+      refresh().catch(() => {});
+    }
+  }, [refresh]);
 
   async function uploadExtra(docKind, file) {
     if (!file) return;
@@ -69,7 +76,7 @@ export function ConsultaPage({ api }) {
   );
 }
 
-export function CadastroConcluidoPage() {
+export function RegistrationCompletePage() {
   const { user } = useAssociateAuth();
   return (
     <div className="text-center">

@@ -66,7 +66,7 @@ async function list(filters = {}) {
 }
 
 async function enrichCalendars(rows) {
-  if (!env.modules.google_calendar) {
+  if (!(await require('./moduleFlags').isModuleEnabled('google_calendar'))) {
     return rows.map((r) => ({ ...r, calendar: null }));
   }
   try {

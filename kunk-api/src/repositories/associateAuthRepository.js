@@ -236,12 +236,31 @@ async function forgotPassword(email) {
        WHERE id = $2`,
       [tokenHash, user.id]
     );
+
+    try {
+      const emailService = require('../services/email');
+      const associationName =
+        process.env.ASSOCIATION_NAME ||
+        (await (async () => {
+          try {
+            const systemConfigService = require('../services/systemConfigService');
+            const configs = await systemConfigService.resolveAll('registration');
+            return configs['VITE_ASSOCIATION_NAME'] || configs['association_name'] || null;
+          } catch {
+            return null;
+          }
+        })());
+      const resetUrl = `${emailService.publicAppUrl('registration')}/nova-senha?token=${encodeURIComponent(resetToken)}`;
+      const tpl = emailService.templates.passwordReset({ resetUrl, associationName });
+      await emailService.sendTemplated(normalized, tpl);
+    } catch {
+      /* never leak mailer errors on forgot */
+    }
   }
 
   return {
     ok: true,
     message: 'Se o e-mail existir, enviaremos instruções de redefinição.',
-    // Exposed only in test for QA without mailer
     ...(process.env.NODE_ENV === 'test' && resetToken ? { reset_token: resetToken } : {}),
   };
 }
@@ -270,7 +289,9 @@ async function resetPassword(token, password) {
     `UPDATE users SET
       account_password = $1,
       password_reset_token = NULL,
-      password_reset_expires = NULL
+      password_reset_expires = NULL,
+      session_token = NULL,
+      is_session_active = false
      WHERE id = $2`,
     [hash, user.id]
   );

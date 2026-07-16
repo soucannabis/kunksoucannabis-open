@@ -1,10 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { FRONT_URL, API_URL } from './e2e/helpers/fixtures.js';
 
-const FRONT_URL = process.env.E2E_FRONT_URL || 'http://localhost:4256';
-const API_URL = process.env.E2E_API_URL || `${FRONT_URL}/api/v1`;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: path.join(__dirname, 'e2e'),
   fullyParallel: false,
   workers: 1,
   timeout: 90_000,
@@ -16,12 +18,21 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: FRONT_URL,
+      },
+    },
+  ],
   webServer: {
     command: 'npm run dev -- --host 0.0.0.0 --port 4256',
+    cwd: __dirname,
     url: FRONT_URL,
     reuseExistingServer: true,
     timeout: 120_000,
   },
-  metadata: { apiUrl: API_URL },
+  metadata: { apiUrl: API_URL, frontUrl: FRONT_URL },
 });

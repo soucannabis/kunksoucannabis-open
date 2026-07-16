@@ -6,7 +6,7 @@
 |---|---|
 | Front | `http://localhost:4256` |
 | API | `http://localhost:4250/api/v1` (via proxy `/api/v1`) |
-| Cookie | `session_token` |
+| Cookie | `kunk_oss_session` |
 | Admin | `admin@kunk-api.test` / `TestAdmin123!` |
 | Não-admin | `acolhimento@kunk-api.test` / `TestAcol123!` |
 
@@ -44,6 +44,12 @@
 |---|---|---|
 | 5.1 | CRUD etiquetas | criar, editar, excluir |
 
+### 6. Serviços externos — `servicos-externos.spec.js`
+
+| # | Teste | Critério |
+|---|---|---|
+| 6.1 | secret Loggi | falha de teste não persiste |
+
 ## Como revalidar
 
 ```bash
@@ -52,4 +58,12 @@ cd kunk-api && npm run dev
 
 # na raiz
 npm run test:e2e:admin
+npm run test:e2e:admin:ui
+
+# ou em apps/admin
+cd apps/admin
+npm run test:e2e
+npm run test:e2e:ui
 ```
+
+Navegações usam `appUrl()` (`http://localhost:4256/...`) para não depender só do `baseURL` do Playwright.

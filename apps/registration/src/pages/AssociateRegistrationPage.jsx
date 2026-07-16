@@ -34,7 +34,7 @@ const EMPTY = {
   ciap_codes: [],
 };
 
-export function CadastroAssociadoPage({ api }) {
+export function AssociateRegistrationPage({ api }) {
   const { user, refresh } = useAssociateAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState(EMPTY);

@@ -4,7 +4,7 @@ const request = require('supertest');
 const { getApp } = require('./app');
 const { ensureAdminUser } = require('./db');
 
-function extractCookie(setCookie, name = 'session_token') {
+function extractCookie(setCookie, name = 'kunk_oss_session') {
   if (!setCookie) return null;
   const list = Array.isArray(setCookie) ? setCookie : [setCookie];
   const raw = list.find((c) => String(c).startsWith(`${name}=`)) || list[0];

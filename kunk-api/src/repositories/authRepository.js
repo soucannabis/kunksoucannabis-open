@@ -200,6 +200,104 @@ async function hashPassword(password) {
   return bcrypt.hash(password, SALT_ROUNDS);
 }
 
+function hashResetToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function assertOperatorPassword(password) {
+  if (!password || String(password).length < 8) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Senha deve ter no mínimo 8 caracteres');
+  }
+  if (!/[A-Z]/.test(password) || !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'Senha precisa de maiúscula e caractere especial'
+    );
+  }
+}
+
+const OPERATOR_RESET_APPS = new Set(['kunk', 'admin', 'doc-sign']);
+
+async function forgotPassword(email, app = 'kunk') {
+  const normalized = String(email || '').trim().toLowerCase();
+  if (!normalized) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'email é obrigatório');
+  }
+  const appKey = String(app || 'kunk').toLowerCase();
+  if (!OPERATOR_RESET_APPS.has(appKey)) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'app inválido (kunk|admin|doc-sign)');
+  }
+
+  const user = await findByEmail(normalized);
+  let resetToken = null;
+  if (user && String(user.status || '').toLowerCase() !== 'inactive') {
+    resetToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = hashResetToken(resetToken);
+    await query(
+      `UPDATE system_users SET
+         password_reset_token = $1,
+         password_reset_expires = NOW() + interval '1 hour'
+       WHERE id = $2`,
+      [tokenHash, user.id]
+    );
+
+    try {
+      const emailService = require('../services/email');
+      const resetUrl = `${emailService.publicAppUrl(appKey)}/nova-senha?token=${encodeURIComponent(resetToken)}`;
+      const tpl = emailService.templates.passwordReset({
+        resetUrl,
+        associationName: process.env.ASSOCIATION_NAME || null,
+      });
+      await emailService.sendTemplated(normalized, tpl);
+    } catch {
+      /* ignore mailer errors */
+    }
+  }
+
+  return {
+    ok: true,
+    message: 'Se o e-mail existir, enviaremos instruções de redefinição.',
+    ...(process.env.NODE_ENV === 'test' && resetToken ? { reset_token: resetToken } : {}),
+  };
+}
+
+async function resetPassword(token, password) {
+  if (!token || !password) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'token e password são obrigatórios');
+  }
+  assertOperatorPassword(password);
+
+  const tokenHash = hashResetToken(token);
+  const result = await query(
+    `SELECT * FROM system_users
+     WHERE password_reset_token = $1
+       AND password_reset_expires > NOW()
+     LIMIT 1`,
+    [tokenHash]
+  );
+  const user = result.rows[0];
+  if (!user) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Token inválido ou expirado');
+  }
+
+  const hash = await hashPassword(password);
+  await query(
+    `UPDATE system_users SET
+      password = $1,
+      password_reset_token = NULL,
+      password_reset_expires = NULL,
+      session_token = NULL,
+      is_session_active = false,
+      status = CASE WHEN lower(coalesce(status, '')) = 'pending' THEN 'active' ELSE status END,
+      date_updated = NOW()
+     WHERE id = $2`,
+    [hash, user.id]
+  );
+
+  return { ok: true };
+}
+
 module.exports = {
   publicUser,
   findByEmail,
@@ -211,4 +309,8 @@ module.exports = {
   revokeApiToken,
   resolveBearer,
   hashPassword,
+  forgotPassword,
+  resetPassword,
+  assertOperatorPassword,
+  OPERATOR_RESET_APPS,
 };

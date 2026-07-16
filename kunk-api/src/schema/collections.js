@@ -102,6 +102,8 @@ const COLUMNS = {
     'freight_carrier', 'freight_option', 'dce',
     'institutional_client_id', 'institutional_client_code',
     'stock_debited_at',
+    'soucannabis_order_id', 'soucannabis_synced_at', 'soucannabis_sync_error', 'external_payment_info',
+    'external_delivery_type',
   ],
   orders_files: ['id', 'order_id', 'file_id'],
   partners: [

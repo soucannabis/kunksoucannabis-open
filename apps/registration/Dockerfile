@@ -7,7 +7,7 @@ COPY apps/admin/package.json ./apps/admin/
 COPY apps/registration/package.json ./apps/registration/
 COPY packages ./packages
 COPY apps/kunk/package.json ./apps/kunk/
-COPY apps/terms/package.json ./apps/terms/
+COPY apps/doc-sign/package.json ./apps/doc-sign/
 
 RUN npm install
 

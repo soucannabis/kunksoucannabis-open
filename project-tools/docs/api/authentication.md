@@ -4,7 +4,7 @@ A API possui **três** canais de autenticação (um por request).
 
 | Canal | Cliente | Credencial | Persistência |
 |---|---|---|---|
-| **Sessão operador** | Painel e **Admin** | Cookie `session_token` | `system_users` |
+| **Sessão operador** | Painel e **Admin** | Cookie `kunk_oss_session` | `system_users` |
 | **Sessão associado** | Cadastramento | Cookie **`associate_session`** | `users` |
 | **API Key** | Scripts, webhooks, apps externos | `Authorization: Bearer <token>` | `users_api` / `api_tokens` |
 
@@ -18,7 +18,7 @@ O app **admin** (`admin.` / `:4256`) reusa a sessão operador; o front e as rota
 
 | Atributo | Valor |
 |---|---|
-| Nome | `session_token` |
+| Nome | `kunk_oss_session` |
 | HttpOnly | `true` |
 | Secure | `true` (produção) |
 | SameSite | `Lax` |
@@ -62,7 +62,7 @@ Autentica operador interno (`system_users`).
 }
 ```
 
-Seta cookie `session_token`. Senha com bcrypt. Nunca retornar `password` / `session_token` no body.
+Seta cookie `kunk_oss_session`. Senha com bcrypt. Nunca retornar `password` / `session_token` no body.
 
 **Erros:** 400 `VALIDATION_ERROR` · 401 `INVALID_CREDENTIALS` · 403 `USER_INACTIVE`
 
@@ -76,7 +76,7 @@ Retorna o operador autenticado. **401** se cookie inválido/expirado.
 
 ### Validação (middleware operador)
 
-1. Ler cookie `session_token`
+1. Ler cookie `kunk_oss_session`
 2. Buscar `system_users` com token ativo
 3. Verificar expiração / inatividade
 4. `req.auth = { type: "session", subject: "operator" }`
@@ -96,7 +96,7 @@ Retorna o operador autenticado. **401** se cookie inválido/expirado.
 | HttpOnly / Secure / SameSite / Path | iguais ao operador |
 | Domain | raiz da associação (cross-subdomain se necessário) |
 
-Separado de `session_token` para não colidir painel × cadastro.
+Separado de `kunk_oss_session` (operador) para não colidir painel × cadastro. O nome `session_token` fica reservado ao Kunk legado.
 
 ### Endpoints
 
@@ -106,13 +106,31 @@ Separado de `session_token` para não colidir painel × cadastro.
 | POST | `/auth/associate/login` | `{ email, password }` |
 | POST | `/auth/associate/logout` | |
 | GET | `/auth/associate/me` | responsável sem senha |
-| POST | `/auth/associate/forgot-password` | `{ email }` → 200 genérico |
-| POST | `/auth/associate/reset-password` | `{ token, password }` |
+| POST | `/auth/associate/forgot-password` | `{ email }` → 200 genérico; envia link se SMTP ok |
+| POST | `/auth/associate/reset-password` | `{ token, password }` — invalida sessões do associado |
 
 - Credenciais: `users.email_account` + `users.account_password` (bcrypt).
 - Sessão: `users.session_*`.
-- Reset: token opaco, TTL 1h, colunas `password_reset_token` / `password_reset_expires` (armazenar **hash** do token).
+- Reset: token opaco, TTL 1h, colunas `password_reset_token` / `password_reset_expires` (armazenar **hash** do token). Rate limit por IP+e-mail.
 - Register: 409 `ACCOUNT_EXISTS` / `ACCOUNT_IN_PROGRESS` — ver api do cadastramento.
+
+### Operador — reset de senha
+
+| Método | Path | Função |
+|---|---|---|
+| POST | `/auth/forgot-password` | `{ email, app: "kunk"\|"admin"\|"doc-sign" }` → 200 genérico |
+| POST | `/auth/reset-password` | `{ token, password }` (política: 8+, maiúscula, especial) |
+
+Link do e-mail aponta para `{URL_DO_APP}/nova-senha?token=…`. Colunas `system_users.password_reset_*`. SQL: `alter-system-users-password-reset.sql`.
+
+### Convite de operador
+
+| Método | Path | Função |
+|---|---|---|
+| GET | `/auth/system-invite/preview` | Preview público do token |
+| POST | `/auth/system-invite/accept` | Define senha e ativa usuário `pending` |
+| POST | `/system-users` | Admin cria operador **sem senha** (`pending`) + envia convite |
+| POST | `/system-users/:id/resend-invite` | Reenvia convite |
 
 ### Validação (middleware associado)
 

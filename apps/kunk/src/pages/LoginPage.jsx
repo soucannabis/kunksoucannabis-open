@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Container, TextField, Button, Box, Typography, Grid } from '@mui/material';
 import { useOperatorAuth } from '@kunk/auth-session';
 import { useKunkConfig } from '../config/KunkConfigProvider.jsx';
@@ -195,12 +195,20 @@ export function LoginPage() {
                     color: primary,
                     borderColor: primary,
                     '&:hover': { borderColor: primary, bgcolor: 'rgba(90, 122, 91, 0.08)' },
-                    mb: 2,
+                    mb: 1,
                   }}
                 >
                   Entrar como teste
                 </Button>
               ) : null}
+              <Button
+                component={Link}
+                to="/nova-senha"
+                fullWidth
+                sx={{ color: primary, textTransform: 'none', mb: 2 }}
+              >
+                Esqueci a senha
+              </Button>
             </Box>
           </Box>
         </Container>

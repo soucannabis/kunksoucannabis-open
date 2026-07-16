@@ -50,19 +50,22 @@ function hasStructuredAddress(address) {
 }
 
 async function isValidationEnabled() {
-  if (!env.modules.geoapify) return false;
+  const { isModuleEnabled } = require('../moduleFlags');
+  if (!(await isModuleEnabled('geoapify'))) return false;
   const { values } = await systemConfigService.resolveAll('modules');
   return asBool(values['modules.geoapify.use_for_validation'], false);
 }
 
 async function getValidationStatus() {
+  const { isModuleEnabled } = require('../moduleFlags');
   const credentialsService = require('../credentialsService');
   const credentials = await credentialsService.listPublic('geoapify');
   const apiKey = credentials.find((c) => c.field_key === 'api_key');
   const useForValidation = await isValidationEnabled();
+  const enabled = await isModuleEnabled('geoapify');
   return {
     module: 'geoapify',
-    enabled: Boolean(env.modules.geoapify),
+    enabled,
     use_for_validation: useForValidation,
     credentials_complete: Boolean(apiKey?.has_value),
     credentials_source: apiKey?.source || 'empty',

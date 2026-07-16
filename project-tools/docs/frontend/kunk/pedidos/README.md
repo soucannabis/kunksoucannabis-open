@@ -23,7 +23,8 @@ Recriar o fluxo de **novo pedido** com:
 | Checkbox `no_commission` | Explicitamente excluído |
 | Parceiros / Beeviral (`bvid`) | Específico SouCannabis — não portar |
 | Rota pública `/cart` sem auth | Unificar em `/app/loja/novo-pedido` autenticado |
-| Pagar.me no create do carrinho | Módulo separado (pagamento pós-pedido) |
+| Pagar.me no create do carrinho | Pagamento **pós-pedido** via PaymentModal — spec [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md) |
+| Sync Pedidos SouCannabis | Spec [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md) (create remoto só após pago) |
 | Etiqueta no momento do create do pedido | Continua na página Pedidos (como no legado) |
 
 ## Índice
@@ -44,6 +45,7 @@ Docs de API dos módulos:
 | [`../../api/modules/loggi.md`](../../api/modules/loggi.md) | Cotação, etiqueta, cancelamento, teste Loggi |
 | [`../../api/modules/melhorenvio.md`](../../api/modules/melhorenvio.md) | Cotação Correios, etiqueta, OAuth, teste ME |
 | [`../../api/modules/credentials.md`](../../api/modules/credentials.md) | Tabela `system_api_credentials` + assistente |
+| [`../pagamentos-soucannabis/README.md`](../pagamentos-soucannabis/README.md) | Pagar.me + Pedidos SouCannabis (pagamento, split, catálogo SC) |
 
 ## Posicionamento
 

@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Chip,
   CircularProgress,
   FormControlLabel,
   Grid,
@@ -209,6 +210,8 @@ export default function CartPage() {
   const [info, setInfo] = useState('');
   const [orderTags, setOrderTags] = useState([]);
   const [tagOptions, setTagOptions] = useState([]);
+  const [scTagOptions, setScTagOptions] = useState([]);
+  const [catalogSource, setCatalogSource] = useState('local');
 
   const [prescriber, setPrescriber] = useState('');
   const [prescriberCode, setPrescriberCode] = useState('');
@@ -366,9 +369,34 @@ export default function CartPage() {
     if (!userCodeFromQuery && !institutionalCodeFromQuery && !orderRefFromQuery) return undefined;
     (async () => {
       setProductsLoading(true);
+      let scCatalog = false;
       try {
-        const res = await api.listItems('products', 'limit=200');
-        setProducts(res.data || []);
+        const st = await api.getSoucannabisOrdersStatus();
+        scCatalog = Boolean(st.data?.enabled && st.data?.sync_products !== false);
+      } catch {
+        scCatalog = false;
+      }
+      setCatalogSource(scCatalog ? 'soucannabis' : 'local');
+      try {
+        if (scCatalog) {
+          const res = await api.listSoucannabisProducts();
+          const rows = Array.isArray(res.data) ? res.data : [];
+          setProducts(
+            rows.map((p) => ({
+              id: p.id,
+              name: p.name || p.title || 'Produto',
+              sku: p.sku || p.code || String(p.id),
+              code: p.code || p.sku || String(p.id),
+              price: Number(p.price ?? p.value ?? p.amount_price ?? 0) || 0,
+              amount: null,
+              batch: p.batch || '',
+              soucannabis: true,
+            }))
+          );
+        } else {
+          const res = await api.listItems('products', 'limit=200');
+          setProducts(res.data || []);
+        }
       } catch {
         setProducts([]);
       } finally {
@@ -387,6 +415,22 @@ export default function CartPage() {
       } catch {
         setTagOptions([]);
       }
+      if (scCatalog) {
+        try {
+          const res = await api.listSoucannabisTags();
+          const rows = Array.isArray(res.data) ? res.data : [];
+          setScTagOptions(
+            rows
+              .map((t) => (typeof t === 'string' ? t : t?.tag || t?.name || ''))
+              .map((t) => String(t).trim())
+              .filter(Boolean)
+          );
+        } catch {
+          setScTagOptions([]);
+        }
+      } else {
+        setScTagOptions([]);
+      }
       try {
         const res = await api.freightQuoteAvailability();
         setFreightQuoteEnabled(Boolean(res.data?.quote_enabled));
@@ -395,6 +439,13 @@ export default function CartPage() {
       }
     })();
   }, [api, userCodeFromQuery, institutionalCodeFromQuery, orderRefFromQuery]);
+
+  const groupedTagOptions = useMemo(() => {
+    return [
+      ...tagOptions.map((t) => ({ tag: t, group: 'Tags do sistema' })),
+      ...scTagOptions.map((t) => ({ tag: t, group: 'Tags SouCannabis' })),
+    ];
+  }, [tagOptions, scTagOptions]);
 
   const filteredProducts = useMemo(() => {
     const term = productFilter.trim().toLowerCase();
@@ -577,7 +628,7 @@ export default function CartPage() {
       showError('Calcule e selecione o frete antes de criar o pedido');
       return;
     }
-    if (zeroStockItems.length > 0) {
+    if (catalogSource !== 'soucannabis' && zeroStockItems.length > 0) {
       const names = zeroStockItems.map((it) => it.name || it.code).join(', ');
       const ok = window.confirm(
         `Atenção: pedido com estoque 0 (ou negativo): ${names}.\n\nDeseja continuar mesmo assim?`
@@ -971,7 +1022,7 @@ export default function CartPage() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {zeroStockItems.length > 0 && (
+                  {catalogSource !== 'soucannabis' && zeroStockItems.length > 0 && (
                     <TableRow>
                       <TableCell colSpan={6} sx={{ py: 1 }}>
                         <Alert severity="warning" sx={{ py: 0 }}>
@@ -1174,14 +1225,31 @@ export default function CartPage() {
                       <Autocomplete
                         multiple
                         disableCloseOnSelect
-                        options={tagOptions}
-                        value={orderTags}
-                        onChange={(_e, v) => setOrderTags(v)}
+                        options={groupedTagOptions}
+                        groupBy={(o) => o.group}
+                        getOptionLabel={(o) =>
+                          typeof o === 'string' ? o : o.tag || ''
+                        }
+                        isOptionEqualToValue={(a, b) =>
+                          (typeof a === 'string' ? a : a.tag) ===
+                          (typeof b === 'string' ? b : b.tag)
+                        }
+                        value={orderTags.map((t) => ({
+                          tag: t,
+                          group: scTagOptions.includes(t)
+                            ? 'Tags SouCannabis'
+                            : 'Tags do sistema',
+                        }))}
+                        onChange={(_e, v) =>
+                          setOrderTags(
+                            v.map((x) => (typeof x === 'string' ? x : x.tag)).filter(Boolean)
+                          )
+                        }
                         freeSolo
                         renderOption={(props, option, { selected }) => (
                           <li {...props}>
                             <Checkbox checked={selected} sx={{ mr: 1 }} readOnly />
-                            {option}
+                            {typeof option === 'string' ? option : option.tag}
                           </li>
                         )}
                         renderInput={(params) => (
@@ -1443,6 +1511,15 @@ export default function CartPage() {
                   </Box>
                 ) : (
                   <>
+                    {catalogSource === 'soucannabis' && (
+                      <Chip
+                        label="Catálogo SouCannabis"
+                        color="success"
+                        size="small"
+                        data-testid="sc-catalog-badge"
+                        sx={{ mb: 1.5 }}
+                      />
+                    )}
                     <TextField
                       label="Filtrar por nome"
                       variant="outlined"
@@ -1454,7 +1531,10 @@ export default function CartPage() {
                     <Table>
                       <TableHead>
                         <TableRow sx={{ bgcolor: GREEN }}>
-                          {['Nome', 'Estoque', 'Qnt', 'Carrinho'].map((h) => (
+                          {(catalogSource === 'soucannabis'
+                            ? ['Nome', 'Qnt', 'Carrinho']
+                            : ['Nome', 'Estoque', 'Qnt', 'Carrinho']
+                          ).map((h) => (
                             <TableCell key={h} sx={headCell}>
                               {h}
                             </TableCell>
@@ -1465,7 +1545,10 @@ export default function CartPage() {
                         {filteredProducts.map((p) => {
                           const key = p.sku || String(p.id);
                           const stock = Number(p.amount);
-                          const zero = Number.isFinite(stock) && stock <= 0;
+                          const zero =
+                            catalogSource !== 'soucannabis' &&
+                            Number.isFinite(stock) &&
+                            stock <= 0;
                           return (
                             <TableRow key={p.id} sx={{ '&:hover': { bgcolor: '#e0e0e0' } }}>
                               <TableCell sx={{ maxWidth: 120, fontSize: '0.9em', textAlign: 'left' }}>
@@ -1485,6 +1568,7 @@ export default function CartPage() {
                                   </>
                                 ) : null}
                               </TableCell>
+                              {catalogSource !== 'soucannabis' && (
                               <TableCell
                                 sx={{
                                   textAlign: 'center',
@@ -1494,6 +1578,7 @@ export default function CartPage() {
                               >
                                 {Number.isFinite(stock) ? stock : '—'}
                               </TableCell>
+                              )}
                               <TableCell sx={{ textAlign: 'center' }}>
                                 <input
                                   type="number"

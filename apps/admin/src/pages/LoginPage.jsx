@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useOperatorAuth } from '@kunk/auth-session';
 import { readRememberedAdminRoute, safeInternalPath } from '../lib/lastRoute.js';
 
@@ -84,6 +84,9 @@ export function LoginPage() {
         <button className="btn btn-primary" type="submit" disabled={busy}>
           {busy ? 'Entrando…' : 'Entrar'}
         </button>
+        <p className="muted" style={{ marginTop: 12 }}>
+          <Link to="/nova-senha">Esqueci a senha</Link>
+        </p>
       </form>
     </div>
   );

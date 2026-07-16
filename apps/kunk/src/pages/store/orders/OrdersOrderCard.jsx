@@ -15,9 +15,13 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import CircularProgress from '@mui/material/CircularProgress';
 import StatusLoggi from './StatusLoggi.jsx';
-import { displayTrackingCode } from './OrderDetailsModal.jsx';
+import { displayTrackingCode } from './TrackingPanel.jsx';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import PaymentIcon from '@mui/icons-material/Payment';
+import SyncIcon from '@mui/icons-material/Sync';
+import SyncProblemIcon from '@mui/icons-material/SyncProblem';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const GREEN = '#5a7a5b';
 const PURPLE = '#7A5B7A';
@@ -99,14 +103,25 @@ export default function OrdersOrderCard({
   onOpenCart,
   onDelete,
   onCopyTracking,
+  onOpenTracking,
   onOpenDetails,
   onAddressValidationDetail,
+  onOpenPayment,
+  onRetrySync,
+  splitMode = false,
+  pagarmeForOrders = false,
   zebra,
   dateField = 'created_date',
   labelBusy = false,
   productStockMap = null,
 }) {
-  const canToggle = order.status === awaitingStatus || order.status === paidStatus;
+  const total = Number(order.total || 0);
+  const paymentLocked = Boolean(splitMode && total > 0);
+  const canToggleBase = order.status === awaitingStatus || order.status === paidStatus;
+  // Com split: só libera reverter pago→aguardando (não marcar pago pelo toggle).
+  const canToggle =
+    canToggleBase &&
+    !(paymentLocked && order.status === awaitingStatus);
   const carrier = String(
     order.freight_carrier || order.freight_option?.provider || ''
   ).toLowerCase();
@@ -469,6 +484,18 @@ export default function OrdersOrderCard({
               <IconButton size="small" onClick={() => onCopyTracking(order)} aria-label="Copiar rastreio">
                 <ContentCopyIcon fontSize="small" />
               </IconButton>
+              {typeof onOpenTracking === 'function' ? (
+                <Tooltip title="Detalhes do rastreio">
+                  <IconButton
+                    size="small"
+                    onClick={() => onOpenTracking(order)}
+                    aria-label="Detalhes do rastreio"
+                    data-testid={`tracking-info-${order.id}`}
+                  >
+                    <InfoOutlinedIcon fontSize="small" sx={{ color: '#1976d2' }} />
+                  </IconButton>
+                </Tooltip>
+              ) : null}
             </Box>
           )}
           {!hasTracking && hasLabel && (
@@ -513,6 +540,45 @@ export default function OrdersOrderCard({
             ))}
           </Box>
 
+          {(order.soucannabis_order_id || order.soucannabis_sync_error) && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                mb: 1,
+                justifyContent: { lg: 'flex-end' },
+                width: '100%',
+              }}
+              data-testid={`sc-sync-${order.id}`}
+            >
+              {order.soucannabis_order_id && !order.soucannabis_sync_error ? (
+                <Tooltip title={`SC #${order.soucannabis_order_id}`}>
+                  <Chip
+                    size="small"
+                    icon={<CheckCircleOutlineIcon />}
+                    label="Sync SC"
+                    color="success"
+                    variant="outlined"
+                  />
+                </Tooltip>
+              ) : null}
+              {order.soucannabis_sync_error ? (
+                <Tooltip title={order.soucannabis_sync_error}>
+                  <Chip
+                    size="small"
+                    icon={<SyncProblemIcon />}
+                    label="Erro sync"
+                    color="error"
+                    onClick={() => onRetrySync?.(order)}
+                    onDelete={() => onRetrySync?.(order)}
+                    deleteIcon={<SyncIcon />}
+                  />
+                </Tooltip>
+              ) : null}
+            </Box>
+          )}
+
           <Box
             sx={{
               display: 'flex',
@@ -522,6 +588,17 @@ export default function OrdersOrderCard({
               mt: 'auto',
             }}
           >
+            {pagarmeForOrders && order.status === awaitingStatus && total > 0 && (
+              <Tooltip title="Pagamento Pagar.me">
+                <Button
+                  data-testid={`pay-${order.id}`}
+                  onClick={() => onOpenPayment?.(order)}
+                  sx={actionBtnSx('#1565c0', '#0d47a1')}
+                >
+                  <PaymentIcon fontSize="small" />
+                </Button>
+              </Tooltip>
+            )}
             {showLabelActions && (
               <>
                 <Tooltip

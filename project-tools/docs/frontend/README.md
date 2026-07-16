@@ -16,7 +16,7 @@ O legado (`src/` painel, `cadastramento/`) permanece como **referência funciona
 | **Cadastramento** | `apps/registration/` | `cad.` | 4255 | **1 — primeiro frontend** |
 | **Admin** | `apps/admin/` | `admin.` | 4256 | **2 — admin da instância** |
 | **Kunk** | `apps/kunk/` | `app.` | 4257 | **3 — app operacional** ([kunk/](./kunk/)) |
-| **Termos** | `apps/terms/` | `termos.` | — | 4 (módulo nativo; DocuSeal como ponte) |
+| **Doc-sign** | `apps/doc-sign/` | `termos.` | 4258 | 4 — termos/assinaturas nativos ([doc-sign/](./doc-sign/)) |
 
 Cada app é um **entrypoint** independente (build/deploy próprio), mas compartilha pacotes do monorepo. Não são produtos nem APIs separados.
 
@@ -30,7 +30,7 @@ O **admin** é a superfície de administração da instância (CRUD de dados, `s
 | Auth de sessão (cookie) | Fluxos de negócio |
 | Tokens de tema / branding da associação | Layout (sidebar de progresso vs. dashboard) |
 | Componentes de formulário reutilizáveis | Copy e CTAs |
-| Utilitários (máscaras, CPF, telefone) | Integração DocuSeal → depois módulo termos |
+| Utilitários (máscaras, CPF, telefone) | Integração doc-sign (fase 4 do cadastro) |
 
 ## Relação com a API
 
@@ -51,6 +51,7 @@ O cadastramento precisa de **auth de associado** (`users`), distinta da auth de 
 | [cadastramento/](./cadastramento/) | App de cadastro de associados (detalhe) |
 | [admin/](./admin/) | App de administração da instância (dados, configs, operadores) |
 | [kunk/](./kunk/) | App operacional Kunk + inventário de páginas do legado |
+| [doc-sign/](./doc-sign/) | Termos de adesão e assinaturas (substitui DocuSeal) |
 
 ## Fonte legada
 

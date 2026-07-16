@@ -89,7 +89,7 @@ async function getServiceOptions() {
     );
   }
 
-  if (env.modules.melhorenvio) {
+  if (await require('./moduleFlags').isModuleEnabled('melhorenvio')) {
     try {
       const meQuote = require('./melhorenvio/quote');
       const me = await meQuote.listServices();
@@ -103,6 +103,14 @@ async function getServiceOptions() {
 }
 
 async function getQuoteAvailability() {
+  const { isModuleEnabled } = require('./moduleFlags');
+  if (await isModuleEnabled('soucannabis_orders')) {
+    return {
+      quote_enabled: false,
+      providers: [],
+      reason: 'soucannabis_orders',
+    };
+  }
   const flags = await storeFreight.getModuleFreightFlags();
   const providers = [];
   if (flags.loggi.enabled && flags.loggi.use_for_quote) providers.push('loggi');
@@ -116,10 +124,22 @@ async function getQuoteAvailability() {
 }
 
 async function getLabelAvailability() {
+  const { isModuleEnabled } = require('./moduleFlags');
+  if (await isModuleEnabled('soucannabis_orders')) {
+    return { loggi: false, melhorenvio: false, reason: 'soucannabis_orders' };
+  }
   const flags = await storeFreight.getModuleFreightFlags();
   return {
     loggi: Boolean(flags.loggi.enabled && flags.loggi.use_for_label),
     melhorenvio: Boolean(flags.melhorenvio.enabled && flags.melhorenvio.use_for_label),
+  };
+}
+
+async function getTrackingAvailability() {
+  const flags = await storeFreight.getModuleFreightFlags();
+  return {
+    loggi: Boolean(flags.loggi.enabled && flags.loggi.use_for_tracking),
+    melhorenvio: Boolean(flags.melhorenvio.enabled && flags.melhorenvio.use_for_tracking),
   };
 }
 
@@ -157,6 +177,7 @@ module.exports = {
   getServiceOptions,
   getQuoteAvailability,
   getLabelAvailability,
+  getTrackingAvailability,
   getDefaultOption,
   setDefaultOption,
 };

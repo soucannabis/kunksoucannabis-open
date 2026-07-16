@@ -46,7 +46,7 @@ Campos podem existir no schema por compatibilidade; a UI de Serviços **não** c
 
 ### Status (pagamento operacional — sem checkout)
 
-Manter os status de pagamento do legado na UI e no domínio. O operador marca manualmente; **não** há PaymentModal / Pagar.me / `payment_link`.
+Manter os status de pagamento do legado na UI e no domínio. Toggle manual e comprovante permanecem. Com módulo `pagarme` ativo, PaymentModal / `payment_link` entram conforme [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md) (sem sync Pedidos SC).
 
 | Status | Uso |
 |---|---|

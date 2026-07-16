@@ -133,7 +133,7 @@ Uma tabela, dois papéis claros na UI:
 | Prescritor só visto em receita de associado | `is_prescriber` apenas — **não** entra no input de Serviços |
 | Colaborador que também receita | ambas |
 
-Sem CreateRecipientModal / Pagar.me / ranking de split.
+Sem ranking de split / CreateRecipientModal nesta tela (Pagarme de serviços: Admin → Serviços externos → Pagar.me).
 
 ### Migração da rota legada
 
@@ -172,7 +172,7 @@ Produção, por default, **inclui** Serviços e Profissionais.
 
 | Item | Motivo |
 |---|---|
-| Pagar.me / payment links | Fora de escopo |
+| Pagar.me / payment links | Spec [`../pagamentos-soucannabis/admin.md`](../pagamentos-soucannabis/admin.md) |
 | Utalk | Módulo futuro |
 
 Tipos de profissional, taxas (`association_fee`) e preço padrão de consulta ficam no módulo **[Relatórios de serviços — admin](../relatorios-servicos/admin.md)** (`system_configs` `professional_types`). O select de `type` em Profissionais passa a ler esse catálogo.

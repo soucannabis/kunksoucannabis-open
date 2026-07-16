@@ -19,7 +19,7 @@ kunksoucannabis-open/
 │   ├── registration/          # Cadastramento (cad.) — 1º frontend · :4255
 │   ├── admin/                 # Admin da instância (admin.) — :4256
 │   ├── panel/                 # Painel operacional (app.) — migração futura de src/
-│   └── terms/                 # Termos/assinaturas (termos.) — futuro
+│   └── doc-sign/              # Termos/assinaturas (termos.) — :4258
 ├── packages/
 │   ├── api-client/            # fetch tipado → kunk-api /v1
 │   ├── auth-session/          # login/logout/me, UserProvider genérico
@@ -39,7 +39,7 @@ kunksoucannabis-open/
 | `apps/registration` | `cad.` | 4255 | Cadastramento |
 | `apps/admin` | `admin.` | 4256 | Admin da instância |
 | `apps/panel` | `app.` | — | Painel Kunk (operacional) |
-| `apps/terms` | `termos.` | — | Gerenciador de termos |
+| `apps/doc-sign` | `termos.` | 4258 | Gerenciador de termos / assinaturas |
 
 Os nomes em inglês nas pastas evitam acentos em paths; a UI e a docs permanecem em português.
 
@@ -87,7 +87,7 @@ Para sessão compartilhada entre `cad.` e `app.` (quando fizer sentido):
 | `Secure` | `true` (produção) |
 | `SameSite` | `Lax` |
 
-CORS da API deve listar as origens dos três apps. Detalhes: [`../api/authentication.md`](../api/authentication.md).
+CORS da API deve listar as origens dos apps (`cad.`, `admin.`, `app.`, `termos.`). Detalhes: [`../api/authentication.md`](../api/authentication.md).
 
 ## Estratégia de migração
 
@@ -97,7 +97,7 @@ CORS da API deve listar as origens dos três apps. Detalhes: [`../api/authentica
 | Em paralelo | Manter `cadastramento/` legado em produção até cutover |
 | Próximo | Documentar + criar `apps/admin` (dados, `system_configs`, operadores) |
 | Depois | Migrar painel para `apps/panel` reusando `api-client` / `auth-session` |
-| Depois | Extrair UI de assinatura para `apps/terms` (nativo; DocuSeal como ponte) |
+| Depois | Implementar `apps/doc-sign` (nativo; ver [doc-sign/](./doc-sign/README.md)) |
 
 Não é obrigatório mover o painel no mesmo PR do cadastramento — a estrutura acima existe para **não pintar o cadastramento num canto** que impeça o painel.
 

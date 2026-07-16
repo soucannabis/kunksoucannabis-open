@@ -41,6 +41,10 @@ async function remove(req) {
     const pro = await itemsRepository.getItem('professionals', id);
     await assertProfessionalDeletable(pro);
   }
+  if (collection === 'orders') {
+    const ordersService = require('./ordersService');
+    return ordersService.deleteOrder(id);
+  }
   return itemsRepository.deleteItem(collection, id, {
     scopeFilter: getScope(req),
   });

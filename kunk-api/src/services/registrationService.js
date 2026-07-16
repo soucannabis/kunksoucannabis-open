@@ -454,11 +454,18 @@ async function advance(associateRow) {
   }
 
   if (phase === 4) {
+    if (associateRow.adhesion_term) {
+      const result = await query(
+        `UPDATE users SET associate_status = 5, date_updated = NOW() WHERE id = $1 RETURNING *`,
+        [associateRow.id]
+      );
+      return associateAuthRepository.publicAssociate(result.rows[0]);
+    }
     if (!env.termsDevBypass) {
       throw new AppError(
-        501,
-        'TERMS_MODULE_IN_DEVELOPMENT',
-        'Módulo de assinatura de termos em desenvolvimento'
+        400,
+        'VALIDATION_ERROR',
+        'Assine o termo de adesão antes de avançar para a fase 5'
       );
     }
     const result = await query(

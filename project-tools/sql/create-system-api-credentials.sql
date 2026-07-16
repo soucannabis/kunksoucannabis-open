@@ -40,5 +40,12 @@ INSERT INTO system_api_credentials (
   ('google_calendar', 'client_secret', NULL, 'GOOGLE_CLIENT_SECRET', true, 'Google OAuth Client Secret'),
   ('google_calendar', 'redirect_uri', NULL, 'GOOGLE_REDIRECT_URI', false, 'OAuth redirect URI (API callback)'),
   ('google_calendar', 'access_token', NULL, NULL, true, 'Google OAuth access token'),
-  ('google_calendar', 'refresh_token', NULL, 'GOOGLE_REFRESH_TOKEN', true, 'Google OAuth refresh token')
+  ('google_calendar', 'refresh_token', NULL, 'GOOGLE_REFRESH_TOKEN', true, 'Google OAuth refresh token'),
+  ('email', 'host', NULL, 'SMTP_HOST', false, 'Servidor SMTP (ex.: smtp.example.com)'),
+  ('email', 'port', NULL, 'SMTP_PORT', false, 'Porta SMTP (ex.: 587 ou 465)'),
+  ('email', 'secure', NULL, 'SMTP_SECURE', false, 'TLS implícito (true para porta 465)'),
+  ('email', 'user', NULL, 'SMTP_USER', false, 'Usuário SMTP'),
+  ('email', 'pass', NULL, 'SMTP_PASS', true, 'Senha SMTP'),
+  ('email', 'from_email', NULL, 'SMTP_FROM', false, 'Remetente (From)'),
+  ('email', 'from_name', NULL, 'SMTP_FROM_NAME', false, 'Nome do remetente')
 ON CONFLICT (service, field_key) DO NOTHING;

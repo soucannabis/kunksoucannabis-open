@@ -19,7 +19,7 @@ Criar um app de administração que permita à associação (ou ao operador com 
 
 - Fluxos operacionais de acolhimento, produção, pedidos, etc. → isso é o **painel** (`apps/panel` / `app.`)
 - Funil público de associados → **cadastramento** (`apps/registration` / `cad.`)
-- Assinatura de termos → **termos** (`apps/terms` / `termos.`)
+- Assinatura de termos → **doc-sign** (`apps/doc-sign` / `termos.`)
 - Clone de features Directus (flows, revisions, SQL livre do cliente)
 
 ## Índice
@@ -36,7 +36,7 @@ Criar um app de administração que permita à associação (ou ao operador com 
 subdomínio admin./     →  este app (admin)     porta dev :4256
 subdomínio app./       →  painel operacional   (futuro)
 subdomínio cad./       →  cadastramento        porta dev :4255
-subdomínio termos./    →  termos               (futuro)
+subdomínio termos./    →  doc-sign             (spec: ../doc-sign/)
          │
          ▼
     kunk-api /v1  ←── mesma API de todos os apps

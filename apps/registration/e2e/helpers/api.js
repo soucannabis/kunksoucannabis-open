@@ -47,10 +47,44 @@ export function createApi(request) {
 }
 
 /**
+ * Ensure both doc-sign templates are published (needed before creating contracts).
+ */
+export async function ensureDocSignTemplatesPublished(request) {
+  const login = await request.post(`${API_URL}/auth/login`, {
+    data: { email: 'admin@kunk-api.test', password: 'TestAdmin123!' },
+    failOnStatusCode: false,
+  });
+  if (login.status() !== 200) {
+    // fallback: templates may already be published by another process
+    return;
+  }
+  const setCookie = login.headers()['set-cookie'];
+  const cookie = Array.isArray(setCookie) ? setCookie.map((c) => String(c).split(';')[0]).join('; ') : String(setCookie || '').split(';')[0];
+
+  for (const kind of ['self', 'with_patient']) {
+    const tpl = await request.get(`${API_URL}/doc-sign/templates/${kind}`, {
+      headers: { Cookie: cookie },
+      failOnStatusCode: false,
+    });
+    if (tpl.status() !== 200) continue;
+    const body = await tpl.json().catch(() => ({}));
+    if (body.data?.current_version_id) continue;
+    await request.post(`${API_URL}/doc-sign/templates/${kind}/publish`, {
+      headers: { Cookie: cookie },
+      data: { notes: 'e2e auto-publish' },
+      failOnStatusCode: false,
+    });
+  }
+}
+
+/**
  * Seed associate via API using page.context().request so the session cookie
  * is available to subsequent page.goto calls.
  */
 export async function seedAssociate(page, { email, phase = 1, responsibleType = 'himself' } = {}) {
+  if (phase >= 3) {
+    await ensureDocSignTemplatesPublished(page.context().request);
+  }
   const api = createApi(page.context().request);
   const reg = await api.registerEmail(email);
   if (reg.status !== 201) {

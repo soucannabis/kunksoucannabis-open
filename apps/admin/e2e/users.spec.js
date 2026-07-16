@@ -13,15 +13,16 @@ test.describe('users', () => {
     await page.getByRole('link', { name: 'Usuários' }).click();
     await expect(page.getByRole('heading', { name: 'Usuários' })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Novo operador' }).click();
+    await page.getByRole('link', { name: 'Convidar operador' }).click();
     const email = uniqueEmail('ui');
     await page.getByRole('textbox', { name: 'Nome', exact: true }).fill('Oper');
     await page.getByRole('textbox', { name: 'Sobrenome' }).fill('E2E');
     await page.getByRole('textbox', { name: 'E-mail' }).fill(email);
-    await page.getByLabel('Senha', { exact: true }).fill('TempPass123!');
     await page.getByRole('button', { name: 'Acolhimento' }).click();
-    await page.getByRole('button', { name: 'Salvar' }).click();
+    await page.getByRole('button', { name: 'Criar e enviar convite' }).click();
 
+    await expect(page.getByTestId('invite-result')).toBeVisible();
+    await page.getByRole('link', { name: 'Abrir operador' }).click();
     await expect(page).toHaveURL(/\/usuarios\/\d+/);
     await expect(page.getByRole('textbox', { name: 'E-mail' })).toHaveValue(email);
 

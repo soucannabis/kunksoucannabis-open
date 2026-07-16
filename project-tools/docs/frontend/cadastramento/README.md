@@ -17,7 +17,7 @@ Recriar o fluxo de inscrição de associados com:
 ## Fora de escopo (neste app / nesta entrega)
 
 - Painel interno completo de acolhimento (só alinhamento mínimo às fases 1–5)
-- **Assinatura real de termos** — módulo **termos** em desenvolvimento (fase 4 = stub/mensagem)
+- **Assinatura real de termos** — spec em [`../doc-sign/`](../doc-sign/README.md); fase 4 do cadastro ainda usa stub até a entrega do módulo
 - Loja / pedidos
 
 ## Índice

@@ -95,10 +95,22 @@ export function createApiClient({ baseUrl }) {
       request('DELETE', `/admin/external-services/${service}/credentials/${fieldKey}`),
     testExternalService: (service) =>
       request('POST', `/admin/external-services/${service}/test`, {}),
+    sendExternalTestEmail: (to) =>
+      request('POST', '/admin/external-services/email/test-email', { to }),
     activateMelhorEnvioProduction: () =>
       request('POST', '/admin/external-services/melhorenvio/activate-production', {}),
     activateMelhorEnvioSandbox: () =>
       request('POST', '/admin/external-services/melhorenvio/activate-sandbox', {}),
+    // Operator password reset
+    forgotOperatorPassword: (email, app) =>
+      request('POST', '/auth/forgot-password', { email, app }),
+    resetOperatorPassword: (token, password) =>
+      request('POST', '/auth/reset-password', { token, password }),
+    previewSystemInvite: (token) =>
+      request('GET', `/auth/system-invite/preview?token=${encodeURIComponent(token)}`),
+    acceptSystemInvite: (body) => request('POST', '/auth/system-invite/accept', body),
+    resendSystemUserInvite: (id) => request('POST', `/system-users/${id}/resend-invite`, {}),
+    docSignResendEmail: (id) => request('POST', `/doc-sign/contracts/${id}/resend-email`, {}),
     freightQuote: (body) => request('POST', '/freight/quote', body),
     freightQuoteAvailability: () => request('GET', '/freight/quote-availability'),
     freightLabelAvailability: () => request('GET', '/freight/label-availability'),
@@ -117,7 +129,17 @@ export function createApiClient({ baseUrl }) {
     ordersFacets: (qs = '') => request('GET', `/orders/facets${qs ? `?${qs}` : ''}`),
     ordersStatusConfig: () => request('GET', '/orders/status-config'),
     ordersBulk: (body) => request('POST', '/orders/bulk', body),
-    updateOrderStatus: (id, status) => request('PATCH', `/orders/${id}/status`, { status }),
+    updateOrderStatus: (id, status, opts = {}) =>
+      request('PATCH', `/orders/${id}/status`, {
+        status,
+        ...(opts.skip_payment_lock || opts.force_test_paid
+          ? {
+              skip_payment_lock: true,
+              force_test_paid: true,
+              external_payment_info: opts.external_payment_info,
+            }
+          : {}),
+      }),
     ordersByUser: (userCode) => request('GET', `/orders/by-user/${encodeURIComponent(userCode)}`),
     createLoggiLabel: (body) => request('POST', '/modules/loggi/create-label', body),
     cancelLoggiLabel: (body) => request('POST', '/modules/loggi/cancel', body),
@@ -178,6 +200,37 @@ export function createApiClient({ baseUrl }) {
     googleCalendarOAuthAuthorizeUrl: () =>
       request('GET', '/modules/google_calendar/oauth/authorize?redirect=0'),
     googleCalendarOAuthStatus: () => request('GET', '/modules/google_calendar/oauth/status'),
+
+    // Pagar.me + Pedidos SouCannabis
+    getPagarmeStatus: () => request('GET', '/modules/pagarme/status'),
+    createPagarmeCheckout: (body) => request('POST', '/modules/pagarme/orders', body),
+    createPagarmeRecipient: (body) => request('POST', '/modules/pagarme/recipients', body),
+    createPagarmeAssociationRecipient: (body) =>
+      request('POST', '/modules/pagarme/recipients/association', body),
+    createPagarmeSoucannabisRecipient: (body) =>
+      request('POST', '/modules/pagarme/recipients/soucannabis', body),
+    ensurePagarmeWebhooks: (body = {}) =>
+      request('POST', '/modules/pagarme/webhooks/ensure', body),
+    validatePagarmeWebhooks: () => request('POST', '/modules/pagarme/webhooks/validate'),
+    createPagarmeTestPaymentLink: () =>
+      request('POST', '/modules/pagarme/webhooks/test-payment'),
+    getPagarmeWebhooksStatus: () => request('GET', '/modules/pagarme/webhooks/status'),
+    listPagarmeWebhooks: (qs = '') =>
+      request('GET', `/modules/pagarme/webhooks${qs ? (qs.startsWith('?') ? qs : `?${qs}`) : ''}`),
+    retryPagarmeWebhook: (hookId) =>
+      request('POST', `/modules/pagarme/webhooks/${encodeURIComponent(hookId)}/retry`),
+    getSoucannabisOrdersStatus: () => request('GET', '/modules/soucannabis_orders/status'),
+    getSoucannabisOrdersMe: () => request('GET', '/modules/soucannabis_orders/me'),
+    listSoucannabisProducts: () => request('GET', '/modules/soucannabis_orders/products'),
+    listSoucannabisTags: () => request('GET', '/modules/soucannabis_orders/tags'),
+    syncSoucannabisOrder: (id, body = {}) =>
+      request('POST', `/modules/soucannabis_orders/sync/order/${id}`, body),
+    getSoucannabisOutboundCredentials: ({ reveal = false } = {}) =>
+      request(
+        'GET',
+        `/modules/soucannabis_orders/outbound-credentials${reveal ? '?reveal=1' : ''}`
+      ),
+    getSoucannabisWebhooksInfo: () => request('GET', '/modules/soucannabis_orders/webhook-info'),
 
     getProfessionalTypes: () => request('GET', '/config/services/professional-types'),
     putProfessionalTypes: (types) => request('PUT', '/config/services/professional-types', types),

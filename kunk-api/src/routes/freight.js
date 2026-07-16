@@ -51,6 +51,15 @@ router.get('/label-availability', requireCartRole, async (req, res, next) => {
   }
 });
 
+router.get('/tracking-availability', requireCartRole, async (req, res, next) => {
+  try {
+    const data = await freightService.getTrackingAvailability();
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/service-options', requireCartRole, async (req, res, next) => {
   try {
     const data = await freightService.getServiceOptions();

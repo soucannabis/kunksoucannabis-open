@@ -19,11 +19,13 @@ import { PATHS } from '../../app/menuConfig.js';
 import OrdersStatusChips from './orders/OrdersStatusChips.jsx';
 import OrdersFilters from './orders/OrdersFilters.jsx';
 import OrdersOrderCard from './orders/OrdersOrderCard.jsx';
+import TrackingDetailsModal from './orders/TrackingDetailsModal.jsx';
 import OrdersBulkActions, { OrdersBulkResultDialog } from './orders/OrdersBulkActions.jsx';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
 import OrderDetailsModal, { displayTrackingCode } from './orders/OrderDetailsModal.jsx';
 import AddressValidationDetailModal from './orders/AddressValidationDetailModal.jsx';
 import { processAutoAddressValidation } from '../../lib/addressValidation.js';
+import PaymentModal from '../../components/PaymentModal.jsx';
 
 const muiTheme = createTheme();
 const GREEN = '#5a7a5b';
@@ -73,6 +75,9 @@ export default function OrdersPage() {
   const [tagOptions, setTagOptions] = useState([]);
   const [labelFlags, setLabelFlags] = useState({ loggi: false, melhorenvio: false });
   const [labelBusyId, setLabelBusyId] = useState(null);
+  const [splitMode, setSplitMode] = useState(false);
+  const [pagarmeForOrders, setPagarmeForOrders] = useState(false);
+  const [paymentOrder, setPaymentOrder] = useState(null);
 
   const [facetsLoaded, setFacetsLoaded] = useState(false);
   const [statusCounts, setStatusCounts] = useState({});
@@ -82,6 +87,7 @@ export default function OrdersPage() {
   const [showOnlySelected, setShowOnlySelected] = useState(false);
   const [bulkResult, setBulkResult] = useState(null);
   const [detailsOrderId, setDetailsOrderId] = useState(null);
+  const [trackingOrder, setTrackingOrder] = useState(null);
   const [addressValidationOrder, setAddressValidationOrder] = useState(null);
   const [productStockMap, setProductStockMap] = useState(() => new Map());
   const deepLinkP = (searchParams.get('p') || '').trim();
@@ -192,6 +198,14 @@ export default function OrdersPage() {
       } catch {
         setLabelFlags({ loggi: false, melhorenvio: false });
       }
+      try {
+        const res = await api.getPagarmeStatus();
+        setSplitMode(Boolean(res.data?.split_mode));
+        setPagarmeForOrders(Boolean(res.data?.enabled && res.data?.use_for_orders));
+      } catch {
+        setSplitMode(false);
+        setPagarmeForOrders(false);
+      }
     })();
   }, [api]);
 
@@ -261,6 +275,16 @@ export default function OrdersPage() {
       if (facetsLoaded) await loadFacets();
     } catch (err) {
       showError(err.message || 'Falha ao atualizar status');
+    }
+  }
+
+  async function onRetrySync(order) {
+    try {
+      await api.syncSoucannabisOrder(order.id);
+      setMsg(`Sync SouCannabis reenviado para #${order.id}`);
+      await loadOrders();
+    } catch (err) {
+      showError(err.message || 'Falha no retry de sync');
     }
   }
 
@@ -538,8 +562,13 @@ export default function OrdersPage() {
                 onOpenCart={onOpenCart}
                 onDelete={onDelete}
                 onCopyTracking={onCopyTracking}
+                onOpenTracking={(ord) => setTrackingOrder(ord)}
                 onOpenDetails={(ord) => setDetailsOrderId(ord.id)}
                 onAddressValidationDetail={(ord) => setAddressValidationOrder(ord)}
+                onOpenPayment={(ord) => setPaymentOrder(ord)}
+                onRetrySync={onRetrySync}
+                splitMode={splitMode}
+                pagarmeForOrders={pagarmeForOrders}
                 zebra={i % 2 === 1}
                 dateField={dateField}
                 productStockMap={productStockMap}
@@ -547,6 +576,18 @@ export default function OrdersPage() {
             ))
           )}
         </Paper>
+
+        <PaymentModal
+          open={Boolean(paymentOrder)}
+          onClose={() => setPaymentOrder(null)}
+          api={api}
+          context="order"
+          entity={paymentOrder}
+          onSuccess={async () => {
+            setMsg(`Link de pagamento gerado para #${paymentOrder?.id}`);
+            await loadOrders();
+          }}
+        />
 
         <AddressValidationDetailModal
           open={Boolean(addressValidationOrder)}
@@ -574,6 +615,13 @@ export default function OrdersPage() {
             loadOrders();
             if (facetsLoaded) loadFacets();
           }}
+        />
+
+        <TrackingDetailsModal
+          open={Boolean(trackingOrder)}
+          order={trackingOrder}
+          api={api}
+          onClose={() => setTrackingOrder(null)}
         />
 
         {!loading && !showOnlySelected && total > PAGE_SIZE && (

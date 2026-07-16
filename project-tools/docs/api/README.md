@@ -15,12 +15,15 @@
 | [query-parameters.md](./query-parameters.md) | `filter`, `sort`, `fields`, `limit`, `meta` |
 | [collections.md](./collections.md) | Collections permitidas e notas de domínio |
 | [domain-routes.md](./domain-routes.md) | Rotas de negócio (orders, services, auth…) |
+| [doc-sign.md](./doc-sign.md) | Termos e assinaturas nativos (substitui DocuSeal) |
 | [files.md](./files.md) | Upload, download e metadados de arquivos |
 | [files-cloud-storage.md](./files-cloud-storage.md) | **Futuro:** buckets S3 / GCS / Azure (planejamento) |
-| [modules.md](./modules.md) | Módulos opcionais (Loggi, Pagar.me, etc.) |
+| [modules.md](./modules.md) | Módulos opcionais (Loggi, Pagar.me, Pedidos SouCannabis, etc.) |
 | [modules/credentials.md](./modules/credentials.md) | Tabela `system_api_credentials` + política de secrets |
 | [modules/loggi.md](./modules/loggi.md) | Cotação, etiqueta, teste Loggi |
 | [modules/melhorenvio.md](./modules/melhorenvio.md) | Cotação Correios, OAuth, etiqueta, teste ME |
+| [modules/pagarme.md](./modules/pagarme.md) | Checkout, recipients, webhooks, split |
+| [modules/soucannabis_orders.md](./modules/soucannabis_orders.md) | Cliente API externa SC + sync de pedidos |
 | [errors.md](./errors.md) | Formato de erros e códigos |
 | [migration-from-directus.md](./migration-from-directus.md) | Mapa Directus / kunkserver → nova API |
 | [openapi.yaml](./openapi.yaml) | Esboço OpenAPI 3.0 |
@@ -41,7 +44,7 @@ http://localhost:8056/api/v1
 
 | Cliente | Método | Header / Cookie |
 |---|---|---|
-| Painel / Cadastro (browser) | Sessão | Cookie `session_token` (HttpOnly) |
+| Painel / Cadastro (browser) | Sessão | Cookie `kunk_oss_session` (HttpOnly, operador) / `associate_session` (associado) |
 | Integrações / scripts | API Key | `Authorization: Bearer <token>` |
 
 Detalhes em [authentication.md](./authentication.md).

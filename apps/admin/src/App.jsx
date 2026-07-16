@@ -5,6 +5,7 @@ import { OperatorAuthProvider } from '@kunk/auth-session';
 import { getPublicConfig } from '@kunk/config';
 import { AdminShell, RequireAdmin } from './layout/AdminShell.jsx';
 import { LoginPage } from './pages/LoginPage.jsx';
+import { NewPasswordPage } from './pages/NewPasswordPage.jsx';
 import { ForbiddenPage } from './pages/ForbiddenPage.jsx';
 import { DadosIndexPage, DadosCollectionPage, DadosItemPage } from './pages/DadosPages.jsx';
 import { ArquivosPage } from './pages/ArquivosPage.jsx';
@@ -38,6 +39,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/nova-senha" element={<NewPasswordPage api={api} />} />
           <Route path="/sem-permissao" element={<ForbiddenPage />} />
           <Route
             element={(

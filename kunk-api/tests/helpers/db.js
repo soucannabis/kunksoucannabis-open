@@ -83,6 +83,25 @@ async function truncateBusinessTables() {
 
 /** Remove apenas users/associados criados por testes (domínio @test.local). */
 async function cleanupTestLocalUsers() {
+  await query(
+    `DELETE FROM term_events WHERE contract_id IN (
+       SELECT id FROM term_contracts WHERE user_code IN (
+         SELECT user_code FROM users WHERE email_account LIKE '%@test.local'
+       )
+     )`
+  );
+  await query(
+    `DELETE FROM term_signatures WHERE contract_id IN (
+       SELECT id FROM term_contracts WHERE user_code IN (
+         SELECT user_code FROM users WHERE email_account LIKE '%@test.local'
+       )
+     )`
+  );
+  await query(
+    `DELETE FROM term_contracts WHERE user_code IN (
+       SELECT user_code FROM users WHERE email_account LIKE '%@test.local'
+     )`
+  );
   await query(`DELETE FROM users_files WHERE user_id IN (SELECT id FROM users WHERE email_account LIKE '%@test.local')`);
   await query(`DELETE FROM users WHERE email_account LIKE '%@test.local'`);
 }

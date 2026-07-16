@@ -17,7 +17,7 @@ const EMPTY = {
   ciap_codes: [],
 };
 
-export function CadastroPacientePage({ api }) {
+export function PatientRegistrationPage({ api }) {
   const { user, refresh } = useAssociateAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState(EMPTY);

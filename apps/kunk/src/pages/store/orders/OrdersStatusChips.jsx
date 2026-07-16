@@ -7,6 +7,7 @@ const GREEN = '#5a7a5b';
 const STATUS_CHIP_COLORS = {
   'Aguardando pagamento': { bg: '#FFF3CD', color: '#856404' },
   'Pagamento concluído': { bg: '#D1E7DD', color: '#0F5132' },
+  'Aguardando aprovação': { bg: '#CFE2FF', color: '#084298' },
   'Em produção': { bg: '#CCE5FF', color: '#004085' },
   Enviado: { bg: '#D4EDDA', color: '#155724' },
   Entregue: { bg: '#D1E7DD', color: '#0F5132' },

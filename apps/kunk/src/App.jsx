@@ -8,6 +8,7 @@ import { buildAppRoutes } from './app/routes.jsx';
 import { KunkConfigProvider } from './config/KunkConfigProvider.jsx';
 import { ErrorModalProvider } from './components/errors/ErrorModalProvider.jsx';
 import { LoginPage } from './pages/LoginPage.jsx';
+import { NewPasswordPage } from './pages/NewPasswordPage.jsx';
 import { UnauthorizedPage } from './pages/UnauthorizedPage.jsx';
 import { NotConnectedPage } from './pages/NotConnectedPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
@@ -21,6 +22,7 @@ function AppRoutes() {
     <Suspense fallback={<div style={{ padding: 24 }}>Carregando…</div>}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/nova-senha" element={<NewPasswordPage />} />
         <Route path="/cadastro" element={<SystemUserInvitePage />} />
         <Route path="/relatorio/servicos" element={<ProfessionalReportPortalPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />

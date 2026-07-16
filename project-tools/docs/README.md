@@ -22,9 +22,9 @@ Superfícies distintas por subdomínio/porta (não sistemas separados):
 | `cad/` | Cadastramento | Associados em onboarding |
 | `admin/` | Admin da instância | Operadores com role `Administrador` |
 | `app/` | Painel interno (operacional) | Operadores (`system_users`) |
-| `termos/` | Termos / assinaturas | Associados + operadores |
+| `termos/` | Doc-sign (termos / assinaturas) | Associados + operadores |
 
-A documentação de frontend descreve a estrutura compartilhada **e** cada app. O primeiro app recriado é o **cadastramento**; o **admin** está em progresso; o **Kunk** operacional vive em `apps/kunk` (docs em [`frontend/kunk/`](./frontend/kunk/)).
+A documentação de frontend descreve a estrutura compartilhada **e** cada app. O primeiro app recriado é o **cadastramento**; o **admin** está em progresso; o **Kunk** operacional vive em `apps/kunk` (docs em [`frontend/kunk/`](./frontend/kunk/)); o **doc-sign** está especificado em [`frontend/doc-sign/`](./frontend/doc-sign/).
 
 ## Ordem sugerida de leitura (app Kunk operacional)
 
@@ -45,6 +45,14 @@ A documentação de frontend descreve a estrutura compartilhada **e** cada app. 
 2. [`flow.md`](./frontend/kunk/pedidos/flow.md) → [`fields.md`](./frontend/kunk/pedidos/fields.md) → [`admin.md`](./frontend/kunk/pedidos/admin.md)
 3. [`api.md`](./frontend/kunk/pedidos/api.md) + [`ui-ux.md`](./frontend/kunk/pedidos/ui-ux.md) + [`gaps.md`](./frontend/kunk/pedidos/gaps.md)
 4. Módulos: [`api/modules/loggi.md`](./api/modules/loggi.md) · [`melhorenvio.md`](./api/modules/melhorenvio.md) · [`credentials.md`](./api/modules/credentials.md)
+
+## Ordem sugerida de leitura (Pagar.me + Pedidos SouCannabis — spec)
+
+1. [`frontend/kunk/pagamentos-soucannabis/README.md`](./frontend/kunk/pagamentos-soucannabis/README.md) — escopo e acoplamento dos dois serviços
+2. [`flow.md`](./frontend/kunk/pagamentos-soucannabis/flow.md) → [`fields.md`](./frontend/kunk/pagamentos-soucannabis/fields.md) → [`admin.md`](./frontend/kunk/pagamentos-soucannabis/admin.md)
+3. [`api.md`](./frontend/kunk/pagamentos-soucannabis/api.md) + [`ui-ux.md`](./frontend/kunk/pagamentos-soucannabis/ui-ux.md) + [`gaps.md`](./frontend/kunk/pagamentos-soucannabis/gaps.md)
+4. Módulos: [`api/modules/pagarme.md`](./api/modules/pagarme.md) · [`api/modules/soucannabis_orders.md`](./api/modules/soucannabis_orders.md)
+5. Contrato remoto: [`external_apps_kunk_doc.md`](./external_apps_kunk_doc.md) · Split: [Pagar.me Split](https://docs.pagar.me/reference/split-1)
 
 ## Ordem sugerida de leitura (serviços / profissionais / Google Calendar — implementação)
 
@@ -67,3 +75,10 @@ A documentação de frontend descreve a estrutura compartilhada **e** cada app. 
 2. [`frontend/admin/README.md`](./frontend/admin/README.md) — escopo do app
 3. [`frontend/admin/flow.md`](./frontend/admin/flow.md) — áreas (dados, configs, usuários)
 4. [`frontend/admin/api.md`](./frontend/admin/api.md) + [`frontend/admin/gaps.md`](./frontend/admin/gaps.md)
+
+## Ordem sugerida de leitura (doc-sign — termos / assinaturas)
+
+1. [`frontend/doc-sign/README.md`](./frontend/doc-sign/README.md) — escopo OSS (substitui DocuSeal)
+2. [`flow.md`](./frontend/doc-sign/flow.md) → [`fields.md`](./frontend/doc-sign/fields.md)
+3. [`api.md`](./frontend/doc-sign/api.md) + [`ui-ux.md`](./frontend/doc-sign/ui-ux.md) + [`gaps.md`](./frontend/doc-sign/gaps.md)
+4. API domínio: [`api/doc-sign.md`](./api/doc-sign.md)

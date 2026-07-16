@@ -169,7 +169,15 @@ Usado quando o teste não precisa repetir o funil inteiro na UI. Cookie comparti
 | **Pré-condição** | Seed fase 3 |
 | **Entrada (UI)** | Modo CNH; upload `#responsible-front` (JPEG mínimo); “Avançar para assinatura” |
 | **API** | `POST /files` multipart (`doc_type=cnh`, `side=front`, `subject=responsible`, `doc_kind=identity`) **201**; `GET /users/me/documents/status` → `complete=true`, `mode=cnh`; `POST /users/me/advance` → fase **4** |
-| **Validação UI** | “Documentos OK”; texto do stub de termos em desenvolvimento |
+| **Validação UI** | “Documentos OK”; heading Assinatura; botão Assinar termo |
+
+### Phase4 — assinatura disponível
+
+| Item | Valor |
+|---|---|
+| **Pré-condição** | Seed fase 4 (+ templates doc-sign publicados) |
+| **API relacionada** | `POST /doc-sign/contracts` |
+| **Validação UI** | Heading “Assinatura do termo”; botão “Assinar termo” (sem stub) |
 | **Critério de aceite** | Completude CNH = 1 arquivo frente |
 
 ### 3.2 `RG requires front and back`
@@ -193,16 +201,16 @@ Usado quando o teste não precisa repetir o funil inteiro na UI. Cookie comparti
 | **Validação UI** | Botão “Avançar para assinatura” só após paciente |
 | **Critério de aceite** | Completude por subject |
 
-### 3.4 `phase 4 shows terms module stub`
+### 3.4 `phase 4 shows signing CTA (not stub)`
 
 | | |
 |---|---|
-| **Objetivo** | Fase 4 não oferece assinatura real nesta entrega |
-| **Pré-condição** | Seed fase 4 |
+| **Objetivo** | Fase 4 oferece CTA de assinatura no doc-sign |
+| **Pré-condição** | Seed fase 4 (+ templates publicados) |
 | **Entrada (UI)** | `GET /documentos` |
-| **API relacionada** | `GET/POST /terms/*` → **501** `TERMS_MODULE_IN_DEVELOPMENT` (stub; este teste valida a UI) |
-| **Validação UI** | Heading “Assinatura do termo”; texto “em desenvolvimento” |
-| **Critério de aceite** | Mensagem explícita; sem webhook falso para fase 5 |
+| **API relacionada** | `POST /doc-sign/contracts` |
+| **Validação UI** | Heading “Assinatura do termo”; botão “Assinar termo” |
+| **Critério de aceite** | Sem mensagem de módulo em desenvolvimento |
 
 ---
 
@@ -251,14 +259,14 @@ Usado quando o teste não precisa repetir o funil inteiro na UI. Cookie comparti
 | **Validação** | Redirect `/documentos` |
 | **Aceite** | Não voltar a etapas anteriores |
 
-### 5.3 `phase 4 stays on documentos stub not consulta`
+### 5.3 `phase 4 stays on documentos not consulta`
 
 | | |
 |---|---|
 | **Pré-condição** | Fase 4 |
 | **Ação** | `goto /consulta` |
-| **Validação** | Não fica em `/consulta`; heading do stub de termos |
-| **Aceite** | Fase 5 inacessível sem módulo/bypass |
+| **Validação** | Não fica em `/consulta`; heading de assinatura do termo |
+| **Aceite** | Fase 5 inacessível sem termo assinado / bypass |
 
 ### 5.4 `unauthenticated / redirects to login`
 
@@ -292,10 +300,10 @@ Usado quando o teste não precisa repetir o funil inteiro na UI. Cookie comparti
 | 7 | forms | himself → docs | advance → fase 3 |
 | 8 | forms | parcial | 200 + nome persistido |
 | 9 | forms | another + paciente | advance → docs |
-| 10 | docs | CNH → fase 4 | stub termos |
-| 11 | docs | RG frente/verso | botão só após verso |
-| 12 | docs | paciente docs | complete só com ambos |
-| 13 | docs | stub fase 4 | UI módulo em dev |
+| 10 | docs | CNH → fase 4 | Assinar termo |
+| 11 | docs | RG frente+verso | completo |
+| 12 | docs | another + patient docs | completo |
+| 13 | docs | fase 4 | CTA Assinar termo |
 | 14 | fase5 | concluir | `status=Associado` |
 | 15 | fase5 | `/` Associado | `/cadastro-concluido` |
 | 16–20 | guards | fases / auth | redirects corretos |

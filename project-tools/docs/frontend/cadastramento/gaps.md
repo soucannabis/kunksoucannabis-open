@@ -57,7 +57,7 @@ Implementar na `kunk-api` **na mesma entrega** do app `registration`.
 | Token | Opaco (random 32+ bytes, hex/base64url); **nunca** AES no Vite |
 | Armazenamento | Colunas em `users`: `password_reset_token` (hash do token), `password_reset_expires` — ou tabela `password_resets`; preferir **colunas em `users`** no MVP |
 | TTL | **1 hora**, uso único |
-| E-mail | Link `{VITE_URL}/nova-senha?token=...` |
+| E-mail | Link `{REGISTRATION_PUBLIC_URL}/nova-senha?token=...` via módulo SMTP (`MODULE_EMAIL_ENABLED`) |
 | Resposta forgot | Sempre 200 genérico (não revelar se e-mail existe) |
 
 Incluir migration SQL das colunas na entrega do cadastramento.
@@ -87,21 +87,27 @@ Regra de completude fase 3:
 - Se `another`: mesma regra para `subject=patient`.
 - Só então a UI oferece “avançar para assinatura” (fase 4).
 
-### 5. Módulo de termos (fase 4) — **em desenvolvimento**
+### 5. Módulo de termos (fase 4) — **spec pronta; implementação pendente**
 
-**Não implementar** assinatura real (DocuSeal nem nativo) nesta entrega.
+Assinatura real: app **`apps/doc-sign`** + API `/doc-sign/*`.  
+Documentação: [`../doc-sign/`](../doc-sign/README.md).
 
-No cadastramento / API:
+**Nesta entrega do cadastramento** (já feita): stubs 501 + UI “em desenvolvimento”.
 
-- Após docs completos, `associate_status` pode ir a **4**.
-- Tela da fase 4 e qualquer chamada de gerar/assinar termo devem informar de forma explícita:
+Quando o módulo for implementado:
 
-  > **Módulo de assinatura de termos em desenvolvimento.**
+- Endpoints reais em `/doc-sign/*` (aliases `/terms/*`)
+- Gerar contrato → assinar → gravar `adhesion_term` (`term_contracts.id`) → `associate_status=5`
+- Payload com **`user_code`** (UUID)
+- **Sem webhook** — handler interno na `kunk-api` (mesma API do cadastro)
 
-- Endpoints stub, ex.: `POST /terms/contracts`, `GET /terms/status` → **503** ou **501** com código `TERMS_MODULE_IN_DEVELOPMENT` e mensagem amigável.
-- **Não** avançar automaticamente para fase **5** até o módulo existir (sem webhook falso).
-- `adhesion_term` permanece vazio até o módulo gravar a ref.
-- Quando o módulo for entregue: usar **`user_code`** (UUID) no payload do termo — nunca `id` numérico legado.
+Até lá:
+
+- Após docs completos, `associate_status` pode ir a **4**
+- Tela da fase 4 informa módulo em desenvolvimento
+- Endpoints stub → **501** `TERMS_MODULE_IN_DEVELOPMENT`
+- **Não** avançar automaticamente para fase **5** (sem webhook falso)
+- `adhesion_term` permanece vazio
 
 Opcional só para QA interno (não produção): env `TERMS_DEV_BYPASS=true` permite ir 4→5 sem assinatura. Default **false**.
 
@@ -175,7 +181,7 @@ Refino visual completo do acolhimento pode continuar depois; a **leitura correta
 
 | Item | Quando |
 |---|---|
-| Assinatura real de termos (DocuSeal ou nativo) | Módulo **termos** (depois) |
+| Assinatura real de termos (doc-sign nativo) | Spec [`../doc-sign/`](../doc-sign/README.md) — implementação pendente |
 | `awaiting_signature` como status string | Com o módulo termos |
 | BeeViral / `met_us` / comprovante endereço | Nunca (OSS) |
 

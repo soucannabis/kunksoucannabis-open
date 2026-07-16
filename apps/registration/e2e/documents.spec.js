@@ -4,7 +4,7 @@ import { seedAssociate } from './helpers/api.js';
 import { uploadTinyJpeg } from './helpers/forms.js';
 
 test.describe('Documentos — assistente RG/CNH e fase 4', () => {
-  test('CNH upload completes and advances to terms stub', async ({ page }) => {
+  test('CNH upload completes and advances to terms signing CTA', async ({ page }) => {
     const email = uniqueEmail('cnh');
     await seedAssociate(page, { email, phase: 3 });
     await page.goto('/documentos');
@@ -14,9 +14,10 @@ test.describe('Documentos — assistente RG/CNH e fase 4', () => {
     await uploadTinyJpeg(page, 'responsible-front');
     await expect(page.getByText(/Documentos OK/i)).toBeVisible({ timeout: 20_000 });
     await page.getByRole('button', { name: /Avançar para assinatura/i }).click();
-    await expect(page.getByText(/Módulo de assinatura de termos em desenvolvimento/i)).toBeVisible({
+    await expect(page.getByRole('heading', { name: /Assinatura do termo/i })).toBeVisible({
       timeout: 20_000,
     });
+    await expect(page.getByRole('button', { name: /Assinar termo/i })).toBeVisible({ timeout: 20_000 });
   });
 
   test('RG requires front and back', async ({ page }) => {
@@ -42,9 +43,7 @@ test.describe('Documentos — assistente RG/CNH e fase 4', () => {
     await uploadTinyJpeg(page, 'responsible-front');
     await expect(page.getByRole('button', { name: /Avançar para assinatura/i })).toHaveCount(0);
 
-    // patient section — second CNH button / patient-front
     await page.locator('#patient-front').waitFor({ state: 'attached' });
-    // ensure CNH mode on patient block: click CNH in patient section
     const patientBlock = page.locator('h2', { hasText: 'Paciente' }).locator('xpath=ancestor::div[contains(@class,"mb-4")]');
     await patientBlock.getByRole('button', { name: /CNH/i }).click();
     await uploadTinyJpeg(page, 'patient-front');
@@ -53,11 +52,12 @@ test.describe('Documentos — assistente RG/CNH e fase 4', () => {
     });
   });
 
-  test('phase 4 shows terms module stub', async ({ page }) => {
+  test('phase 4 shows signing CTA (not stub)', async ({ page }) => {
     const email = uniqueEmail('phase4');
     await seedAssociate(page, { email, phase: 4 });
     await page.goto('/documentos');
     await expect(page.getByRole('heading', { name: /Assinatura do termo/i })).toBeVisible();
-    await expect(page.getByText(/em desenvolvimento/i)).toBeVisible();
+    await expect(page.getByText(/em desenvolvimento/i)).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Assinar termo/i })).toBeVisible({ timeout: 20_000 });
   });
 });

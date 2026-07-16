@@ -50,14 +50,14 @@ Botão no header do modal quando `status ≠ Associado` (ainda no funil / termo 
 
 Não gera termo. Não preenche `adhesion_term`. Confirmação explícita na UI.
 
-### Termo — ciclo futuro (app de assinatura)
+### Termo — ciclo (app doc-sign)
 
-Quando o módulo/app de termos existir (fora desta entrega do painel stub):
+Quando o módulo/app de termos existir — spec [`../../doc-sign/`](../../doc-sign/README.md):
 
-1. **Gerar termo** → associado fica com status/label **Termo não assinado** (fase/`status` conforme módulo)
-2. **Assinar** → status atualizado (conclusão / Associado conforme regras do app de termos)
+1. **Gerar termo** → associado fica com status/label **Termo não assinado** (`associate_status=4` / contrato `pending`)
+2. **Assinar** → `adhesion_term` + `associate_status=5` (handler interno na API; sem webhook DocuSeal)
 
-No painel v1: botões “Novo Termo” / “Copiar link” **não** alteram banco.
+No painel v1 atual: botões “Novo Termo” / “Copiar link” **não** alteram banco (stub).
 
 ### Exclusão (regra global de vínculos)
 

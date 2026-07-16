@@ -47,13 +47,14 @@ router.get('/', (req, res) => {
 
 router.get('/status', async (req, res, next) => {
   try {
+    const { isModuleEnabled } = require('../../services/moduleFlags');
     const oauth = await auth.oauthStatus();
     const primary = await auth.getPrimaryCalendarId();
     const useScheduling = await auth.getSchedulingEnabled();
     res.json(
       ok({
         module: 'google_calendar',
-        enabled: Boolean(env.modules.google_calendar),
+        enabled: await isModuleEnabled('google_calendar'),
         use_for_scheduling: useScheduling,
         primary_calendar_id: primary,
         credentials_complete: oauth.credentials_complete,

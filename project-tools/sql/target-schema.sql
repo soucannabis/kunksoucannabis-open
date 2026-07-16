@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS users (
   documents_folder_id VARCHAR(255),
   rg_patient_proof VARCHAR(255),
   patient_user_code VARCHAR(255),
-  adhesion_term TEXT,
+  adhesion_term UUID,
   invalid_fields TEXT,
   ciap_codes TEXT,
   associate_birth_date VARCHAR(255),
@@ -106,7 +106,9 @@ CREATE TABLE IF NOT EXISTS system_users (
   session_expires TIMESTAMP,
   last_activity TIMESTAMP,
   is_session_active BOOLEAN,
-  internal_code VARCHAR(255)
+  internal_code VARCHAR(255),
+  password_reset_token VARCHAR(255),
+  password_reset_expires TIMESTAMP
 );
 
 -- Institutional clients → institutional_clients
@@ -183,6 +185,11 @@ CREATE TABLE IF NOT EXISTS orders (
   freight_option JSONB,
   dce JSONB,
   stock_debited_at TIMESTAMPTZ,
+  soucannabis_order_id VARCHAR(64),
+  soucannabis_synced_at TIMESTAMPTZ,
+  soucannabis_sync_error TEXT,
+  external_payment_info JSONB,
+  external_delivery_type VARCHAR(32),
   CONSTRAINT fk_orders_user FOREIGN KEY ("user") REFERENCES users(id),
   CONSTRAINT fk_orders_institutional_client FOREIGN KEY (institutional_client_id) REFERENCES institutional_clients(id)
 );
@@ -467,4 +474,74 @@ CREATE TABLE IF NOT EXISTS users_files (
   doc_kind VARCHAR(32),
   CONSTRAINT fk_users_files_user_id FOREIGN KEY (user_id) REFERENCES users(id),
   CONSTRAINT fk_users_files_file_id FOREIGN KEY (file_id) REFERENCES files(id)
+);
+
+-- Doc-sign (termos / assinaturas)
+CREATE TABLE IF NOT EXISTS term_templates (
+  id UUID PRIMARY KEY,
+  kind TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  display_name TEXT NOT NULL DEFAULT '',
+  requires_patient BOOLEAN NOT NULL DEFAULT false,
+  draft_content_json JSONB,
+  logo_file_id UUID NULL REFERENCES files(id) ON DELETE SET NULL,
+  current_version_id UUID NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS term_template_versions (
+  id UUID PRIMARY KEY,
+  template_id UUID NOT NULL REFERENCES term_templates(id) ON DELETE CASCADE,
+  version_number INT NOT NULL,
+  content_json JSONB NOT NULL,
+  content_sha256 TEXT NOT NULL,
+  pdf_file_id UUID NULL REFERENCES files(id) ON DELETE SET NULL,
+  pdf_sha256 TEXT NULL,
+  created_by UUID NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  notes TEXT NULL,
+  UNIQUE (template_id, version_number)
+);
+
+CREATE TABLE IF NOT EXISTS term_contracts (
+  id UUID PRIMARY KEY,
+  user_code UUID NOT NULL REFERENCES users(user_code) ON DELETE CASCADE,
+  signer_email TEXT NOT NULL,
+  template_version_id UUID NOT NULL REFERENCES term_template_versions(id),
+  kind TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  variables JSONB NOT NULL DEFAULT '{}'::jsonb,
+  filled_pdf_file_id UUID NULL REFERENCES files(id) ON DELETE SET NULL,
+  signed_pdf_file_id UUID NULL REFERENCES files(id) ON DELETE SET NULL,
+  audit_pdf_file_id UUID NULL REFERENCES files(id) ON DELETE SET NULL,
+  filled_pdf_sha256 TEXT NULL,
+  signed_pdf_sha256 TEXT NULL,
+  signing_token_hash TEXT NOT NULL,
+  signing_token_expires TIMESTAMPTZ NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMPTZ NULL
+);
+
+CREATE TABLE IF NOT EXISTS term_signatures (
+  id UUID PRIMARY KEY,
+  contract_id UUID NOT NULL REFERENCES term_contracts(id) ON DELETE CASCADE,
+  method TEXT NOT NULL,
+  typed_name TEXT NULL,
+  image_file_id UUID NULL REFERENCES files(id) ON DELETE SET NULL,
+  consent_accepted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS term_events (
+  id UUID PRIMARY KEY,
+  contract_id UUID NOT NULL REFERENCES term_contracts(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL,
+  occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  actor_email TEXT NULL,
+  actor_name TEXT NULL,
+  ip TEXT NULL,
+  user_agent TEXT NULL,
+  timezone TEXT NULL,
+  meta JSONB NULL
 );

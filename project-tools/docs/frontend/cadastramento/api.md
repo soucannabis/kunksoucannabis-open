@@ -83,9 +83,9 @@ Metadados: ver [gaps.md](./gaps.md) §4.
 
 ---
 
-## Termos (fase 4) — módulo em desenvolvimento
+## Termos (fase 4) — stub até entrega do doc-sign
 
-**Não entregar assinatura real nesta fase.**
+**Nesta entrega do cadastramento:** sem assinatura real.
 
 | Método | Path | Comportamento nesta entrega |
 |---|---|---|
@@ -95,7 +95,7 @@ Metadados: ver [gaps.md](./gaps.md) §4.
 Front: após docs OK, tela da fase 4 com mensagem de módulo em desenvolvimento.  
 Não avançar para fase 5 por webhook. Bypass só com `TERMS_DEV_BYPASS=true` (QA).
 
-Quando o módulo for implementado (entrega separada): gravar `adhesion_term`, `associate_status=5`, payload com **`user_code`**.
+**Spec do módulo nativo:** [`../doc-sign/`](../doc-sign/README.md) — API alvo `/doc-sign/*`, avanço 4→5 na mesma `kunk-api` (sem webhook), `adhesion_term` = UUID do contrato, payload com **`user_code`**.
 
 ---
 

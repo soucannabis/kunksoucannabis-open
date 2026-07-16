@@ -131,7 +131,23 @@ router.patch('/:id', authorize('orders', 'update'), async (req, res, next) => {
 
 router.patch('/:id/status', authorize('orders', 'update'), async (req, res, next) => {
   try {
-    const data = await ordersService.updateStatus(req.params.id, req.body?.status);
+    const body = req.body || {};
+    const skipPaymentLock =
+      body.skip_payment_lock === true ||
+      body.force_test_paid === true ||
+      body.test_bypass_payment_lock === true;
+    const options = { skipPaymentLock };
+    if (skipPaymentLock) {
+      options.source = 'test_bypass';
+      options.external_payment_info = body.external_payment_info || {
+        provider: 'manual',
+        method: 'test_bypass',
+        note: 'Teste: pagamento forçado pelo operador (bypass PAYMENT_LOCK SouCannabis)',
+        paid_at: new Date().toISOString(),
+        local_order_id: Number(req.params.id),
+      };
+    }
+    const data = await ordersService.updateStatus(req.params.id, body.status, options);
     res.json(ok(data));
   } catch (err) {
     next(err);

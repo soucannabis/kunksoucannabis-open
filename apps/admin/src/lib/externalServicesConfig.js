@@ -23,6 +23,11 @@ export async function testExternalService(api, service) {
   return res.data;
 }
 
+export async function sendExternalTestEmail(api, to) {
+  const res = await api.sendExternalTestEmail(to);
+  return res.data;
+}
+
 export async function startMelhorEnvioOAuth(api) {
   const res = await api.melhorEnvioOAuthAuthorize();
   const url = res.data?.url;

@@ -9,12 +9,23 @@ const meAuth = require('../services/melhorenvio/auth');
 const geoClient = require('../services/geoapify/client');
 const gcAuth = require('../services/google_calendar/auth');
 const { ok, AppError } = require('../utils/response');
-const { env } = require('../config/env');
 const { query } = require('../db/pool');
 const { oauthRedirectUri } = require('../utils/publicApiUrl');
 
-const SERVICES = ['loggi', 'melhorenvio', 'geoapify', 'google_calendar'];
+const SERVICES = [
+  'loggi',
+  'melhorenvio',
+  'geoapify',
+  'google_calendar',
+  'email',
+  'pagarme',
+  'soucannabis_orders',
+];
 const FREIGHT_SERVICES = new Set(['loggi', 'melhorenvio']);
+const emailClient = require('../services/email');
+const pagarmeService = require('../services/pagarme');
+const scOrdersService = require('../services/soucannabis_orders');
+const { isModuleEnabled } = require('../services/moduleFlags');
 
 const router = Router();
 
@@ -25,38 +36,80 @@ function serviceOrThrow(service) {
   return service;
 }
 
-function asBool(v, fb) {
-  if (v == null || v === '') return fb;
-  return String(v).toLowerCase() === 'true' || v === '1' || v === true;
-}
-
 async function getModuleConfigFlags(service) {
+  const { isModuleEnabled, envModuleDefault, asBool: flagBool } = require('../services/moduleFlags');
   const enabledKey = `modules.${service}.enabled`;
   const quoteKey = `modules.${service}.use_for_quote`;
   const labelKey = `modules.${service}.use_for_label`;
+  const trackingKey = `modules.${service}.use_for_tracking`;
   const validationKey = `modules.${service}.use_for_validation`;
   const schedulingKey = `modules.${service}.use_for_scheduling`;
   const primaryKey = `modules.${service}.primary_calendar_id`;
+  const useOrdersKey = `modules.${service}.use_for_orders`;
+  const useServicesKey = `modules.${service}.use_for_services`;
+  const syncProductsKey = `modules.${service}.sync_products`;
+  const syncTagsKey = `modules.${service}.sync_tags`;
+  const syncOrdersKey = `modules.${service}.sync_orders`;
+  const assocRecipientKey = `modules.${service}.association_recipient_id`;
+  const scRecipientKey = `modules.${service}.soucannabis_recipient_id`;
   const result = await query(
     `SELECT key, value FROM system_configs
      WHERE system = 'modules' AND key = ANY($1::text[])`,
-    [[enabledKey, quoteKey, labelKey, validationKey, schedulingKey, primaryKey]]
+    [[
+      enabledKey,
+      quoteKey,
+      labelKey,
+      trackingKey,
+      validationKey,
+      schedulingKey,
+      primaryKey,
+      useOrdersKey,
+      useServicesKey,
+      syncProductsKey,
+      syncTagsKey,
+      syncOrdersKey,
+      assocRecipientKey,
+      scRecipientKey,
+    ]]
   );
   const values = Object.fromEntries(result.rows.map((r) => [r.key, r.value]));
+  const hasAdminEnabled =
+    values[enabledKey] != null && values[enabledKey] !== '';
   const flags = {
-    enabled: env.modules[service] === true,
-    config_enabled: asBool(values[enabledKey], false),
+    /** Effective runtime flag (admin overrides env). */
+    enabled: await isModuleEnabled(service),
+    /** Value stored in Admin, if any. */
+    config_enabled: hasAdminEnabled ? flagBool(values[enabledKey], false) : null,
+    /** Env default when Admin has never set a value. */
+    env_default: envModuleDefault(service),
+    source: hasAdminEnabled ? 'admin' : 'env',
   };
   if (FREIGHT_SERVICES.has(service)) {
-    flags.use_for_quote = asBool(values[quoteKey], service === 'loggi' || service === 'melhorenvio');
-    flags.use_for_label = asBool(values[labelKey], service === 'loggi');
+    const scOn = await isModuleEnabled('soucannabis_orders');
+    flags.use_for_quote = scOn
+      ? false
+      : flagBool(values[quoteKey], service === 'loggi' || service === 'melhorenvio');
+    flags.use_for_label = scOn ? false : flagBool(values[labelKey], service === 'loggi');
+    flags.use_for_tracking = flagBool(values[trackingKey], false);
+    flags.sc_blocks_quote_label = scOn;
   }
   if (service === 'geoapify') {
-    flags.use_for_validation = asBool(values[validationKey], false);
+    flags.use_for_validation = flagBool(values[validationKey], false);
   }
   if (service === 'google_calendar') {
-    flags.use_for_scheduling = asBool(values[schedulingKey], true);
+    flags.use_for_scheduling = flagBool(values[schedulingKey], true);
     flags.primary_calendar_id = values[primaryKey] || null;
+  }
+  if (service === 'pagarme') {
+    flags.use_for_orders = flagBool(values[useOrdersKey], true);
+    flags.use_for_services = flagBool(values[useServicesKey], true);
+    flags.association_recipient_id = values[assocRecipientKey] || null;
+    flags.soucannabis_recipient_id = values[scRecipientKey] || null;
+  }
+  if (service === 'soucannabis_orders') {
+    flags.sync_products = flagBool(values[syncProductsKey], true);
+    flags.sync_tags = flagBool(values[syncTagsKey], true);
+    flags.sync_orders = flagBool(values[syncOrdersKey], true);
   }
   return flags;
 }
@@ -194,6 +247,51 @@ router.get('/:service', async (req, res, next) => {
       };
       payload.hidden_cred_fields = ['access_token', 'refresh_token', 'redirect_uri'];
     }
+    if (service === 'email') {
+      if (!(credentials || []).length) {
+        await emailClient.ensureCredentialRows();
+        credentials = await credentialsService.listPublic(service);
+        payload.credentials = credentials;
+      }
+    }
+    if (service === 'pagarme') {
+      await pagarmeService.ensureCredentialRows();
+      credentials = await credentialsService.listPublic(service);
+      payload.credentials = credentials;
+      const urls = pagarmeService.hooksSetup.getWebhookUrls(req);
+      payload.webhook_urls = {
+        orders: urls.orders,
+        services: urls.services,
+      };
+      try {
+        payload.pagarme_status = await pagarmeService.getStatus(req);
+      } catch (err) {
+        payload.pagarme_status = { error: err.message || String(err) };
+      }
+      // Efetivo: secret + webhooks ready. Se o flag no Admin/env estiver "on" sem isso, mostra desligado.
+      const effectivelyOn = await isModuleEnabled('pagarme');
+      payload.enabled = effectivelyOn;
+      if (!effectivelyOn && payload.config_enabled === true) {
+        await upsertModuleFlag(
+          'modules.pagarme.enabled',
+          false,
+          'Módulo pagarme desligado: exige Secret key e webhooks validados'
+        );
+        payload.config_enabled = false;
+        payload.source = 'admin';
+      }
+    }
+    if (service === 'soucannabis_orders') {
+      await scOrdersService.ensureCredentialRows();
+      credentials = await credentialsService.listPublic(service);
+      payload.credentials = credentials;
+      payload.hidden_cred_fields = ['access_token'];
+      try {
+        payload.sc_status = await scOrdersService.getStatus();
+      } catch (err) {
+        payload.sc_status = { error: err.message || String(err) };
+      }
+    }
     res.json(ok(payload));
   } catch (err) {
     next(err);
@@ -231,6 +329,16 @@ router.patch('/:service', async (req, res, next) => {
     }
 
     if (body.use_for_quote !== undefined) {
+      if (FREIGHT_SERVICES.has(service)) {
+        const { isModuleEnabled } = require('../services/moduleFlags');
+        if (await isModuleEnabled('soucannabis_orders') && body.use_for_quote === true) {
+          throw new AppError(
+            400,
+            'SC_BLOCKS_FREIGHT',
+            'Com Pedidos SouCannabis ativo, cotação Loggi/Melhor Envio fica desligada. Use a opção Tracking.'
+          );
+        }
+      }
       await upsertModuleFlag(
         `modules.${service}.use_for_quote`,
         Boolean(body.use_for_quote),
@@ -238,10 +346,27 @@ router.patch('/:service', async (req, res, next) => {
       );
     }
     if (body.use_for_label !== undefined) {
+      if (FREIGHT_SERVICES.has(service)) {
+        const { isModuleEnabled } = require('../services/moduleFlags');
+        if (await isModuleEnabled('soucannabis_orders') && body.use_for_label === true) {
+          throw new AppError(
+            400,
+            'SC_BLOCKS_FREIGHT',
+            'Com Pedidos SouCannabis ativo, etiqueta Loggi/Melhor Envio fica desligada. Use a opção Tracking.'
+          );
+        }
+      }
       await upsertModuleFlag(
         `modules.${service}.use_for_label`,
         Boolean(body.use_for_label),
         `Usar ${service} na geração de etiqueta`
+      );
+    }
+    if (body.use_for_tracking !== undefined) {
+      await upsertModuleFlag(
+        `modules.${service}.use_for_tracking`,
+        Boolean(body.use_for_tracking),
+        `Usar ${service} na consulta de rastreio`
       );
     }
     if (body.use_for_validation !== undefined) {
@@ -266,11 +391,123 @@ router.patch('/:service', async (req, res, next) => {
         'string'
       );
     }
+    if (body.use_for_orders !== undefined) {
+      await upsertModuleFlag(
+        `modules.${service}.use_for_orders`,
+        Boolean(body.use_for_orders),
+        `Usar ${service} em pedidos`
+      );
+    }
+    if (body.use_for_services !== undefined) {
+      await upsertModuleFlag(
+        `modules.${service}.use_for_services`,
+        Boolean(body.use_for_services),
+        `Usar ${service} em serviços`
+      );
+    }
+    if (body.sync_products !== undefined) {
+      await upsertModuleFlag(
+        `modules.${service}.sync_products`,
+        Boolean(body.sync_products),
+        'Sincronizar produtos SouCannabis'
+      );
+    }
+    if (body.sync_tags !== undefined) {
+      await upsertModuleFlag(
+        `modules.${service}.sync_tags`,
+        Boolean(body.sync_tags),
+        'Sincronizar tags SouCannabis'
+      );
+    }
+    if (body.sync_orders !== undefined) {
+      await upsertModuleFlag(
+        `modules.${service}.sync_orders`,
+        Boolean(body.sync_orders),
+        'Sincronizar pedidos SouCannabis'
+      );
+    }
+    if (body.association_recipient_id !== undefined) {
+      await upsertModuleFlag(
+        `modules.pagarme.association_recipient_id`,
+        body.association_recipient_id ? String(body.association_recipient_id).trim() : null,
+        'Recipient Pagarme da associação',
+        'string'
+      );
+    }
+    if (body.soucannabis_recipient_id !== undefined) {
+      await upsertModuleFlag(
+        `modules.pagarme.soucannabis_recipient_id`,
+        body.soucannabis_recipient_id ? String(body.soucannabis_recipient_id).trim() : null,
+        'Recipient Pagarme SouCannabis',
+        'string'
+      );
+    }
+
     if (body.enabled !== undefined) {
+      if (service === 'pagarme' && body.enabled === true) {
+        let pagarmeStatus;
+        try {
+          pagarmeStatus = await pagarmeService.getStatus(req);
+        } catch (err) {
+          throw new AppError(400, 'DEPENDENCY_PAGARME', err.message || 'Pagar.me indisponível');
+        }
+        if (!pagarmeStatus.credentials_complete) {
+          throw new AppError(
+            400,
+            'CREDENTIAL_MISSING',
+            'Autentique a Secret key do Pagar.me antes de ativar o módulo'
+          );
+        }
+        if (!pagarmeStatus.webhooks?.ready) {
+          throw new AppError(
+            400,
+            'WEBHOOKS_NOT_VALIDATED',
+            'Valide os webhooks (usuário, senha e URLs no painel Pagar.me) antes de ativar o módulo'
+          );
+        }
+      }
+      if (service === 'soucannabis_orders' && body.enabled === true) {
+        const pagarmeOn = await isModuleEnabled('pagarme');
+        if (!pagarmeOn) {
+          throw new AppError(400, 'DEPENDENCY_PAGARME', 'Ative o Pagar.me antes de Pedidos SouCannabis');
+        }
+        let pagarmeStatus;
+        try {
+          pagarmeStatus = await pagarmeService.getStatus();
+        } catch (err) {
+          throw new AppError(400, 'DEPENDENCY_PAGARME', err.message || 'Pagar.me indisponível');
+        }
+        if (pagarmeStatus.is_psp === false) {
+          throw new AppError(400, 'PAGARME_NOT_PSP', 'Conta Pagar.me precisa ser PSP para Pedidos SouCannabis');
+        }
+        if (!pagarmeStatus.association_recipient_id) {
+          throw new AppError(400, 'SPLIT_NOT_CONFIGURED', 'Configure o recipient da associação no Pagar.me');
+        }
+        if (!pagarmeStatus.soucannabis_recipient_id) {
+          throw new AppError(400, 'SPLIT_NOT_CONFIGURED', 'Recipient SouCannabis ainda não foi criado (outbound)');
+        }
+        if (!pagarmeStatus.payment_percentage_ok) {
+          throw new AppError(
+            400,
+            'PAYMENT_PERCENTAGE_NOT_INTEGER',
+            'payment_percentage da SouCannabis precisa ser inteiro 0–100 (rode o teste OAuth)'
+          );
+        }
+      }
+      if (service === 'pagarme' && body.enabled === false) {
+        const scOn = await isModuleEnabled('soucannabis_orders');
+        if (scOn) {
+          throw new AppError(
+            400,
+            'DEPENDENCY_SC_ACTIVE',
+            'Desative Pedidos SouCannabis antes de desligar o Pagar.me'
+          );
+        }
+      }
       await upsertModuleFlag(
         `modules.${service}.enabled`,
         Boolean(body.enabled),
-        `Módulo ${service} habilitado (espelha env; runtime usa MODULE_*_ENABLED)`
+        `Módulo ${service} habilitado (Admin sobrescreve MODULE_*_ENABLED)`
       );
     }
     const flags = await getModuleConfigFlags(service);
@@ -278,10 +515,6 @@ router.patch('/:service', async (req, res, next) => {
       ok({
         service,
         ...flags,
-        note:
-          'Habilitar o módulo em runtime exige MODULE_' +
-          service.toUpperCase() +
-          '_ENABLED=true no ambiente',
       })
     );
   } catch (err) {
@@ -318,6 +551,16 @@ router.put('/:service/credentials', async (req, res, next) => {
       await gcAuth.ensureCredentialRows();
     }
 
+    if (service === 'email') {
+      await emailClient.ensureCredentialRows();
+    }
+    if (service === 'pagarme') {
+      await pagarmeService.ensureCredentialRows();
+    }
+    if (service === 'soucannabis_orders') {
+      await scOrdersService.ensureCredentialRows();
+    }
+
     // Redirect URI is always computed by the API — never taken from the admin form.
     if (service === 'melhorenvio' || service === 'google_calendar') {
       fields.redirect_uri = oauthRedirectUri(service, req);
@@ -330,6 +573,12 @@ router.put('/:service/credentials', async (req, res, next) => {
         await geoClient.testConnection(merged);
       } else if (service === 'google_calendar') {
         await gcAuth.testConnection(merged);
+      } else if (service === 'email') {
+        await emailClient.testConnection(merged);
+      } else if (service === 'pagarme') {
+        await pagarmeService.testConnection(merged);
+      } else if (service === 'soucannabis_orders') {
+        await scOrdersService.testConnection(merged);
       } else {
         await meAuth.testConnection(merged);
       }
@@ -339,6 +588,12 @@ router.put('/:service/credentials', async (req, res, next) => {
       runTest,
       testFn,
     });
+    if (
+      service === 'pagarme' &&
+      (fields.webhook_user != null || fields.webhook_pass != null)
+    ) {
+      await pagarmeService.clearWebhookValidation().catch(() => {});
+    }
     res.json(ok({ service, credentials, persisted: true }));
   } catch (err) {
     next(err);
@@ -406,19 +661,42 @@ router.post('/:service/test', async (req, res, next) => {
   try {
     const service = serviceOrThrow(req.params.service);
     const creds = await credentialsService.resolveAll(service);
+    let extra = {};
     if (service === 'loggi') {
       await loggiClient.testConnection(creds);
     } else if (service === 'geoapify') {
       await geoClient.testConnection(creds);
     } else if (service === 'google_calendar') {
       await gcAuth.testConnection(creds);
+    } else if (service === 'email') {
+      await emailClient.testConnection(creds);
+    } else if (service === 'pagarme') {
+      extra = await pagarmeService.testConnection(creds);
+    } else if (service === 'soucannabis_orders') {
+      extra = await scOrdersService.testConnection(creds);
     } else {
       await meAuth.testConnection(creds);
     }
     await credentialsService.markTestResult(service, true);
-    res.json(ok({ ok: true }));
+    res.json(ok({ ok: true, ...extra }));
   } catch (err) {
     await credentialsService.markTestResult(req.params.service, false).catch(() => {});
+    next(err);
+  }
+});
+
+router.post('/:service/test-email', async (req, res, next) => {
+  try {
+    const service = serviceOrThrow(req.params.service);
+    if (service !== 'email') {
+      throw new AppError(400, 'VALIDATION_ERROR', 'Somente o serviço email aceita test-email');
+    }
+    const to = req.body?.to;
+    const result = await emailClient.sendTestEmail({ to });
+    await credentialsService.markTestResult(service, true);
+    res.json(ok(result));
+  } catch (err) {
+    await credentialsService.markTestResult('email', false).catch(() => {});
     next(err);
   }
 });

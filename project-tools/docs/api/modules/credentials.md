@@ -131,8 +131,18 @@ Inserir rows com `encrypted_value=NULL` e `env_fallback` preenchido para o assis
 | google_calendar | redirect_uri | GOOGLE_REDIRECT_URI | false |
 | google_calendar | access_token | — | true |
 | google_calendar | refresh_token | — | true |
+| pagarme | secret_key | PAGARME_SECRET_KEY (alias PAGARME_TOKEN) | true |
+| pagarme | public_key | PAGARME_PUBLIC_KEY | false |
+| pagarme | api_base_url | PAGARME_URL_API | false |
+| pagarme | webhook_user | PAGARME_WEBHOOK_USER | true |
+| pagarme | webhook_pass | PAGARME_WEBHOOK_PASS | true |
+| soucannabis_orders | base_url | SOUCANNABIS_ORDERS_BASE_URL | false |
+| soucannabis_orders | client_id | SOUCANNABIS_ORDERS_CLIENT_ID | true |
+| soucannabis_orders | client_secret | SOUCANNABIS_ORDERS_CLIENT_SECRET | true |
+| soucannabis_orders | token_url | SOUCANNABIS_ORDERS_TOKEN_URL | false |
 
-Tokens ME e Google Calendar são preenchidos só pelo callback OAuth (não pelo form manual, exceto “limpar”).
+Tokens ME e Google Calendar são preenchidos só pelo callback OAuth (não pelo form manual, exceto “limpar”).  
+`soucannabis_orders` usa OAuth **client credentials** no server (não popup). Recipient SC do split fica em `modules.pagarme.soucannabis_recipient_id` (config), não em credentials.
 
 ## Assistente — regras
 
@@ -163,10 +173,15 @@ system_configs (system=modules)
   modules.google_calendar.enabled
   modules.google_calendar.use_for_scheduling
   modules.google_calendar.primary_calendar_id
+  modules.pagarme.enabled
+  modules.pagarme.use_for_orders
+  modules.pagarme.soucannabis_recipient_id
+  modules.soucannabis_orders.enabled
+  modules.soucannabis_orders.sync_products
   …
 
-system_api_credentials (service=loggi | google_calendar | …)
-  client_id, client_secret, …
+system_api_credentials (service=loggi | google_calendar | pagarme | soucannabis_orders | …)
+  client_id, client_secret, secret_key, …
 ```
 
 Flags e papéis ≠ secrets. O módulo lê ambos no bootstrap da request.

@@ -46,9 +46,9 @@ Agendamento e gestão de serviços (consultas/atendimentos) com calendário. Uma
 | Opção | Escolha |
 |---|---|
 | **Manter** | Lista + filtros + layout legado; agrupamento por código; modal Info; multi-profissional; Google Calendar; tags; comprovante; valores manuais |
-| **Remover** | PaymentModal / Pagar.me / `payment_link`; toggle pago-pendente; Beeviral; cupons; Utalk no v1 |
-| **Modificar** | Status sem checkout; `consultation_price` no profissional; agenda editável na gestão de profissionais; calendário principal no admin |
-| **Notas** | Spec completa em [`../servicos/`](../servicos/README.md). Layout visual = requisito. |
+| **Remover** | Beeviral; cupons; Utalk no v1 |
+| **Modificar** | PaymentModal / `payment_link` quando módulo `pagarme` ativo ([pagamentos-soucannabis](../pagamentos-soucannabis/README.md)); toggle/comprovante permanecem; `consultation_price`; agendas / calendário principal |
+| **Notas** | Spec em [`../servicos/`](../servicos/README.md). Pagamentos: [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md). |
 
 ## Status
 

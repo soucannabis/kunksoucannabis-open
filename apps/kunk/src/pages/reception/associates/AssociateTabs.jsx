@@ -14,11 +14,14 @@ import {
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { normalizeCiapCodes, serializeCiapCodes } from '@kunk/forms';
+import SaveIcon from '@mui/icons-material/Save';
+import { normalizeCiapCodes, PhoneInput, serializeCiapCodes } from '@kunk/forms';
 import Ciap2Field from '../../../components/ciap2/Ciap2Field.jsx';
 import { displayName, contentAreaDialogSx } from './associatesStatus.js';
 
 const GREEN = '#5a7a5b';
+
+const FULL_WIDTH_KEYS = new Set(['reason_treatment_text']);
 
 /** Alinhado a @kunk/forms (cadastramento). */
 const GENDER_OPTIONS = [
@@ -59,8 +62,6 @@ const PERSON_FIELDS = [
   ['reason_treatment_text', 'Motivo do tratamento'],
 ];
 
-const FULL_WIDTH_KEYS = new Set(['reason_treatment_text']);
-
 function onlyDigits(value) {
   return String(value || '').replace(/\D/g, '');
 }
@@ -96,19 +97,49 @@ function emptyPersonForm() {
 }
 
 function personFormFromRecord(record) {
-  return {
-    ...emptyPersonForm(),
-    ...(record || {}),
-    ciap_codes: normalizeCiapCodes(record?.ciap_codes),
-  };
+  const form = emptyPersonForm();
+  if (!record) return form;
+  for (const [key] of PERSON_FIELDS) {
+    const value = record[key];
+    if (key === 'mobile_number' || key === 'associate_cpf') {
+      form[key] = value == null ? '' : onlyDigits(value);
+    } else {
+      form[key] = value == null ? '' : String(value);
+    }
+  }
+  // birth_date as YYYY-MM-DD for <input type="date">
+  if (form.associate_birth_date) {
+    form.associate_birth_date = form.associate_birth_date.slice(0, 10);
+  }
+  form.ciap_codes = normalizeCiapCodes(record.ciap_codes);
+  return form;
 }
 
+/** Only editable person columns — never spread full user (e.g. hydrated `patients`). */
 function personPayload(form, { ciap2Enabled }) {
-  const out = { ...form };
+  const out = {};
+  for (const [key] of PERSON_FIELDS) {
+    const raw = form[key];
+    if (raw === '' || raw == null) {
+      out[key] = null;
+      continue;
+    }
+    if (key === 'associate_cpf') {
+      out[key] = onlyDigits(raw) || null;
+    } else if (key === 'mobile_number') {
+      out[key] = onlyDigits(raw) || null;
+    } else if (key === 'cep') {
+      out[key] = formatCep(raw) || null;
+    } else {
+      out[key] = raw;
+    }
+  }
+  // Keep login email in sync with contact email when present in schema.
+  if (out.email_account != null) {
+    out.email = out.email_account;
+  }
   if (ciap2Enabled) {
     out.ciap_codes = serializeCiapCodes(form.ciap_codes) || null;
-  } else {
-    delete out.ciap_codes;
   }
   return out;
 }
@@ -134,6 +165,49 @@ function PersonFieldsGrid({ form, onChange }) {
     >
       {PERSON_FIELDS.map(([key, label]) => {
         const fullWidthSx = FULL_WIDTH_KEYS.has(key) ? { gridColumn: '1 / -1' } : undefined;
+
+        if (key === 'mobile_number') {
+          return (
+            <Box
+              key={key}
+              sx={{
+                '& .kunk-phone-input': { width: '100%' },
+                '& .kunk-phone-input .form-control': {
+                  width: '100% !important',
+                  height: '40px !important',
+                  fontSize: '0.875rem',
+                  borderRadius: '4px',
+                  border: '1px solid rgba(0, 0, 0, 0.23)',
+                  paddingLeft: '48px',
+                },
+                '& .kunk-phone-input .form-control:focus': {
+                  borderColor: GREEN,
+                  outline: 'none',
+                  boxShadow: `0 0 0 1px ${GREEN}`,
+                },
+                '& .kunk-phone-flag-btn': {
+                  borderRadius: '4px 0 0 4px',
+                  border: '1px solid rgba(0, 0, 0, 0.23)',
+                  background: '#fff',
+                },
+                '& .kunk-phone-dropdown': {
+                  zIndex: 1400,
+                },
+              }}
+            >
+              <PhoneInput
+                value={form[key] || ''}
+                onChange={(v) => onChange(key, v)}
+                inputProps={{
+                  name: 'mobile_number',
+                  autoComplete: 'tel',
+                  'aria-label': label,
+                  placeholder: label,
+                }}
+              />
+            </Box>
+          );
+        }
 
         if (key === 'associate_cpf') {
           return (
@@ -290,33 +364,49 @@ export function PersonalDataTab({ user, onSave, onDelete, busy, ciap2Enabled = t
   }, [user]);
 
   return (
-    <Box sx={{ pt: 3 }}>
-      <Box sx={{ mb: 2.5 }}>
-        <PersonFieldsGrid
-          form={form}
-          onChange={(key, value) => setForm((prev) => ({ ...prev, [key]: value }))}
-        />
-      </Box>
-      {ciap2Enabled ? (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, pt: 1 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', pr: 0.5, pb: 2 }}>
         <Box sx={{ mb: 2.5 }}>
-          <Ciap2Field
-            value={form.ciap_codes}
-            onChange={(codes) => setForm((prev) => ({ ...prev, ciap_codes: codes }))}
-            disabled={busy}
+          <PersonFieldsGrid
+            form={form}
+            onChange={(key, value) => setForm((prev) => ({ ...prev, [key]: value }))}
           />
         </Box>
-      ) : null}
-      <Stack direction="row" spacing={1}>
+        {ciap2Enabled ? (
+          <Box sx={{ mb: 2.5 }}>
+            <Ciap2Field
+              value={form.ciap_codes}
+              onChange={(codes) => setForm((prev) => ({ ...prev, ciap_codes: codes }))}
+              disabled={busy}
+            />
+          </Box>
+        ) : null}
+        <Box sx={{ pt: 1, mt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+          <Button color="error" disabled={busy} onClick={onDelete}>
+            Excluir associado
+          </Button>
+        </Box>
+      </Box>
+      <Stack
+        direction="row"
+        justifyContent="flex-end"
+        alignItems="center"
+        sx={{
+          pt: 1.5,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          flexShrink: 0,
+        }}
+      >
         <Button
           variant="contained"
           disabled={busy}
+          startIcon={<SaveIcon />}
           onClick={() => onSave(personPayload(form, { ciap2Enabled }))}
           sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#303B30' } }}
         >
           Salvar
-        </Button>
-        <Button color="error" disabled={busy} onClick={onDelete}>
-          Excluir
         </Button>
       </Stack>
     </Box>
@@ -327,6 +417,10 @@ export function PatientsTab({ patients, onCreate, onSave, onDelete, busy, ciap2E
   const [draft, setDraft] = useState(() => emptyPersonForm());
   const [editing, setEditing] = useState({});
   const [showNewForm, setShowNewForm] = useState(false);
+
+  useEffect(() => {
+    setEditing({});
+  }, [patients]);
 
   function patchDraft(key, value) {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -363,20 +457,25 @@ export function PatientsTab({ patients, onCreate, onSave, onDelete, busy, ciap2E
               />
             </Box>
           ) : null}
-          <Stack direction="row" spacing={1}>
+          <Stack direction="row" spacing={1} justifyContent="flex-end">
+            <Button variant="outlined" disabled={busy} onClick={closeNewForm}>
+              Cancelar
+            </Button>
             <Button
               variant="contained"
               disabled={busy || !String(draft.associate_name || '').trim()}
-              onClick={() => {
-                onCreate(personPayload(draft, { ciap2Enabled }));
-                closeNewForm();
+              startIcon={<SaveIcon />}
+              onClick={async () => {
+                try {
+                  await onCreate(personPayload(draft, { ciap2Enabled }));
+                  closeNewForm();
+                } catch {
+                  /* parent sets msg */
+                }
               }}
               sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#303B30' } }}
             >
               Adicionar paciente
-            </Button>
-            <Button variant="outlined" disabled={busy} onClick={closeNewForm}>
-              Cancelar
             </Button>
           </Stack>
         </Box>
@@ -431,20 +530,23 @@ export function PatientsTab({ patients, onCreate, onSave, onDelete, busy, ciap2E
                     />
                   </Box>
                 ) : null}
-                <Stack direction="row" spacing={1}>
+                <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
                   <Button
                     size="small"
                     variant="contained"
                     disabled={busy}
+                    startIcon={<SaveIcon />}
                     onClick={() => onSave(p.id, personPayload(form, { ciap2Enabled }))}
                     sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#303B30' } }}
                   >
                     Salvar
                   </Button>
-                  <Button size="small" color="error" onClick={() => onDelete(p.id)} disabled={busy}>
-                    Excluir
-                  </Button>
                 </Stack>
+                <Box sx={{ pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+                  <Button size="small" color="error" onClick={() => onDelete(p.id)} disabled={busy}>
+                    Excluir paciente
+                  </Button>
+                </Box>
               </AccordionDetails>
             </Accordion>
           );
@@ -503,6 +605,7 @@ export function PrescriberTab({ user, onSave, busy, FileUpload, api }) {
             <Button
               variant="contained"
               disabled={busy}
+              startIcon={<SaveIcon />}
               onClick={() =>
                 onSave({
                   prescriber,
@@ -510,7 +613,7 @@ export function PrescriberTab({ user, onSave, busy, FileUpload, api }) {
                   date_prescription: datePrescription || null,
                 })
               }
-              sx={{ bgcolor: GREEN, alignSelf: 'flex-start', '&:hover': { bgcolor: '#303B30' } }}
+              sx={{ bgcolor: GREEN, alignSelf: 'flex-end', '&:hover': { bgcolor: '#303B30' } }}
             >
               Salvar prescritor
             </Button>
@@ -626,11 +729,13 @@ export function HistoryTab({ history }) {
   );
 }
 
-export function TermStubMenu({ onStub }) {
+export function TermStubMenu({ onNewTerm, onCopyLink, canCreate }) {
   return (
     <>
-      <MenuItem onClick={() => onStub('Novo Termo')}>Novo Termo</MenuItem>
-      <MenuItem onClick={() => onStub('Copiar link do Termo')}>Copiar link do Termo</MenuItem>
+      <MenuItem onClick={onNewTerm} disabled={!canCreate}>
+        Novo Termo
+      </MenuItem>
+      <MenuItem onClick={onCopyLink}>Copiar link do Termo</MenuItem>
     </>
   );
 }

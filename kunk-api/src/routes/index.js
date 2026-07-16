@@ -20,6 +20,7 @@ const systemUsers = require('./systemUsers');
 const files = require('./files');
 const search = require('./search');
 const terms = require('./terms');
+const docSign = require('./docSign');
 const config = require('./config');
 const admin = require('./admin');
 const freight = require('./freight');
@@ -48,6 +49,7 @@ router.use('/tags', tags);
 router.use('/system-users', systemUsers);
 router.use('/files', files);
 router.use('/search', search);
+router.use('/doc-sign', docSign);
 router.use('/terms', terms);
 router.use('/modules', modules);
 

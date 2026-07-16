@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAssociateAuth } from '@kunk/auth-session';
 import { usePublicConfig } from '../config/PublicConfigProvider.jsx';
 
-export function BemVindoPage() {
+export function WelcomePage() {
   const { user } = useAssociateAuth();
   const { config: cfg } = usePublicConfig();
   return (

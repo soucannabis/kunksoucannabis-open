@@ -287,16 +287,15 @@ describe('registration funnel', () => {
     assert.equal(to4.body.data.associate_status, 4);
 
     const terms = await request(app).get('/api/v1/terms/status');
-    assert.equal(terms.status, 501);
-    assert.equal(terms.body.errors[0].code, 'TERMS_MODULE_IN_DEVELOPMENT');
+    assert.equal(terms.status, 200);
+    assert.equal(terms.body.data.status, 'ready');
 
-    const contracts = await request(app).post('/api/v1/terms/contracts').send({});
-    assert.equal(contracts.status, 501);
-    assert.equal(contracts.body.errors[0].code, 'TERMS_MODULE_IN_DEVELOPMENT');
+    const contractsUnauth = await request(app).post('/api/v1/terms/contracts').send({});
+    assert.equal(contractsUnauth.status, 401);
 
     const noBypass = await request(app).post('/api/v1/users/me/advance').set('Cookie', cookie);
-    assert.equal(noBypass.status, 501);
-    assert.equal(noBypass.body.errors[0].code, 'TERMS_MODULE_IN_DEVELOPMENT');
+    assert.equal(noBypass.status, 400);
+    assert.equal(noBypass.body.errors[0].code, 'VALIDATION_ERROR');
 
     // Force phase 5 for complete test (QA path)
     await query(

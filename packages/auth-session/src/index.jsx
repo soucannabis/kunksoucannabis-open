@@ -92,7 +92,7 @@ export function useAssociateAuth() {
 }
 
 /**
- * Operator session (system_users + session_token).
+ * Operator session (system_users + cookie kunk_oss_session).
  * @param {{ api: object, requiredRole?: string|null, allowedRoles?: string[]|null, children: any }} props
  */
 export function OperatorAuthProvider({

@@ -311,7 +311,7 @@ export function getTerminalStatusValue(statuses = TRIAGE_DEFAULT_STATUSES) {
   return terminal?.value || 'done';
 }
 
-/** Default order statuses (payment toggle). Extra statuses via admin. */
+/** Default order statuses (payment toggle + SC approval). Extra statuses via admin. */
 export const ORDER_DEFAULT_STATUSES = [
   {
     id: 'awaiting_payment',
@@ -331,10 +331,20 @@ export const ORDER_DEFAULT_STATUSES = [
     is_paid: true,
     color: '#2e7d32',
   },
+  {
+    id: 'awaiting_approval',
+    value: 'Aguardando aprovação',
+    label: 'Aguardando aprovação',
+    order: 3,
+    system: true,
+    is_awaiting_approval: true,
+    color: '#1565c0',
+  },
 ];
 
 export const ORDER_STATUS_AWAITING = 'Aguardando pagamento';
 export const ORDER_STATUS_PAID = 'Pagamento concluído';
+export const ORDER_STATUS_AWAITING_APPROVAL = 'Aguardando aprovação';
 
 export const STORE_ORDER_STATUS_KEY = 'store.order_statuses';
 
@@ -351,6 +361,7 @@ export function normalizeOrderStatuses(statuses) {
       system: Boolean(s.system),
       is_awaiting: Boolean(s.is_awaiting),
       is_paid: Boolean(s.is_paid),
+      is_awaiting_approval: Boolean(s.is_awaiting_approval),
       color: s.color || '#5c6bc0',
     }))
     .sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -373,6 +384,11 @@ export function getAwaitingPaymentValue(statuses = ORDER_DEFAULT_STATUSES) {
 export function getPaidStatusValue(statuses = ORDER_DEFAULT_STATUSES) {
   const row = (statuses || []).find((s) => s.is_paid);
   return row?.value || ORDER_STATUS_PAID;
+}
+
+export function getAwaitingApprovalValue(statuses = ORDER_DEFAULT_STATUSES) {
+  const row = (statuses || []).find((s) => s.is_awaiting_approval);
+  return row?.value || ORDER_STATUS_AWAITING_APPROVAL;
 }
 
 export function isAllowedOrderStatus(status, statuses = ORDER_DEFAULT_STATUSES) {

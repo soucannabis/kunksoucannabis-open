@@ -72,6 +72,7 @@ export default function TagsPage() {
   const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
+  const [scTags, setScTags] = useState([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -83,6 +84,24 @@ export default function TagsPage() {
       setRows([]);
     } finally {
       setLoading(false);
+    }
+    try {
+      const st = await api.getSoucannabisOrdersStatus();
+      if (st.data?.enabled && st.data?.sync_tags !== false) {
+        const tres = await api.listSoucannabisTags();
+        const list = Array.isArray(tres.data) ? tres.data : [];
+        setScTags(
+          list.map((t) =>
+            typeof t === 'string'
+              ? { tag: t, color: '#5a7a5b' }
+              : { tag: t.tag || t.name, color: t.color || '#5a7a5b' }
+          )
+        );
+      } else {
+        setScTags([]);
+      }
+    } catch {
+      setScTags([]);
     }
   }, [api, showError]);
 
@@ -286,6 +305,36 @@ export default function TagsPage() {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {scTags.length > 0 && (
+          <Paper
+            elevation={0}
+            data-testid="sc-tags-section"
+            sx={{
+              backgroundColor: '#f5f5f5',
+              borderRadius: '30px',
+              p: '20px 24px',
+              mt: 2,
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: GREEN, mb: 1 }}>
+              Tags SouCannabis
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#666', mb: 1.5 }}>
+              Somente leitura — sincronizadas do catálogo externo.
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {scTags.map((t) => (
+                <Chip
+                  key={t.tag}
+                  label={t.tag}
+                  size="small"
+                  sx={{ bgcolor: t.color || GREEN, color: '#fff' }}
+                />
+              ))}
+            </Box>
+          </Paper>
+        )}
       </Box>
 
       <Dialog open={Boolean(dialog)} onClose={() => !busy && setDialog(null)} fullWidth maxWidth="sm">

@@ -107,6 +107,8 @@ Cards/linhas por serviço conhecido:
 |---|---|
 | Loggi | Modalidades Econômico / Expresso + etiquetas |
 | Melhor Envio | Transportadoras e serviços (Correios PAC/Sedex, Azul, …) + etiquetas opcional |
+| Pagar.me | Checkout pedidos/serviços — ver [`../pagamentos-soucannabis/admin.md`](../pagamentos-soucannabis/admin.md) |
+| Pedidos SouCannabis | Catálogo/tags/sync + split (requer Pagarme) — idem |
 
 Cada card:
 

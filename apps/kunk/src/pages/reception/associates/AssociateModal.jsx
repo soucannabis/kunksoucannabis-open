@@ -60,13 +60,15 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
     };
   }, [api]);
 
+  const userKey = initialUser?.user_code || initialUser?.id || null;
+
   const reload = useCallback(async () => {
-    if (!initialUser?.id && !initialUser?.user_code) return;
+    if (!userKey) return;
     setBusy(true);
     setMsg('');
     try {
       let u = initialUser;
-      if (initialUser.user_code) {
+      if (initialUser?.user_code) {
         const res = await api.getUserByCode(initialUser.user_code, 'patients=1');
         u = res.data || initialUser;
       }
@@ -84,13 +86,17 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
     } finally {
       setBusy(false);
     }
-  }, [api, initialUser]);
+    // initialUser usado só como fallback; identidade controlada por userKey
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api, userKey]);
 
   useEffect(() => {
-    if (open) {
-      setTab(0);
-      reload();
-    }
+    if (!open) return;
+    setTab(0);
+  }, [open, userKey]);
+
+  useEffect(() => {
+    if (open) reload();
   }, [open, reload]);
 
   async function saveUser(patch) {
@@ -175,9 +181,60 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
             </Button>
             <Menu anchorEl={termAnchor} open={Boolean(termAnchor)} onClose={() => setTermAnchor(null)}>
               <TermStubMenu
-                onStub={(label) => {
+                canCreate={!user?.adhesion_term}
+                onNewTerm={async () => {
                   setTermAnchor(null);
-                  setMsg(`Módulo de termos em desenvolvimento (${label})`);
+                  if (!user?.user_code) return;
+                  setBusy(true);
+                  setMsg('');
+                  try {
+                    const res = await api.post('/doc-sign/contracts', {
+                      user_code: user.user_code,
+                      regenerate: true,
+                      send_email: true,
+                    });
+                    const url = res.data?.signing_url;
+                    if (url && navigator.clipboard?.writeText) {
+                      await navigator.clipboard.writeText(url);
+                    }
+                    setMsg(url ? `Termo gerado. Link copiado: ${url}` : 'Termo gerado.');
+                    onChanged?.();
+                  } catch (err) {
+                    setMsg(err.message || 'Falha ao gerar termo');
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+                onCopyLink={async () => {
+                  setTermAnchor(null);
+                  if (!user?.user_code) return;
+                  setBusy(true);
+                  setMsg('');
+                  try {
+                    let url = null;
+                    try {
+                      const created = await api.post('/doc-sign/contracts', {
+                        user_code: user.user_code,
+                        regenerate: false,
+                      });
+                      url = created.data?.signing_url;
+                    } catch (err) {
+                      if (err.code !== 'CONTRACT_ALREADY_COMPLETED') throw err;
+                      const list = await api.get(`/doc-sign/contracts/by-user/${user.user_code}`);
+                      const completed = (list.data || []).find((r) => r.status === 'completed');
+                      url = completed?.signed_pdf_url || completed?.audit_pdf_url || null;
+                    }
+                    if (!url) {
+                      setMsg('Nenhum termo encontrado para copiar o link.');
+                      return;
+                    }
+                    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(url);
+                    setMsg(`Link copiado: ${url}`);
+                  } catch (err) {
+                    setMsg(err.message || 'Falha ao copiar link');
+                  } finally {
+                    setBusy(false);
+                  }
                 }}
               />
             </Menu>
@@ -186,13 +243,21 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
           {msg ? (
-            <Typography variant="body2" sx={{ mb: 1, color: msg.includes('desenvolvimento') ? 'warning.main' : 'text.secondary' }}>
+            <Typography
+              variant="body2"
+              sx={{
+                mb: 1,
+                flexShrink: 0,
+                color: /falha|erro/i.test(msg) ? 'error.main' : 'text.secondary',
+                wordBreak: 'break-word',
+              }}
+            >
               {msg}
             </Typography>
           ) : null}
-          <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" sx={{ mb: 2 }}>
+          <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" sx={{ mb: 1, flexShrink: 0 }}>
             <Tab label="Dados Pessoais" />
             <Tab label="Pacientes" />
             <Tab label="Prescritor" />
@@ -200,7 +265,15 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
             <Tab label="Documentos" />
             <Tab label="Histórico" />
           </Tabs>
-          <Box sx={{ flex: 1, overflow: 'auto' }}>
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflow: tab === 0 ? 'hidden' : 'auto',
+              display: tab === 0 ? 'flex' : 'block',
+              flexDirection: 'column',
+            }}
+          >
             {tab === 0 ? (
               <PersonalDataTab
                 user={user}
@@ -222,18 +295,23 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
                     await reload();
                     onChanged?.();
                   } catch (err) {
-                    setMsg(err.message);
+                    setMsg(err.message || 'Falha ao criar paciente');
+                    throw err;
                   } finally {
                     setBusy(false);
                   }
                 }}
                 onSave={async (patientId, body) => {
                   setBusy(true);
+                  setMsg('');
                   try {
                     await api.updateUserPatient(user.id, patientId, body);
                     await reload();
+                    onChanged?.();
+                    setMsg('Paciente salvo');
                   } catch (err) {
-                    setMsg(err.message);
+                    setMsg(err.message || 'Falha ao salvar paciente');
+                    throw err;
                   } finally {
                     setBusy(false);
                   }

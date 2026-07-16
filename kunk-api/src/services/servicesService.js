@@ -61,11 +61,11 @@ async function maybeCreateCalendarEvent(serviceRow, professional, createFlag) {
       `${proName} não tem agenda do Google cadastrada. Em Profissionais, vincule um calendário secundário antes de criar o evento.`
     );
   }
-  if (!env.modules.google_calendar) {
+  if (!(await require('./moduleFlags').isModuleEnabled('google_calendar'))) {
     throw new AppError(
       503,
       'MODULE_DISABLED',
-      'Módulo Google Calendar desabilitado. Ative MODULE_GOOGLE_CALENDAR_ENABLED na API.'
+      'Módulo Google Calendar desabilitado. Ative-o em Admin → Serviços externos.'
     );
   }
   const events = require('./google_calendar/events');
@@ -216,7 +216,7 @@ async function updateService(id, payload = {}) {
     );
   }
 
-  if (dateChanging && existing.event_id && replaceEvent && env.modules.google_calendar) {
+  if (dateChanging && existing.event_id && replaceEvent && (await require('./moduleFlags').isModuleEnabled('google_calendar'))) {
     const pro = await loadProfessional(existing.professional_id);
     const calendarId = pro?.calendar_id && String(pro.calendar_id).trim();
     if (!calendarId) {
@@ -254,7 +254,7 @@ async function updateService(id, payload = {}) {
       body.professional_name = [pro.name, pro.last_name].filter(Boolean).join(' ').trim() || pro.name;
       body.professional_email = pro.email || null;
       body.type = body.type || pro.type;
-      if (existing.event_id && existing.consultation_date && env.modules.google_calendar) {
+      if (existing.event_id && existing.consultation_date && (await require('./moduleFlags').isModuleEnabled('google_calendar'))) {
         const events = require('./google_calendar/events');
         const oldPro = await loadProfessional(existing.professional_id);
         if (oldPro?.calendar_id) {
@@ -284,7 +284,7 @@ async function updateService(id, payload = {}) {
 async function deleteService(id) {
   const existing = await itemsRepository.getItem('services', id);
   if (!existing) throw new AppError(404, 'NOT_FOUND', 'Serviço não encontrado');
-  if (existing.event_id && env.modules.google_calendar) {
+  if (existing.event_id && (await require('./moduleFlags').isModuleEnabled('google_calendar'))) {
     const pro = await loadProfessional(existing.professional_id);
     if (pro?.calendar_id) {
       const events = require('./google_calendar/events');
@@ -380,7 +380,7 @@ async function cancelCalendarEvent(serviceId) {
   const pro = await loadProfessional(existing.professional_id);
   const calendarId = pro?.calendar_id && String(pro.calendar_id).trim();
 
-  if (env.modules.google_calendar && calendarId) {
+  if ((await require('./moduleFlags').isModuleEnabled('google_calendar')) && calendarId) {
     const events = require('./google_calendar/events');
     try {
       await events.deleteEvent(existing.event_id, calendarId);

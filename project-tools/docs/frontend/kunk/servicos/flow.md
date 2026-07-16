@@ -224,8 +224,9 @@ Sem `calendar_id` no profissional → toast orientando configurar na gestão de 
 Clique em preços → modal/inline → PATCH.  
 Clique em data → se houver `event_id`, fluxo **5c** (modal de aprovação); senão PATCH direto.
 
-Toggle status pagamento na tabela: `Aguardando Pagamento` ↔ `Pagamento Concluído` (manual, sem Pagar.me).  
-Upload de comprovante → também define `Pagamento Concluído` (igual legado ao confirmar pelo documento).
+Toggle status pagamento na tabela: `Aguardando Pagamento` ↔ `Pagamento Concluído` (manual; serviços sem split SC).  
+Upload de comprovante → também define `Pagamento Concluído`.  
+PaymentModal (se `pagarme` on): ver [`../pagamentos-soucannabis/flow.md`](../pagamentos-soucannabis/flow.md).
 
 Excluir linha → confirmação → DELETE (+ DELETE evento Google se `event_id`).
 

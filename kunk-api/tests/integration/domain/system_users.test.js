@@ -30,15 +30,15 @@ describe('domain/system_users', () => {
       .set('Cookie', cookie)
       .send({
         email,
-        password: 'TempPass123!',
         name: 'Sys',
         last_name: 'Test',
         permissions: ['Acolhimento'],
-        status: 'active',
       });
     assert.equal(created.status, 201, JSON.stringify(created.body));
-    assert.equal(created.body.data.email, email);
-    assert.equal(created.body.data.password, undefined);
+    assert.equal(created.body.data.user.email, email);
+    assert.equal(created.body.data.user.password, undefined);
+    assert.ok(created.body.data.invite_url);
+    assert.equal(created.body.data.user.status, 'pending');
   });
 
   it('gets, patches and deletes a system user', async () => {
@@ -48,14 +48,12 @@ describe('domain/system_users', () => {
       .set('Cookie', cookie)
       .send({
         email,
-        password: 'TempPass123!',
         name: 'Patch',
         last_name: 'Me',
         permissions: ['Produção'],
-        status: 'active',
       });
     assert.equal(created.status, 201, JSON.stringify(created.body));
-    const id = created.body.data.id;
+    const id = created.body.data.user.id;
 
     const got = await request(app).get(`/api/v1/system-users/${id}`).set('Cookie', cookie);
     assert.equal(got.status, 200, JSON.stringify(got.body));

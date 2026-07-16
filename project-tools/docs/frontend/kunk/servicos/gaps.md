@@ -5,7 +5,7 @@
 | # | Decisão |
 |---|---|
 | 1 | Layout/visual da página Serviços **igual ao legado** |
-| 2 | **Não** portar PaymentModal / Pagar.me / `payment_link` / Beeviral / cupons |
+| 2 | Beeviral / cupons **fora**. PaymentModal / `payment_link` quando módulo `pagarme` ativo — ver [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md). Sem split SC em serviços |
 | 3 | Status `Aguardando Pagamento` / `Pagamento Concluído` + toggle manual |
 | 4 | **Comprovante ao ser enviado → `Pagamento Concluído`** (nos IDs do grupo se agrupado) |
 | 5 | Modal Infos (observações, tags, profissional, payment_type, comprovante) |

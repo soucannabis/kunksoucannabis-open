@@ -78,12 +78,17 @@ function SubjectDocs({ api, subject, label, status, onUploaded }) {
   );
 }
 
-export function DocumentosPage({ api }) {
+function docSignOrigin() {
+  return import.meta.env.VITE_DOC_SIGN_URL || 'http://localhost:4258';
+}
+
+export function DocumentsPage({ api }) {
   const { user, refresh } = useAssociateAuth();
   const phase = Number(user?.associate_status) || 1;
   const [status, setStatus] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [signingUrl, setSigningUrl] = useState(null);
 
   const load = useCallback(async () => {
     const res = await api.documentsStatus();
@@ -93,6 +98,26 @@ export function DocumentosPage({ api }) {
   useEffect(() => {
     if (phase === 3) load().catch((err) => setError(err.message));
   }, [phase, load]);
+
+  useEffect(() => {
+    if (phase !== 4) return undefined;
+    let cancelled = false;
+    (async () => {
+      setBusy(true);
+      setError(null);
+      try {
+        const res = await api.post('/doc-sign/contracts', {});
+        if (!cancelled) setSigningUrl(res.data?.signing_url || null);
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setBusy(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [phase, api]);
 
   async function advanceToTerms() {
     setBusy(true);
@@ -107,16 +132,27 @@ export function DocumentosPage({ api }) {
     }
   }
 
+  function openSigning() {
+    if (!signingUrl) return;
+    const returnUrl = encodeURIComponent(`${window.location.origin}/consulta?signed=1`);
+    const url = `${signingUrl}${signingUrl.includes('?') ? '&' : '?'}return_url=${returnUrl}`;
+    window.location.assign(url);
+  }
+
   if (phase === 4) {
     return (
       <div>
         <h1 className="h3 mb-3">Assinatura do termo</h1>
-        <div className="alert alert-warning">
-          <strong>Módulo de assinatura de termos em desenvolvimento.</strong>
-          <p className="mb-0 mt-2">
-            Seus documentos foram recebidos. Em breve você poderá assinar o termo de adesão por aqui.
-          </p>
-        </div>
+        <AlertError message={error} />
+        <p className="text-white-50 mb-3">
+          Seus documentos foram recebidos. Assine o termo de adesão para continuar o cadastro.
+        </p>
+        <button type="button" className="btn btn-success" disabled={busy || !signingUrl} onClick={openSigning}>
+          {busy && !signingUrl ? 'Preparando termo…' : 'Assinar termo'}
+        </button>
+        <p className="small text-white-50 mt-3 mb-0">
+          Você será redirecionado para {docSignOrigin()}
+        </p>
       </div>
     );
   }

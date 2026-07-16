@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
-import { ADMIN_EMAIL, ADMIN_PASSWORD } from './helpers/fixtures.js';
+import { ADMIN_EMAIL, ADMIN_PASSWORD, appUrl } from './helpers/fixtures.js';
 import { loginInBrowser } from './helpers/api.js';
 
 test.describe('servicos externos', () => {
@@ -11,7 +11,7 @@ test.describe('servicos externos', () => {
   test('lista e form de secret não reexibe valor; teste falho não salva', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(page.getByText('Kunk Admin')).toBeVisible();
-    await page.goto('/servicos-externos/loggi');
+    await page.goto(appUrl('/servicos-externos/loggi'));
     await expect(page.getByRole('heading', { name: 'loggi' })).toBeVisible();
 
     await expect(page.getByTestId('use-for-quote')).toBeVisible();

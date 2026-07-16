@@ -47,4 +47,4 @@ npm run docker:kunk
 | `/configs` | system_configs |
 | `/usuarios` | system_users + roles |
 
-Sessão: cookie HttpOnly `session_token`.
+Sessão: cookie HttpOnly `kunk_oss_session` (distinto do Kunk legado).

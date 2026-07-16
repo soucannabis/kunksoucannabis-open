@@ -26,7 +26,7 @@ Referência legada: [`kunksoucannabis/`](../../../../kunksoucannabis/) + [`kunks
 |---|---|---|
 | Cadastramento / Associados | `/app/acolhimento/cadastramento` | [pages/cadastramento.md](./pages/cadastramento.md) · **[spec implementação](./associados/README.md)** |
 | Triagem | `/app/acolhimento/triagem` | [pages/triagem.md](./pages/triagem.md) · **[spec implementação](./triagem/README.md)** |
-| Pedidos | `/app/loja/pedidos` | [pages/pedidos.md](./pages/pedidos.md) · **[spec carrinho/frete](./pedidos/README.md)** |
+| Pedidos | `/app/loja/pedidos` | [pages/pedidos.md](./pages/pedidos.md) · **[spec carrinho/frete](./pedidos/README.md)** · **[Pagar.me + Pedidos SC](./pagamentos-soucannabis/README.md)** |
 | Serviços | `/app/acolhimento/servicos` | [pages/servicos.md](./pages/servicos.md) · **[spec implementação](./servicos/README.md)** |
 | Relatório de serviços | `/app/relatorios/servicos` | [pages/relatorios-servicos.md](./pages/relatorios-servicos.md) · **[spec implementação](./relatorios-servicos/README.md)** |
 | Dashboard Analytics | `/app/relatorios/dashboard` | [pages/painel-analise.md](./pages/painel-analise.md) · **[spec implementação](./analytics/README.md)** |
@@ -41,7 +41,7 @@ Referência legada: [`kunksoucannabis/`](../../../../kunksoucannabis/) + [`kunks
 |---|---|---|
 | Cadastramento (associados) | `/app/acolhimento/cadastramento` | [pages/cadastramento.md](./pages/cadastramento.md) · [associados/](./associados/README.md) |
 | Triagem / acolhimento | `/app/acolhimento/triagem` | [pages/triagem.md](./pages/triagem.md) · [triagem/](./triagem/README.md) |
-| Pedidos | `/app/loja/pedidos` | [pages/pedidos.md](./pages/pedidos.md) · [pedidos/](./pedidos/README.md) |
+| Pedidos | `/app/loja/pedidos` | [pages/pedidos.md](./pages/pedidos.md) · [pedidos/](./pedidos/README.md) · [pagamentos-soucannabis/](./pagamentos-soucannabis/README.md) |
 | Serviços | `/app/acolhimento/servicos` | [pages/servicos.md](./pages/servicos.md) · [servicos/](./servicos/README.md) |
 | Relatório de serviços | `/app/relatorios/servicos` + `/relatorio/servicos` | [pages/relatorios-servicos.md](./pages/relatorios-servicos.md) · [relatorios-servicos/](./relatorios-servicos/README.md) |
 | Dashboard Analytics | `/app/relatorios/dashboard` | [pages/painel-analise.md](./pages/painel-analise.md) · [analytics/](./analytics/README.md) |
@@ -128,7 +128,8 @@ Módulos de terceiros devem vir **desabilitados por padrão** no OSS ([MANIFESTO
 | Directus (legado) | Quase todas | Substituir por `kunk-api` + PostgreSQL |
 | DocuSeal | Cadastramento (contrato) | Substituir por módulo termos nativo |
 | Utalk / WhatsApp | Triagem, pedidos, serviços, relatórios, pesquisas | Módulo opcional |
-| Pagar.me | Novo pedido, serviços, prescritores | Módulo opcional |
+| Pagar.me | Novo pedido, serviços | Módulo opcional — [pagamentos-soucannabis/](./pagamentos-soucannabis/README.md) |
+| Pedidos SouCannabis | Carrinho (catálogo/tags) + sync pós-pago + split | Requer Pagar.me — [pagamentos-soucannabis/](./pagamentos-soucannabis/README.md) |
 | Loggi / Melhor Envio | Pedidos, novo pedido | Módulo opcional |
 | Google Calendar | Serviços | Módulo opcional |
 | Beeviral (+ Analytics) | Pedidos, triagem, parceiros, painel | Candidato a remover (SC) |

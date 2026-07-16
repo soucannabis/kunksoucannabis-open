@@ -2,7 +2,7 @@
 
 > **Obrigatório:** replicar layout, hierarquia visual e padrões do legado `services.jsx`.
 > Fonte: `kunksoucannabis/src/components/master/services.jsx` + classes em `App.css`.
-> **Não** portar PaymentModal, botão de checkout, toggle pago/pendente, Beeviral.
+> Beeviral fora. Toggle pago/pendente e comprovante permanecem. PaymentModal quando `pagarme` ativo — [`../pagamentos-soucannabis/ui-ux.md`](../pagamentos-soucannabis/ui-ux.md).
 
 ## Rota
 
@@ -47,7 +47,7 @@ Cores de status/ações devem reutilizar o CSS já existente em `apps/kunk` quan
 │  (sem Beeviral / sem botão checkout Pagamento)               │
 └──────────────────────────────────────────────────────────────┘
 
-Modais: Novo Serviço · Infos · Editar data/evento · Editar campo · (sem PaymentModal)
+Modais: Novo Serviço · Infos · Editar data/evento · Editar campo · PaymentModal (se `pagarme` on)
 ```
 
 ### Classes / containers
@@ -195,7 +195,7 @@ Espelhar o dialog legado “Observações do Serviço” (`observationsModal`).
 | Bloco | Motivo |
 |---|---|
 | Botão excluir `payment_link` | Sem checkout |
-| Qualquer CTA que abra PaymentModal | Fora de escopo |
+| CTA PaymentModal | Condicional a `modules.pagarme.use_for_services` — ver pagamentos-soucannabis |
 
 ### Alterar profissional
 
@@ -255,7 +255,7 @@ Tabela:
 | Ativo | Switch |
 | Agenda secundária (`calendar_id`) | Select (sem o calendário principal da associação) |
 
-Sem CreateRecipientModal / Pagar.me.
+CreateRecipientModal / ranking de split: fora desta página (Pagarme em Serviços externos).
 
 ---
 
@@ -277,7 +277,7 @@ Sem CreateRecipientModal / Pagar.me.
 | Modal Info completo | Manter (sem payment_link) |
 | Modal Novo Serviço multi-profissional | Manter + checkbox evento |
 | Toggle / coluna status pagamento | **Manter** (manual, sem checkout) |
-| Botão / modal Pagamento (Pagar.me) | **Remover** |
+| Botão / modal Pagamento (Pagar.me) | Condicional ao módulo `pagarme` — spec pagamentos-soucannabis |
 | Beeviral | **Remover** |
 | WhatsApp | Adiar (módulo Utalk) |
 | Cupons | **Remover** |
