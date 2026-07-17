@@ -36,6 +36,11 @@ import { useSearchParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
+import { useCacheConfig } from '../../lib/cache/CacheConfigProvider.jsx';
+import {
+  fetchServicesDefaultList,
+  invalidateServicesCache,
+} from '../../lib/cache/fetchers.js';
 import NewServiceModal from './services/NewServiceModal.jsx';
 import ServiceInfoModal from './services/ServiceInfoModal.jsx';
 import PaymentModal from '../../components/PaymentModal.jsx';
@@ -77,6 +82,7 @@ export default function ServicesPage() {
   const bootstrap = getKunkPublicConfig();
   const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
   const { showError } = useErrorModal();
+  const { enabled: cacheEnabled } = useCacheConfig();
   const [searchParams] = useSearchParams();
 
   const [rows, setRows] = useState([]);
@@ -118,9 +124,11 @@ export default function ServicesPage() {
       params.set('limit', '200');
       if (dateFrom) params.set('filter[date_created][_gte]', `${dateFrom}T00:00:00`);
       if (dateTo) params.set('filter[date_created][_lte]', `${dateTo}T23:59:59`);
-      // Status filtrado no client (aceita legado pending/completed do seed)
-      const res = await api.listServices(params.toString());
-      let data = res.data || [];
+      const paramsString = params.toString();
+      const isDefaultWindow = dateFrom === daysAgoIso(14) && !dateTo;
+      let data = isDefaultWindow
+        ? await fetchServicesDefaultList(api, cacheEnabled, paramsString)
+        : (await api.listServices(paramsString)).data || [];
       if (showOnlyPaid === true) {
         data = data.filter((s) => normalizeServiceStatus(s.status) === STATUS_PAID);
       } else if (showOnlyPaid === false) {
@@ -147,7 +155,7 @@ export default function ServicesPage() {
     } finally {
       setLoading(false);
     }
-  }, [api, dateFrom, dateTo, showOnlyPaid, q, showError]);
+  }, [api, cacheEnabled, dateFrom, dateTo, showOnlyPaid, q, showError]);
 
   useEffect(() => {
     load();
@@ -158,6 +166,7 @@ export default function ServicesPage() {
     const next = current === STATUS_PAID ? STATUS_AWAITING : STATUS_PAID;
     try {
       await api.updateService(row.id, { status: next });
+      invalidateServicesCache();
       load();
     } catch (err) {
       showError(err);
@@ -168,6 +177,7 @@ export default function ServicesPage() {
     try {
       const res = await api.scheduleService(row.id);
       const updated = res?.data || {};
+      invalidateServicesCache();
       await load();
       const link = updated.event_link || eventOpenUrl(updated);
       if (link) {
@@ -206,6 +216,7 @@ export default function ServicesPage() {
     }
     try {
       await api.unscheduleService(row.id);
+      invalidateServicesCache();
       await load();
     } catch (err) {
       showError(err);
@@ -216,6 +227,7 @@ export default function ServicesPage() {
     if (!window.confirm('Excluir este serviço?')) return;
     try {
       await api.deleteService(row.id);
+      invalidateServicesCache();
       load();
     } catch (err) {
       showError(err);
@@ -230,6 +242,7 @@ export default function ServicesPage() {
       });
       setEditDate(null);
       setConfirmReplace(null);
+      invalidateServicesCache();
       load();
     } catch (err) {
       if (err.code === 'EVENT_DATE_CONFIRMATION_REQUIRED') {
@@ -476,14 +489,20 @@ export default function ServicesPage() {
         onClose={() => setNewOpen(false)}
         api={api}
         initialUserCode={searchParams.get('u')}
-        onCreated={load}
+        onCreated={() => {
+          invalidateServicesCache();
+          load();
+        }}
       />
       <ServiceInfoModal
         open={Boolean(infoService)}
         service={infoService}
         api={api}
         onClose={() => setInfoService(null)}
-        onSaved={load}
+        onSaved={() => {
+          invalidateServicesCache();
+          load();
+        }}
       />
 
       <Menu

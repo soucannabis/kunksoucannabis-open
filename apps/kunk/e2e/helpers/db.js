@@ -75,13 +75,13 @@ export async function ensureAcolhimentoUser() {
   });
 }
 
-export async function ensurePartnerUser() {
+export async function ensureFinanceiroUser() {
   return upsertUser({
-    email: 'parceiro@kunk-api.test',
-    password: 'TestPartner123!',
-    permissions: ['Parceiro'],
-    name: 'Parceiro',
+    email: 'financeiro@kunk-api.test',
+    password: 'TestFinanceiro123!',
+    permissions: ['Financeiro'],
+    name: 'Financeiro',
     lastName: 'Test',
-    code: 'PART-TEST',
+    code: 'FIN-TEST',
   });
 }

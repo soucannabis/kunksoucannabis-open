@@ -11,7 +11,6 @@ Nomes = tabelas do schema alvo ([target-schema.sql](../../sql/target-schema.sql)
 | `system_users` | `id` | Operadores do painel |
 | `orders` | `id` | Pedidos; FK `"user"` → `users.id` (nullable) e/ou `institutional_client_id` |
 | `orders_files` | `id` | Junction pedido ↔ arquivo |
-| `partners` | `id` | Parceiros / afiliados |
 | `institutional_clients` | `id` | Clientes institucionais (não associados) |
 | `products` | `id` | Produtos / SKU |
 | `professionals` | `id` | Profissionais / prescritores |
@@ -30,7 +29,6 @@ Nomes = tabelas do schema alvo ([target-schema.sql](../../sql/target-schema.sql)
 |---|---|
 | `system_users` | `password`, `session_token`, `utalk_token` |
 | `users` | `account_password`, `session_token` |
-| `partners` | `account_password` |
 | `users_api` | `token` (plaintext legado) |
 
 ## Campos importantes por domínio

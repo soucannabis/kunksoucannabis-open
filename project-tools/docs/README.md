@@ -7,6 +7,7 @@
 
 | Área | Pasta | Status |
 |---|---|---|
+| **Mapa de funcionalidades** | [`funcionalidades/`](./funcionalidades/) | Inventário por app + testes (npm / e2e) |
 | **API** | [`api/`](./api/) | Em implementação (`kunk-api/`) |
 | **Schema / Directus legado** | [`directus/`](./directus/) | Mapeado; schema alvo proposto |
 | **Frontends (apps)** | [`frontend/`](./frontend/) | Cadastramento + admin + app Kunk (`apps/kunk`) |

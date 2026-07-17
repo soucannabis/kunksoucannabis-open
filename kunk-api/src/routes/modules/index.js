@@ -388,6 +388,7 @@ const geoapifyRouter = require('./geoapify');
 const googleCalendarRouter = require('./google_calendar');
 const pagarmeRouter = require('./pagarme');
 const soucannabisOrdersRouter = require('./soucannabis_orders');
+const utalkRouter = require('./utalk');
 
 router.use('/loggi', loggiRouter);
 router.use('/melhorenvio', melhorenvioRouter);
@@ -395,6 +396,7 @@ router.use('/geoapify', geoapifyRouter);
 router.use('/google_calendar', googleCalendarRouter);
 router.use('/pagarme', pagarmeRouter);
 router.use('/soucannabis_orders', soucannabisOrdersRouter);
+router.use('/utalk', utalkRouter);
 
 const IMPLEMENTED = new Set([
   'loggi',
@@ -404,6 +406,7 @@ const IMPLEMENTED = new Set([
   'ciap2',
   'pagarme',
   'soucannabis_orders',
+  'utalk',
 ]);
 
 for (const name of MODULE_NAMES) {

@@ -69,6 +69,50 @@ Retorna lista de collections + colunas + FKs conhecidas (só Administrador). Evi
 
 Detalhe: [`../../api/files.md`](../../api/files.md). Se `GET /files` (lista) não existir, incluir na entrega do admin.
 
+### Armazenamento (buckets)
+
+| Método | Path | Uso |
+|---|---|---|
+| GET | `/admin/storage` | Status do driver (sem secrets) |
+| PUT | `/admin/storage` | Salvar config / credenciais |
+| POST | `/admin/storage/test` | Testar acesso ao bucket |
+| POST | `/admin/storage/activate` | Ativar S3 ou GCS |
+
+### Sample data
+
+| Método | Path | Uso |
+|---|---|---|
+| GET | `/admin/sample-data` | Contagem de linhas com `is_sample = true` por tabela |
+| DELETE | `/admin/sample-data` | Remove só registros sample (preserva operador logado se for sample) |
+
+Resposta do GET: `{ tables: [{ table, label, count }], total }`.  
+Resposta do DELETE: `{ deleted: [{ table, label, count }], skipped, total }`.  
+Erro `409 SAMPLE_DATA_BLOCKED` se FK de dado real impedir a exclusão.
+
+Setup storage: [`../../api/storage-s3-setup.md`](../../api/storage-s3-setup.md), [`../../api/storage-gcs-setup.md`](../../api/storage-gcs-setup.md).
+
+### Erros do sistema
+
+| Método | Path | Uso |
+|---|---|---|
+| GET | `/admin/system-errors/summary` | Totais em aberto / 24h / 7d |
+| GET | `/admin/system-errors/top` | Grupos por `error_hash` (`?period=30d`) |
+| GET | `/admin/system-errors` | Eventos individuais |
+| GET | `/admin/system-errors/:errorHash/samples` | Amostras de um grupo |
+| POST | `/admin/system-errors/resolve` | `{ error_hash, status: fixed\|ignored\|open }` |
+
+Ingestão pública (frontends): `POST /system-errors` — ver [`../../api/system-errors.md`](../../api/system-errors.md).
+
+### Web Vitals
+
+| Método | Path | Uso |
+|---|---|---|
+| GET | `/admin/web-vitals/summary` | p50/p75/p95 por métrica (`?period=7d`) |
+| GET | `/admin/web-vitals/series` | Série temporal (`?name=LCP`) |
+| GET | `/admin/web-vitals/by-page` | Piores paths |
+
+Ingestão pública: `POST /web-vitals` — ver [`../../api/web-vitals.md`](../../api/web-vitals.md).
+
 ---
 
 ## System configs (admin)
@@ -168,7 +212,6 @@ GET /admin/roles
     { "id": "Acolhimento", "description": "Painel operacional" },
     { "id": "Produção", "description": "…" },
     { "id": "Financeiro", "description": "…" },
-    { "id": "Parceiro", "description": "…" },
     { "id": "Prescritor", "description": "…" }
   ]
 }
@@ -197,4 +240,5 @@ Mesmo cookie `kunk_oss_session` do painel.
 | 403 | `FORBIDDEN` | Sessão ok, sem `Administrador` |
 | 404 | `NOT_FOUND` | Collection/id/config inexistente |
 | 409 | `LAST_ADMIN` | Tentativa de remover/desativar o último Administrador |
+| 409 | `SAMPLE_DATA_BLOCKED` | Exclusão de sample bloqueada por FK de dado real |
 | 400 | `VALIDATION_ERROR` | Body inválido / unknown fields |

@@ -1,9 +1,9 @@
 [
   {
-    "date_created": "2026-07-01T23:42:25.360Z",
-    "date_updated": "2026-07-10T23:42:25.360Z",
+    "date_created": "2026-07-07T17:23:18.667Z",
+    "date_updated": "2026-07-16T17:23:18.667Z",
     "name": "Pedidos por status (demo)",
-    "report_code": "4337024d-9a7e-43e9-b760-869fb713d689",
+    "report_code": "425d117e-da77-4552-9dc9-fbb5bb578c78",
     "query_config": {
       "source": "orders",
       "group_by": "status"
@@ -36,13 +36,14 @@
     "embedded_report_codes": [],
     "favorites": {
       "users": []
-    }
+    },
+    "is_sample": true
   },
   {
-    "date_created": "2026-07-02T23:42:25.360Z",
-    "date_updated": "2026-07-09T23:42:25.360Z",
+    "date_created": "2026-07-08T17:23:18.667Z",
+    "date_updated": "2026-07-15T17:23:18.667Z",
     "name": "Associados ativos (demo)",
-    "report_code": "a88bc51c-529f-426c-ad65-e2715c544b2a",
+    "report_code": "e24562e4-191d-4552-a1e1-f0b4aa8263c6",
     "query_config": {
       "source": "users",
       "filter": {
@@ -76,13 +77,14 @@
     "embedded_report_codes": [],
     "favorites": {
       "users": []
-    }
+    },
+    "is_sample": true
   },
   {
-    "date_created": "2026-07-03T23:42:25.360Z",
-    "date_updated": "2026-07-08T23:42:25.360Z",
+    "date_created": "2026-07-09T17:23:18.667Z",
+    "date_updated": "2026-07-14T17:23:18.667Z",
     "name": "Dashboard operacional (demo)",
-    "report_code": "9ef0797e-498f-4fa9-a862-df15838f54fb",
+    "report_code": "6b472488-e1fe-4efc-8fcd-9b64cf5e892f",
     "query_config": {
       "widgets": [
         "orders",
@@ -118,6 +120,7 @@
       "users": [
         "admin@demo.kunk.local"
       ]
-    }
+    },
+    "is_sample": true
   }
 ]

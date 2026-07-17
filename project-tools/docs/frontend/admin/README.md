@@ -29,6 +29,7 @@ Criar um app de administração que permita à associação (ou ao operador com 
 | [flow.md](./flow.md) | Áreas do app, guards de acesso, navegação |
 | [api.md](./api.md) | Contratos de API necessários ao admin |
 | [gaps.md](./gaps.md) | Decisões fechadas + checklist da entrega |
+| [file-rename-pt-to-en.md](../file-rename-pt-to-en.md) | Inventário de arquivos PT/mistos e sugestões de rename → inglês |
 
 ## Posicionamento no produto
 

@@ -125,8 +125,12 @@ export function KunkConfigProvider({ api, children }) {
   }, [config.title]);
 
   useEffect(() => {
-    const href = config.logo || '/kunkLogo.png';
+    const href = String(config.logo || '').trim();
     let link = document.querySelector("link[rel='icon']");
+    if (!href) {
+      if (link) link.remove();
+      return;
+    }
     if (!link) {
       link = document.createElement('link');
       link.setAttribute('rel', 'icon');

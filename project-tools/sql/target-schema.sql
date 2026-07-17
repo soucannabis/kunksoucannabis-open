@@ -8,7 +8,10 @@ CREATE TABLE IF NOT EXISTS files (
   filename VARCHAR(512),
   mime_type VARCHAR(128),
   storage_path TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  storage_driver VARCHAR(16) NOT NULL DEFAULT 'local',
+  storage_key TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  is_sample BOOLEAN NOT NULL DEFAULT false
 );
 
 -- Users → users (antes de orders por causa da FK)
@@ -68,6 +71,7 @@ CREATE TABLE IF NOT EXISTS users (
   fullname VARCHAR(255),
   password_reset_token VARCHAR(255),
   password_reset_expires TIMESTAMP,
+  is_sample BOOLEAN NOT NULL DEFAULT false,
   CONSTRAINT fk_users_responsible_code FOREIGN KEY (responsible_code) REFERENCES users(user_code) ON DELETE SET NULL
 );
 
@@ -108,7 +112,8 @@ CREATE TABLE IF NOT EXISTS system_users (
   is_session_active BOOLEAN,
   internal_code VARCHAR(255),
   password_reset_token VARCHAR(255),
-  password_reset_expires TIMESTAMP
+  password_reset_expires TIMESTAMP,
+  is_sample BOOLEAN NOT NULL DEFAULT false
 );
 
 -- Institutional clients → institutional_clients
@@ -138,7 +143,8 @@ CREATE TABLE IF NOT EXISTS institutional_clients (
   city VARCHAR(255),
   state VARCHAR(255),
   cep VARCHAR(255),
-  delivery_address JSONB
+  delivery_address JSONB,
+  is_sample BOOLEAN NOT NULL DEFAULT false
 );
 
 -- Orders → orders
@@ -190,6 +196,7 @@ CREATE TABLE IF NOT EXISTS orders (
   soucannabis_sync_error TEXT,
   external_payment_info JSONB,
   external_delivery_type VARCHAR(32),
+  is_sample BOOLEAN NOT NULL DEFAULT false,
   CONSTRAINT fk_orders_user FOREIGN KEY ("user") REFERENCES users(id),
   CONSTRAINT fk_orders_institutional_client FOREIGN KEY (institutional_client_id) REFERENCES institutional_clients(id)
 );
@@ -199,32 +206,9 @@ CREATE TABLE IF NOT EXISTS orders_files (
   id SERIAL PRIMARY KEY,
   order_id INTEGER,
   file_id UUID,
+  is_sample BOOLEAN NOT NULL DEFAULT false,
   CONSTRAINT fk_orders_files_order_id FOREIGN KEY (order_id) REFERENCES orders(id),
   CONSTRAINT fk_orders_files_file_id FOREIGN KEY (file_id) REFERENCES files(id)
-);
-
--- Partners → partners
-CREATE TABLE IF NOT EXISTS partners (
-  id SERIAL PRIMARY KEY,
-  status VARCHAR(255) NOT NULL,
-  sort INTEGER,
-  date_created TIMESTAMPTZ,
-  date_updated TIMESTAMPTZ,
-  first_name VARCHAR(255),
-  last_name VARCHAR(255),
-  email VARCHAR(255),
-  account_password VARCHAR(255),
-  mobile_number VARCHAR(255),
-  user_code UUID,
-  documents_folder_id VARCHAR(255),
-  commission_value INTEGER,
-  commission_total REAL,
-  type VARCHAR(255),
-  pix_key VARCHAR(255),
-  commission_transactions TEXT,
-  cpf VARCHAR(255),
-  is_favorite VARCHAR(255),
-  contest_reports JSONB
 );
 
 -- Products → products
@@ -245,7 +229,8 @@ CREATE TABLE IF NOT EXISTS products (
   amount INTEGER,
   category VARCHAR(255),
   photo UUID,
-  batch VARCHAR(255)
+  batch VARCHAR(255),
+  is_sample BOOLEAN NOT NULL DEFAULT false
 );
 
 -- Product stock movements (histórico de uso / ajustes)
@@ -286,7 +271,8 @@ CREATE TABLE IF NOT EXISTS professionals (
   recipient_id VARCHAR(255),
   donation_balance INTEGER,
   calendar_id VARCHAR(255),
-  consultation_price NUMERIC(12, 2) DEFAULT 0
+  consultation_price NUMERIC(12, 2) DEFAULT 0,
+  is_sample BOOLEAN NOT NULL DEFAULT false
 );
 
 -- Reception → reception
@@ -297,8 +283,7 @@ CREATE TABLE IF NOT EXISTS reception (
   last_name VARCHAR(255),
   email VARCHAR(255),
   phone VARCHAR(255),
-  option1 VARCHAR(255),
-  option2 VARCHAR(255),
+  help_topic VARCHAR(255),
   is_associate VARCHAR(255),
   message TEXT,
   code UUID,
@@ -313,8 +298,8 @@ CREATE TABLE IF NOT EXISTS reception (
   tags JSONB,
   completion_reason VARCHAR(255),
   is_prescriber VARCHAR(255),
-  at VARCHAR(255),
-  full_name VARCHAR(255)
+  full_name VARCHAR(255),
+  is_sample BOOLEAN NOT NULL DEFAULT false
 );
 
 -- reports → reports
@@ -334,7 +319,8 @@ CREATE TABLE IF NOT EXISTS reports (
   tags JSONB,
   column_maps JSONB,
   embedded_report_codes JSONB,
-  favorites JSONB
+  favorites JSONB,
+  is_sample BOOLEAN NOT NULL DEFAULT false
 );
 
 -- services → services
@@ -369,6 +355,7 @@ CREATE TABLE IF NOT EXISTS services (
   payment_code TEXT,
   payment_info JSONB,
   commission_validation VARCHAR(32),
+  is_sample BOOLEAN NOT NULL DEFAULT false,
   CONSTRAINT fk_services_professional_id FOREIGN KEY (professional_id) REFERENCES professionals(professional_code) ON DELETE SET NULL,
   CONSTRAINT fk_services_associate_user_code FOREIGN KEY (associate_user_code) REFERENCES users(user_code) ON DELETE SET NULL,
   CONSTRAINT fk_services_patient_user_code FOREIGN KEY (patient_user_code) REFERENCES users(user_code) ON DELETE SET NULL
@@ -379,6 +366,7 @@ CREATE TABLE IF NOT EXISTS services_files (
   id SERIAL PRIMARY KEY,
   service_id INTEGER,
   file_id UUID,
+  is_sample BOOLEAN NOT NULL DEFAULT false,
   CONSTRAINT fk_services_files_service_id FOREIGN KEY (service_id) REFERENCES services(id),
   CONSTRAINT fk_services_files_file_id FOREIGN KEY (file_id) REFERENCES files(id)
 );
@@ -388,7 +376,8 @@ CREATE TABLE IF NOT EXISTS tags (
   id SERIAL PRIMARY KEY,
   tag VARCHAR(255),
   contexts VARCHAR(255),
-  color VARCHAR(255)
+  color VARCHAR(255),
+  is_sample BOOLEAN NOT NULL DEFAULT false
 );
 
 -- System configs (per-system runtime env overrides; not exposed via /items)
@@ -456,11 +445,85 @@ CREATE INDEX IF NOT EXISTS idx_system_activity_related
 CREATE INDEX IF NOT EXISTS idx_system_activity_actor
   ON system_activity (actor_user_code, date_created DESC);
 
+-- system_errors: native error observability events
+CREATE TABLE IF NOT EXISTS system_errors (
+  id BIGSERIAL PRIMARY KEY,
+  date_created TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  error_hash CHAR(64) NOT NULL,
+  source TEXT NOT NULL,
+  app TEXT,
+  severity TEXT NOT NULL DEFAULT 'error',
+  message TEXT NOT NULL,
+  code TEXT,
+  file_name TEXT,
+  lineno INT,
+  colno INT,
+  stack_trace TEXT,
+  url TEXT,
+  method TEXT,
+  status_code INT,
+  user_code TEXT,
+  user_agent TEXT,
+  request_id TEXT,
+  environment TEXT,
+  metadata JSONB
+);
+
+CREATE INDEX IF NOT EXISTS idx_system_errors_hash_created
+  ON system_errors (error_hash, date_created DESC);
+
+CREATE INDEX IF NOT EXISTS idx_system_errors_created
+  ON system_errors (date_created DESC);
+
+CREATE INDEX IF NOT EXISTS idx_system_errors_source
+  ON system_errors (source, date_created DESC);
+
+-- system_error_resolutions: per-hash triage status
+CREATE TABLE IF NOT EXISTS system_error_resolutions (
+  error_hash CHAR(64) PRIMARY KEY,
+  status TEXT NOT NULL DEFAULT 'open',
+  resolved_at TIMESTAMPTZ,
+  resolved_by TEXT,
+  note TEXT
+);
+
+-- web_vitals: Core Web Vitals / performance metrics from frontends
+CREATE TABLE IF NOT EXISTS web_vitals (
+  id BIGSERIAL PRIMARY KEY,
+  date_created TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  name TEXT NOT NULL,
+  value DOUBLE PRECISION NOT NULL,
+  rating TEXT,
+  delta DOUBLE PRECISION,
+  navigation_type TEXT,
+  app TEXT,
+  url TEXT,
+  path TEXT,
+  user_code TEXT,
+  user_agent TEXT,
+  connection_type TEXT,
+  device_memory DOUBLE PRECISION,
+  metadata JSONB
+);
+
+CREATE INDEX IF NOT EXISTS idx_web_vitals_created
+  ON web_vitals (date_created DESC);
+
+CREATE INDEX IF NOT EXISTS idx_web_vitals_name_created
+  ON web_vitals (name, date_created DESC);
+
+CREATE INDEX IF NOT EXISTS idx_web_vitals_path_name
+  ON web_vitals (path, name, date_created DESC);
+
+CREATE INDEX IF NOT EXISTS idx_web_vitals_app
+  ON web_vitals (app, date_created DESC);
+
 -- Users_Api → users_api
 CREATE TABLE IF NOT EXISTS users_api (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255),
-  token VARCHAR(255)
+  token VARCHAR(255),
+  is_sample BOOLEAN NOT NULL DEFAULT false
 );
 
 -- Users_files → users_files
@@ -472,6 +535,7 @@ CREATE TABLE IF NOT EXISTS users_files (
   side VARCHAR(16),
   subject VARCHAR(32),
   doc_kind VARCHAR(32),
+  is_sample BOOLEAN NOT NULL DEFAULT false,
   CONSTRAINT fk_users_files_user_id FOREIGN KEY (user_id) REFERENCES users(id),
   CONSTRAINT fk_users_files_file_id FOREIGN KEY (file_id) REFERENCES files(id)
 );

@@ -54,7 +54,7 @@ export const MENU_SECTIONS = [
     ],
   },
   {
-    id: 'parceirosPrescritores',
+    id: 'profissionais',
     label: 'Profissionais',
     items: [{ id: 'profissionais', label: 'Profissionais', path: PATHS.professionals }],
   },
@@ -89,7 +89,6 @@ export const REMOVED_MENU_LABELS = [
   'Pagamentos',
   'Sou Analytics',
   'Dashboards',
-  'Parceiros',
   'Usuários',
   'Usuários do sistema',
 ];

@@ -25,6 +25,8 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { useErrorModal } from '../components/errors/ErrorModalProvider.jsx';
+import { useCacheConfig } from '../lib/cache/CacheConfigProvider.jsx';
+import { fetchTags, invalidateTagsCache } from '../lib/cache/fetchers.js';
 
 const materialTheme = createTheme({
   palette: {
@@ -65,6 +67,7 @@ export default function TagsPage() {
     return createApiClient({ baseUrl: bootstrap.apiUrl });
   }, []);
   const { showError } = useErrorModal();
+  const { enabled: cacheEnabled } = useCacheConfig();
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,8 +80,8 @@ export default function TagsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.listItems('tags', 'limit=500');
-      setRows(res.data || []);
+      const list = await fetchTags(api, cacheEnabled, 'limit=500');
+      setRows(list);
     } catch (err) {
       showError(err);
       setRows([]);
@@ -103,7 +106,7 @@ export default function TagsPage() {
     } catch {
       setScTags([]);
     }
-  }, [api, showError]);
+  }, [api, cacheEnabled, showError]);
 
   useEffect(() => {
     load();
@@ -162,6 +165,7 @@ export default function TagsPage() {
       };
       if (dialog.mode === 'new') await api.createItem('tags', body);
       else await api.updateItem('tags', dialog.id, body);
+      invalidateTagsCache();
       setDialog(null);
       await load();
     } catch (err) {
@@ -175,6 +179,7 @@ export default function TagsPage() {
     if (!window.confirm(`Excluir a tag "${row.tag}"?`)) return;
     try {
       await api.deleteItem('tags', row.id);
+      invalidateTagsCache();
       await load();
     } catch (err) {
       showError(err);

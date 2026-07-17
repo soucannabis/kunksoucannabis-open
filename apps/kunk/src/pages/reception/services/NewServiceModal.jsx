@@ -17,6 +17,12 @@ import {
   Chip,
 } from '@mui/material';
 import { associateDisplayName, defaultPriceForType, typeLabel } from './servicesUtils.js';
+import { useCacheConfig } from '../../../lib/cache/CacheConfigProvider.jsx';
+import {
+  fetchAssociateUser,
+  fetchCollaboratorProfessionals,
+  fetchTags,
+} from '../../../lib/cache/fetchers.js';
 
 function patientLabel(p) {
   if (!p) return '';
@@ -51,36 +57,37 @@ export default function NewServiceModal({
   const [linkService, setLinkService] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const { enabled: cacheEnabled } = useCacheConfig();
 
   useEffect(() => {
     if (!open) return;
     (async () => {
       try {
-        const [pros, tagsRes, typesRes] = await Promise.all([
-          api.listProfessionals({ active: 1, role: 'collaborators' }),
-          api.listItems('tags', 'limit=200'),
+        const [pros, tagList, typesRes] = await Promise.all([
+          fetchCollaboratorProfessionals(api, cacheEnabled),
+          fetchTags(api, cacheEnabled),
           api.getProfessionalTypes().catch(() => ({ data: [] })),
         ]);
-        setProfessionals(pros.data || []);
-        setTagOpts((tagsRes.data || []).map((t) => t.tag).filter(Boolean));
+        setProfessionals(pros);
+        setTagOpts(tagList.map((t) => t.tag).filter(Boolean));
         setProfessionalTypes(Array.isArray(typesRes.data) ? typesRes.data : []);
       } catch {
         /* ignore */
       }
     })();
-  }, [open, api]);
+  }, [open, api, cacheEnabled]);
 
   useEffect(() => {
     if (!open || !initialUserCode) return;
     (async () => {
       try {
-        const res = await api.getUserByCode(initialUserCode);
-        if (res.data) setAssociate(res.data);
+        const user = await fetchAssociateUser(api, cacheEnabled, initialUserCode, '');
+        if (user) setAssociate(user);
       } catch {
         /* ignore */
       }
     })();
-  }, [open, initialUserCode, api]);
+  }, [open, initialUserCode, api, cacheEnabled]);
 
   useEffect(() => {
     if (!associateQ || associateQ.length < 2) return;

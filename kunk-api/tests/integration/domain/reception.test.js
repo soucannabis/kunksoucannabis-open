@@ -31,6 +31,7 @@ describe('domain/reception', () => {
         last_name: 'Teste',
         email: `triagem-${Date.now()}@example.com`,
         phone: '11999999999',
+        help_topic: 'Outro',
         message: 'preciso de acolhimento',
       });
     assert.equal(created.status, 201);

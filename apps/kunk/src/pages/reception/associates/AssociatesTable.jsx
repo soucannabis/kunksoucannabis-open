@@ -70,8 +70,12 @@ export default function AssociatesTable({
                       {displayName(u)}
                     </Typography>
                     {patientSub ? (
-                      <Typography variant="caption" color="text.secondary">
-                        Paciente: {patientSub}
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ fontWeight: 400, display: 'block' }}
+                      >
+                        {patientSub}
                       </Typography>
                     ) : null}
                   </TableCell>

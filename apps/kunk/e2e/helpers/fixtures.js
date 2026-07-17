@@ -7,5 +7,5 @@ export const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'TestAdmin123!';
 export const ACOL_EMAIL = process.env.E2E_ACOL_EMAIL || 'acolhimento@kunk-api.test';
 export const ACOL_PASSWORD = process.env.E2E_ACOL_PASSWORD || 'TestAcol123!';
 
-export const PARTNER_EMAIL = process.env.E2E_PARTNER_EMAIL || 'parceiro@kunk-api.test';
-export const PARTNER_PASSWORD = process.env.E2E_PARTNER_PASSWORD || 'TestPartner123!';
+export const FINANCEIRO_EMAIL = process.env.E2E_FINANCEIRO_EMAIL || 'financeiro@kunk-api.test';
+export const FINANCEIRO_PASSWORD = process.env.E2E_FINANCEIRO_PASSWORD || 'TestFinanceiro123!';

@@ -20,11 +20,14 @@ const SERVICES = [
   'email',
   'pagarme',
   'soucannabis_orders',
+  'utalk',
 ];
 const FREIGHT_SERVICES = new Set(['loggi', 'melhorenvio']);
 const emailClient = require('../services/email');
 const pagarmeService = require('../services/pagarme');
 const scOrdersService = require('../services/soucannabis_orders');
+const utalkClient = require('../services/utalk/client');
+const utalkAttendants = require('../services/utalk/attendants');
 const { isModuleEnabled } = require('../services/moduleFlags');
 
 const router = Router();
@@ -37,7 +40,7 @@ function serviceOrThrow(service) {
 }
 
 async function getModuleConfigFlags(service) {
-  const { isModuleEnabled, envModuleDefault, asBool: flagBool } = require('../services/moduleFlags');
+  const { isModuleEnabled, asBool: flagBool } = require('../services/moduleFlags');
   const enabledKey = `modules.${service}.enabled`;
   const quoteKey = `modules.${service}.use_for_quote`;
   const labelKey = `modules.${service}.use_for_label`;
@@ -52,6 +55,8 @@ async function getModuleConfigFlags(service) {
   const syncOrdersKey = `modules.${service}.sync_orders`;
   const assocRecipientKey = `modules.${service}.association_recipient_id`;
   const scRecipientKey = `modules.${service}.soucannabis_recipient_id`;
+  const triageMsgEnabledKey = `modules.${service}.triage_message_enabled`;
+  const triageMsgKey = `modules.${service}.triage_message`;
   const result = await query(
     `SELECT key, value FROM system_configs
      WHERE system = 'modules' AND key = ANY($1::text[])`,
@@ -70,6 +75,8 @@ async function getModuleConfigFlags(service) {
       syncOrdersKey,
       assocRecipientKey,
       scRecipientKey,
+      triageMsgEnabledKey,
+      triageMsgKey,
     ]]
   );
   const values = Object.fromEntries(result.rows.map((r) => [r.key, r.value]));
@@ -80,16 +87,14 @@ async function getModuleConfigFlags(service) {
     enabled: await isModuleEnabled(service),
     /** Value stored in Admin, if any. */
     config_enabled: hasAdminEnabled ? flagBool(values[enabledKey], false) : null,
-    /** Env default when Admin has never set a value. */
-    env_default: envModuleDefault(service),
-    source: hasAdminEnabled ? 'admin' : 'env',
+    /** Default quando Admin nunca gravou (sempre off — env não ativa módulos). */
+    env_default: false,
+    source: hasAdminEnabled ? 'admin' : 'default',
   };
   if (FREIGHT_SERVICES.has(service)) {
     const scOn = await isModuleEnabled('soucannabis_orders');
-    flags.use_for_quote = scOn
-      ? false
-      : flagBool(values[quoteKey], service === 'loggi' || service === 'melhorenvio');
-    flags.use_for_label = scOn ? false : flagBool(values[labelKey], service === 'loggi');
+    flags.use_for_quote = scOn ? false : flagBool(values[quoteKey], false);
+    flags.use_for_label = scOn ? false : flagBool(values[labelKey], false);
     flags.use_for_tracking = flagBool(values[trackingKey], false);
     flags.sc_blocks_quote_label = scOn;
   }
@@ -97,19 +102,27 @@ async function getModuleConfigFlags(service) {
     flags.use_for_validation = flagBool(values[validationKey], false);
   }
   if (service === 'google_calendar') {
-    flags.use_for_scheduling = flagBool(values[schedulingKey], true);
+    flags.use_for_scheduling = flagBool(values[schedulingKey], false);
     flags.primary_calendar_id = values[primaryKey] || null;
   }
   if (service === 'pagarme') {
-    flags.use_for_orders = flagBool(values[useOrdersKey], true);
-    flags.use_for_services = flagBool(values[useServicesKey], true);
+    flags.use_for_orders = flagBool(values[useOrdersKey], false);
+    flags.use_for_services = flagBool(values[useServicesKey], false);
     flags.association_recipient_id = values[assocRecipientKey] || null;
     flags.soucannabis_recipient_id = values[scRecipientKey] || null;
   }
   if (service === 'soucannabis_orders') {
-    flags.sync_products = flagBool(values[syncProductsKey], true);
-    flags.sync_tags = flagBool(values[syncTagsKey], true);
-    flags.sync_orders = flagBool(values[syncOrdersKey], true);
+    flags.sync_products = flagBool(values[syncProductsKey], false);
+    flags.sync_tags = flagBool(values[syncTagsKey], false);
+    flags.sync_orders = flagBool(values[syncOrdersKey], false);
+  }
+  if (service === 'utalk') {
+    const { DEFAULT_TRIAGE_MESSAGE } = require('../services/utalk/triageMessage');
+    flags.triage_message_enabled = flagBool(values[triageMsgEnabledKey], false);
+    flags.triage_message =
+      values[triageMsgKey] != null && String(values[triageMsgKey]).trim() !== ''
+        ? String(values[triageMsgKey])
+        : DEFAULT_TRIAGE_MESSAGE;
   }
   return flags;
 }
@@ -138,23 +151,63 @@ async function upsertModuleFlag(key, value, description, valueType = 'boolean') 
 
 router.get('/', async (req, res, next) => {
   try {
+    const store = await storeFreight.getStoreFreightConfig();
+    let storeReady = true;
+    let storeMissing = [];
+    try {
+      storeFreight.assertShipFrom(store.ship_from);
+      storeFreight.assertPackage(store.package);
+      storeFreight.assertContentDeclaration(store.content_declaration);
+    } catch (err) {
+      storeReady = false;
+      storeMissing = err.details?.missing || [];
+    }
+
     const list = [];
     for (const service of SERVICES) {
       const flags = await getModuleConfigFlags(service);
       const credentials = await credentialsService.listPublic(service);
-      list.push({ service, ...flags, credentials });
+      const item = { service, ...flags, credentials };
+      if (FREIGHT_SERVICES.has(service)) {
+        item.store_freight_ready = storeReady;
+        item.store_freight_missing = storeMissing;
+      }
+      list.push(item);
     }
-    const store = await storeFreight.getStoreFreightConfig();
     res.json(
       ok({
         services: list,
         store_incomplete: {
-          ship_from: !store.ship_from,
-          package: !store.package,
-          content_declaration: !store.content_declaration,
+          ship_from: storeMissing.some((m) => String(m).includes('ship_from')) || !store.ship_from,
+          package:
+            storeMissing.some((m) => String(m).includes('package')) || !store.package,
+          content_declaration:
+            storeMissing.some((m) => String(m).includes('content_declaration')) ||
+            !store.content_declaration,
         },
       })
     );
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/utalk/attendants', async (req, res, next) => {
+  try {
+    const attendants = await utalkAttendants.listAttendantsForAdmin();
+    res.json(ok({ attendants }));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/utalk/attendants/:userCode', async (req, res, next) => {
+  try {
+    const attendant = await utalkAttendants.updateAttendantUtalkId(
+      req.params.userCode,
+      req.body?.utalk_id
+    );
+    res.json(ok({ attendant }));
   } catch (err) {
     next(err);
   }
@@ -166,12 +219,25 @@ router.get('/:service', async (req, res, next) => {
     let [flags, credentials, storeCfg] = await Promise.all([
       getModuleConfigFlags(service),
       credentialsService.listPublic(service),
-      service === 'melhorenvio' ? storeFreight.getStoreFreightConfig() : Promise.resolve(null),
+      FREIGHT_SERVICES.has(service)
+        ? storeFreight.getStoreFreightConfig()
+        : Promise.resolve(null),
     ]);
     const payload = { service, ...flags, credentials };
+    if (FREIGHT_SERVICES.has(service) && storeCfg) {
+      try {
+        storeFreight.assertShipFrom(storeCfg.ship_from);
+        storeFreight.assertPackage(storeCfg.package);
+        storeFreight.assertContentDeclaration(storeCfg.content_declaration);
+        payload.store_freight_ready = true;
+      } catch (err) {
+        payload.store_freight_ready = false;
+        payload.store_freight_missing = err.details?.missing || [];
+      }
+    }
     if (service === 'melhorenvio') {
-      const hasEnvRow = credentials.some((c) => c.field_key === 'environment');
-      if (!hasEnvRow) await meAuth.ensureEnvironmentRow();
+      await meAuth.ensureEnvironmentRow();
+      credentials = await credentialsService.listPublic(service);
 
       const envCred = credentials.find((c) => c.field_key === 'environment');
       const apiCred = credentials.find((c) => c.field_key === 'api_base_url');
@@ -179,7 +245,7 @@ router.get('/:service', async (req, res, next) => {
         ? meAuth.resolveEnvironmentKey(envCred.value)
         : apiCred?.value
           ? meAuth.detectEnvironmentFromApiBase(apiCred.value)
-          : 'sandbox';
+          : 'production';
       const pinned = meAuth.ME_ENVIRONMENTS[environment].api_base_url;
 
       const accessCred = credentials.find((c) => c.field_key === 'access_token');
@@ -213,16 +279,6 @@ router.get('/:service', async (req, res, next) => {
         'api_base_url',
         'redirect_uri',
       ];
-
-      try {
-        storeFreight.assertShipFrom(storeCfg.ship_from);
-        storeFreight.assertPackage(storeCfg.package);
-        storeFreight.assertContentDeclaration(storeCfg.content_declaration);
-        payload.store_freight_ready = true;
-      } catch (err) {
-        payload.store_freight_ready = false;
-        payload.store_freight_missing = err.details?.missing || [];
-      }
     }
     if (service === 'google_calendar') {
       const needed = ['client_id', 'client_secret', 'redirect_uri'];
@@ -252,6 +308,27 @@ router.get('/:service', async (req, res, next) => {
         await emailClient.ensureCredentialRows();
         credentials = await credentialsService.listPublic(service);
         payload.credentials = credentials;
+      }
+    }
+    if (service === 'loggi') {
+      await loggiClient.ensureCredentialRows();
+      credentials = await credentialsService.listPublic(service);
+      payload.credentials = credentials;
+    }
+    if (service === 'geoapify') {
+      await geoClient.ensureCredentialRows();
+      credentials = await credentialsService.listPublic(service);
+      payload.credentials = credentials;
+    }
+    if (service === 'utalk') {
+      await utalkClient.ensureCredentialRows();
+      credentials = await credentialsService.listPublic(service);
+      payload.credentials = credentials;
+      try {
+        payload.attendants = await utalkAttendants.listAttendantsForAdmin();
+      } catch (err) {
+        payload.attendants = [];
+        payload.attendants_error = err.message || String(err);
       }
     }
     if (service === 'pagarme') {
@@ -304,7 +381,7 @@ router.patch('/:service', async (req, res, next) => {
     const body = req.body || {};
 
     const enablingFreight =
-      service === 'melhorenvio' &&
+      FREIGHT_SERVICES.has(service) &&
       (body.use_for_quote === true || body.use_for_label === true || body.enabled === true);
     if (enablingFreight) {
       const cfg = await storeFreight.getStoreFreightConfig();
@@ -313,10 +390,11 @@ router.patch('/:service', async (req, res, next) => {
         storeFreight.assertPackage(cfg.package);
         storeFreight.assertContentDeclaration(cfg.content_declaration);
       } catch (err) {
+        const label = service === 'loggi' ? 'Loggi' : 'Melhor Envio';
         throw new AppError(
           400,
           'CONFIG_INCOMPLETE',
-          'Preencha remetente, caixa e declaração de conteúdo em Serviços externos → Dados de envio antes de ativar o Melhor Envio',
+          `Preencha remetente, caixa e declaração de conteúdo em Serviços externos → Dados de envio antes de ativar o ${label}`,
           {
             missing: err.details?.missing || [
               'store.ship_from',
@@ -442,6 +520,46 @@ router.patch('/:service', async (req, res, next) => {
         'string'
       );
     }
+    if (service === 'utalk' && body.triage_message_enabled !== undefined) {
+      if (body.triage_message_enabled === true) {
+        const creds = await credentialsService.resolveAll('utalk');
+        try {
+          utalkClient.assertFromPhoneE164(creds.from_phone);
+        } catch (err) {
+          throw new AppError(
+            400,
+            'CONFIG_INCOMPLETE',
+            err.message ||
+              'Cadastre from_phone no formato +55 e número completo antes de ativar a mensagem da triagem'
+          );
+        }
+        const msgCfg = await require('../services/utalk/triageMessage').getTriageMessageConfig();
+        const nextMsg =
+          body.triage_message !== undefined
+            ? String(body.triage_message || '').trim()
+            : String(msgCfg.triage_message || '').trim();
+        if (!nextMsg) {
+          throw new AppError(
+            400,
+            'CONFIG_INCOMPLETE',
+            'Escreva o texto da mensagem da triagem antes de ativar o envio'
+          );
+        }
+      }
+      await upsertModuleFlag(
+        'modules.utalk.triage_message_enabled',
+        Boolean(body.triage_message_enabled),
+        'Enviar mensagem Utalk ao criar triagem pelo formulário público'
+      );
+    }
+    if (service === 'utalk' && body.triage_message !== undefined) {
+      await upsertModuleFlag(
+        'modules.utalk.triage_message',
+        body.triage_message == null ? '' : String(body.triage_message),
+        'Texto da mensagem Utalk enviada ao criar triagem',
+        'string'
+      );
+    }
 
     if (body.enabled !== undefined) {
       if (service === 'pagarme' && body.enabled === true) {
@@ -507,7 +625,7 @@ router.patch('/:service', async (req, res, next) => {
       await upsertModuleFlag(
         `modules.${service}.enabled`,
         Boolean(body.enabled),
-        `Módulo ${service} habilitado (Admin sobrescreve MODULE_*_ENABLED)`
+        `Módulo ${service} habilitado (Admin)`
       );
     }
     const flags = await getModuleConfigFlags(service);
@@ -538,6 +656,25 @@ router.put('/:service/credentials', async (req, res, next) => {
     const fields = { ...(req.body?.fields || {}) };
     const runTest = req.body?.run_test !== false;
 
+    if (service === 'loggi') {
+      await loggiClient.ensureCredentialRows();
+    }
+    if (service === 'melhorenvio') {
+      await meAuth.ensureCredentialRows();
+    }
+    if (service === 'geoapify') {
+      await geoClient.ensureCredentialRows();
+    }
+    if (service === 'pagarme') {
+      await pagarmeService.ensureCredentialRows();
+    }
+    if (service === 'soucannabis_orders') {
+      await scOrdersService.ensureCredentialRows();
+    }
+    if (service === 'utalk') {
+      await utalkClient.ensureCredentialRows();
+    }
+
     if (service === 'melhorenvio') {
       await meAuth.ensureEnvironmentRow();
       const envKey = meAuth.resolveEnvironmentKey(
@@ -553,12 +690,6 @@ router.put('/:service/credentials', async (req, res, next) => {
 
     if (service === 'email') {
       await emailClient.ensureCredentialRows();
-    }
-    if (service === 'pagarme') {
-      await pagarmeService.ensureCredentialRows();
-    }
-    if (service === 'soucannabis_orders') {
-      await scOrdersService.ensureCredentialRows();
     }
 
     // Redirect URI is always computed by the API — never taken from the admin form.
@@ -579,6 +710,8 @@ router.put('/:service/credentials', async (req, res, next) => {
         await pagarmeService.testConnection(merged);
       } else if (service === 'soucannabis_orders') {
         await scOrdersService.testConnection(merged);
+      } else if (service === 'utalk') {
+        await utalkClient.testConnection(merged);
       } else {
         await meAuth.testConnection(merged);
       }
@@ -674,6 +807,8 @@ router.post('/:service/test', async (req, res, next) => {
       extra = await pagarmeService.testConnection(creds);
     } else if (service === 'soucannabis_orders') {
       extra = await scOrdersService.testConnection(creds);
+    } else if (service === 'utalk') {
+      extra = await utalkClient.testConnection(creds);
     } else {
       await meAuth.testConnection(creds);
     }

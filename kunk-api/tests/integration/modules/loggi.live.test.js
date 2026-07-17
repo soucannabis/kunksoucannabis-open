@@ -1,12 +1,10 @@
 'use strict';
 
 /**
- * Live Loggi integration — skipped unless MODULE_LOGGI_ENABLED=true
- * AND RUN_LIVE_FREIGHT_TESTS=true (and real credentials/config present).
+ * Live Loggi integration — skipped unless RUN_LIVE_FREIGHT_TESTS=true
+ * (módulo Loggi deve estar ativo no Admin; credenciais/config reais necessárias).
  */
-const enabled =
-  process.env.MODULE_LOGGI_ENABLED === 'true' &&
-  process.env.RUN_LIVE_FREIGHT_TESTS === 'true';
+const enabled = process.env.RUN_LIVE_FREIGHT_TESTS === 'true';
 
 const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');

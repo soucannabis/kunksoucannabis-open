@@ -1,12 +1,10 @@
 'use strict';
 
 /**
- * Live Melhor Envio integration — skipped unless MODULE_MELHORENVIO_ENABLED=true
- * AND RUN_LIVE_FREIGHT_TESTS=true.
+ * Live Melhor Envio integration — skipped unless RUN_LIVE_FREIGHT_TESTS=true
+ * (módulo Melhor Envio deve estar ativo no Admin; credenciais/config reais necessárias).
  */
-const enabled =
-  process.env.MODULE_MELHORENVIO_ENABLED === 'true' &&
-  process.env.RUN_LIVE_FREIGHT_TESTS === 'true';
+const enabled = process.env.RUN_LIVE_FREIGHT_TESTS === 'true';
 
 const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');

@@ -15,7 +15,8 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SaveIcon from '@mui/icons-material/Save';
-import { normalizeCiapCodes, PhoneInput, serializeCiapCodes } from '@kunk/forms';
+import { normalizeCiapCodes, serializeCiapCodes } from '@kunk/forms';
+import PhoneField from '../../../components/PhoneField.jsx';
 import Ciap2Field from '../../../components/ciap2/Ciap2Field.jsx';
 import { displayName, contentAreaDialogSx } from './associatesStatus.js';
 
@@ -168,42 +169,12 @@ function PersonFieldsGrid({ form, onChange }) {
 
         if (key === 'mobile_number') {
           return (
-            <Box
-              key={key}
-              sx={{
-                '& .kunk-phone-input': { width: '100%' },
-                '& .kunk-phone-input .form-control': {
-                  width: '100% !important',
-                  height: '40px !important',
-                  fontSize: '0.875rem',
-                  borderRadius: '4px',
-                  border: '1px solid rgba(0, 0, 0, 0.23)',
-                  paddingLeft: '48px',
-                },
-                '& .kunk-phone-input .form-control:focus': {
-                  borderColor: GREEN,
-                  outline: 'none',
-                  boxShadow: `0 0 0 1px ${GREEN}`,
-                },
-                '& .kunk-phone-flag-btn': {
-                  borderRadius: '4px 0 0 4px',
-                  border: '1px solid rgba(0, 0, 0, 0.23)',
-                  background: '#fff',
-                },
-                '& .kunk-phone-dropdown': {
-                  zIndex: 1400,
-                },
-              }}
-            >
-              <PhoneInput
+            <Box key={key} sx={fullWidthSx}>
+              <PhoneField
+                label={label}
+                name="mobile_number"
                 value={form[key] || ''}
                 onChange={(v) => onChange(key, v)}
-                inputProps={{
-                  name: 'mobile_number',
-                  autoComplete: 'tel',
-                  'aria-label': label,
-                  placeholder: label,
-                }}
               />
             </Box>
           );

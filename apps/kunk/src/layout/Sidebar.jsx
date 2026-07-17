@@ -21,12 +21,13 @@ import { useOperatorAuth } from '@kunk/auth-session';
 import { MENU_SECTIONS } from '../app/menuConfig.js';
 import { allowedPagesForRoles, filterMenuSections } from '../lib/rolePages.js';
 import { useKunkConfig } from '../config/KunkConfigProvider.jsx';
+import { CacheClearButton } from '../components/CacheClearButton.jsx';
 import { closeSidebar } from './utils.js';
 
 const SECTION_ICONS = {
   acolhimento: GroupRoundedIcon,
   loja: ShoppingCartRoundedIcon,
-  parceirosPrescritores: Groups2Icon,
+  profissionais: Groups2Icon,
 };
 
 function Toggler({ open, renderToggle, children }) {
@@ -162,10 +163,11 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
         hidden={collapsed}
         sx={{ display: collapsed ? 'none' : 'flex' }}
       >
-        <img
-          src={config.logo || '/kunkLogo.png'}
-          alt={config.title || 'Kunk Logo'}
-        />
+        {config.logo ? (
+          <CacheClearButton>
+            <img src={config.logo} alt={config.title || 'Logo'} />
+          </CacheClearButton>
+        ) : null}
       </Box>
       <Box sx={{ alignItems: 'center' }}>
         {!collapsed && (

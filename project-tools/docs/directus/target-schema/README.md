@@ -23,7 +23,6 @@
 | `Kunk_Users` | `kunk_users` | 34 |
 | `Orders` | `orders` | 46 |
 | `Orders_files` | `orders_files` | 3 |
-| `Partners` | `partners` | 21 |
 | `Products` | `products` | 17 |
 | `Professionals` | `professionals` | 24 |
 | `Reception` | `reception` | 25 |

@@ -57,7 +57,7 @@ Implementar na `kunk-api` **na mesma entrega** do app `registration`.
 | Token | Opaco (random 32+ bytes, hex/base64url); **nunca** AES no Vite |
 | Armazenamento | Colunas em `users`: `password_reset_token` (hash do token), `password_reset_expires` — ou tabela `password_resets`; preferir **colunas em `users`** no MVP |
 | TTL | **1 hora**, uso único |
-| E-mail | Link `{REGISTRATION_PUBLIC_URL}/nova-senha?token=...` via módulo SMTP (`MODULE_EMAIL_ENABLED`) |
+| E-mail | Link `{REGISTRATION_PUBLIC_URL}/nova-senha?token=...` via módulo SMTP (Admin) |
 | Resposta forgot | Sempre 200 genérico (não revelar se e-mail existe) |
 
 Incluir migration SQL das colunas na entrega do cadastramento.

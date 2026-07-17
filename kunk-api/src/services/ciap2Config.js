@@ -12,13 +12,9 @@ function asBool(v, fallback) {
 }
 
 /**
- * CIAP-2 module: DB is source of truth for admin toggle (default on).
- * MODULE_CIAP2_ENABLED=false forces off without needing DB.
+ * CIAP-2 module: Admin (`system_configs`) is the source of truth (default on).
  */
 async function isEnabled() {
-  if (process.env.MODULE_CIAP2_ENABLED !== undefined && process.env.MODULE_CIAP2_ENABLED !== '') {
-    if (!asBool(process.env.MODULE_CIAP2_ENABLED, true)) return false;
-  }
   const result = await query(
     `SELECT value FROM system_configs WHERE system = 'modules' AND key = $1 LIMIT 1`,
     [CONFIG_KEY]

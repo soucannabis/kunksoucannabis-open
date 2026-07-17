@@ -19,8 +19,6 @@ function createPayload(collection) {
         permissions: '["Acolhimento"]',
         status: 'active',
       };
-    case 'partners':
-      return { status: 'active', first_name: 'P', last_name: 'T', email: `p${Date.now()}@t.com`, user_code: uuidv4() };
     case 'products':
       return { status: 'active', name: 'Prod', sku: `SKU-${Date.now()}`, batch: 'B1' };
     case 'professionals':
@@ -54,8 +52,6 @@ function patchPayload(collection) {
       return { status: 'Atualizado' };
     case 'users':
       return { annotations: 'note' };
-    case 'partners':
-      return { is_favorite: 'true' };
     case 'professionals':
       return { specialty: 'geral' };
     case 'reception':

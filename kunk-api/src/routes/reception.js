@@ -55,6 +55,17 @@ router.post('/', authorize('reception', 'create'), async (req, res, next) => {
   }
 });
 
+router.post('/utalk-sync-waiting', authorize('reception', 'update'), async (req, res, next) => {
+  try {
+    const data = await receptionService.syncUtalkWaiting({
+      concurrency: req.body?.concurrency,
+    });
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.patch('/:id/complete', authorize('reception', 'update'), async (req, res, next) => {
   try {
     const data = await receptionService.complete(req.params.id, req.body?.completion_reason, req.user);
@@ -70,6 +81,27 @@ router.patch('/:id/attendant', authorize('reception', 'update'), async (req, res
       throw new AppError(400, 'VALIDATION_ERROR', 'attendant é obrigatório');
     }
     const data = await receptionService.assignAttendant(req.params.id, req.body.attendant, req.user);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/:id/chat', authorize('reception', 'update'), async (req, res, next) => {
+  try {
+    if (!Object.prototype.hasOwnProperty.call(req.body || {}, 'chat_id')) {
+      throw new AppError(400, 'VALIDATION_ERROR', 'chat_id é obrigatório (use null para limpar)');
+    }
+    const data = await receptionService.setChatId(req.params.id, req.body.chat_id, req.user);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/utalk-sync', authorize('reception', 'update'), async (req, res, next) => {
+  try {
+    const data = await receptionService.syncUtalk(req.params.id);
     res.json(ok(data));
   } catch (err) {
     next(err);

@@ -29,6 +29,6 @@ describe('relations', () => {
 
   it('returns null for unknown keys', () => {
     assert.equal(getRelation('services', 'nope'), null);
-    assert.equal(RELATIONS.partners, undefined);
+    assert.equal(RELATIONS.unknown, undefined);
   });
 });

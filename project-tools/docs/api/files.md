@@ -2,6 +2,8 @@
 
 Substitui `directus_files` + junctions. Tabela `files` no schema alvo + `orders_files`, `users_files`, `services_files`.
 
+O blob pode estar em disco local, Amazon S3 ou Google Cloud Storage (ver [files-cloud-storage.md](./files-cloud-storage.md)). A URL lógica permanece `/api/v1/files/{id}/download` — a API faz proxy com as credenciais do bucket (bucket privado).
+
 ## Endpoints
 
 ### Upload
@@ -48,7 +50,9 @@ GET /files/:id
 GET /files/:id/download
 ```
 
-Retorna stream com `Content-Type` e `Content-Disposition`.
+Retorna stream com `Content-Type` e `Content-Disposition` (`inline` para imagens/PDF).
+
+Auth: operador (`files:read`), associado dono do arquivo, **ou** sem auth quando o `id` aparece no `value` de alguma `system_configs` não sensível (logo/fundo do Kunk e outros assets de branding públicos).
 
 ### Delete
 

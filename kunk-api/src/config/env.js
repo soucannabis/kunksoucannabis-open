@@ -27,6 +27,22 @@ const env = {
   corsOrigin: parseCorsOrigin(process.env.CORS_ORIGIN),
   sessionMaxHours: Number(process.env.SESSION_MAX_HOURS || 168),
   storagePath: process.env.STORAGE_PATH || path.join(__dirname, '../../storage'),
+  /** Active files driver default when DB config is empty: local | s3 | gcs */
+  filesDriver: String(process.env.FILES_DRIVER || 'local').toLowerCase(),
+  filesKeyPrefix: String(process.env.FILES_KEY_PREFIX || 'kunk/'),
+  s3: {
+    bucket: process.env.S3_BUCKET || '',
+    region: process.env.S3_REGION || 'us-east-1',
+    accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+  },
+  gcs: {
+    bucket: process.env.GCS_BUCKET || '',
+    projectId: process.env.GCS_PROJECT_ID || '',
+    clientEmail: process.env.GCS_CLIENT_EMAIL || '',
+    privateKey: process.env.GCS_PRIVATE_KEY || '',
+    credentialsJson: process.env.GCS_CREDENTIALS_JSON || '',
+  },
   nodeEnv: process.env.NODE_ENV || 'development',
   termsDevBypass: bool(process.env.TERMS_DEV_BYPASS, false),
   /** Public base URL of doc-sign app (e.g. http://localhost:4258) for signing_url */
@@ -36,22 +52,6 @@ const env = {
   ),
   /** Master key for system_configs sensitive values (AES-256-GCM). Never stored in DB. */
   configEncryptKey: process.env.CONFIG_ENCRYPT_KEY || '',
-  modules: {
-    pagarme: bool(process.env.MODULE_PAGARME_ENABLED),
-    soucannabis_orders: bool(process.env.MODULE_SOUCANNABIS_ORDERS_ENABLED),
-    loggi: bool(process.env.MODULE_LOGGI_ENABLED),
-    melhorenvio: bool(process.env.MODULE_MELHORENVIO_ENABLED),
-    google_calendar: bool(process.env.MODULE_GOOGLE_CALENDAR_ENABLED),
-    beeviral: bool(process.env.MODULE_BEEVIRAL_ENABLED),
-    utalk: bool(process.env.MODULE_UTALK_ENABLED),
-    pipefy: bool(process.env.MODULE_PIPEFY_ENABLED),
-    brasilnfe: bool(process.env.MODULE_BRASILNFE_ENABLED),
-    scp: bool(process.env.MODULE_SCP_ENABLED),
-    nibo: bool(process.env.MODULE_NIBO_ENABLED),
-    geoapify: bool(process.env.MODULE_GEOAPIFY_ENABLED),
-    ciap2: bool(process.env.MODULE_CIAP2_ENABLED, true),
-    email: bool(process.env.MODULE_EMAIL_ENABLED),
-  },
   /** Public app URLs for e-mail links */
   publicUrls: {
     kunk: String(process.env.KUNK_PUBLIC_URL || process.env.PUBLIC_APP_URL || 'http://localhost:4255').replace(

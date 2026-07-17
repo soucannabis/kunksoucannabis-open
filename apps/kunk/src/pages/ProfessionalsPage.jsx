@@ -24,6 +24,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { useErrorModal } from '../components/errors/ErrorModalProvider.jsx';
+import PhoneField from '../components/PhoneField.jsx';
 import { typeLabel, resolvePriceFromType, normalizeProfessionalTypeId } from './reception/services/servicesUtils.js';
 
 const muiTheme = createTheme();
@@ -311,10 +312,11 @@ export default function ProfessionalsPage() {
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             />
-            <TextField
+            <PhoneField
               label="Telefone"
+              name="phone"
               value={form.phone}
-              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+              onChange={(v) => setForm((f) => ({ ...f, phone: v }))}
             />
             <TextField
               select

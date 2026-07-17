@@ -44,7 +44,11 @@ export default function RegistrationPage() {
         const u = res.data;
         setRows(u ? [u] : []);
         setSelected(u || null);
-        if (u?.patient_user_code) {
+        if (u?.patients?.length) {
+          setPatientNames({
+            [u.user_code]: u.patients.map((p) => displayName(p)).filter(Boolean).join(', '),
+          });
+        } else if (u?.patient_user_code) {
           try {
             const p = await api.getUserByCode(u.patient_user_code);
             if (p.data) {
@@ -61,24 +65,29 @@ export default function RegistrationPage() {
       params.set('limit', String(limit));
       params.set('sort', '-created_date');
       params.set('filter[status][_neq]', 'patient');
+      params.set('patients', '1');
       const res = await api.listUsers(params.toString());
       const data = res.data || [];
       setRows(data);
 
       const names = {};
-      await Promise.all(
-        data
-          .filter((u) => u.patient_user_code)
-          .slice(0, 40)
-          .map(async (u) => {
-            try {
-              const p = await api.getUserByCode(u.patient_user_code);
-              if (p.data) names[u.user_code] = displayName(p.data);
-            } catch {
-              /* ignore */
-            }
-          })
-      );
+      for (const u of data) {
+        const fromHydrate = (u.patients || [])
+          .map((p) => displayName(p))
+          .filter(Boolean);
+        if (fromHydrate.length) {
+          names[u.user_code] = fromHydrate.join(', ');
+          continue;
+        }
+        if (u.patient_user_code) {
+          try {
+            const p = await api.getUserByCode(u.patient_user_code);
+            if (p.data) names[u.user_code] = displayName(p.data);
+          } catch {
+            /* ignore */
+          }
+        }
+      }
       setPatientNames(names);
     } catch (err) {
       showError(err.message || 'Falha ao carregar associados');
@@ -125,7 +134,7 @@ export default function RegistrationPage() {
     try {
       const name = u.associate_name || displayName(u).split(' ')[0] || 'Associado';
       const last = u.associate_last_name || '';
-      await api.createReception({
+      const created = await api.createReception({
         name,
         last_name: last,
         email: u.email_account || u.email || null,
@@ -133,9 +142,9 @@ export default function RegistrationPage() {
         is_associate: true,
         associate_code: u.user_code,
         associate_name: displayName(u),
-        status: 'Espera',
       });
-      navigate(PATHS.triage);
+      const code = created?.data?.code;
+      navigate(code ? `${PATHS.triage}?t=${encodeURIComponent(code)}` : PATHS.triage);
     } catch (err) {
       showError(err.message || 'Falha ao enviar para triagem');
     }

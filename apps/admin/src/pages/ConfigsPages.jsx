@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { VisibleFieldsPicker } from '../components/VisibleFieldsPicker.jsx';
+import { AdminLoader } from '../components/AdminLoader.jsx';
 import { collectionLabel, isDadosCollection } from '../lib/collectionLabels.js';
 import {
   defaultVisibleFields,
@@ -18,50 +19,131 @@ const SYSTEM_LABELS = {
   terms: 'Termos',
   api: 'API',
   modules: 'Módulos',
+  services: 'Serviços',
+  store: 'Loja',
+};
+
+const SYSTEM_BLURBS = {
+  admin: 'Campos visíveis e opções do painel Admin',
+  registration: 'Branding e textos do cadastramento',
+  kunk: 'Aparência, páginas e preferências do app operacional',
+  triage: 'Formulário público e fila de triagem',
+  panel: 'Painel / fila pública',
+  terms: 'Termos e documentos',
+  api: 'Parâmetros da API',
+  modules: 'Flags de módulos',
+  services: 'Tipos e relatório de serviços',
+  store: 'Loja e frete',
 };
 
 function systemLabel(name) {
   return SYSTEM_LABELS[name] || (name ? name.charAt(0).toUpperCase() + name.slice(1) : name);
 }
 
+function systemBlurb(name) {
+  return SYSTEM_BLURBS[name] || 'Variáveis deste sistema';
+}
+
+function sourceLabel(source) {
+  const s = String(source || '').toLowerCase();
+  if (s === 'db' || s === 'database') return 'Banco';
+  if (s === 'env') return 'Env';
+  if (s === 'hardcoded' || s === 'default') return 'Padrão';
+  return source || '—';
+}
+
+function sourceClass(source) {
+  const s = String(source || '').toLowerCase();
+  if (s === 'db' || s === 'database') return 'source-pill source-pill--db';
+  if (s === 'env') return 'source-pill source-pill--env';
+  return 'source-pill source-pill--default';
+}
+
 export function ConfigsIndexPage({ api }) {
   const [systems, setSystems] = useState([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setLoading(true);
       try {
         const res = await api.configSystems();
-        if (!cancelled) setSystems(res.data || []);
+        const list = Array.isArray(res.data) ? res.data : res.data?.systems || [];
+        if (!cancelled) setSystems(list);
       } catch (err) {
         if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [api]);
 
+  const sorted = useMemo(
+    () =>
+      [...systems].sort((a, b) =>
+        systemLabel(a.system).localeCompare(systemLabel(b.system), 'pt-BR')
+      ),
+    [systems]
+  );
+
+  if (loading) {
+    return <AdminLoader label="Carregando variáveis…" />;
+  }
+
   return (
-    <div>
-      <h1>System configs</h1>
-      <p className="muted">Variáveis agrupadas por sistema (cascata DB → env → hardcoded).</p>
-      {error ? <div className="alert alert-error">{error}</div> : null}
-      <div className="grid-2" style={{ marginTop: '1rem' }}>
-        <Link className="collection-link" to="/configs/ciap2">
-          <strong>CIAP-2</strong>
-          <div className="muted">Habilitar/desabilitar motivos de tratamento no Kunk e no cadastramento</div>
-        </Link>
-        <Link className="collection-link" to="/configs/services-types">
-          <strong>Tipos de profissional / relatório</strong>
-          <div className="muted">Taxas por tipo, preço padrão e desconto de doação no relatório</div>
-        </Link>
-        {systems.map((s) => (
-          <Link key={s.system} className="collection-link" to={`/configs/${encodeURIComponent(s.system)}`}>
-            <strong>{systemLabel(s.system)}</strong>
-            <div className="muted">{s.system} · {s.key_count} keys</div>
-          </Link>
-        ))}
+    <div className="configs-page">
+      <div className="admin-top">
+        <div>
+          <h1 style={{ margin: 0 }}>Variáveis</h1>
+          <p className="muted" style={{ margin: '0.25rem 0 0' }}>
+            Agrupadas por sistema · cascata banco → env → padrão
+          </p>
+        </div>
       </div>
+      {error ? <div className="alert alert-error">{error}</div> : null}
+
+      {sorted.length === 0 ? (
+        <div className="card configs-empty">
+          <p className="muted" style={{ margin: 0 }}>
+            Nenhum sistema de configuração encontrado.
+          </p>
+        </div>
+      ) : (
+        <div className="configs-systems-grid">
+          {sorted.map((s) => {
+            const count = Number(s.key_count) || 0;
+            return (
+              <Link
+                key={s.system}
+                className="configs-system-card"
+                to={`/configs/${encodeURIComponent(s.system)}`}
+              >
+                <span className="configs-system-icon" aria-hidden="true">
+                  {systemLabel(s.system).charAt(0)}
+                </span>
+                <span className="configs-system-body">
+                  <strong className="configs-system-title">{systemLabel(s.system)}</strong>
+                  <span className="muted configs-system-blurb">{systemBlurb(s.system)}</span>
+                  <span className="configs-system-meta">
+                    <code className="mono">{s.system}</code>
+                    <span className="configs-key-badge">
+                      {count} {count === 1 ? 'chave' : 'chaves'}
+                    </span>
+                  </span>
+                </span>
+                <span className="configs-system-arrow" aria-hidden="true">
+                  →
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -79,6 +161,7 @@ export function ConfigsSystemPage({ api }) {
   const [fieldsDirty, setFieldsDirty] = useState({});
   const [fieldsBusy, setFieldsBusy] = useState({});
   const [openCollections, setOpenCollections] = useState({});
+  const [loading, setLoading] = useState(true);
 
   async function reload() {
     const res = await api.configBySystem(system);
@@ -88,13 +171,18 @@ export function ConfigsSystemPage({ api }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setLoading(true);
       try {
         await reload();
       } catch (err) {
         if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api, system]);
 
@@ -117,7 +205,9 @@ export function ConfigsSystemPage({ api }) {
         if (!cancelled) setError(err.message);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [api, isAdmin]);
 
   const visibleFieldItems = useMemo(() => {
@@ -151,7 +241,9 @@ export function ConfigsSystemPage({ api }) {
         const item = configByCollection[col.name];
         const parsed = parseFieldsJson(item?.value || item?.resolved_value);
         const schema = schemaByCollection[col.name];
-        const allowed = new Set((schema?.columns || []).filter((c) => !(schema.sensitive || []).includes(c)));
+        const allowed = new Set(
+          (schema?.columns || []).filter((c) => !(schema.sensitive || []).includes(c))
+        );
         if (parsed?.length) {
           const filtered = parsed.filter((f) => allowed.has(f));
           next[col.name] = filtered.length ? filtered : defaultVisibleFields(schema);
@@ -167,7 +259,7 @@ export function ConfigsSystemPage({ api }) {
     setError('');
     setMessage('');
     try {
-      const value = drafts[item.id] !== undefined ? drafts[item.id] : (item.is_sensitive ? '' : item.value);
+      const value = drafts[item.id] !== undefined ? drafts[item.id] : item.is_sensitive ? '' : item.value;
       if (item.is_sensitive && !value) {
         setError('Informe um novo valor para config sensível');
         return;
@@ -238,25 +330,42 @@ export function ConfigsSystemPage({ api }) {
     setOpenCollections((prev) => ({ ...prev, [name]: !prev[name] }));
   }
 
+  if (loading) {
+    return <AdminLoader label="Carregando variáveis…" />;
+  }
+
   return (
-    <div>
+    <div className="configs-page">
       <div className="admin-top">
         <div>
-          <h1>Configs · {systemLabel(system)}</h1>
-          <p className="muted"><Link to="/configs">← Sistemas</Link></p>
+          <p className="configs-breadcrumb muted">
+            <Link to="/configs">Variáveis</Link>
+            <span aria-hidden="true"> / </span>
+            <span>{systemLabel(system)}</span>
+          </p>
+          <h1 style={{ margin: 0 }}>Variáveis · {systemLabel(system)}</h1>
+          <p className="muted" style={{ margin: '0.25rem 0 0' }}>
+            {systemBlurb(system)} · <code className="mono">{system}</code>
+          </p>
         </div>
       </div>
-      {error ? <div className="alert alert-error" role="alert">{error}</div> : null}
+      {error ? (
+        <div className="alert alert-error" role="alert">
+          {error}
+        </div>
+      ) : null}
       {message ? <div className="alert alert-info">{message}</div> : null}
 
       {isAdmin ? (
-        <section>
-          <h2>Campos visíveis em Dados</h2>
-          <p className="muted">
-            Clique em uma tabela para configurar os campos da listagem.
-          </p>
+        <section className="configs-section">
+          <div className="configs-section-head">
+            <h2 style={{ margin: 0 }}>Campos visíveis em Registros</h2>
+            <p className="muted" style={{ margin: '0.35rem 0 0' }}>
+              Clique em uma tabela para configurar os campos da listagem.
+            </p>
+          </div>
           {dadosCollections.length === 0 ? (
-            <div className="card muted">Carregando tabelas…</div>
+            <AdminLoader label="Carregando tabelas…" className="admin-loader--embedded" />
           ) : (
             <div className="config-accordion">
               {dadosCollections.map((col) => {
@@ -273,12 +382,14 @@ export function ConfigsSystemPage({ api }) {
                       aria-expanded={open}
                       onClick={() => toggleCollection(col.name)}
                     >
-                      <span className="config-accordion-chevron" aria-hidden="true">{open ? '▾' : '▸'}</span>
+                      <span className="config-accordion-chevron" aria-hidden="true">
+                        {open ? '▾' : '▸'}
+                      </span>
                       <span className="config-accordion-title">
                         <strong>{collectionLabel(col.name)}</strong>
                         <span className="mono muted">{col.name}</span>
                       </span>
-                      <span className="muted" style={{ fontSize: '0.8rem' }}>
+                      <span className={`configs-status-pill${hasSaved ? ' is-saved' : ''}`}>
                         {hasSaved ? 'salvo' : 'padrão'} · {selected.length} campos
                       </span>
                     </button>
@@ -293,7 +404,7 @@ export function ConfigsSystemPage({ api }) {
                             setFieldsDirty((d) => ({ ...d, [col.name]: true }));
                           }}
                         />
-                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.85rem', flexWrap: 'wrap' }}>
+                        <div className="configs-row-actions">
                           <button
                             type="button"
                             className="btn btn-primary"
@@ -309,7 +420,7 @@ export function ConfigsSystemPage({ api }) {
                               disabled={busy}
                               onClick={() => clearVisibleForCollection(col.name)}
                             >
-                              Clear
+                              Limpar
                             </button>
                           ) : null}
                         </div>
@@ -322,52 +433,81 @@ export function ConfigsSystemPage({ api }) {
           )}
         </section>
       ) : (
-        <>
-          <h2>Keys</h2>
-          <div className="card table-wrap">
-            <table className="data">
-              <thead>
-                <tr>
-                  <th>Key</th>
-                  <th>Valor</th>
-                  <th>Source</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="muted">Nenhuma key neste grupo.</td>
-                  </tr>
-                ) : (
-                  items.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <div className="mono">{item.key}</div>
-                        <div className="muted">{item.description}</div>
-                      </td>
-                      <td>
-                        <input
-                          style={{ width: '100%' }}
-                          type={item.is_sensitive ? 'password' : 'text'}
-                          placeholder={item.is_sensitive ? (item.has_value ? '********' : '(vazio)') : (item.resolved_value || '')}
-                          value={drafts[item.id] !== undefined ? drafts[item.id] : (item.is_sensitive ? '' : (item.value || ''))}
-                          onChange={(e) => setDrafts((d) => ({ ...d, [item.id]: e.target.value }))}
-                        />
-                      </td>
-                      <td className="mono">{item.source}</td>
-                      <td style={{ whiteSpace: 'nowrap' }}>
-                        <button type="button" className="btn btn-primary" onClick={() => saveItem(item)}>Salvar</button>
-                        {' '}
-                        <button type="button" className="btn" onClick={() => clearItem(item)}>Clear</button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+        <section className="configs-section">
+          <div className="configs-section-head">
+            <h2 style={{ margin: 0 }}>Chaves</h2>
+            <p className="muted" style={{ margin: '0.35rem 0 0' }}>
+              {items.length === 0
+                ? 'Nenhuma chave neste grupo.'
+                : `${items.length} chave${items.length === 1 ? '' : 's'} neste sistema`}
+            </p>
           </div>
-        </>
+
+          {items.length === 0 ? (
+            <div className="card configs-empty">
+              <p className="muted" style={{ margin: 0 }}>
+                Nenhuma key neste grupo.
+              </p>
+            </div>
+          ) : (
+            <div className="configs-keys-list">
+              {items.map((item) => {
+                const draftValue =
+                  drafts[item.id] !== undefined
+                    ? drafts[item.id]
+                    : item.is_sensitive
+                      ? ''
+                      : item.value || '';
+                return (
+                  <article key={item.id} className="card configs-key-card">
+                    <header className="configs-key-head">
+                      <div className="configs-key-titles">
+                        <code className="mono configs-key-name">{item.key}</code>
+                        {item.description ? (
+                          <p className="muted configs-key-desc">{item.description}</p>
+                        ) : null}
+                      </div>
+                      <span className={sourceClass(item.source)}>{sourceLabel(item.source)}</span>
+                    </header>
+                    <div className="configs-key-body">
+                      <label className="field configs-key-field">
+                        <span className="configs-key-field-label">
+                          {item.is_sensitive ? 'Valor (sensível)' : 'Valor'}
+                        </span>
+                        <input
+                          type={item.is_sensitive ? 'password' : 'text'}
+                          placeholder={
+                            item.is_sensitive
+                              ? item.has_value
+                                ? '********'
+                                : '(vazio)'
+                              : item.resolved_value || ''
+                          }
+                          value={draftValue}
+                          onChange={(e) =>
+                            setDrafts((d) => ({ ...d, [item.id]: e.target.value }))
+                          }
+                        />
+                      </label>
+                      <div className="configs-row-actions">
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          onClick={() => saveItem(item)}
+                        >
+                          Salvar
+                        </button>
+                        <button type="button" className="btn" onClick={() => clearItem(item)}>
+                          Limpar
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
       )}
     </div>
   );

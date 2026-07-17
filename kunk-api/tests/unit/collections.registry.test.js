@@ -10,7 +10,15 @@ const NON_ITEMS_TABLES = new Set([
   'system_configs',
   'system_activity',
   'system_api_credentials',
+  'system_errors',
+  'system_error_resolutions',
+  'web_vitals',
   'product_stock_movements',
+  'term_templates',
+  'term_template_versions',
+  'term_contracts',
+  'term_signatures',
+  'term_events',
 ]);
 
 describe('collections.registry', () => {

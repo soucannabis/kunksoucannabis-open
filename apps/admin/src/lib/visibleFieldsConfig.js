@@ -31,7 +31,7 @@ export function formatFieldsForDisplay(fields) {
 
 export function defaultVisibleFields(schema) {
   if (!schema) return ['id'];
-  const skip = new Set(schema.sensitive || []);
+  const skip = new Set([...(schema.sensitive || []), 'is_sample']);
   const cols = (schema.columns || []).filter((c) => !skip.has(c));
   return cols.slice(0, 6);
 }

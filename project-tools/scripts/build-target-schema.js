@@ -29,6 +29,7 @@ const MANUAL_EXCLUDED = [
   { collection: "services", field: "message", reason: "unused", note: "Sem read/write" },
   { collection: "services", field: "coupon_id", reason: "scope", note: "Coupons fora do produto open source" },
   { collection: "Professionals", field: "at", reason: "unused", note: "Sem referência" },
+  { collection: "Reception", field: "at", reason: "unused", note: "Campo opaco removido do schema OSS" },
   { collection: "Kunk_Users", field: "type", reason: "unused", note: "Sem referência no OSS" },
 ];
 
@@ -38,8 +39,12 @@ const EXCLUDED_TABLES = [
     reason: "Estrutura de cupons fora do escopo open source",
   },
   {
+    old: "Partners",
+    reason: "Parceiros/afiliados removidos do produto open source",
+  },
+  {
     old: "Partners_files",
-    reason: "Junction morta; documents.js não faz upload para parceiros",
+    reason: "Junction de Partners; Partners fora do escopo open source",
   },
 ];
 
@@ -280,6 +285,8 @@ function writeSql(collections) {
   lines.push("  filename VARCHAR(512),");
   lines.push("  mime_type VARCHAR(128),");
   lines.push("  storage_path TEXT,");
+  lines.push("  storage_driver VARCHAR(16) NOT NULL DEFAULT 'local',");
+  lines.push("  storage_key TEXT,");
   lines.push("  created_at TIMESTAMPTZ DEFAULT NOW()");
   lines.push(");");
   lines.push("");

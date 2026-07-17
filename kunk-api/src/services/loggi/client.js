@@ -192,6 +192,22 @@ function clearTokenCache() {
   cachedTokenExp = 0;
 }
 
+/** Garante metadados de credenciais mesmo sem o SQL de seed aplicado. */
+async function ensureCredentialRows() {
+  const { query } = require('../../db/pool');
+  await query(
+    `INSERT INTO system_api_credentials (
+       service, field_key, encrypted_value, env_fallback, is_secret, description
+     ) VALUES
+       ('loggi', 'client_id', NULL, 'LOGGI_CLIENT_ID', true, 'Loggi OAuth client_id'),
+       ('loggi', 'client_secret', NULL, 'LOGGI_CLIENT_SECRET', true, 'Loggi OAuth client_secret'),
+       ('loggi', 'company_id', NULL, 'LOGGI_COMPANY_ID', false, 'Loggi company id'),
+       ('loggi', 'api_base_url', NULL, 'LOGGI_URL_API', false, 'Loggi API base URL'),
+       ('loggi', 'token_url', NULL, 'LOGGI_TOKEN_URL', false, 'Loggi OAuth token URL')
+     ON CONFLICT (service, field_key) DO NOTHING`
+  );
+}
+
 module.exports = {
   getLoggiCredentials,
   loggiRequest,
@@ -200,4 +216,5 @@ module.exports = {
   clearTokenCache,
   getApiBase,
   parseLoggiErrorBody,
+  ensureCredentialRows,
 };

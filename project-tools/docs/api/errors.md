@@ -53,7 +53,7 @@ Campos fora do schema da collection:
 {
   "code": "VALIDATION_ERROR",
   "message": "Campos desconhecidos no payload",
-  "details": { "unknown_fields": ["partner_code", "delivery_problem"] }
+  "details": { "unknown_fields": ["legacy_field", "delivery_problem"] }
 }
 ```
 

@@ -156,7 +156,6 @@ export default function GlobalAppSearch() {
         is_associate: true,
         associate_code: code,
         associate_name: name,
-        status: 'Espera',
       });
       openFullUrl(PATHS.triage);
       setOpen(false);

@@ -1,11 +1,14 @@
 'use strict';
 
 const path = require('path');
-const fs = require('fs/promises');
 const { v4: uuidv4 } = require('uuid');
 const { query } = require('../db/pool');
-const { env } = require('../config/env');
 const { AppError } = require('../utils/response');
+const {
+  getActiveStorageDriver,
+  getDriverForFile,
+  objectKeyForFile,
+} = require('../storage');
 
 const ATTACH_MAP = {
   orders: { table: 'orders_files', fk: 'order_id' },
@@ -13,28 +16,41 @@ const ATTACH_MAP = {
   services: { table: 'services_files', fk: 'service_id' },
 };
 
-async function ensureStorage() {
-  await fs.mkdir(env.storagePath, { recursive: true });
+function fileUrl(id) {
+  return `/api/v1/files/${id}/download`;
+}
+
+function withUrl(row) {
+  return { ...row, url: fileUrl(row.id) };
 }
 
 async function createFile({ buffer, filename, mimeType }) {
-  await ensureStorage();
+  const { driver, config } = await getActiveStorageDriver();
   const id = uuidv4();
   const safeName = (filename || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
-  const storagePath = path.join(env.storagePath, `${id}_${safeName}`);
-  await fs.writeFile(storagePath, buffer);
+  const displayName = filename || safeName;
+  const mime = mimeType || 'application/octet-stream';
+
+  let storageKey;
+  let storagePath = null;
+
+  if (driver.name === 'local') {
+    storageKey = `${id}_${safeName}`;
+    const put = await driver.put({ key: storageKey, buffer, mimeType: mime, filename: displayName });
+    storagePath = put.absolutePath || path.join(config.local.path, storageKey);
+  } else {
+    storageKey = objectKeyForFile({ id, filename: displayName, keyPrefix: config.keyPrefix });
+    await driver.put({ key: storageKey, buffer, mimeType: mime, filename: displayName });
+    storagePath = storageKey;
+  }
 
   const result = await query(
-    `INSERT INTO files (id, filename, mime_type, storage_path, created_at)
-     VALUES ($1, $2, $3, $4, NOW()) RETURNING *`,
-    [id, filename || safeName, mimeType || 'application/octet-stream', storagePath]
+    `INSERT INTO files (id, filename, mime_type, storage_path, storage_driver, storage_key, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING *`,
+    [id, displayName, mime, storagePath, driver.name, storageKey]
   );
 
-  const row = result.rows[0];
-  return {
-    ...row,
-    url: `/api/v1/files/${row.id}/download`,
-  };
+  return withUrl(result.rows[0]);
 }
 
 async function listFiles({ limit = 25, offset = 0, search = null, userId = null, docKind = null } = {}) {
@@ -61,7 +77,7 @@ async function listFiles({ limit = 25, offset = 0, search = null, userId = null,
     );
     params.push(lim, off);
     const result = await query(
-      `SELECT f.id, f.filename, f.mime_type, f.storage_path, f.created_at,
+      `SELECT f.id, f.filename, f.mime_type, f.storage_path, f.storage_driver, f.storage_key, f.created_at,
               uf.doc_kind, uf.doc_type, uf.side, uf.subject, uf.user_id
        FROM users_files uf
        JOIN files f ON f.id = uf.file_id
@@ -71,10 +87,7 @@ async function listFiles({ limit = 25, offset = 0, search = null, userId = null,
       params
     );
     return {
-      data: result.rows.map((row) => ({
-        ...row,
-        url: `/api/v1/files/${row.id}/download`,
-      })),
+      data: result.rows.map(withUrl),
       meta: {
         filter_count: countResult.rows[0].total,
         total_count: countResult.rows[0].total,
@@ -93,17 +106,14 @@ async function listFiles({ limit = 25, offset = 0, search = null, userId = null,
   const countResult = await query(`SELECT COUNT(*)::int AS total FROM files ${where}`, params);
   params.push(lim, off);
   const result = await query(
-    `SELECT id, filename, mime_type, storage_path, created_at
+    `SELECT id, filename, mime_type, storage_path, storage_driver, storage_key, created_at
      FROM files ${where}
      ORDER BY created_at DESC NULLS LAST, id DESC
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params
   );
   return {
-    data: result.rows.map((row) => ({
-      ...row,
-      url: `/api/v1/files/${row.id}/download`,
-    })),
+    data: result.rows.map(withUrl),
     meta: {
       filter_count: countResult.rows[0].total,
       total_count: countResult.rows[0].total,
@@ -118,10 +128,30 @@ async function getFile(id) {
   if (!result.rows[0]) {
     throw new AppError(404, 'NOT_FOUND', 'Arquivo não encontrado');
   }
-  return {
-    ...result.rows[0],
-    url: `/api/v1/files/${id}/download`,
-  };
+  return withUrl(result.rows[0]);
+}
+
+function fileObjectKey(file) {
+  return file.storage_key || file.storage_path;
+}
+
+async function openFileStream(file) {
+  const driver = await getDriverForFile(file);
+  return driver.get({ key: fileObjectKey(file) });
+}
+
+async function readFileBuffer(fileOrId) {
+  const file = typeof fileOrId === 'object' ? fileOrId : await getFile(fileOrId);
+  const driver = await getDriverForFile(file);
+  if (typeof driver.getBuffer === 'function') {
+    return driver.getBuffer({ key: fileObjectKey(file) });
+  }
+  const stream = await driver.get({ key: fileObjectKey(file) });
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
 }
 
 async function deleteFile(id) {
@@ -131,9 +161,10 @@ async function deleteFile(id) {
   await query(`DELETE FROM services_files WHERE file_id = $1`, [id]);
   await query(`DELETE FROM files WHERE id = $1`, [id]);
   try {
-    await fs.unlink(file.storage_path);
+    const driver = await getDriverForFile(file);
+    await driver.delete({ key: fileObjectKey(file) });
   } catch {
-    /* ignore missing file */
+    /* ignore missing blob */
   }
   return { id };
 }
@@ -183,12 +214,35 @@ async function detachFile(fileId, collection, itemId) {
   return { id: result.rows[0].id };
 }
 
+async function countLocalFiles() {
+  const result = await query(
+    `SELECT COUNT(*)::int AS total
+     FROM files
+     WHERE COALESCE(storage_driver, 'local') = 'local'`
+  );
+  return result.rows[0].total;
+}
+
+async function countCloudFiles() {
+  const result = await query(
+    `SELECT COUNT(*)::int AS total
+     FROM files
+     WHERE storage_driver IN ('s3', 'gcs')`
+  );
+  return result.rows[0].total;
+}
+
 module.exports = {
   ATTACH_MAP,
   createFile,
   listFiles,
   getFile,
+  openFileStream,
+  readFileBuffer,
   deleteFile,
   attachFile,
   detachFile,
+  countLocalFiles,
+  countCloudFiles,
+  fileObjectKey,
 };

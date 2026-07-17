@@ -78,14 +78,12 @@ Referência legada: [`kunksoucannabis/`](../../../../kunksoucannabis/) + [`kunks
 | Novo pedido (carrinho / checkout) | `/app/loja/novo-pedido` | [pages/novo-pedido.md](./pages/novo-pedido.md) · **[spec](./pedidos/README.md)** |
 | Carrinho (rota top-level) | `/cart` | [pages/cart-top-level.md](./pages/cart-top-level.md) — **não portar** (unificar com novo-pedido) |
 
-### Parceiros, prescritores e cupons
+### Prescritores e cupons
 
 | Página | Rota | Doc |
 |---|---|---|
-| Parceiros | `/app/parceiros` | [pages/parceiros.md](./pages/parceiros.md) |
 | Prescritores | `/app/prescritores` | [pages/prescritores.md](./pages/prescritores.md) — gestão OSS em [servicos/](./servicos/README.md) (`/app/profissionais`) |
 | Cupons (serviço social) | `/app/servico-social/cupons` | [pages/cupons.md](./pages/cupons.md) |
-| Parceiros — cadastro (top-level) | `/parceiros/cadastro` | [pages/parceiros-cadastro-top-level.md](./pages/parceiros-cadastro-top-level.md) |
 | Relatório de pedidos (externo) | `/relatorio/pedidos` | [pages/relatorio-pedidos-externo.md](./pages/relatorio-pedidos-externo.md) |
 | Relatório de serviços (externo) | `/relatorio/servicos` | [pages/relatorio-servicos-externo.md](./pages/relatorio-servicos-externo.md) · **[spec](./relatorios-servicos/README.md)** |
 | Relatórios — pedidos (staff) | `/app/relatorios/pedidos` | [pages/relatorios-pedidos.md](./pages/relatorios-pedidos.md) — **fora do escopo v1 serviços** |
@@ -132,7 +130,7 @@ Módulos de terceiros devem vir **desabilitados por padrão** no OSS ([MANIFESTO
 | Pedidos SouCannabis | Carrinho (catálogo/tags) + sync pós-pago + split | Requer Pagar.me — [pagamentos-soucannabis/](./pagamentos-soucannabis/README.md) |
 | Loggi / Melhor Envio | Pedidos, novo pedido | Módulo opcional |
 | Google Calendar | Serviços | Módulo opcional |
-| Beeviral (+ Analytics) | Pedidos, triagem, parceiros, painel | Candidato a remover (SC) |
+| Beeviral (+ Analytics) | Pedidos, triagem, painel | Candidato a remover (SC) |
 | Nibo | Nibo Dashboard | Módulo opcional |
 | BrasilNFe | Pedidos | Módulo opcional / fiscal BR |
 | Geoapify | Pedidos | Módulo opcional |

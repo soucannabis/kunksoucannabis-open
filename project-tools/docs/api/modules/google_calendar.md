@@ -8,12 +8,11 @@
 
 | Flag | Origem |
 |---|---|
-| `MODULE_GOOGLE_CALENDAR_ENABLED=true` | Env |
-| `modules.google_calendar.enabled` | `system_configs` |
-| `modules.google_calendar.use_for_scheduling` | default `true` — toggle no admin |
+| `modules.google_calendar.enabled` | Admin (`system_configs`) |
+| `modules.google_calendar.use_for_scheduling` | default `false` — toggle no admin |
 | `modules.google_calendar.primary_calendar_id` | Calendário principal da aplicação (select no admin) |
 
-Desabilitado no env → `503 MODULE_DISABLED`.  
+Desabilitado → `503 MODULE_DISABLED`.  
 `use_for_scheduling=false` → `403 SCHEDULING_DISABLED` em create/update/delete de eventos.
 
 ## Prefixo

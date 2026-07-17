@@ -17,7 +17,9 @@
 | [domain-routes.md](./domain-routes.md) | Rotas de negócio (orders, services, auth…) |
 | [doc-sign.md](./doc-sign.md) | Termos e assinaturas nativos (substitui DocuSeal) |
 | [files.md](./files.md) | Upload, download e metadados de arquivos |
-| [files-cloud-storage.md](./files-cloud-storage.md) | **Futuro:** buckets S3 / GCS / Azure (planejamento) |
+| [files-cloud-storage.md](./files-cloud-storage.md) | Drivers local / S3 / GCS + migração + lock |
+| [storage-s3-setup.md](./storage-s3-setup.md) | Como criar bucket S3 privado + IAM + credenciais |
+| [storage-gcs-setup.md](./storage-gcs-setup.md) | Como criar bucket GCS privado + service account |
 | [modules.md](./modules.md) | Módulos opcionais (Loggi, Pagar.me, Pedidos SouCannabis, etc.) |
 | [modules/credentials.md](./modules/credentials.md) | Tabela `system_api_credentials` + política de secrets |
 | [modules/loggi.md](./modules/loggi.md) | Cotação, etiqueta, teste Loggi |
@@ -25,6 +27,9 @@
 | [modules/pagarme.md](./modules/pagarme.md) | Checkout, recipients, webhooks, split |
 | [modules/soucannabis_orders.md](./modules/soucannabis_orders.md) | Cliente API externa SC + sync de pedidos |
 | [errors.md](./errors.md) | Formato de erros e códigos |
+| [system-errors.md](./system-errors.md) | Observabilidade nativa (`system_errors`) |
+| [web-vitals.md](./web-vitals.md) | Core Web Vitals (`web_vitals`) |
+| [cache.md](./cache.md) | Memory cache operacional + flag Admin |
 | [migration-from-directus.md](./migration-from-directus.md) | Mapa Directus / kunkserver → nova API |
 | [openapi.yaml](./openapi.yaml) | Esboço OpenAPI 3.0 |
 
@@ -53,7 +58,7 @@ Detalhes em [authentication.md](./authentication.md).
 
 Fonte: [`../directus/target-schema/README.md`](../directus/target-schema/README.md) e [`../../sql/target-schema.sql`](../../sql/target-schema.sql).
 
-`users`, `system_users`, `orders`, `orders_files`, `partners`, `institutional_clients`, `products`, `professionals`, `reception`, `reports`, `services`, `services_files`, `tags`, `users_api`, `users_files`, `files`
+`users`, `system_users`, `orders`, `orders_files`, `institutional_clients`, `products`, `professionals`, `reception`, `reports`, `services`, `services_files`, `tags`, `users_api`, `users_files`, `files`
 
 ## Relação com o manifesto
 
@@ -67,6 +72,7 @@ Alinha ao [MANIFESTO.md](../../../MANIFESTO.md) §3.1 e §3.1.3:
 
 Documentação das apps (estrutura multi-app + cadastramento primeiro):
 
+- [`../funcionalidades/`](../funcionalidades/) — mapa de módulos/páginas + status de testes
 - [`../frontend/README.md`](../frontend/README.md)
 - [`../frontend/cadastramento/`](../frontend/cadastramento/) — fluxo, campos, UI, requisitos de API e gaps
 - Índice geral: [`../README.md`](../README.md)

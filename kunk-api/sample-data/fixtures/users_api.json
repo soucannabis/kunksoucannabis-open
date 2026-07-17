@@ -1,6 +1,7 @@
 [
   {
     "email": "{\"label\":\"demo-integration\",\"scopes\":[\"*\"]}",
-    "token": "$2b$08$R/Bcvbkt2uki6uas8Ml/SuoG7p69pJgkkr.uOp4vfqtpI1AcmP1yC"
+    "token": "$2b$08$n1ofrLHZU9ypwFUtN6aZ0.8D2Qp7FSZAog9yPCd2U2C3o5eaBnzrm",
+    "is_sample": true
   }
 ]

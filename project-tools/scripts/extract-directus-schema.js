@@ -58,13 +58,6 @@ const LOGICAL_LINK_RULES = [
   },
   {
     collection: "Users",
-    field: "partner_code",
-    related_collection: "Partners",
-    related_field: "user_code",
-    note: "Código do parceiro; nome fica em partner_name.",
-  },
-  {
-    collection: "Users",
     field: "responsible_for",
     related_collection: "Users",
     related_field: "user_code",
@@ -85,32 +78,11 @@ const LOGICAL_LINK_RULES = [
     note: "Código do associado no atendimento, sem FK.",
   },
   {
-    collection: "Partners_files",
-    field: "Partners_id",
-    related_collection: "Partners",
-    related_field: "id",
-    note: "Junction de arquivos sem meta/relation registrada no Directus.",
-  },
-  {
-    collection: "Partners_files",
-    field: "directus_files_id",
-    related_collection: "directus_files",
-    related_field: "id",
-    note: "Junction → arquivo Directus; relation não registrada.",
-  },
-  {
     collection: "Kunk_Users",
     field: "associates",
     related_collection: "Users",
     related_field: "user_code",
     note: "Lista/texto de associados vinculados ao usuário interno.",
-  },
-  {
-    collection: "Partners",
-    field: "associates",
-    related_collection: "Users",
-    related_field: "user_code",
-    note: "Lista/texto de associados do parceiro.",
   },
 ];
 

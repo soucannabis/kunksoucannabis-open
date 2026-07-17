@@ -122,12 +122,10 @@ Baixa automática de estoque ao passar pedido de **Aguardando pagamento** → **
 
 ---
 
-## Partners / Professionals
+## Professionals
 
 | Método | Path | Descrição |
 |---|---|---|
-| GET | `/partners/by-code/:user_code` | Lookup |
-| PATCH | `/partners/:id/favorite` | `is_favorite` |
 | GET | `/professionals` | Lista com filtros de agenda |
 | PATCH | `/professionals/:id/donation-balance` | Ajuste de saldo |
 

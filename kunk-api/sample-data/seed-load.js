@@ -1,0 +1,873 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * Sample data massivo para teste de carga.
+ *
+ * Uso:
+ *   cd kunk-api && npm run seed:load
+ *   npm run seed:load -- --profile=smoke
+ *   npm run seed:load -- --profile=large
+ *   npm run seed:load -- --profile=medium --batch=500
+ *   npm run seed:load -- --users=2000 --orders=4000
+ *
+ * Flags:
+ *   --profile=smoke|medium|large|xlarge   Perfil de volumes (default: medium)
+ *   --batch=N                             Tamanho do lote de INSERT (default: 250)
+ *   --users=N --orders=N --services=N …   Sobrescreve contagens do perfil
+ *   --no-truncate                         Não trunca (só anexar — emails únicos)
+ *   --yes                                 Confirma perfil large/xlarge sem prompt
+ */
+
+const crypto = require('crypto');
+const path = require('path');
+const bcrypt = require('bcrypt');
+const { Pool } = require('pg');
+
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+const manifest = require('./manifest-load.json');
+const demoManifest = require('./manifest.json');
+
+const DEMO_PASSWORD = manifest.demo_login.password;
+const SALT_ROUNDS = 8;
+const QUOTED = new Set(['user']);
+
+const FIRST_NAMES = [
+  'Ana', 'Bruno', 'Carla', 'Diego', 'Elena', 'Fábio', 'Gabriela', 'Hugo', 'Iris', 'João',
+  'Karen', 'Lucas', 'Marina', 'Nuno', 'Olívia', 'Paulo', 'Queila', 'Rafael', 'Sofia', 'Tiago',
+  'Úrsula', 'Vitor', 'Wanda', 'Xavier', 'Yasmin', 'Zeca', 'Beatriz', 'Caio', 'Débora', 'Eduardo',
+];
+const LAST_NAMES = [
+  'Almeida', 'Barbosa', 'Cardoso', 'Dias', 'Esteves', 'Freitas', 'Gomes', 'Henrique', 'Ibrahim',
+  'Junqueira', 'Klein', 'Lima', 'Mendes', 'Nogueira', 'Oliveira', 'Pereira', 'Queiroz', 'Ramos',
+  'Silva', 'Teixeira', 'Uchoa', 'Vieira', 'Wagner', 'Xavier', 'Yamamoto', 'Zanetti',
+];
+const CITIES = [
+  ['São Paulo', 'SP'], ['Campinas', 'SP'], ['Curitiba', 'PR'], ['Florianópolis', 'SC'],
+  ['Belo Horizonte', 'MG'], ['Porto Alegre', 'RS'], ['Recife', 'PE'], ['Salvador', 'BA'],
+  ['Brasília', 'DF'], ['Goiânia', 'GO'],
+];
+const ORDER_STATUSES = [
+  'Aguardando pagamento', 'Pagamento concluído', 'Em produção', 'Produção Finalizada',
+  'Adicionado no sistema', 'Enviado', 'Entregue', 'Cancelado',
+];
+const SERVICE_STATUSES = ['Aguardando Pagamento', 'Pagamento Concluído'];
+const RECEPTION_STATUSES = ['waiting', 'waiting', 'waiting', 'done', 'waiting'];
+const CIAP = ['A98', 'P76', 'L18', 'N01', 'R74', 'T90', 'K86'];
+const GENDER_OPTIONS = [
+  'homem-cis', 'mulher-cis', 'homem-trans', 'mulher-trans', 'travesti', 'nao-binario', 'outro',
+];
+
+const PRODUCT_BASE = [
+  { name: 'Spectrum Oil 10ml', sku: 'KNK-OIL-100', type: 'oil', unit: 'ml', concentration: 100, price: 189.9, category: 'wellness' },
+  { name: 'Spectrum Oil 30ml', sku: 'KNK-OIL-300', type: 'oil', unit: 'ml', concentration: 300, price: 349.9, category: 'wellness' },
+  { name: 'Calm Caps 30ct', sku: 'KNK-CAP-25', type: 'capsule', unit: 'unit', concentration: 25, price: 159.9, category: 'sleep' },
+  { name: 'Focus Softgel 30ct', sku: 'KNK-SFT-15', type: 'softgel', unit: 'unit', concentration: 15, price: 129.9, category: 'focus' },
+  { name: 'Recovery Balm 50g', sku: 'KNK-BAL-50', type: 'topical', unit: 'g', concentration: 50, price: 99.9, category: 'recovery' },
+  { name: 'Night Drops 15ml', sku: 'KNK-DRP-150', type: 'oil', unit: 'ml', concentration: 150, price: 219.9, category: 'sleep' },
+];
+
+function uuid() {
+  return crypto.randomUUID();
+}
+
+function pick(arr, i) {
+  return arr[i % arr.length];
+}
+
+function fakeCpf(n) {
+  const base = String(90000000000 + (n % 8999999999)).padStart(11, '0');
+  return `${base.slice(0, 3)}.${base.slice(3, 6)}.${base.slice(6, 9)}-${base.slice(9)}`;
+}
+
+function fakePhone(n) {
+  const ddd = 11 + (n % 80);
+  const num = String(900000000 + (n % 100000000)).slice(-9);
+  return `+55${ddd}${num}`;
+}
+
+function fakeCep(n) {
+  const raw = String(10000000 + (n % 89999999)).padStart(8, '0');
+  return `${raw.slice(0, 5)}-${raw.slice(5)}`;
+}
+
+function daysAgo(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - Math.abs(n));
+  return d.toISOString();
+}
+
+function dateOnlyDaysAgo(n) {
+  return daysAgo(n).slice(0, 10);
+}
+
+function serializeValue(v) {
+  if (v === undefined) return null;
+  if (v === null) return null;
+  if (typeof v === 'object') return JSON.stringify(v);
+  return v;
+}
+
+function quoteCol(name) {
+  return QUOTED.has(name) ? `"${name}"` : name;
+}
+
+function parseArgs(argv) {
+  const out = {
+    profile: manifest.defaults.profile,
+    batchSize: manifest.defaults.batchSize,
+    patientRatio: manifest.defaults.patientRatio,
+    noTruncate: false,
+    yes: false,
+    overrides: {},
+  };
+  for (const arg of argv.slice(2)) {
+    if (arg === '--no-truncate') out.noTruncate = true;
+    else if (arg === '--yes') out.yes = true;
+    else if (arg.startsWith('--profile=')) out.profile = arg.slice('--profile='.length);
+    else if (arg.startsWith('--batch=')) out.batchSize = Math.max(25, Number(arg.slice('--batch='.length)) || 250);
+    else if (arg.startsWith('--patient-ratio=')) {
+      out.patientRatio = Math.min(0.5, Math.max(0, Number(arg.slice('--patient-ratio='.length)) || 0.2));
+    } else {
+      const m = arg.match(/^--(users|orders|services|reception|institutional_clients|professionals|products|tags|files|reports)=(\d+)$/);
+      if (m) out.overrides[m[1]] = Number(m[2]);
+    }
+  }
+  return out;
+}
+
+function resolveCounts(args) {
+  const profile = manifest.profiles[args.profile];
+  if (!profile) {
+    throw new Error(`Perfil inválido: ${args.profile}. Use: ${Object.keys(manifest.profiles).join(', ')}`);
+  }
+  const { description, ...counts } = profile;
+  return {
+    description,
+    counts: { ...counts, ...args.overrides },
+  };
+}
+
+async function truncateAll(client) {
+  await client.query(`
+    TRUNCATE TABLE
+      orders_files, services_files, users_files,
+      orders, services, reception, reports, tags, products, institutional_clients,
+      professionals,
+      users, system_users, users_api, files
+    RESTART IDENTITY CASCADE
+  `);
+  console.log('Tabelas truncadas');
+}
+
+async function insertBatch(client, table, columns, rows) {
+  if (!rows.length) return [];
+  const colSql = columns.map(quoteCol).join(', ');
+  const values = [];
+  const tuples = rows.map((row) => {
+    const ph = columns.map((col) => {
+      values.push(serializeValue(row[col]));
+      return `$${values.length}`;
+    });
+    return `(${ph.join(',')})`;
+  });
+  const sql = `INSERT INTO ${table} (${colSql}) VALUES ${tuples.join(',')} RETURNING id`;
+  const result = await client.query(sql, values);
+  return result.rows.map((r) => r.id);
+}
+
+async function insertBatches(client, table, columns, buildRow, total, batchSize, label) {
+  const ids = [];
+  const t0 = Date.now();
+  for (let start = 0; start < total; start += batchSize) {
+    const end = Math.min(start + batchSize, total);
+    const chunk = [];
+    for (let i = start; i < end; i++) chunk.push(buildRow(i));
+    const batchIds = await insertBatch(client, table, columns, chunk);
+    ids.push(...batchIds);
+    if (end === total || end % (batchSize * 4) < batchSize) {
+      process.stdout.write(`\r  ${label}: ${end}/${total}`);
+    }
+  }
+  const ms = Date.now() - t0;
+  console.log(`\r  ${label}: ${total}/${total} (${ms}ms)          `);
+  return ids;
+}
+
+function buildSystemUsers(passwordHash) {
+  return [
+    {
+      date_created: daysAgo(60),
+      date_updated: daysAgo(1),
+      name: 'Admin',
+      last_name: 'Demo',
+      status: 'active',
+      user_code: uuid(),
+      permissions: JSON.stringify(['Administrador']),
+      email: manifest.demo_login.email,
+      password: passwordHash,
+      cpf: fakeCpf(9001),
+      rg: '9000001',
+      birth_date: '1985-03-12',
+      gender: 'homem-cis',
+      nationality: 'Brasileira',
+      marital_status: 'solteiro',
+      mobile_number: fakePhone(9001),
+      street: 'Rua Admin Demo 1',
+      neighborhood: 'Centro',
+      city: 'São Paulo',
+      state: 'SP',
+      cep: fakeCep(9001),
+      pix_key: 'admin@demo.kunk.local',
+      commission_value: '0',
+      transactions: '[]',
+      commission_total: '0',
+      session_token: null,
+      session_expires: null,
+      last_activity: daysAgo(0),
+      is_session_active: false,
+      internal_code: 'KNK-ADMIN',
+    },
+    {
+      date_created: daysAgo(55),
+      date_updated: daysAgo(2),
+      name: 'Lia',
+      last_name: 'Acolhimento',
+      status: 'active',
+      user_code: uuid(),
+      permissions: JSON.stringify(['Acolhimento']),
+      email: 'acolhimento@demo.kunk.local',
+      password: passwordHash,
+      cpf: fakeCpf(9002),
+      rg: '9000002',
+      birth_date: '1990-07-21',
+      gender: 'mulher-cis',
+      nationality: 'Brasileira',
+      marital_status: 'casado',
+      mobile_number: fakePhone(9002),
+      street: 'Rua Acolhimento Demo 2',
+      neighborhood: 'Jardins',
+      city: 'Campinas',
+      state: 'SP',
+      cep: fakeCep(9002),
+      pix_key: 'acolhimento@pix.demo',
+      commission_value: '0',
+      transactions: '[]',
+      commission_total: '0',
+      session_token: null,
+      session_expires: null,
+      last_activity: daysAgo(1),
+      is_session_active: false,
+      internal_code: 'KNK-ACOL',
+    },
+    {
+      date_created: daysAgo(50),
+      date_updated: daysAgo(3),
+      name: 'Pedro',
+      last_name: 'Produção',
+      status: 'active',
+      user_code: uuid(),
+      permissions: JSON.stringify(['Produção']),
+      email: 'producao@demo.kunk.local',
+      password: passwordHash,
+      cpf: fakeCpf(9003),
+      rg: '9000003',
+      birth_date: '1988-11-05',
+      gender: 'homem-cis',
+      nationality: 'Brasileira',
+      marital_status: 'união estável',
+      mobile_number: fakePhone(9003),
+      street: 'Rua Produção Demo 3',
+      neighborhood: 'Industrial',
+      city: 'Curitiba',
+      state: 'PR',
+      cep: fakeCep(9003),
+      pix_key: 'producao@pix.demo',
+      commission_value: '0',
+      transactions: '[]',
+      commission_total: '0',
+      session_token: null,
+      session_expires: null,
+      last_activity: daysAgo(2),
+      is_session_active: false,
+      internal_code: 'KNK-PROD',
+    },
+  ];
+}
+
+async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHash }) {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) throw new Error('DATABASE_URL is required');
+
+  const pool = new Pool({ connectionString: databaseUrl });
+  const client = await pool.connect();
+
+  const associateCount = Math.max(1, Math.floor(counts.users * (1 - patientRatio)));
+  const patientCount = counts.users - associateCount;
+  const userCodes = Array.from({ length: counts.users }, () => uuid());
+  const associateCodes = userCodes.slice(0, associateCount);
+  const professionalCodes = Array.from({ length: counts.professionals }, () => uuid());
+
+  const products = Array.from({ length: counts.products }, (_, i) => {
+    const base = pick(PRODUCT_BASE, i);
+    const variant = Math.floor(i / PRODUCT_BASE.length) + 1;
+    const sku = variant === 1 ? base.sku : `${base.sku}-V${variant}`;
+    return {
+      ...base,
+      sku,
+      name: variant === 1 ? base.name : `${base.name} v${variant}`,
+      amount: 20 + (i % 80),
+      batch: `LOAD-${1000 + i}`,
+    };
+  });
+
+  try {
+    await client.query('BEGIN');
+    if (truncate) await truncateAll(client);
+
+    // files
+    const fileRows = Array.from({ length: counts.files }, (_, i) => ({
+      id: uuid(),
+      filename: `load-doc-${String(i + 1).padStart(4, '0')}.pdf`,
+      mime_type: 'application/pdf',
+      storage_path: `sample-data/assets/load-doc-${String(i + 1).padStart(4, '0')}.pdf`,
+      storage_driver: 'local',
+      storage_key: `load-doc-${String(i + 1).padStart(4, '0')}.pdf`,
+      created_at: daysAgo(30 - (i % 30)),
+      is_sample: true,
+    }));
+    await insertBatch(client, 'files', [
+      'id', 'filename', 'mime_type', 'storage_path', 'storage_driver', 'storage_key', 'created_at', 'is_sample',
+    ], fileRows);
+    console.log(`  files: ${fileRows.length}`);
+
+    // system_users
+    const sysCols = [
+      'date_created', 'date_updated', 'name', 'last_name', 'status', 'user_code', 'permissions',
+      'email', 'password', 'cpf', 'rg', 'birth_date', 'gender', 'nationality', 'marital_status',
+      'mobile_number', 'street', 'neighborhood', 'city', 'state', 'cep', 'pix_key',
+      'commission_value', 'transactions', 'commission_total', 'session_token', 'session_expires',
+      'last_activity', 'is_session_active', 'internal_code', 'is_sample',
+    ];
+    await insertBatch(
+      client,
+      'system_users',
+      sysCols,
+      buildSystemUsers(passwordHash).map((r) => ({ ...r, is_sample: true }))
+    );
+    console.log('  system_users: 3');
+
+    // users
+    const userCols = [
+      'status', 'sort', 'date_created', 'date_updated', 'associate_name', 'associate_last_name',
+      'gender', 'nationality', 'associate_rg_issuer', 'marital_status', 'email', 'street',
+      'street_number', 'complement', 'neighborhood', 'proof_of_address', 'reason_treatment_text',
+      'responsible_type', 'city', 'state', 'cep', 'email_account', 'account_password', 'user_code',
+      'rg_proof', 'associate_cpf', 'associate_rg', 'mobile_number', 'associate_status', 'prescription',
+      'responsible_code', 'documents_folder_id', 'rg_patient_proof', 'patient_user_code',
+      'adhesion_term', 'ciap_codes', 'associate_birth_date', 'preferred_products', 'date_prescription',
+      'created_date', 'avatar_url', 'prescriber', 'delivery_address', 'prescriber_code',
+      'session_token', 'session_expires', 'last_activity', 'is_session_active', 'fullname', 'is_sample',
+    ];
+
+    const userIds = await insertBatches(
+      client,
+      'users',
+      userCols,
+      (i) => {
+        const isPatient = i >= associateCount;
+        const first = pick(FIRST_NAMES, i);
+        const last = pick(LAST_NAMES, i * 3);
+        const [city, state] = pick(CITIES, i);
+        const product = products[i % products.length];
+        const proCode = professionalCodes[i % professionalCodes.length];
+        const responsibleIdx = isPatient ? (i - associateCount) % associateCount : null;
+        const patientIdx = !isPatient && i < patientCount ? associateCount + i : null;
+
+        return {
+          status: isPatient ? 'patient' : 'Associado',
+          sort: i + 1,
+          date_created: daysAgo(400 - (i % 365)),
+          date_updated: daysAgo(i % 60),
+          associate_name: first,
+          associate_last_name: last,
+          gender: pick(GENDER_OPTIONS, i),
+          nationality: 'Brasileira',
+          associate_rg_issuer: pick(['SSP/SP', 'SSP/PR', 'SSP/MG', 'SSP/RS'], i),
+          marital_status: pick(['solteiro', 'casado', 'união estável', 'divorciado'], i),
+          email: `load${String(i + 1).padStart(6, '0')}@load.kunk.local`,
+          street: `Rua Load ${100 + (i % 9000)}`,
+          street_number: String(10 + (i % 990)),
+          complement: i % 3 === 0 ? `Apto ${i % 200}` : 'Casa',
+          neighborhood: pick(['Centro', 'Jardim', 'Vila Norte', 'Industrial'], i),
+          proof_of_address: `proof-${i + 1}.pdf`,
+          reason_treatment_text: 'Motivo fictício para teste de carga.',
+          responsible_type: isPatient ? 'paciente' : patientIdx != null ? 'another' : pick(['titular', 'responsável'], i),
+          city,
+          state,
+          cep: fakeCep(i + 1),
+          email_account: `load${String(i + 1).padStart(6, '0')}@load.kunk.local`,
+          account_password: passwordHash,
+          user_code: userCodes[i],
+          rg_proof: `rg-${i + 1}.pdf`,
+          associate_cpf: fakeCpf(i + 1),
+          associate_rg: `${1000000 + i}`,
+          mobile_number: fakePhone(i + 1),
+          associate_status: isPatient ? null : 5,
+          prescription: `rx-${i + 1}.pdf`,
+          responsible_code: isPatient ? userCodes[responsibleIdx] : null,
+          documents_folder_id: `docs-${i + 1}`,
+          rg_patient_proof: `rg-p-${i + 1}.pdf`,
+          patient_user_code: patientIdx != null ? userCodes[patientIdx] : null,
+          adhesion_term: null,
+          ciap_codes: `${pick(CIAP, i)};${pick(CIAP, i + 3)}`,
+          associate_birth_date: `19${70 + (i % 30)}-${String((i % 12) + 1).padStart(2, '0')}-15`,
+          preferred_products: product.sku,
+          date_prescription: dateOnlyDaysAgo(20 + (i % 40)),
+          created_date: daysAgo(400 - (i % 365)),
+          avatar_url: null,
+          prescriber: `Dr Load ${(i % 50) + 1}`,
+          delivery_address: {
+            street: `Rua Load ${100 + (i % 9000)}`,
+            number: String(10 + (i % 990)),
+            city,
+            state,
+            cep: fakeCep(i + 1),
+            country: 'BR',
+          },
+          prescriber_code: String(proCode),
+          session_token: null,
+          session_expires: null,
+          last_activity: daysAgo(i % 30),
+          is_session_active: false,
+          fullname: `${first} ${last}`,
+          is_sample: true,
+        };
+      },
+      counts.users,
+      batchSize,
+      'users'
+    );
+
+    // institutional_clients
+    await insertBatches(
+      client,
+      'institutional_clients',
+      [
+        'client_code', 'status', 'sort', 'date_created', 'date_updated', 'is_company',
+        'company_name', 'company_trade_name', 'company_cnpj', 'company_email', 'company_phone',
+        'representative_name', 'representative_last_name', 'representative_cpf',
+        'representative_email', 'representative_mobile', 'street', 'street_number',
+        'complement', 'neighborhood', 'city', 'state', 'cep', 'delivery_address', 'is_sample',
+      ],
+      (i) => {
+        const first = pick(FIRST_NAMES, i + 2);
+        const last = pick(LAST_NAMES, i + 4);
+        const [city, state] = pick(CITIES, i);
+        const isCompany = i % 2 === 0;
+        return {
+          client_code: uuid(),
+          status: i % 11 === 0 ? 'inactive' : 'active',
+          sort: i + 1,
+          date_created: daysAgo(80 - (i % 60)),
+          date_updated: daysAgo(i % 20),
+          is_company: isCompany,
+          company_name: isCompany ? `Instituição Load ${i + 1}` : null,
+          company_trade_name: isCompany ? `Load ${i + 1}` : null,
+          company_cnpj: isCompany ? `${String(10000000000000 + i).slice(0, 14)}` : null,
+          company_email: isCompany ? `inst-load${String(i + 1).padStart(4, '0')}@load.kunk.local` : null,
+          company_phone: isCompany ? fakePhone(3000 + i) : null,
+          representative_name: first,
+          representative_last_name: last,
+          representative_cpf: fakeCpf(3000 + i),
+          representative_email: `rep-load${String(i + 1).padStart(4, '0')}@load.kunk.local`,
+          representative_mobile: fakePhone(3100 + i),
+          street: `Av Institucional ${i + 1}`,
+          street_number: String(100 + (i % 900)),
+          complement: i % 3 === 0 ? `Sala ${i % 50}` : null,
+          neighborhood: pick(['Centro', 'Jardim', 'Industrial'], i),
+          city,
+          state,
+          cep: fakeCep(3000 + i),
+          delivery_address: {
+            street: `Av Institucional ${i + 1}`,
+            number: String(100 + (i % 900)),
+            city,
+            state,
+            cep: fakeCep(3000 + i),
+            country: 'BR',
+          },
+          is_sample: true,
+        };
+      },
+      counts.institutional_clients,
+      batchSize,
+      'institutional_clients'
+    );
+
+    // professionals
+    await insertBatches(
+      client,
+      'professionals',
+      [
+        'sort', 'date_created', 'name', 'last_name', 'type', 'services_description', 'phone',
+        'state', 'city', 'cpf', 'email', 'specialty', 'active', 'is_prescriber', 'is_collaborator',
+        'professional_code', 'fingerprint', 'contest_reports', 'met_us', 'recipient_id',
+        'donation_balance', 'calendar_id', 'is_sample',
+      ],
+      (i) => {
+        const first = pick(FIRST_NAMES, i + 11);
+        const last = pick(LAST_NAMES, i + 13);
+        const [city, state] = pick(CITIES, i);
+        return {
+          sort: i + 1,
+          date_created: daysAgo(45 - (i % 40)),
+          name: first,
+          last_name: last,
+          type: i % 3 === 0 ? 'medic' : 'therapist',
+          services_description: 'Atendimento clínico load-test',
+          phone: fakePhone(4000 + i),
+          state,
+          city,
+          cpf: fakeCpf(4000 + i),
+          email: `pro-load${String(i + 1).padStart(4, '0')}@load.kunk.local`,
+          specialty: pick(['clínica geral', 'psiquiatria', 'dor', 'neurologia', 'integrativa'], i),
+          active: 1,
+          is_prescriber: i % 2 === 0 ? 'true' : 'false',
+          is_collaborator: i < 10 ? 'true' : 'false',
+          professional_code: professionalCodes[i],
+          fingerprint: `fp-load-${i + 1}`,
+          contest_reports: { demo: true },
+          met_us: pick(['indicação', 'evento', 'site', 'parceiro'], i),
+          recipient_id: `rcp-load-${i + 1}`,
+          donation_balance: 50 * ((i % 20) + 1),
+          calendar_id: `cal-load-${i + 1}`,
+          is_sample: true,
+        };
+      },
+      counts.professionals,
+      batchSize,
+      'professionals'
+    );
+
+    // products
+    await insertBatches(
+      client,
+      'products',
+      [
+        'status', 'sort', 'date_created', 'date_updated', 'name', 'sku', 'type', 'unit',
+        'concentration', 'price', 'category', 'amount', 'batch', 'is_sample',
+      ],
+      (i) => {
+        const p = products[i];
+        return {
+          status: 'published',
+          sort: i + 1,
+          date_created: daysAgo(90 - (i % 60)),
+          date_updated: daysAgo(i % 15),
+          name: p.name,
+          sku: p.sku,
+          type: p.type,
+          unit: p.unit,
+          concentration: p.concentration,
+          price: p.price,
+          category: p.category,
+          amount: p.amount,
+          batch: p.batch,
+          is_sample: true,
+        };
+      },
+      counts.products,
+      batchSize,
+      'products'
+    );
+
+    // tags
+    await insertBatches(
+      client,
+      'tags',
+      ['tag', 'contexts', 'color', 'is_sample'],
+      (i) => ({
+        tag: `load-tag-${i + 1}`,
+        contexts: pick(['orders', 'services', 'reception', 'orders,services'], i),
+        color: pick(['#5a7a5b', '#7A5B7A', '#c9a227', '#2e7d32', '#1565c0'], i),
+        is_sample: true,
+      }),
+      counts.tags,
+      batchSize,
+      'tags'
+    );
+
+    // orders — só associados (não pacientes)
+    await insertBatches(
+      client,
+      'orders',
+      [
+        'sort', 'date_created', 'date_updated', 'status', 'total', 'payment_method', 'tracking_code',
+        'delivery_price', 'associate_name', 'order_code', 'user_code', 'items', 'created_date',
+        'discount', 'details', 'donation', 'prescriber', 'payment_link', 'user', 'carrier_order_code',
+        'payment_code', 'order_notes', 'tags', 'delivery_notes', 'address', 'whatsapp_message',
+        'prescriber_code', 'payment_date', 'custom_payment', 'production_owner', 'tracking_code_date',
+        'last_tracking_date', 'address_validation', 'created_by_user_code', 'is_sample',
+      ],
+      (i) => {
+        const assocIdx = i % associateCount;
+        const userId = userIds[assocIdx];
+        const userCode = associateCodes[assocIdx];
+        const first = pick(FIRST_NAMES, assocIdx);
+        const last = pick(LAST_NAMES, assocIdx * 3);
+        const fullname = `${first} ${last}`;
+        const p1 = products[i % products.length];
+        const qty = 1 + (i % 3);
+        const delivery = 15 + (i % 5) * 3;
+        const status = pick(ORDER_STATUSES, i);
+        const paid = ['Pagamento concluído', 'Em produção', 'Produção Finalizada', 'Enviado', 'Entregue'].includes(status);
+        const shipped = ['Enviado', 'Entregue'].includes(status);
+        const items = [{
+          sku: p1.sku,
+          name: p1.name,
+          quantity: qty,
+          concentration_mg: p1.concentration,
+          unit: p1.unit,
+          price: p1.price,
+          batch: p1.batch,
+          category: p1.category,
+        }];
+        const subtotal = p1.price * qty;
+        const [city, state] = pick(CITIES, i);
+        return {
+          sort: i + 1,
+          date_created: daysAgo(200 - (i % 180)),
+          date_updated: daysAgo(i % 40),
+          status,
+          total: Math.round((subtotal + delivery) * 100) / 100,
+          payment_method: pick(['pix', 'credit_card', 'boleto'], i),
+          tracking_code: shipped ? `BRLOAD${100000 + i}` : `PENDING-${100000 + i}`,
+          delivery_price: delivery,
+          associate_name: fullname,
+          order_code: uuid(),
+          user_code: String(userCode),
+          items,
+          created_date: daysAgo(200 - (i % 180)),
+          discount: i % 7 === 0 ? 10 : 0,
+          details: 'Pedido fictício (load test).',
+          donation: i % 4 === 0 ? 20 : 0,
+          prescriber: `Dr Load ${(i % 50) + 1}`,
+          payment_link: `https://pay.demo.kunk.local/o/load/${i + 1}`,
+          user: userId,
+          carrier_order_code: shipped ? `CARRIER-${7000 + i}` : null,
+          payment_code: paid ? `PAY-${8000 + i}` : null,
+          order_notes: 'Obs load-test',
+          tags: ['load', ...(i % 3 === 0 ? ['urgente'] : [])],
+          delivery_notes: shipped ? 'Horário comercial' : 'Aguardando',
+          address: { street: `Rua Load ${assocIdx}`, city, state, cep: fakeCep(assocIdx), country: 'BR' },
+          whatsapp_message: 'Msg load',
+          prescriber_code: String(professionalCodes[i % professionalCodes.length]),
+          payment_date: paid ? daysAgo(40 - (i % 30)) : null,
+          custom_payment: { method: paid ? 'pix' : 'pending', gateway: 'demo' },
+          production_owner: ['Em produção', 'Produção Finalizada'].includes(status) ? 'Pedro Produção' : null,
+          tracking_code_date: shipped ? daysAgo(10 - (i % 8)) : null,
+          last_tracking_date: shipped ? daysAgo(5 - (i % 4)) : null,
+          address_validation: pick(['valid', 'pending', 'corrected'], i),
+          created_by_user_code: 'KNK-ADMIN',
+          is_sample: true,
+        };
+      },
+      counts.orders,
+      batchSize,
+      'orders'
+    );
+
+    // services
+    await insertBatches(
+      client,
+      'services',
+      [
+        'sort', 'type', 'date_created', 'name', 'professional_id', 'status', 'price',
+        'associate_name', 'associate_user_code', 'associate_email', 'professional_name',
+        'consultation_date', 'payment_link', 'price_paid', 'donation', 'booking_group_code',
+        'patient_name', 'professional_email', 'service_code', 'observations', 'payment_type',
+        'tags', 'created_by_user_code', 'payment_code', 'payment_info', 'is_sample',
+      ],
+      (i) => {
+        const assocIdx = i % associateCount;
+        const first = pick(FIRST_NAMES, assocIdx);
+        const last = pick(LAST_NAMES, assocIdx * 3);
+        const fullname = `${first} ${last}`;
+        const status = pick(SERVICE_STATUSES, i);
+        const price = 150 + (i % 5) * 50;
+        const proIdx = i % counts.professionals;
+        return {
+          sort: i + 1,
+          type: pick(['consulta', 'retorno', 'avaliação'], i),
+          date_created: daysAgo(120 - (i % 100)),
+          name: `Atendimento load #${i + 1}`,
+          professional_id: professionalCodes[proIdx],
+          status,
+          price,
+          associate_name: fullname,
+          associate_user_code: associateCodes[assocIdx],
+          associate_email: `load${String(assocIdx + 1).padStart(6, '0')}@load.kunk.local`,
+          professional_name: `${pick(FIRST_NAMES, proIdx + 11)} ${pick(LAST_NAMES, proIdx + 13)}`,
+          consultation_date: daysAgo(60 - (i % 50)),
+          payment_link: `https://pay.demo.kunk.local/s/load/${i + 1}`,
+          price_paid: status === 'Pagamento Concluído' ? price : 0,
+          donation: i % 5 === 0 ? 30 : 0,
+          booking_group_code: uuid(),
+          patient_name: fullname,
+          professional_email: `pro-load${String(proIdx + 1).padStart(4, '0')}@load.kunk.local`,
+          service_code: uuid(),
+          observations: 'Agendamento fictício (load test).',
+          payment_type: pick(['pix', 'credit_card', 'cash'], i),
+          tags: [{ tag: 'load' }],
+          created_by_user_code: 'KNK-ACOL',
+          payment_code: `SVCPAY-LOAD-${i + 1}`,
+          payment_info: { demo: true, paid: status === 'Pagamento Concluído' },
+          is_sample: true,
+        };
+      },
+      counts.services,
+      batchSize,
+      'services'
+    );
+
+    // reception
+    await insertBatches(
+      client,
+      'reception',
+      [
+        'date_created', 'name', 'last_name', 'email', 'phone', 'help_topic',
+        'is_associate', 'message', 'code', 'chat_id', 'status', 'associate_name',
+        'associate_code', 'date_updated', 'patient_name', 'attendant', 'tags',
+        'completion_reason', 'is_prescriber', 'full_name', 'is_sample',
+      ],
+      (i) => {
+        const first = pick(FIRST_NAMES, i + 5);
+        const last = pick(LAST_NAMES, i + 9);
+        const status = pick(RECEPTION_STATUSES, i);
+        const linked = i % 3 === 0;
+        const assocIdx = i % associateCount;
+        const assocName = `${pick(FIRST_NAMES, assocIdx)} ${pick(LAST_NAMES, assocIdx * 3)}`;
+        return {
+          date_created: daysAgo(90 - (i % 80)),
+          name: first,
+          last_name: last,
+          email: `reception-load${String(i + 1).padStart(5, '0')}@load.kunk.local`,
+          phone: fakePhone(5000 + i),
+          help_topic: pick(['informação', 'cadastro', 'agendamento'], i),
+          is_associate: linked ? 'true' : 'false',
+          message: 'Contato fictício de acolhimento (load test).',
+          code: uuid(),
+          chat_id: `chat-load-${i + 1}`,
+          status,
+          associate_name: linked ? assocName : `${first} ${last}`,
+          associate_code: linked ? String(associateCodes[assocIdx]) : null,
+          date_updated: daysAgo(i % 20),
+          patient_name: i % 2 === 0 ? `${first} ${last}` : assocName,
+          attendant: i % 2 === 0 ? 'Lia Acolhimento' : 'Admin Demo',
+          tags: [{ tag: 'load' }],
+          completion_reason: status === 'done' ? 'Atendido' : null,
+          is_prescriber: i % 4 === 0 ? 'true' : 'false',
+          full_name: `${first} ${last}`,
+          is_sample: true,
+        };
+      },
+      counts.reception,
+      batchSize,
+      'reception'
+    );
+
+    // reports
+    await insertBatches(
+      client,
+      'reports',
+      [
+        'date_created', 'date_updated', 'name', 'report_code', 'query_config', 'sql_query',
+        'type', 'dashboard_queries', 'layout_positions', 'chart_config', 'created_by', 'tags',
+        'column_maps', 'embedded_report_codes', 'favorites', 'is_sample',
+      ],
+      (i) => ({
+        date_created: daysAgo(10 - (i % 8)),
+        date_updated: daysAgo(i % 5),
+        name: `Relatório load #${i + 1}`,
+        report_code: uuid(),
+        query_config: { source: pick(['orders', 'users', 'services'], i), group_by: 'status' },
+        sql_query: '-- load sample only',
+        type: 'table',
+        dashboard_queries: { load: true },
+        layout_positions: { x: (i % 6) * 2, y: Math.floor(i / 6) * 4, w: 6, h: 4 },
+        chart_config: { type: pick(['bar', 'pie', 'line'], i) },
+        created_by: manifest.demo_login.email,
+        tags: [{ tag: 'load' }],
+        column_maps: { status: 'Status', count: 'Total' },
+        embedded_report_codes: [],
+        favorites: { users: [] },
+        is_sample: true,
+      }),
+      counts.reports,
+      batchSize,
+      'reports'
+    );
+
+    await client.query('COMMIT');
+
+    const summary = await client.query(`
+      SELECT 'users' AS t, COUNT(*)::int AS c FROM users
+      UNION ALL SELECT 'orders', COUNT(*)::int FROM orders
+      UNION ALL SELECT 'services', COUNT(*)::int FROM services
+      UNION ALL SELECT 'reception', COUNT(*)::int FROM reception
+      UNION ALL SELECT 'institutional_clients', COUNT(*)::int FROM institutional_clients
+      UNION ALL SELECT 'professionals', COUNT(*)::int FROM professionals
+      UNION ALL SELECT 'products', COUNT(*)::int FROM products
+      UNION ALL SELECT 'tags', COUNT(*)::int FROM tags
+      UNION ALL SELECT 'system_users', COUNT(*)::int FROM system_users
+      UNION ALL SELECT 'files', COUNT(*)::int FROM files
+      UNION ALL SELECT 'reports', COUNT(*)::int FROM reports
+      ORDER BY t
+    `);
+    console.log('\nContagens no banco:');
+    for (const r of summary.rows) console.log(`  ${r.t}: ${r.c}`);
+    console.log(`  (associados: ${associateCount}, pacientes: ${patientCount})`);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+    await pool.end();
+  }
+}
+
+async function main() {
+  const args = parseArgs(process.argv);
+  const { description, counts } = resolveCounts(args);
+
+  console.log('Sample data MASSIVO (teste de carga)');
+  console.log(`Perfil: ${args.profile} — ${description}`);
+  console.log('Volumes:', counts);
+  console.log(`Batch: ${args.batchSize} | patientRatio: ${args.patientRatio}`);
+  console.log(`Truncate: ${!args.noTruncate}`);
+
+  if ((args.profile === 'large' || args.profile === 'xlarge') && !args.yes) {
+    console.error('\nPerfis large/xlarge exigem --yes para confirmar (pode demorar e usar muita RAM/CPU).');
+    console.error('Ex.: npm run seed:load -- --profile=large --yes');
+    process.exit(1);
+  }
+
+  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, SALT_ROUNDS);
+  const t0 = Date.now();
+  await seedLoad(counts, {
+    truncate: !args.noTruncate,
+    batchSize: args.batchSize,
+    patientRatio: args.patientRatio,
+    passwordHash,
+  });
+  console.log(`\nConcluído em ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+  console.log(`Login: ${manifest.demo_login.email} / ${DEMO_PASSWORD}`);
+  console.log(`(demo legado: ${demoManifest.demo_login.email} — recriado neste seed)`);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

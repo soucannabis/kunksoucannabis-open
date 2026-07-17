@@ -19,6 +19,7 @@ export default defineConfig({
       '@kunk/api-client': path.resolve(root, 'packages/api-client/src/index.js'),
       '@kunk/auth-session': path.resolve(root, 'packages/auth-session/src/index.jsx'),
       '@kunk/theme': path.resolve(root, 'packages/theme/src/index.js'),
+      'web-vitals': path.resolve(root, 'node_modules/web-vitals'),
     },
   },
   server: {

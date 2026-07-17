@@ -21,8 +21,6 @@ const { v4: uuidv4 } = require('uuid');
 const FORBIDDEN_CHECKOUT_FIELDS = [
   'coupon_id',
   'no_commission',
-  'partner',
-  'partner_code',
   'bvid',
 ];
 
@@ -72,8 +70,6 @@ async function validateAndNormalizeCheckout(payload) {
   const {
     coupon_id,
     no_commission,
-    partner,
-    partner_code,
     bvid,
     email,
     associate_email,

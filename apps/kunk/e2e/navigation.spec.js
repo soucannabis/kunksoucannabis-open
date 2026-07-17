@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
 import { loginInBrowser } from './helpers/api.js';
 
+/**
+ * Substitui expectativas de stub ("Module under development") pelas páginas reais.
+ */
 test.describe('navigation', () => {
   test.beforeAll(async () => {
     await ensureAdminUser();
@@ -16,18 +19,18 @@ test.describe('navigation', () => {
     await page.getByTestId('kunk-sidebar').getByText(sectionLabel, { exact: true }).click();
   }
 
-  test('navega Associados → cadastramento stub', async ({ page }) => {
+  test('navega Associados → cadastramento', async ({ page }) => {
     await openSection(page, 'Acolhimento');
     await page.getByRole('menuitem', { name: 'Associados' }).click();
     await expect(page).toHaveURL(/\/app\/acolhimento\/cadastramento/);
-    await expect(page.getByText('Module under development')).toBeVisible();
+    await expect(page.getByText(/Filtrar Associados/i)).toBeVisible({ timeout: 20_000 });
   });
 
-  test('navega Triagem → triagem stub', async ({ page }) => {
+  test('navega Triagem → fila', async ({ page }) => {
     await openSection(page, 'Acolhimento');
     await page.getByRole('menuitem', { name: 'Triagem' }).click();
     await expect(page).toHaveURL(/\/app\/acolhimento\/triagem/);
-    await expect(page.getByText('Module under development')).toBeVisible();
+    await expect(page.getByRole('tab').first()).toBeVisible({ timeout: 20_000 });
   });
 
   test('navega Pedidos → listagem', async ({ page }) => {
@@ -37,11 +40,22 @@ test.describe('navigation', () => {
     await expect(page.getByTestId('orders-page')).toBeVisible();
   });
 
-  test('navega Serviços → servicos stub', async ({ page }) => {
+  test('navega Serviços → listagem', async ({ page }) => {
     await openSection(page, 'Acolhimento');
     await page.getByRole('menuitem', { name: 'Serviços' }).click();
     await expect(page).toHaveURL(/\/app\/acolhimento\/servicos/);
-    await expect(page.getByText('Module under development')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Novo Serviço/i })).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+
+  test('navega Produtos → listagem', async ({ page }) => {
+    await openSection(page, 'Loja');
+    await page.getByRole('menuitem', { name: 'Produtos' }).click();
+    await expect(page).toHaveURL(/\/app\/loja\/produtos/);
+    await expect(page.getByRole('button', { name: /Novo produto/i })).toBeVisible({
+      timeout: 20_000,
+    });
   });
 
   test('QuickNav Pedidos funciona', async ({ page }) => {

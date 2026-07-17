@@ -13,13 +13,12 @@ const STANDARD_FIELD_IDS = new Set([
   'email',
   'phone',
   'is_associate',
-  'option1',
-  'option2',
+  'help_topic',
   'message',
   'patient_name',
 ]);
 
-const DEFAULT_OPTION1_OPTIONS = [
+const DEFAULT_HELP_TOPIC_OPTIONS = [
   'Preciso de óleo / produto',
   'Renovação de receita',
   'Agendamento / consulta',
@@ -33,29 +32,29 @@ const DEFAULT_FORM_FIELDS = [
   { id: 'email', enabled: true, required: true, label: 'E-mail', order: 3 },
   { id: 'phone', enabled: true, required: true, label: 'Telefone', order: 4 },
   {
-    id: 'option1',
+    id: 'help_topic',
     enabled: true,
-    required: false,
+    required: true,
     label: 'Como podemos ajudar?',
     order: 5,
     type: 'select',
-    options: [...DEFAULT_OPTION1_OPTIONS],
+    options: [...DEFAULT_HELP_TOPIC_OPTIONS],
   },
-  { id: 'option2', enabled: false, required: false, label: 'Opção 2', order: 6 },
-  { id: 'message', enabled: true, required: false, label: 'Mensagem', order: 7 },
-  { id: 'patient_name', enabled: false, required: false, label: 'Nome do paciente', order: 8 },
+  { id: 'message', enabled: true, required: true, label: 'Mensagem', order: 6 },
+  { id: 'patient_name', enabled: false, required: true, label: 'Nome do paciente', order: 7 },
 ];
 
 function normalizeFormFields(fields) {
   const list = Array.isArray(fields) ? fields : [];
   return list
-    .filter((f) => f && f.id !== 'is_associate')
+    .filter((f) => f && f.id !== 'is_associate' && f.id !== 'option2')
     .map((f) => {
-      if (f.id !== 'option1') return { ...f };
-      const options = Array.isArray(f.options) && f.options.length
-        ? f.options.map((o) => String(o).trim()).filter(Boolean)
-        : [...DEFAULT_OPTION1_OPTIONS];
-      return { ...f, type: 'select', options };
+      const field = f.id === 'option1' ? { ...f, id: 'help_topic' } : { ...f };
+      if (field.id !== 'help_topic') return field;
+      const options = Array.isArray(field.options) && field.options.length
+        ? field.options.map((o) => String(o).trim()).filter(Boolean)
+        : [...DEFAULT_HELP_TOPIC_OPTIONS];
+      return { ...field, type: 'select', options };
     });
 }
 
@@ -103,6 +102,17 @@ function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
 }
 
+function isValidEmail(email) {
+  const value = String(email || '').trim();
+  if (!value) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(value);
+}
+
+function isValidPhone(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  return digits.length >= 10 && digits.length <= 15;
+}
+
 function displayName(user) {
   const parts = [
     user.associate_name || user.name,
@@ -133,6 +143,19 @@ function getTerminalStatus(statuses) {
   return terminal?.value || 'done';
 }
 
+/** Aceita value estável, label (legado) ou vazio → status de entrada (só create). */
+function resolveReceptionStatus(raw, statuses, { fallbackToEntry = true } = {}) {
+  const list = statuses || [];
+  const entry = getEntryStatus(list);
+  if (raw == null || raw === '') return fallbackToEntry ? entry : null;
+  const s = String(raw).trim();
+  if (!s) return fallbackToEntry ? entry : null;
+  if (list.some((x) => x.value === s)) return s;
+  const byLabel = list.find((x) => String(x.label || '').toLowerCase() === s.toLowerCase());
+  if (byLabel?.value) return byLabel.value;
+  return fallbackToEntry ? entry : null;
+}
+
 function enabledFields(cfg) {
   const standard = (cfg.formFields || [])
     .filter((f) => f && f.enabled !== false)
@@ -147,7 +170,7 @@ async function getFormSchema() {
   const cfg = await loadTriageConfig();
   return {
     enabled: cfg.publicFormEnabled,
-    fields: enabledFields(cfg),
+    fields: enabledFields(cfg).map((f) => ({ ...f, required: true })),
     form_fields: cfg.formFields,
     custom_fields: cfg.customFields,
     statuses: cfg.statuses,
@@ -211,8 +234,16 @@ async function createPublicReception(payload = {}) {
   for (const field of fields) {
     const raw = body[field.id];
     const value = coerceFieldValue(field, raw);
-    if (field.required && isEmptyValue(value) && value !== false) {
+    if (isEmptyValue(value) && value !== false) {
       errors.push(`Campo obrigatório: ${field.label || field.id}`);
+      continue;
+    }
+    if (field.id === 'email' && !isValidEmail(value)) {
+      errors.push('Informe um e-mail válido');
+      continue;
+    }
+    if (field.id === 'phone' && !isValidPhone(value)) {
+      errors.push('Informe um telefone válido');
       continue;
     }
     if (field.source === 'custom') {
@@ -260,8 +291,7 @@ async function createPublicReception(payload = {}) {
     full_name: fullName,
     email: email || null,
     phone: standard.phone || null,
-    option1: standard.option1 || null,
-    option2: standard.option2 || null,
+    help_topic: standard.help_topic || null,
     is_associate: Boolean(standard.is_associate),
     message: standard.message || null,
     patient_name: standard.patient_name || null,
@@ -289,16 +319,56 @@ async function createPublicReception(payload = {}) {
     },
   });
 
+  const utalkMsg = await require('./utalk/triageMessage').maybeSendTriageWelcome(created);
+  if (utalkMsg?.ok && utalkMsg.chat_id) {
+    let withChat = await itemsRepository.updateItem('reception', created.id, {
+      chat_id: String(utalkMsg.chat_id).trim(),
+      date_updated: new Date().toISOString(),
+    });
+    let syncMeta = null;
+    try {
+      const synced = await syncUtalk(withChat.id);
+      withChat = synced.reception || withChat;
+      syncMeta = synced.utalk || null;
+    } catch (err) {
+      syncMeta = {
+        ok: false,
+        code: err.code || 'UTALK_SYNC_ERROR',
+        message: err.message || String(err),
+      };
+    }
+    await activityService.recordSafe({
+      entity_type: 'reception',
+      entity_id: String(withChat.id),
+      entity_code: withChat.code || null,
+      action: 'reception.chat_linked',
+      actor_user_code: null,
+      actor_name: 'Formulário público',
+      summary: `Chat Utalk vinculado automaticamente na triagem ${activityService.contactLabel(withChat)}`,
+      metadata: {
+        source: 'public_triage_message',
+        chat_id: withChat.chat_id,
+        attendant: withChat.attendant || null,
+        utalk_message_id: utalkMsg.message_id || null,
+        utalk_sync: syncMeta,
+      },
+    });
+    return { ...withChat, utalk_message: utalkMsg, utalk_sync: syncMeta };
+  }
+  if (utalkMsg && !utalkMsg.skipped) {
+    return { ...created, utalk_message: utalkMsg };
+  }
   return created;
 }
 
 async function createReception(payload, actor = null) {
   const cfg = await loadTriageConfig();
+  const status = resolveReceptionStatus(payload.status, cfg.statuses);
   const created = await itemsRepository.createItem('reception', {
     ...payload,
     code: payload.code || uuidv4(),
     date_created: new Date().toISOString(),
-    status: payload.status || getEntryStatus(cfg.statuses),
+    status,
   });
 
   const actorFields = activityService.fromActor(actor);
@@ -434,7 +504,209 @@ async function assignAttendant(id, attendant, actor = null) {
     });
   }
 
-  return updated;
+  const rowForUtalk = {
+    ...updated,
+    chat_id: updated.chat_id || before.chat_id || null,
+  };
+  const utalk = await maybeTransferUtalk(rowForUtalk, value);
+  return utalk ? { ...updated, chat_id: rowForUtalk.chat_id, utalk } : updated;
+}
+
+/**
+ * Fail-soft: se módulo Utalk ativo e há chat_id, transfere no Umbler.
+ * Não reverte o assign local se o Utalk falhar.
+ */
+async function maybeTransferUtalk(receptionRow, attendantCode) {
+  const chatId = String(receptionRow?.chat_id || '').trim();
+  if (!chatId) return null;
+  try {
+    const { isModuleEnabled } = require('./moduleFlags');
+    if (!(await isModuleEnabled('utalk'))) return null;
+    const utalkClient = require('./utalk/client');
+    const { resolveUtalkIdByCode } = require('./utalk/attendants');
+    let memberId = null;
+    if (attendantCode) {
+      memberId = await resolveUtalkIdByCode(attendantCode);
+      memberId = memberId ? String(memberId).trim() : null;
+      if (!memberId) {
+        return {
+          ok: false,
+          skipped: true,
+          code: 'UTALK_ID_MISSING',
+          message: `Operador sem utalk_id cadastrado — configure em Admin → Serviços externos → Utalk`,
+        };
+      }
+    }
+    await utalkClient.transferChat(chatId, memberId);
+    return { ok: true, chat_id: chatId, member_id: memberId };
+  } catch (err) {
+    return {
+      ok: false,
+      code: err.code || 'UTALK_ERROR',
+      message: err.message || String(err),
+      details: err.details || null,
+    };
+  }
+}
+
+async function setChatId(id, chatId, actor = null) {
+  const value =
+    chatId == null || String(chatId).trim() === '' ? null : String(chatId).trim();
+  const before = await itemsRepository.getItem('reception', id);
+  let updated = await itemsRepository.updateItem('reception', id, {
+    chat_id: value,
+    date_updated: new Date().toISOString(),
+  });
+  let syncMeta = null;
+  if (value) {
+    try {
+      const synced = await syncUtalk(updated.id);
+      updated = synced.reception || updated;
+      syncMeta = synced.utalk || null;
+    } catch (err) {
+      syncMeta = {
+        ok: false,
+        code: err.code || 'UTALK_SYNC_ERROR',
+        message: err.message || String(err),
+      };
+    }
+  }
+  const actorFields = activityService.fromActor(actor);
+  await activityService.recordSafe({
+    entity_type: 'reception',
+    entity_id: String(updated.id),
+    entity_code: updated.code || null,
+    action: value ? 'reception.chat_linked' : 'reception.chat_unlinked',
+    ...actorFields,
+    summary: value
+      ? `${actorFields.actor_name} vinculou chat Utalk na triagem ${activityService.contactLabel(updated)}`
+      : `${actorFields.actor_name} removeu chat Utalk da triagem ${activityService.contactLabel(updated)}`,
+    metadata: {
+      chat_id: value,
+      previous_chat_id: before.chat_id || null,
+      attendant: updated.attendant || null,
+      utalk_sync: syncMeta,
+    },
+  });
+  return syncMeta ? { ...updated, utalk_sync: syncMeta } : updated;
+}
+
+/**
+ * Sync attendant from Utalk chat organizationMember → system_users.utalk_id.
+ */
+async function syncUtalk(id) {
+  const { isModuleEnabled } = require('./moduleFlags');
+  if (!(await isModuleEnabled('utalk'))) {
+    throw new AppError(503, 'MODULE_DISABLED', 'Módulo utalk não está ativo');
+  }
+  const row = await itemsRepository.getItem('reception', id);
+  if (!row?.chat_id) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Contato sem chat_id Utalk');
+  }
+  const utalkClient = require('./utalk/client');
+  const chat = await utalkClient.getChat(row.chat_id);
+  const memberId = chat?.organizationMember?.id || chat?.organization_member?.id || null;
+
+  if (!memberId) {
+    if (row.attendant) {
+      const updated = await itemsRepository.updateItem('reception', id, {
+        attendant: null,
+        date_updated: new Date().toISOString(),
+      });
+      return {
+        reception: updated,
+        utalk: { ok: true, cleared: true, member_id: null },
+      };
+    }
+    return {
+      reception: row,
+      utalk: { ok: true, updated: false, cleared: false, member_id: null },
+    };
+  }
+
+  const result = await query(
+    `SELECT user_code, internal_code FROM system_users
+     WHERE utalk_id::text = $1
+     LIMIT 1`,
+    [String(memberId)]
+  );
+  const match = result.rows[0];
+  if (!match) {
+    return {
+      reception: row,
+      utalk: {
+        ok: true,
+        updated: false,
+        unknown_member: true,
+        member_id: String(memberId),
+      },
+    };
+  }
+  const code = match.user_code || match.internal_code;
+  if (row.attendant === code) {
+    return {
+      reception: row,
+      utalk: { ok: true, updated: false, attendant: code, member_id: String(memberId) },
+    };
+  }
+  const updated = await itemsRepository.updateItem('reception', id, {
+    attendant: code,
+    date_updated: new Date().toISOString(),
+  });
+  return {
+    reception: updated,
+    utalk: { ok: true, updated: true, attendant: code, member_id: String(memberId) },
+  };
+}
+
+async function syncUtalkWaiting({ concurrency = 5 } = {}) {
+  const { isModuleEnabled } = require('./moduleFlags');
+  if (!(await isModuleEnabled('utalk'))) {
+    throw new AppError(503, 'MODULE_DISABLED', 'Módulo utalk não está ativo');
+  }
+  const cfg = await loadTriageConfig();
+  const entry = getEntryStatus(cfg.statuses);
+  const list = await query(
+    `SELECT id, chat_id, attendant, status FROM reception
+     WHERE status = $1 AND chat_id IS NOT NULL AND trim(chat_id) <> ''
+     ORDER BY date_created ASC NULLS LAST
+     LIMIT 200`,
+    [entry]
+  );
+  const rows = list.rows;
+  const results = [];
+  let i = 0;
+  const limit = Math.max(1, Math.min(10, Number(concurrency) || 5));
+
+  async function worker() {
+    while (i < rows.length) {
+      const idx = i++;
+      const row = rows[idx];
+      try {
+        const synced = await syncUtalk(row.id);
+        results.push({
+          id: row.id,
+          ok: true,
+          updated: Boolean(synced.utalk?.updated),
+          cleared: Boolean(synced.utalk?.cleared),
+          unknown_member: Boolean(synced.utalk?.unknown_member),
+        });
+      } catch (err) {
+        results.push({
+          id: row.id,
+          ok: false,
+          message: err.message || String(err),
+        });
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, rows.length || 1) }, () => worker()));
+  return {
+    total: rows.length,
+    updated: results.filter((r) => r.updated).length,
+    failed: results.filter((r) => !r.ok).length,
+    results,
+  };
 }
 
 const TRIAGE_ATTENDANT_ROLES = ['Administrador', 'Acolhimento', 'Produção'];
@@ -460,42 +732,47 @@ function attendantCode(row) {
 
 /** Operators who can take triage contacts (no secrets). */
 async function listAttendants() {
-  const result = await query(
-    `SELECT id, name, last_name, email, user_code, internal_code, avatar_url, permissions, status
-     FROM system_users
-     WHERE status IS NULL OR lower(status) <> 'inactive'
-     ORDER BY name ASC NULLS LAST, last_name ASC NULLS LAST
-     LIMIT 200`,
-  );
-  return result.rows
-    .map((row) => {
-      const permissions = parsePermissions(row.permissions);
-      const code = attendantCode(row);
-      return {
-        id: row.id,
-        code,
-        user_code: row.user_code || null,
-        internal_code: row.internal_code || null,
-        name: row.name || '',
-        last_name: row.last_name || '',
-        email: row.email || null,
-        avatar_url: row.avatar_url || null,
-        permissions,
-      };
-    })
-    .filter((u) => {
-      if (!u.code) return false;
-      return u.permissions.some((p) => TRIAGE_ATTENDANT_ROLES.includes(p));
-    });
+  const { getOrSet, cacheTtl, keys } = require('../cache');
+  return getOrSet(keys.ATTENDANTS, cacheTtl.KUNK_USERS_MS, async () => {
+    const result = await query(
+      `SELECT id, name, last_name, email, user_code, internal_code, avatar_url, permissions, status, utalk_id
+       FROM system_users
+       WHERE status IS NULL OR lower(status) <> 'inactive'
+       ORDER BY name ASC NULLS LAST, last_name ASC NULLS LAST
+       LIMIT 200`,
+    );
+    return result.rows
+      .map((row) => {
+        const permissions = parsePermissions(row.permissions);
+        const code = attendantCode(row);
+        return {
+          id: row.id,
+          code,
+          user_code: row.user_code || null,
+          internal_code: row.internal_code || null,
+          name: row.name || '',
+          last_name: row.last_name || '',
+          email: row.email || null,
+          avatar_url: row.avatar_url || null,
+          permissions,
+          utalk_id: row.utalk_id || null,
+        };
+      })
+      .filter((u) => {
+        if (!u.code) return false;
+        return u.permissions.some((p) => TRIAGE_ATTENDANT_ROLES.includes(p));
+      });
+  });
 }
 
 async function updateStatus(id, status, actor = null) {
-  const value = String(status || '').trim();
-  if (!value) throw new AppError(400, 'VALIDATION_ERROR', 'status é obrigatório');
+  const raw = String(status || '').trim();
+  if (!raw) throw new AppError(400, 'VALIDATION_ERROR', 'status é obrigatório');
   const cfg = await loadTriageConfig();
+  const value = resolveReceptionStatus(raw, cfg.statuses, { fallbackToEntry: false });
   const allowed = new Set((cfg.statuses || []).map((s) => s.value));
-  if (!allowed.has(value)) {
-    throw new AppError(400, 'VALIDATION_ERROR', `Status inválido: ${value}`);
+  if (!value || !allowed.has(value)) {
+    throw new AppError(400, 'VALIDATION_ERROR', `Status inválido: ${raw}`);
   }
   const before = await itemsRepository.getItem('reception', id);
   const updated = await itemsRepository.updateItem('reception', id, {
@@ -681,6 +958,9 @@ module.exports = {
   getFormSchema,
   complete,
   assignAttendant,
+  setChatId,
+  syncUtalk,
+  syncUtalkWaiting,
   updateStatus,
   linkAssociate,
   unlinkAssociate,

@@ -1,12 +1,12 @@
 ---
 name: kunk-system-errors
 description: >-
-  Triagem de erros em aberto do PostgreSQL de observabilidade do Kunk
-  (system_errors). Lista grupos no banco, analisa causas no código e gera
-  relatório markdown detalhado para aprovação do usuário. Não corrige código
-  nem marca erros como resolvidos sem aprovação explícita. Use quando o usuário
-  pedir triagem de erros, analisar system_errors, relatório de erros do
-  Webmaster, ou executar /kunk-system-errors.
+  Triagem de erros em aberto do PostgreSQL do Kunk (system_errors no DATABASE_URL).
+  Lista grupos no banco/API Admin, analisa causas no código e gera relatório
+  markdown detalhado para aprovação do usuário. Não corrige código nem marca
+  erros como resolvidos sem aprovação explícita. Use quando o usuário pedir
+  triagem de erros, analisar system_errors, relatório de erros do Admin, ou
+  executar /kunk-system-errors.
 ---
 
 # Triagem de erros — Kunk SouCannabis
@@ -19,8 +19,9 @@ Gerar um **relatório markdown detalhado** para o usuário revisar e aprovar.
 
 ## Pré-requisitos
 
-- `VITALS_PSQL` configurado no `.env` do `kunkserver`
+- `DATABASE_URL` configurado no `.env` do `kunk-api` (tabelas `system_errors` / `system_error_resolutions` aplicadas)
 - Trabalhar a partir da raiz do repositório
+- Preferir listagem via Admin (`/erros-sistema`) ou `GET /api/v1/admin/system-errors/top` — ver [reference.md](reference.md)
 
 ## Caminhos fixos
 
@@ -47,10 +48,26 @@ Ao invocar `/kunk-system-errors`, execute **somente** esta fase e **pare**.
 
 ### Passo 1 — Listar erros em aberto
 
-```bash
-cd kunkserver
-node scripts/observability/list-open-errors.js --period 30d \
-  --out ../.cursor/skills/kunk-system-errors/work/open-errors.json
+Consultar grupos em aberto (período 30d) via API Admin ou SQL — ver [reference.md](reference.md).
+
+Salvar o resultado em `.cursor/skills/kunk-system-errors/work/open-errors.json` no formato:
+
+```json
+{
+  "total_groups": 1,
+  "period": "30d",
+  "groups": [
+    {
+      "error_hash": "...",
+      "message": "...",
+      "source": "backend",
+      "app": "api",
+      "count": 3,
+      "last_seen": "...",
+      "samples": []
+    }
+  ]
+}
 ```
 
 Se `total_groups` for 0, informe o usuário e encerre.
@@ -149,28 +166,26 @@ Se o usuário aprovar **parcialmente**, aplicar somente os itens indicados.
 
 ### Passo 6 — Testes
 
-Se houve mudança no backend: `cd kunkserver && npm test`
+Se houve mudança no backend: `cd kunk-api && npm test`
 
 ### Passo 7 — Marcar resolvidos no banco
 
 Somente itens com `user_approved: true` e `status: "fixed"`:
 
-```bash
-cd kunkserver
-node scripts/observability/mark-errors-resolved.js \
-  --meta ../.cursor/skills/kunk-system-errors/work/system-errors-triage.meta.json \
-  --status fixed
+Para cada `error_hash`, chamar:
+
+```http
+POST /api/v1/admin/system-errors/resolve
+{ "error_hash": "<hash>", "status": "fixed" }
 ```
+
+(requer sessão Administrador). Alternativa: `UPDATE system_error_resolutions` / upsert conforme [reference.md](reference.md).
 
 Depois de sucesso, atualizar esses itens para `status: "resolved"` no meta.
 
 ### Passo 8 — Verificar
 
-```bash
-cd kunkserver
-node scripts/observability/verify-errors-resolved.js \
-  --meta ../.cursor/skills/kunk-system-errors/work/system-errors-triage.meta.json
-```
+Reconsultar `GET /api/v1/admin/system-errors/top?period=30d` (ou SQL) e confirmar que os hashes aprovados não aparecem mais como `open`.
 
 ### Passo 9 — Atualizar relatório
 

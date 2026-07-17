@@ -28,6 +28,9 @@ Operadores com só `Acolhimento`, `Produção`, etc. usam o **painel** (`app.`),
 | `/dados/:collection/:id` | Detalhe / edição | admin |
 | `/arquivos` | Lista / preview de `files` | admin |
 | `/arquivos/:id` | Metadados + download / preview | admin |
+| `/armazenamento` | Buckets S3 / GCS (fora de Serviços externos) | admin |
+| `/erros-sistema` | Triagem de `system_errors` | admin |
+| `/web-vitals` | Core Web Vitals (`web_vitals`) | admin |
 | `/configs` | Índice de sistemas (`system_configs`) | admin |
 | `/configs/:system` | Keys daquele sistema | admin |
 | `/aparencia` | Aparência do Kunk (branding/tema) | admin |
@@ -35,9 +38,9 @@ Operadores com só `Acolhimento`, `Produção`, etc. usam o **painel** (`app.`),
 | `/triagem/formulario` | Campos do formulário público | admin |
 | `/triagem/status` | Status da fila | admin |
 | `/triagem/modulos` | Flags (docs/dados, etc.) | admin |
-| `/loja` | Índice da área Loja | admin |
-| `/loja/frete` | Frete no total, pacote, remetente | admin |
+| `/loja` | Redireciona para status dos pedidos | admin |
 | `/loja/status-pedidos` | Status de pedidos (`store.order_statuses`) | admin |
+| `/servicos-externos/envio` | Remetente, caixa, declaração de conteúdo | admin |
 | `/servicos-externos` | Enable/disable Loggi, Melhor Envio, … | admin |
 | `/servicos-externos/:service` | Assistente de credenciais + teste | admin |
 | `/usuarios` | Lista de operadores (`system_users`) | admin |
@@ -61,6 +64,7 @@ Substitui a necessidade de um “admin Directus” para o schema alvo.
 5. **Excluir** — `DELETE /items/:collection/:id` com confirmação.
 6. **Campos sensíveis** — senhas/tokens nunca exibidos em claro na lista; no formulário, senha só como “definir nova” (write-only).
 7. **Arquivos** — campo `file_id` / junctions abrem preview via `/files/:id` e download; upload via `POST /files` + attach na junction quando aplicável.
+8. **Excluir dados de exemplo** — no fim do índice `/dados`, botão abre modal com contagens `is_sample` por tabela e confirma exclusão via `DELETE /admin/sample-data`.
 
 ### Relações (chaves relacionadas)
 
@@ -89,6 +93,20 @@ Não inventar SQL livre: só collections whitelist + params documentados em [`..
             ├─ FKs → navegar / trocar vínculo
             └─ junctions *_files → preview / upload / detach
 ```
+
+---
+
+## Área — Armazenamento (buckets)
+
+Fora de **Serviços externos**. Configura o driver de arquivos (`local` | `s3` | `gcs`).
+
+### Comportamento
+
+1. **Menu** `/armazenamento` — status, formulário S3/GCS, testar, ativar.
+2. **Modal de incentivo** ao abrir o admin se o driver for `local` (dismiss em `localStorage`: `kunk.admin.storage.prompt.dismissed`).
+3. **Lock** — ao ativar o bucket, `locked = true`. Alterar nome do bucket no mesmo provedor continua permitido; troca S3↔GCS só se não houver arquivos na nuvem.
+
+Docs de setup: [`../../api/storage-s3-setup.md`](../../api/storage-s3-setup.md), [`../../api/storage-gcs-setup.md`](../../api/storage-gcs-setup.md).
 
 ---
 
@@ -155,7 +173,7 @@ UI dedicada para checkout/frete e integrações. Spec: [`../kunk/pedidos/admin.m
 
 | Subárea | Rota | Persistência |
 |---|---|---|
-| Frete / loja | `/loja/frete` | `system_configs` `system=store` (`apply_to_total`, `ship_from`, `package`, **`content_declaration`**, `default_option`) |
+| Dados de envio | `/servicos-externos/envio` | `system_configs` `system=store` (`ship_from`, `package`, **`content_declaration`**, …) |
 | Status pedidos | `/loja/status-pedidos` | `store.order_statuses` (Aguardando / Pagamento concluído + custom) |
 | Serviços externos | `/servicos-externos` | `system_configs` `system=modules` (flags) + `system_api_credentials` |
 | Assistente | `/servicos-externos/:service` | credentials criptografadas; teste via `/modules/{service}/test` |
@@ -188,7 +206,6 @@ Campo `system_users.permissions` — JSON array de roles, alinhado a [`../../api
 | `Acolhimento` | Painel operacional |
 | `Produção` | Painel operacional |
 | `Financeiro` | Painel operacional |
-| `Parceiro` | Escopo a redesenhar |
 | `Prescritor` | Escopo próprio |
 | `api` | Reservado a tokens |
 

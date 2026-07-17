@@ -2,7 +2,7 @@ FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package.json package-lock.json ./
 COPY apps/doc-sign/package.json ./apps/doc-sign/
 COPY apps/registration/package.json ./apps/registration/
 COPY apps/admin/package.json ./apps/admin/

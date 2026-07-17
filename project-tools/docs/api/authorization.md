@@ -20,7 +20,6 @@ Toda rota autenticada passa por autorização baseada em **role** (sessão) ou *
 | `Acolhimento` | Reception, users, services, orders (operacional) |
 | `Produção` | Orders (produção), products |
 | `Financeiro` | Orders/services (leitura + validação comissão) |
-| `Parceiro` | Relatórios / dados do parceiro (escopo a redesenhar; sem `partner_code` no schema) |
 | `Prescritor` | Relatórios / dados do próprio `prescriber_code` (pedidos — fora do módulo de serviços v1) |
 | `Profissional` | Portal de relatório de serviços; escopo `internal_code` = `professional_code` |
 | `api` | Reservado a tokens de integração |
@@ -29,22 +28,21 @@ Os nomes podem permanecer compatíveis com o JSON atual de `permissions` no kunk
 
 ## Matriz padrão (proposta v1)
 
-| Collection | Admin | Acolhimento | Produção | Financeiro | Parceiro | Prescritor |
-|---|---|---|---|---|---|---|
-| `users` | CRUD | CRU | R | R | — | — |
-| `system_users` | CRUD | R (limitado) | — | — | — | — |
-| `orders` | CRUD | CRUD | RU | RU | R* | R* |
-| `services` | CRUD | CRUD | — | RU | — | R* |
-| `products` | CRUD | R | RU | R | — | — |
-| `partners` | CRUD | R | — | R | R* | — |
-| `professionals` | CRUD | RU | — | R | — | R* |
-| `reception` | CRUD | CRUD | — | — | — | — |
-| `tags` | CRUD | CRUD | R | R | — | — |
-| `reports` | CRUD | R | R | R | R* | R* |
-| `files` / `*_files` | CRUD | CRUD | R | R | — | — |
-| `users_api` / tokens | CRUD | — | — | — | — | — |
+| Collection | Admin | Acolhimento | Produção | Financeiro | Prescritor |
+|---|---|---|---|---|---|
+| `users` | CRUD | CRU | R | R | — |
+| `system_users` | CRUD | R (limitado) | — | — | — |
+| `orders` | CRUD | CRUD | RU | RU | R* |
+| `services` | CRUD | CRUD | — | RU | R* |
+| `products` | CRUD | R | RU | R | — |
+| `professionals` | CRUD | RU | — | R | R* |
+| `reception` | CRUD | CRUD | — | — | — |
+| `tags` | CRUD | CRUD | R | R | — |
+| `reports` | CRUD | R | R | R | R* |
+| `files` / `*_files` | CRUD | CRUD | R | R | — |
+| `users_api` / tokens | CRUD | — | — | — | — |
 
-`R*` = leitura **escopada** ao próprio código (`Prescritor` / `Profissional`; parceiro pendente de redesenho), não lista global.
+`R*` = leitura **escopada** ao próprio código (`Prescritor` / `Profissional`), não lista global.
 
 Role `Profissional` (portal de serviços): ver [`../frontend/kunk/relatorios-servicos/api.md`](../frontend/kunk/relatorios-servicos/api.md) — tipicamente `services` R*, `professionals` R* (próprio), sem CRUD staff.
 
@@ -87,7 +85,6 @@ Mapeamento:
 
 Além do RBAC de collection, aplicar **filtros obrigatórios** no repositório:
 
-- Role `Parceiro` → sem filtro automático por enquanto (`partner_code` removido do schema)
 - Role `Prescritor` → `WHERE prescriber_code = …` (pedidos; fora do relatório de serviços v1)
 - Role `Profissional` → `WHERE services.professional_id = system_users.internal_code` (relatório de serviços)
 - Tokens com scope restrito → mesmo princípio se o token estiver vinculado a um parceiro

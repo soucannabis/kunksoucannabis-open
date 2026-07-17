@@ -4,6 +4,11 @@ const itemsRepository = require('../repositories/itemsRepository');
 const { AppError } = require('../utils/response');
 const { query } = require('../db/pool');
 const stockService = require('./stockService');
+const { getOrSet, memoryCache, cacheTtl, keys } = require('../cache');
+
+function invalidateProductsCatalogCache() {
+  memoryCache.invalidate(keys.PRODUCTS_CATALOG);
+}
 
 const CSV_HEADERS = [
   'sku',
@@ -22,7 +27,9 @@ const ALLOWED_STATUS = new Set(['published', 'draft', 'archived']);
 
 async function updateBatch(id, batch) {
   if (batch === undefined) throw new AppError(400, 'VALIDATION_ERROR', 'batch é obrigatório');
-  return itemsRepository.updateItem('products', id, { batch });
+  const row = await itemsRepository.updateItem('products', id, { batch });
+  invalidateProductsCatalogCache();
+  return row;
 }
 
 async function syncBatches(items = []) {
@@ -32,14 +39,17 @@ async function syncBatches(items = []) {
     const row = await itemsRepository.updateItem('products', item.id, { batch: item.batch });
     updated.push(row);
   }
+  if (updated.length) invalidateProductsCatalogCache();
   return { updated: updated.length, items: updated };
 }
 
 async function listProducts() {
-  const result = await query(
-    `SELECT id, name, sku, batch, amount, status FROM products ORDER BY id DESC`
-  );
-  return result.rows;
+  return getOrSet(keys.PRODUCTS_CATALOG, cacheTtl.PRODUCTS_CATALOG_MS, async () => {
+    const result = await query(
+      `SELECT id, name, sku, batch, amount, status FROM products ORDER BY id DESC`
+    );
+    return result.rows;
+  });
 }
 
 function escapeCsvCell(value) {
@@ -256,6 +266,8 @@ async function importProducts(body) {
   const writeFailed = results.filter((r) => !r.ok);
   const failed = failedRows.length + writeFailed.length;
 
+  if (created + updated > 0) invalidateProductsCatalogCache();
+
   return {
     created,
     updated,
@@ -275,7 +287,9 @@ async function importProducts(body) {
 }
 
 async function adjustStock(id, body) {
-  return stockService.adjustStock(id, body?.delta, { note: body?.note });
+  const result = await stockService.adjustStock(id, body?.delta, { note: body?.note });
+  invalidateProductsCatalogCache();
+  return result;
 }
 
 async function listMovements(id, queryParams = {}) {

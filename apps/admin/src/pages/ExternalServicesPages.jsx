@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, Outlet, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Outlet, useParams, useSearchParams } from 'react-router-dom';
+import { PhoneInput, onlyDigits } from '@kunk/forms';
 import {
-  activateMelhorEnvioProduction,
-  activateMelhorEnvioSandbox,
   getGoogleCalendarOAuthStatus,
   getMelhorEnvioOAuthStatus,
   loadExternalService,
@@ -14,9 +13,383 @@ import {
   startMelhorEnvioOAuth,
   testExternalService,
 } from '../lib/externalServicesConfig.js';
+import { AdminLoader } from '../components/AdminLoader.jsx';
+import {
+  ExternalServiceStatusBanner,
+  ExternalServiceStatusIcon,
+  ExtActionFeedback,
+} from '../components/ExternalServiceStatus.jsx';
+import {
+  EXT_FREIGHT_SLUGS,
+  EXT_SERVICE_LABELS,
+  deriveExternalServiceStatus,
+  deriveShippingStatus,
+} from '../lib/externalServiceStatus.js';
+
+function notifyExternalServicesChanged() {
+  window.dispatchEvent(new CustomEvent('kunk:external-services-changed'));
+}
+
+function AuthKeyIcon() {
+  return (
+    <svg
+      className="btn-auth-key-icon"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle cx="8" cy="8" r="3.25" stroke="currentColor" strokeWidth="1.75" />
+      <path
+        d="M10.5 10.5 20 20M16.5 15.5h3M14.75 17.25h2.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Botão Autenticar / Reautenticar com ícone de chave. */
+function AuthenticateButton({ busy, label, disabled, ...rest }) {
+  const text = busy ? 'Autenticando…' : label || 'Autenticar';
+  return (
+    <button
+      type="submit"
+      className="btn btn-primary"
+      data-testid="save-credentials"
+      disabled={disabled || busy}
+      {...rest}
+    >
+      {!busy ? <AuthKeyIcon /> : null}
+      {text}
+    </button>
+  );
+}
+
+const CREDENTIAL_GUIDE_BOX_STYLE = {
+  marginTop: 0,
+  marginBottom: 16,
+  fontSize: '0.85rem',
+  padding: '0.85rem 1rem',
+  border: '1px solid #ddd',
+  borderRadius: 8,
+  background: '#f7f7f7',
+  color: '#111',
+};
+
+/** Tutorial “Como obter as credenciais” (padrão Google Calendar). */
+function CredentialsSetupGuide({ service, title, steps, docs }) {
+  const testId =
+    service === 'google_calendar' ? 'google-calendar-setup-guide' : `${service}-setup-guide`;
+  return (
+    <div className="ext-credentials-guide" data-testid={testId} style={CREDENTIAL_GUIDE_BOX_STYLE}>
+      <p style={{ margin: '0 0 0.5rem', fontWeight: 600, color: '#111' }}>
+        {title || 'Como obter as credenciais'}
+      </p>
+      <ol style={{ margin: 0, paddingLeft: '1.25rem', color: '#111' }}>
+        {steps.map((step, i) => (
+          <li key={i} style={{ marginBottom: i === steps.length - 1 ? 0 : 6 }}>
+            {step}
+          </li>
+        ))}
+      </ol>
+      {docs?.length ? (
+        <p style={{ margin: '0.75rem 0 0', color: '#444' }}>
+          Docs:{' '}
+          {docs.map((d, i) => (
+            <span key={d.href}>
+              {i > 0 ? ' · ' : null}
+              <a href={d.href} target="_blank" rel="noreferrer" style={{ color: '#0b57d0' }}>
+                {d.label}
+              </a>
+            </span>
+          ))}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+const CREDENTIAL_SETUP_GUIDES = {
+  loggi: {
+    title: 'Como obter as credenciais',
+    steps: [
+      <>
+        Acesse o portal{' '}
+        <a href="https://www.loggi.com/empresas/" target="_blank" rel="noreferrer" style={{ color: '#0b57d0' }}>
+          Loggi Empresas
+        </a>{' '}
+        (ou o ambiente de homologação) com a conta da associação.
+      </>,
+      <>
+        Peça ao time Loggi (Sales Engineering / suporte API) ou abra a área de{' '}
+        <strong>API / integrações</strong> e obtenha as credenciais OAuth do aplicativo:{' '}
+        <strong>Client ID</strong>, <strong>Client Secret</strong> e o <strong>Company ID</strong>.
+      </>,
+      <>
+        Cole esses valores nos campos abaixo. A URL base padrão de produção é{' '}
+        <code>https://api.loggi.com</code>. Auth oficial: OAuth 2.0 client credentials (
+        <code>POST …/v2/oauth2/token</code>).
+      </>,
+      <>
+        Clique em <strong>Autenticar</strong>. Depois preencha{' '}
+        <strong>Dados de envio</strong> (remetente) antes de ativar cotação/etiqueta.
+      </>,
+    ],
+    docs: [
+      { label: 'API Loggi', href: 'https://docs.api.loggi.com/reference/nossa-documenta%C3%A7%C3%A3o' },
+      { label: 'Criar cotação', href: 'https://docs.api.loggi.com/reference/quote' },
+    ],
+  },
+  melhorenvio: {
+    title: 'Como obter as credenciais OAuth',
+    steps: [
+      <>
+        Acesse o{' '}
+        <a href="https://melhorenvio.com.br/" target="_blank" rel="noreferrer" style={{ color: '#0b57d0' }}>
+          Melhor Envio
+        </a>{' '}
+        e entre na conta da loja / associação.
+      </>,
+      <>
+        Em <strong>Integrações → API</strong> (ou “Meus aplicativos”), crie um aplicativo OAuth e
+        copie o <strong>Client ID</strong> e o <strong>Client Secret</strong>.
+      </>,
+      <>
+        Em URIs de redirecionamento, cole a <strong>Redirect URI</strong> exibida nesta página
+        (campo abaixo / botão copiar).
+      </>,
+      <>
+        Cole Client ID e Client Secret nos campos e clique em <strong>Autenticar</strong>. O
+        sistema abre o Melhor Envio para autorizar; ao voltar, o refresh token fica salvo. Preencha{' '}
+        <strong>Dados de envio</strong> antes de ativar cotação/etiqueta.
+      </>,
+    ],
+    docs: [
+      {
+        label: 'Introdução API',
+        href: 'https://docs.melhorenvio.com.br/reference/introducao-api-melhor-envio',
+      },
+      { label: 'Autenticação', href: 'https://docs.melhorenvio.com.br/docs/autenticacao' },
+    ],
+  },
+  geoapify: {
+    title: 'Como obter as credenciais',
+    steps: [
+      <>
+        Crie uma conta em{' '}
+        <a
+          href="https://www.geoapify.com"
+          target="_blank"
+          rel="noreferrer"
+          data-testid="geoapify-site-link"
+          style={{ color: '#0b57d0' }}
+        >
+          geoapify.com
+        </a>
+        .
+      </>,
+      <>
+        No painel{' '}
+        <a
+          href="https://myprojects.geoapify.com"
+          target="_blank"
+          rel="noreferrer"
+          data-testid="geoapify-projects-link"
+          style={{ color: '#0b57d0' }}
+        >
+          myprojects.geoapify.com
+        </a>
+        , abra <strong>API Keys</strong> e crie (ou copie) uma chave.
+      </>,
+      <>
+        Cole a <strong>API Key</strong> no campo abaixo e clique em <strong>Autenticar</strong>. O
+        Kunk valida com um geocode leve (Brasil). ViaCEP (Correios) não exige credencial.
+      </>,
+      <>
+        Com o módulo ativo, marque <strong>Usar na verificação de endereço</strong> para o fluxo
+        composto ViaCEP + Geoapify.
+      </>,
+    ],
+    docs: [
+      { label: 'Geocoding API', href: 'https://www.geoapify.com/geocoding-api/' },
+      { label: 'API Docs', href: 'https://apidocs.geoapify.com/' },
+      { label: 'ViaCEP', href: 'https://viacep.com.br/' },
+    ],
+  },
+  google_calendar: {
+    title: 'Como obter as credenciais OAuth',
+    steps: [
+      <>
+        Abra o{' '}
+        <a
+          href="https://console.cloud.google.com/"
+          target="_blank"
+          rel="noreferrer"
+          data-testid="gc-console-link"
+          style={{ color: '#0b57d0' }}
+        >
+          Google Cloud Console
+        </a>{' '}
+        e selecione (ou crie) o projeto da associação.
+      </>,
+      <>
+        Em <strong>APIs e serviços → Biblioteca</strong>, ative a{' '}
+        <a
+          href="https://console.cloud.google.com/apis/library/calendar-json.googleapis.com"
+          target="_blank"
+          rel="noreferrer"
+          style={{ color: '#0b57d0' }}
+        >
+          Google Calendar API
+        </a>
+        .
+      </>,
+      <>
+        Em <strong>APIs e serviços → Tela de consentimento OAuth</strong>, configure o app (tipo
+        Externo ou Interno).
+      </>,
+      <>
+        Em <strong>Clientes → Criar clientes</strong>, escolha tipo{' '}
+        <strong>Aplicativo da Web</strong>.
+      </>,
+      <>
+        Em <strong>URIs de redirecionamento autorizados</strong>, cole a{' '}
+        <strong>Redirect URI</strong> exibida abaixo nesta página (botão copiar).
+      </>,
+      <>
+        Copie o <strong>Client ID</strong> e o <strong>Client Secret</strong> para os campos
+        abaixo.
+      </>,
+      <>
+        Clique em <strong>Autenticar</strong> — o sistema salva as credenciais, grava a Redirect
+        URI automaticamente, testa e abre o Google para autorizar a conta da associação. Depois
+        selecione o calendário principal.
+      </>,
+    ],
+    docs: [
+      {
+        label: 'Calendar API',
+        href: 'https://developers.google.com/calendar/api/guides/overview',
+      },
+      {
+        label: 'OAuth 2.0',
+        href: 'https://developers.google.com/identity/protocols/oauth2',
+      },
+    ],
+  },
+  email: {
+    title: 'Como obter as credenciais SMTP',
+    steps: [
+      <>
+        Escolha o provedor SMTP da associação (Gmail, Outlook, Amazon SES, SendGrid, servidor
+        próprio, etc.).
+      </>,
+      <>
+        No painel do provedor, ative SMTP e anote <strong>host</strong>, <strong>porta</strong>{' '}
+        (ex.: 587 STARTTLS ou 465 TLS), <strong>usuário</strong> e <strong>senha</strong> (ou senha
+        de app).
+      </>,
+      <>
+        Preencha os campos abaixo: Host, Porta, Usuário, Senha, From (e-mail remetente) e From
+        name. Marque <strong>TLS implícito (secure)</strong> se a porta exigir TLS direto (ex.:
+        465).
+      </>,
+      <>
+        Clique em <strong>Autenticar</strong> para validar a conexão (VERIFY). Depois ative o
+        módulo. Opcionalmente use “Enviar e-mail de teste”.
+      </>,
+    ],
+    docs: [{ label: 'Nodemailer SMTP', href: 'https://nodemailer.com/smtp/' }],
+  },
+  pagarme: {
+    title: 'Como obter as credenciais',
+    steps: [
+      <>
+        Acesse o{' '}
+        <a href="https://dashboard.pagar.me/" target="_blank" rel="noreferrer" style={{ color: '#0b57d0' }}>
+          Dashboard Pagar.me
+        </a>{' '}
+        com a conta da associação (produção ou teste).
+      </>,
+      <>
+        Em <strong>Configurações → Chaves de API</strong>, copie a <strong>Secret Key</strong> (
+        <code>sk_…</code>) e a <strong>Public Key</strong> (<code>pk_…</code>).
+      </>,
+      <>
+        Cole as chaves abaixo e clique em <strong>Autenticar</strong>. O Kunk testa a API e indica
+        se a conta é <strong>PSP</strong> (necessária para split com Pedidos SouCannabis) ou{' '}
+        <strong>Gateway</strong> (só Pagar.me standalone).
+      </>,
+      <>
+        Configure também usuário/senha de <strong>webhooks</strong> se a tela pedir, e as URLs de
+        sucesso / recebedores conforme o onboarding de pagamentos.
+      </>,
+    ],
+    docs: [
+      { label: 'Introdução', href: 'https://docs.pagar.me/reference/introdu%C3%A7%C3%A3o-1' },
+      { label: 'Dashboard', href: 'https://dashboard.pagar.me/' },
+    ],
+  },
+  soucannabis_orders: {
+    title: 'Como obter as credenciais',
+    steps: [
+      <>
+        As credenciais da API de Pedidos SouCannabis são fornecidas pelo time SouCannabis (não há
+        self-service público). Solicite acesso à integração Kunk ↔ SouCannabis.
+      </>,
+      <>
+        Você receberá: <strong>API base URL</strong> (<code>base_url</code>),{' '}
+        <strong>Client ID</strong>, <strong>Client Secret</strong> e, se aplicável,{' '}
+        <strong>Token URL</strong>.
+      </>,
+      <>
+        Cole os valores nos campos abaixo e clique em <strong>Autenticar</strong>. O Kunk obtém o
+        token OAuth (client_credentials) e valida com <code>/me</code>.
+      </>,
+      <>
+        Para pedidos com valor &gt; 0 e split, configure também o <strong>Pagar.me</strong> em conta{' '}
+        <strong>PSP</strong> e complete recipients / percentual de pagamento.
+      </>,
+    ],
+    docs: [],
+  },
+  utalk: {
+    title: 'Como obter as credenciais',
+    steps: [
+      <>
+        Acesse o painel{' '}
+        <a href="https://app.utalk.chat/" target="_blank" rel="noreferrer" style={{ color: '#0b57d0' }}>
+          Utalk / Umbler Talk
+        </a>{' '}
+        com a conta da organização.
+      </>,
+      <>
+        Em configurações da organização / API, copie o <strong>Organization ID</strong> e gere (ou
+        copie) o <strong>API Token</strong> (Bearer de qualquer usuário Utalk da org).
+      </>,
+      <>
+        Cole Organization ID e API Token abaixo (e opcionalmente a API base URL) e clique em{' '}
+        <strong>Autenticar</strong>. O Kunk valida com <code>GET /v1/members/me/</code>.
+      </>,
+      <>
+        Ative o módulo e cadastre o <strong>utalk_id</strong> de cada operador (mapeamento de
+        atendentes). Opcionalmente configure a mensagem automática da triagem.
+      </>,
+    ],
+    docs: [
+      {
+        label: 'Swagger Umbler',
+        href: 'https://app-utalk.umbler.com/api/swagger/index.html',
+      },
+    ],
+  },
+};
 
 const ME_DEFAULT_URLS = {
-  sandbox: 'https://sandbox.melhorenvio.com.br/api/v2',
   production: 'https://www.melhorenvio.com.br/api/v2',
 };
 
@@ -52,17 +425,46 @@ const FIELD_LABELS = {
   webhook_user: 'Usuário HTTP Basic (igual ao painel Pagar.me)',
   webhook_pass: 'Senha HTTP Basic (igual ao painel Pagar.me)',
   base_url: 'Base URL SouCannabis',
+  api_token: 'Token Utalk (Bearer)',
+  organization_id: 'Organization ID',
+  from_phone: 'Telefone do canal (+55…)',
 };
+
+const FIELD_PLACEHOLDERS = {
+  client_id: 'Ex.: abc123def456',
+  client_secret: 'Cole o client secret',
+  redirect_uri: 'https://…/oauth/callback',
+  api_base_url: 'https://api.exemplo.com',
+  company_id: 'Ex.: 123456',
+  token_url: 'https://api.exemplo.com/oauth/token',
+  api_key: 'Cole a API key',
+  host: 'smtp.exemplo.com',
+  port: '587',
+  user: 'usuario@exemplo.com',
+  pass: 'Senha SMTP',
+  from_email: 'noreply@exemplo.com',
+  from_name: 'Nome da associação',
+  secret_key: 'sk_… ou sk_test_…',
+  public_key: 'pk_… ou pk_test_…',
+  webhook_user: 'Usuário do webhook',
+  webhook_pass: 'Senha do webhook',
+  base_url: 'https://api.soucannabis.exemplo',
+  api_token: 'Cole o token Bearer',
+  organization_id: 'Ex.: org_abc123',
+  from_phone: '+5562999999999',
+};
+
+function credentialPlaceholder(fieldKey, isSecret) {
+  if (FIELD_PLACEHOLDERS[fieldKey]) return FIELD_PLACEHOLDERS[fieldKey];
+  if (isSecret) return 'Cole o valor secreto';
+  return 'Preencha este campo';
+}
 
 const FREIGHT_SERVICES = new Set(['loggi', 'melhorenvio']);
 const SERVICE_LABELS = {
-  loggi: 'Loggi',
-  melhorenvio: 'Melhor Envio',
-  geoapify: 'Geoapify',
-  google_calendar: 'Google Calendar',
+  ...EXT_SERVICE_LABELS,
   email: 'E-mail (SMTP)',
-  pagarme: 'Pagar.me',
-  soucannabis_orders: 'Pedidos SouCannabis',
+  utalk: 'Utalk (WhatsApp)',
 };
 
 const SC_AUTH_FIELDS = new Set(['base_url', 'token_url', 'client_id', 'client_secret']);
@@ -95,82 +497,11 @@ function formatExternalAuthError(err) {
   return parts.join(' ');
 }
 
-export function ServicosExternosShell() {
-  return (
-    <div>
-      <div className="admin-top">
-        <div>
-          <h1 style={{ margin: 0 }}>Serviços externos</h1>
-          <p className="muted" style={{ margin: '0.25rem 0 0' }}>
-            Loggi, Melhor Envio, Geoapify, Google Calendar, E-mail, Pagar.me e Pedidos SouCannabis
-          </p>
-        </div>
-      </div>
-      <nav
-        style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}
-      >
-        <NavLink
-          to="/servicos-externos"
-          end
-          className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}
-        >
-          Índice
-        </NavLink>
-        <NavLink
-          to="/servicos-externos/envio"
-          className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}
-        >
-          Dados de envio
-        </NavLink>
-        <NavLink
-          to="/servicos-externos/loggi"
-          className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}
-        >
-          Loggi
-        </NavLink>
-        <NavLink
-          to="/servicos-externos/melhorenvio"
-          className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}
-        >
-          Melhor Envio
-        </NavLink>
-        <NavLink
-          to="/servicos-externos/geoapify"
-          className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}
-        >
-          Geoapify
-        </NavLink>
-        <NavLink
-          to="/servicos-externos/google_calendar"
-          className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}
-        >
-          Google Calendar
-        </NavLink>
-        <NavLink
-          to="/servicos-externos/email"
-          className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}
-        >
-          E-mail
-        </NavLink>
-        <NavLink
-          to="/servicos-externos/pagarme"
-          className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}
-        >
-          Pagar.me
-        </NavLink>
-        <NavLink
-          to="/servicos-externos/soucannabis_orders"
-          className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}
-        >
-          Pedidos SouCannabis
-        </NavLink>
-      </nav>
-      <Outlet />
-    </div>
-  );
+export function ExternalServicesShell() {
+  return <Outlet />;
 }
 
-export function ServicosExternosIndexPage({ api }) {
+export function ExternalServicesIndexPage({ api }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
@@ -189,73 +520,91 @@ export function ServicosExternosIndexPage({ api }) {
     };
   }, [api]);
 
-  if (error) return <p style={{ color: '#b00020' }}>{error}</p>;
-  if (!data) return <div className="muted">Carregando…</div>;
+  if (error) {
+    return (
+      <div className="ext-page">
+        <div className="admin-top">
+          <div>
+            <h1 style={{ margin: 0 }}>Serviços externos</h1>
+            <p className="muted" style={{ margin: '0.25rem 0 0' }}>Visão geral dos provedores</p>
+          </div>
+        </div>
+        <p className="alert alert-error" role="alert">
+          {error}
+        </p>
+      </div>
+    );
+  }
+  if (!data) return <AdminLoader />;
+
+  const shippingStatus = deriveShippingStatus(data.store_incomplete);
+  const freightSet = new Set(EXT_FREIGHT_SLUGS);
+  const freightServices = (data.services || []).filter((s) => freightSet.has(s.service));
+  const otherServices = (data.services || []).filter((s) => !freightSet.has(s.service));
 
   return (
-    <div className="card" style={{ padding: '1.25rem' }}>
-      <h2 style={{ marginTop: 0 }}>Provedores</h2>
-      <ul style={{ lineHeight: 1.8 }}>
-        <li>
-          <Link to="/servicos-externos/envio">Dados de envio</Link> — remetente, caixa e declaração
-          (obrigatório antes de ativar frete)
-        </li>
-        {(data.services || []).map((s) => (
-          <li key={s.service}>
-            <Link to={`/servicos-externos/${s.service}`}>
-              {SERVICE_LABELS[s.service] || s.service}
+    <div className="ext-page ext-page-wide">
+      <div className="admin-top">
+        <div>
+          <h1 style={{ margin: 0 }}>Serviços externos</h1>
+          <p className="muted" style={{ margin: '0.25rem 0 0' }}>
+            Visão geral dos provedores — abra cada um no menu lateral
+          </p>
+        </div>
+      </div>
+
+      <h2 className="ext-overview-heading">Transportadoras</h2>
+      <div className="ext-overview-grid">
+        <Link to="/servicos-externos/envio" className="ext-overview-card">
+          <div className="ext-overview-card-head">
+            <ExternalServiceStatusIcon kind={shippingStatus.kind} label={shippingStatus.label} />
+            <strong>Dados de envio</strong>
+          </div>
+          <span className="muted">{shippingStatus.detail}</span>
+        </Link>
+        {freightServices.map((s) => {
+          const status = deriveExternalServiceStatus(s);
+          return (
+            <Link
+              key={s.service}
+              to={`/servicos-externos/${s.service}`}
+              className="ext-overview-card"
+            >
+              <div className="ext-overview-card-head">
+                <ExternalServiceStatusIcon kind={status.kind} label={status.label} />
+                <strong>{SERVICE_LABELS[s.service] || s.service}</strong>
+              </div>
+              <span className="muted">
+                {status.label} · {s.enabled ? 'habilitado' : 'desabilitado'}
+                {s.source === 'admin' ? ' · Admin' : ' · padrão'}
+              </span>
             </Link>
-            {' — '}
-            runtime {s.enabled ? 'on' : 'off'}
-            {s.source === 'admin' ? ' (admin)' : ' (env)'}
-            {FREIGHT_SERVICES.has(s.service) ? (
-              <>
-                {' '}
-                · quote {s.use_for_quote ? 'sim' : 'não'} · label {s.use_for_label ? 'sim' : 'não'}
-                {' '}
-                · tracking {s.use_for_tracking ? 'sim' : 'não'}
-              </>
-            ) : null}
-            {s.service === 'geoapify' ? (
-              <> · validação {s.use_for_validation ? 'sim' : 'não'}</>
-            ) : null}
-            {s.service === 'google_calendar' ? (
-              <> · agendamento {s.use_for_scheduling ? 'sim' : 'não'}</>
-            ) : null}
-            {s.service === 'pagarme' ? (
-              <>
-                {' '}
-                · pedidos {s.use_for_orders ? 'sim' : 'não'} · serviços{' '}
-                {s.use_for_services ? 'sim' : 'não'}
-              </>
-            ) : null}
-            {s.service === 'soucannabis_orders' ? (
-              <>
-                {' '}
-                · sync produtos {s.sync_products ? 'sim' : 'não'} · tags{' '}
-                {s.sync_tags ? 'sim' : 'não'} · pedidos {s.sync_orders ? 'sim' : 'não'}
-              </>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-      {data.store_incomplete && (
-        <p className="muted">
-          Loja incompleta:{' '}
-          {[
-            data.store_incomplete.ship_from && 'remetente',
-            data.store_incomplete.package && 'caixa',
-            data.store_incomplete.content_declaration && 'declaração',
-          ]
-            .filter(Boolean)
-            .join(', ') || 'ok'}
-          . <Link to="/servicos-externos/envio">Configurar dados de envio</Link>
-        </p>
-      )}
-      <p className="muted" style={{ fontSize: '0.85rem' }}>
-        Ative ou desative cada módulo nesta página. O Admin sobrescreve o padrão do
-        ambiente (MODULE_*_ENABLED).
-      </p>
+          );
+        })}
+      </div>
+
+      <h2 className="ext-overview-heading">Outros serviços</h2>
+      <div className="ext-overview-grid">
+        {otherServices.map((s) => {
+          const status = deriveExternalServiceStatus(s);
+          return (
+            <Link
+              key={s.service}
+              to={`/servicos-externos/${s.service}`}
+              className="ext-overview-card"
+            >
+              <div className="ext-overview-card-head">
+                <ExternalServiceStatusIcon kind={status.kind} label={status.label} />
+                <strong>{SERVICE_LABELS[s.service] || s.service}</strong>
+              </div>
+              <span className="muted">
+                {status.label} · {s.enabled ? 'habilitado' : 'desabilitado'}
+                {s.source === 'admin' ? ' · Admin' : ' · padrão'}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -296,14 +645,16 @@ function CredentialField({
   onCancelEdit,
   envSuffix,
   alwaysEditable = false,
+  className = '',
 }) {
   const label = FIELD_LABELS[cred.field_key] || cred.description || cred.field_key;
+  const fieldClass = `field${className ? ` ${className}` : ''}`;
 
   if (cred.field_key === 'secure') {
     const current = String(value ?? cred.value ?? 'false').toLowerCase();
     const isYes = current === 'true' || current === '1' || current === 'yes' || current === 'on';
     return (
-      <fieldset className="field" style={{ marginBottom: 14, border: 0, padding: 0 }} data-testid="cred-secure">
+      <fieldset className={fieldClass} style={{ border: 0, padding: 0 }} data-testid="cred-secure">
         <legend style={{ fontWeight: 600, marginBottom: 8 }}>{label}{envSuffix || ''}</legend>
         <div style={{ display: 'flex', gap: 16 }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -335,7 +686,7 @@ function CredentialField({
   const showDisplay = !alwaysEditable && cred.has_value && !editing;
 
   return (
-    <div className="field" style={{ marginBottom: 14 }}>
+    <div className={fieldClass}>
       <label htmlFor={`cred-${cred.field_key}`}>
         {label}
         {envSuffix || ''}
@@ -356,30 +707,46 @@ function CredentialField({
         </div>
       ) : (
         <div>
-          <input
-            id={`cred-${cred.field_key}`}
-            className="input"
-            type={
-              cred.field_key === 'user'
-                ? 'email'
-                : cred.is_secret
-                  ? 'password'
-                  : cred.field_key.includes('url')
-                    ? 'url'
-                    : 'text'
-            }
-            data-testid={`cred-${cred.field_key}`}
-            placeholder={
-              cred.field_key === 'pass'
-                ? 'Senha SMTP'
-                : cred.is_secret
-                  ? 'Nova chave'
-                  : ''
-            }
-            autoComplete={cred.field_key === 'pass' ? 'new-password' : 'off'}
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-          />
+          {cred.field_key === 'from_phone' ? (
+            <>
+              <PhoneInput
+                value={onlyDigits(value || '')}
+                onChange={(digits) => onChange(digits ? `+${digits}` : '')}
+                inputClass="input admin-phone-control"
+                placeholder={credentialPlaceholder(cred.field_key)}
+                inputProps={{
+                  id: `cred-${cred.field_key}`,
+                  name: 'from_phone',
+                  'data-testid': `cred-${cred.field_key}`,
+                  autoComplete: 'tel',
+                  placeholder: credentialPlaceholder(cred.field_key),
+                }}
+              />
+              <p className="muted" style={{ margin: '0.35rem 0 0', fontSize: '0.8rem' }}>
+                Obrigatório antes de autenticar. Salvo com código do país (ex.:{' '}
+                <code>+5562999999999</code>).
+              </p>
+            </>
+          ) : (
+            <input
+              id={`cred-${cred.field_key}`}
+              className="input"
+              type={
+                cred.field_key === 'user'
+                  ? 'email'
+                  : cred.is_secret
+                    ? 'password'
+                    : cred.field_key.includes('url')
+                      ? 'url'
+                      : 'text'
+              }
+              data-testid={`cred-${cred.field_key}`}
+              placeholder={credentialPlaceholder(cred.field_key, cred.is_secret)}
+              autoComplete={cred.field_key === 'pass' ? 'new-password' : 'off'}
+              value={value || ''}
+              onChange={(e) => onChange(e.target.value)}
+            />
+          )}
           {cred.has_value && !alwaysEditable && (
             <button
               type="button"
@@ -456,7 +823,7 @@ function OAuthRedirectUriCopy({ uri }) {
   }
 
   return (
-    <div className="field" style={{ marginBottom: 14 }} data-testid="oauth-redirect-uri">
+    <div className="field field--wide" data-testid="oauth-redirect-uri">
       <label>Redirect URI (copie para o provedor OAuth)</label>
       <div className="cred-value-row">
         <span className="cred-value-text" style={{ wordBreak: 'break-all' }}>
@@ -474,7 +841,7 @@ function OAuthRedirectUriCopy({ uri }) {
   );
 }
 
-export function ServicoExternoDetailPage({ api }) {
+export function ExternalServiceDetailPage({ api }) {
   const { service } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [data, setData] = useState(null);
@@ -482,6 +849,7 @@ export function ServicoExternoDetailPage({ api }) {
   const [editing, setEditing] = useState({});
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
+  const [feedbackAt, setFeedbackAt] = useState(null);
   const [saving, setSaving] = useState(false);
   const [oauthStarting, setOauthStarting] = useState(false);
   const [calendars, setCalendars] = useState([]);
@@ -491,7 +859,31 @@ export function ServicoExternoDetailPage({ api }) {
   const [webhookInfo, setWebhookInfo] = useState(null);
   const [pagarmeForceEdit, setPagarmeForceEdit] = useState(false);
   const [assocRecipientDraft, setAssocRecipientDraft] = useState('');
+  const [utalkIdDrafts, setUtalkIdDrafts] = useState({});
+  const [utalkAttendantSaving, setUtalkAttendantSaving] = useState(null);
+  const [triageMessageDraft, setTriageMessageDraft] = useState(
+    'Olá {{nome}}, recebemos seu contato. Em breve um atendente falará com você.'
+  );
+  const [triageMessageSaving, setTriageMessageSaving] = useState(false);
   const oauthWaitRef = useRef(null);
+
+  function reportError(at, message) {
+    setFeedbackAt(at);
+    setError(message || 'Falha');
+    setMsg('');
+  }
+
+  function reportMsg(at, message) {
+    setFeedbackAt(at);
+    setMsg(message || '');
+    setError('');
+  }
+
+  function clearFeedback() {
+    setFeedbackAt(null);
+    setError('');
+    setMsg('');
+  }
 
   function stopOauthWait() {
     if (oauthWaitRef.current) {
@@ -514,6 +906,17 @@ export function ServicoExternoDetailPage({ api }) {
     if (res.sc_status) {
       setAssocRecipientDraft(res.sc_status.association_recipient_id || '');
     }
+    if (service === 'utalk') {
+      const drafts = {};
+      for (const a of res.attendants || []) {
+        drafts[a.code] = a.utalk_id || '';
+      }
+      setUtalkIdDrafts(drafts);
+      setTriageMessageDraft(
+        res.triage_message ||
+          'Olá {{nome}}, recebemos seu contato. Em breve um atendente falará com você.'
+      );
+    }
   }
 
   async function reload() {
@@ -530,13 +933,19 @@ export function ServicoExternoDetailPage({ api }) {
     setData(null);
     setFields({});
     setEditing({});
-    setError('');
-    setMsg('');
+    clearFeedback();
+    setFeedbackAt(null);
     setPagarmeForceEdit(false);
     setOutboundCreds(null);
     setWebhookInfo(null);
     setAssocRecipientDraft('');
     setCalendars([]);
+    setUtalkIdDrafts({});
+    setUtalkAttendantSaving(null);
+    setTriageMessageDraft(
+      'Olá {{nome}}, recebemos seu contato. Em breve um atendente falará com você.'
+    );
+    setTriageMessageSaving(false);
     setSaving(false);
     stopOauthWait();
     (async () => {
@@ -544,12 +953,12 @@ export function ServicoExternoDetailPage({ api }) {
         const res = await loadExternalService(api, service);
         if (!cancelled) {
           applyLoaded(res);
-          setError('');
+          clearFeedback();
         }
       } catch (err) {
         if (!cancelled) {
           setData(null);
-          setError(err.message || 'Falha');
+          reportError('misc', err.message || 'Falha');
         }
       }
     })();
@@ -562,14 +971,16 @@ export function ServicoExternoDetailPage({ api }) {
     const oauth = searchParams.get('oauth');
     if (!oauth) return;
     if (oauth === 'ok') {
-      setMsg(
+      reportMsg(
+        'auth',
         service === 'google_calendar'
           ? 'OAuth Google Calendar autorizado — tokens salvos'
           : 'OAuth Melhor Envio autorizado — tokens salvos'
       );
-      reload().catch(() => {});
+      reload().then(() => notifyExternalServicesChanged()).catch(() => {});
     } else if (oauth === 'error') {
-      setError(
+      reportError(
+        'auth',
         searchParams.get('message') ||
           (service === 'google_calendar' ? 'Falha no OAuth Google' : 'Falha no OAuth Melhor Envio')
       );
@@ -582,18 +993,17 @@ export function ServicoExternoDetailPage({ api }) {
   }, [searchParams]);
 
   async function onToggle(flag, value) {
-    setError('');
-    setMsg('');
+    clearFeedback();
     if (
-      service === 'melhorenvio' &&
+      FREIGHT_SERVICES.has(service) &&
       value === true &&
-      (flag === 'use_for_quote' || flag === 'use_for_label') &&
+      (flag === 'enabled' || flag === 'use_for_quote' || flag === 'use_for_label') &&
       data?.store_freight_ready === false
     ) {
-      const missing =
-        (data.store_freight_missing || []).join(', ') || 'remetente, caixa e declaração';
-      setError(
-        `Não é possível ativar o Melhor Envio: preencha ${missing} em Dados de envio.`
+      const label = service === 'loggi' ? 'Loggi' : 'Melhor Envio';
+      reportError(
+        'flags',
+        `Não é possível ativar o ${label}: preencha Dados de envio.`
       );
       return;
     }
@@ -619,21 +1029,23 @@ export function ServicoExternoDetailPage({ api }) {
             }
           : d
       );
+      notifyExternalServicesChanged();
     } catch (err) {
       setData(prev);
-      setError(err.message || 'Falha ao salvar flag');
+      reportError('flags', err.message || 'Falha ao salvar flag');
     }
   }
 
   async function finishOauthSuccess() {
     stopOauthWait();
-    setMsg('Autenticado no Melhor Envio — tokens salvos');
+    reportMsg('auth', 'Autenticado no Melhor Envio — tokens salvos');
     await reload();
+    notifyExternalServicesChanged();
   }
 
   function finishOauthError(message) {
     stopOauthWait();
-    setError(message || 'Falha no OAuth Melhor Envio');
+    reportError('auth', message || 'Falha no OAuth Melhor Envio');
   }
 
   async function openMelhorEnvioOAuth() {
@@ -641,7 +1053,7 @@ export function ServicoExternoDetailPage({ api }) {
     const url = await startMelhorEnvioOAuth(api);
     if (!/^https?:\/\//i.test(url)) {
       throw new Error(
-        `URL OAuth inválida (não é absoluta): ${url}. Confira o ambiente (sandbox/produção).`
+        `URL OAuth inválida (não é absoluta): ${url}. Confira PUBLIC_API_URL e as credenciais do Melhor Envio.`
       );
     }
 
@@ -666,7 +1078,7 @@ export function ServicoExternoDetailPage({ api }) {
     if (!popup) {
       throw new Error('Pop-up bloqueado — permita pop-ups para este site e tente de novo');
     }
-    setMsg(
+    reportMsg('misc',
       baseline?.authenticated
         ? 'Reautorização — conclua o login no Melhor Envio na nova janela…'
         : 'Teste ok — autorize na nova aba…'
@@ -716,18 +1128,18 @@ export function ServicoExternoDetailPage({ api }) {
     if (!popup) {
       throw new Error('Pop-up bloqueado — permita pop-ups para este site e tente de novo');
     }
-    setMsg('Autorize o Google Calendar na nova janela…');
+    reportMsg('misc', 'Autorize o Google Calendar na nova janela…');
 
     const onMessage = (event) => {
       const dataMsg = event.data;
       if (!dataMsg || dataMsg.type !== 'google-calendar-oauth') return;
       if (dataMsg.ok) {
         stopOauthWait();
-        setMsg('Autenticado no Google Calendar — tokens salvos');
+        reportMsg('misc', 'Autenticado no Google Calendar — tokens salvos');
         reload().then(loadCalendars).catch(() => {});
       } else {
         stopOauthWait();
-        setError(dataMsg.message || 'Falha no OAuth Google');
+        reportError('misc', dataMsg.message || 'Falha no OAuth Google');
       }
     };
     window.addEventListener('message', onMessage);
@@ -738,12 +1150,12 @@ export function ServicoExternoDetailPage({ api }) {
           const status = await getGoogleCalendarOAuthStatus(api);
           if (status?.connected || status?.has_refresh_token) {
             stopOauthWait();
-            setMsg('Autenticado no Google Calendar — tokens salvos');
+            reportMsg('misc', 'Autenticado no Google Calendar — tokens salvos');
             await reload();
             await loadCalendars();
           } else {
             stopOauthWait();
-            setError('Janela OAuth fechada antes de concluir');
+            reportError('misc', 'Janela OAuth fechada antes de concluir');
           }
         }
       } catch {
@@ -753,7 +1165,7 @@ export function ServicoExternoDetailPage({ api }) {
 
     const timeout = setTimeout(() => {
       stopOauthWait();
-      setError('Tempo esgotado aguardando autorização Google');
+      reportError('misc', 'Tempo esgotado aguardando autorização Google');
     }, 5 * 60 * 1000);
 
     oauthWaitRef.current = { interval, timeout, onMessage };
@@ -779,15 +1191,18 @@ export function ServicoExternoDetailPage({ api }) {
   async function onAuthenticate(e) {
     e.preventDefault();
     setSaving(true);
-    setError('');
-    setMsg('');
+    clearFeedback();
     try {
-      if (service === 'melhorenvio' && data?.store_freight_ready === false) {
-        const missing =
-          (data.store_freight_missing || []).join(', ') || 'remetente, caixa e declaração';
-        throw new Error(
-          `Preencha ${missing} em Dados de envio antes de autenticar o Melhor Envio.`
-        );
+      if (service === 'utalk') {
+        const fromPhone =
+          (fields.from_phone && String(fields.from_phone).trim()) ||
+          (data?.credentials || []).find((c) => c.field_key === 'from_phone' && c.has_value)?.value ||
+          '';
+        if (!/^\+55\d{10,11}$/.test(String(fromPhone).trim())) {
+          throw new Error(
+            'Informe o telefone do canal no formato +55 e número completo (ex.: +5562999999999) antes de autenticar'
+          );
+        }
       }
 
       const formCreds =
@@ -800,7 +1215,11 @@ export function ServicoExternoDetailPage({ api }) {
 
       const payload = {};
       for (const c of formCreds) {
-        if (HIDDEN_CRED_FIELDS.has(c.field_key)) continue;
+        const hideOauthMeta =
+          service === 'melhorenvio' || service === 'google_calendar'
+            ? HIDDEN_CRED_FIELDS.has(c.field_key)
+            : ['access_token', 'refresh_token', 'environment', 'redirect_uri'].includes(c.field_key);
+        if (hideOauthMeta) continue;
         // Pagar.me: Autenticar só envia secret/public; webhooks têm bloco próprio.
         if (service === 'pagarme' && PAGARME_WEBHOOK_FIELDS.has(c.field_key)) continue;
         if (service === 'pagarme' && !PAGARME_AUTH_FIELDS.has(c.field_key)) continue;
@@ -835,6 +1254,14 @@ export function ServicoExternoDetailPage({ api }) {
         }
       }
 
+      // Utalk: from_phone tipado entra mesmo sem “editar”.
+      if (service === 'utalk') {
+        for (const key of ['api_token', 'organization_id', 'from_phone', 'api_base_url']) {
+          const v = fields[key];
+          if (v !== undefined && v !== '') payload[key] = v;
+        }
+      }
+
       // E-mail: senha pode estar vazia no estado se não reeditada — só manda se preenchida.
       if (service === 'email' && fields.pass) {
         payload.pass = fields.pass;
@@ -859,55 +1286,18 @@ export function ServicoExternoDetailPage({ api }) {
       }
 
       await reload();
+      notifyExternalServicesChanged();
 
       if (service === 'melhorenvio') {
         await openMelhorEnvioOAuth();
       } else if (service === 'google_calendar') {
         await openGoogleCalendarOAuth();
       } else {
-        setMsg('Credenciais autenticadas (teste ok)');
+        reportMsg('auth', 'Credenciais autenticadas (teste ok)');
       }
     } catch (err) {
       stopOauthWait();
-      setError(formatExternalAuthError(err));
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function onActivateProduction() {
-    const okConfirm = window.confirm(
-      'Ativar produção?\n\nAs credenciais de sandbox e tokens OAuth serão limpos. Você precisará informar o app de produção. Continuar?'
-    );
-    if (!okConfirm) return;
-    setError('');
-    setMsg('');
-    setSaving(true);
-    try {
-      const res = await activateMelhorEnvioProduction(api);
-      setMsg(res.message || 'Produção ativada — informe as credenciais do app real');
-      await reload();
-    } catch (err) {
-      setError(err.message || 'Falha ao ativar produção');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function onActivateSandbox() {
-    const okConfirm = window.confirm(
-      'Voltar ao sandbox?\n\nCredenciais de produção e tokens OAuth serão limpos. Continuar?'
-    );
-    if (!okConfirm) return;
-    setError('');
-    setMsg('');
-    setSaving(true);
-    try {
-      const res = await activateMelhorEnvioSandbox(api);
-      setMsg(res.message || 'Sandbox ativado');
-      await reload();
-    } catch (err) {
-      setError(err.message || 'Falha ao ativar sandbox');
+      reportError('auth', formatExternalAuthError(err));
     } finally {
       setSaving(false);
     }
@@ -916,46 +1306,40 @@ export function ServicoExternoDetailPage({ api }) {
   async function onSendTestEmail(e) {
     e.preventDefault();
     setSendingTestEmail(true);
-    setError('');
-    setMsg('');
+    clearFeedback();
     try {
       await sendExternalTestEmail(api, testEmailTo);
-      setMsg(`E-mail de teste enviado para ${testEmailTo}`);
+      reportMsg('email-test', `E-mail de teste enviado para ${testEmailTo}`);
     } catch (err) {
-      setError(err.message || 'Falha ao enviar e-mail de teste');
+      reportError('email-test', err.message || 'Falha ao enviar e-mail de teste');
     } finally {
       setSendingTestEmail(false);
     }
   }
 
   if (!data && !error) {
-    return (
-      <div className="card" style={{ padding: '1.25rem', maxWidth: 640 }} data-testid="ext-loading">
-        <h2 style={{ margin: 0 }}>{SERVICE_LABELS[service] || service}</h2>
-        <p className="muted" style={{ margin: '0.75rem 0 0' }}>
-          Carregando…
-        </p>
-      </div>
-    );
+    return <AdminLoader data-testid="ext-loading" />;
   }
   if (!data) {
     return (
-      <div className="card" style={{ padding: '1.25rem', maxWidth: 640 }}>
-        <h2 style={{ margin: 0 }}>{SERVICE_LABELS[service] || service}</h2>
-        <p role="alert" style={{ color: '#b00020' }} data-testid="ext-error">
-          {error}
-        </p>
+      <div className="ext-page">
+        <div className="admin-top">
+          <div>
+            <h1 style={{ margin: 0 }}>{SERVICE_LABELS[service] || service}</h1>
+          </div>
+        </div>
+        <div className="card ext-card">
+          <p className="alert alert-error" role="alert" data-testid="ext-error">
+            {error}
+          </p>
+        </div>
       </div>
     );
   }
 
-  const meUrls = data.me_urls || {
-    sandbox: { api_base_url: ME_DEFAULT_URLS.sandbox, label: 'Sandbox (teste)' },
-    production: { api_base_url: ME_DEFAULT_URLS.production, label: 'Produção' },
-  };
-  const environment = data.environment || 'sandbox';
-  const isProduction = environment === 'production';
-  const pinnedApiBase = meUrls[environment]?.api_base_url || ME_DEFAULT_URLS[environment];
+  const moduleStatus = deriveExternalServiceStatus(data);
+  const pinnedApiBase =
+    data.me_urls?.production?.api_base_url || ME_DEFAULT_URLS.production;
   const credList =
     service === 'google_calendar' &&
     !(data.credentials || []).some((c) => c.field_key === 'client_id')
@@ -963,11 +1347,24 @@ export function ServicoExternoDetailPage({ api }) {
       : service === 'email' && !(data.credentials || []).length
         ? EMAIL_FORM_CREDS
         : data.credentials || [];
-  const editableCreds = credList.filter((c) => {
-    if (HIDDEN_CRED_FIELDS.has(c.field_key)) return false;
-    if (service === 'pagarme' && PAGARME_WEBHOOK_FIELDS.has(c.field_key)) return false;
-    return true;
-  });
+  const UTALK_CRED_ORDER = ['api_token', 'organization_id', 'from_phone', 'api_base_url'];
+  const editableCreds = credList
+    .filter((c) => {
+      if (service === 'melhorenvio' || service === 'google_calendar') {
+        if (HIDDEN_CRED_FIELDS.has(c.field_key)) return false;
+      } else if (['access_token', 'refresh_token', 'environment', 'redirect_uri'].includes(c.field_key)) {
+        return false;
+      }
+      if (service === 'pagarme' && PAGARME_WEBHOOK_FIELDS.has(c.field_key)) return false;
+      return true;
+    })
+    .slice()
+    .sort((a, b) => {
+      if (service !== 'utalk') return 0;
+      const ia = UTALK_CRED_ORDER.indexOf(a.field_key);
+      const ib = UTALK_CRED_ORDER.indexOf(b.field_key);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    });
   const pagarmeWebhookCreds = credList.filter((c) => PAGARME_WEBHOOK_FIELDS.has(c.field_key));
   const oauth = data.oauth;
   const busy = saving || oauthStarting;
@@ -1009,347 +1406,324 @@ export function ServicoExternoDetailPage({ api }) {
     fontWeight: 600,
   };
 
+  const freightActivationBlocked =
+    FREIGHT_SERVICES.has(service) && data.store_freight_ready === false;
+
   return (
-    <div className="card" style={{ padding: '1.25rem', maxWidth: 640 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
-        <h2 style={{ margin: 0 }}>{service}</h2>
-        {service === 'melhorenvio' && (
-          <span
-            className={`me-env-pill${isProduction ? ' is-production' : ''}`}
-            data-testid="me-env-label"
-          >
-            {isProduction ? 'Produção' : 'Sandbox'}
-          </span>
-        )}
+    <div className="ext-page ext-page-wide">
+      <div className="admin-top">
+        <div>
+          <h1 style={{ margin: 0 }}>{SERVICE_LABELS[service] || service}</h1>
+        </div>
       </div>
-      <p className="muted" style={{ marginTop: 4 }}>
-        Estado efetivo:{' '}
-        <strong data-testid="module-enabled-status">
-          {data.enabled ? 'habilitado' : 'desabilitado'}
-        </strong>
-        {' · '}
-        fonte {data.source === 'admin' ? 'Admin' : 'ambiente (MODULE_*)'}
-        {service === 'melhorenvio' && oauth ? (
-          <>
-            {' · '}
-            OAuth:{' '}
-            <strong data-testid="me-oauth-status">
-              {oauth.authenticated ? 'autorizado' : 'não autorizado'}
-            </strong>
-          </>
-        ) : null}
-      </p>
 
-      <label
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          margin: '12px 0 16px',
-          padding: '10px 12px',
-          border: '1px solid var(--admin-border)',
-          borderRadius: 8,
-          background: data.enabled ? '#1a2a1c' : '#151a16',
-          color: 'var(--admin-text)',
-        }}
-        data-testid="module-enabled-toggle"
-      >
-        <input
-          type="checkbox"
-          checked={Boolean(data.enabled) && (service !== 'pagarme' || pagarmeCanEnable)}
-          disabled={service === 'pagarme' && !pagarmeCanEnable}
-          onChange={(e) => onToggle('enabled', e.target.checked)}
-        />
-        <span>
-          <strong style={{ color: 'var(--admin-text)' }}>Módulo ativo</strong>
-          <span style={{ display: 'block', fontSize: '0.85rem', color: 'var(--admin-muted)' }}>
-            {service === 'pagarme'
-              ? 'Só pode ativar com API autenticada, link de teste e webhooks validados. A validação ativa o módulo automaticamente.'
-              : 'Quando desligado, o serviço não envia e-mails / não é usado em runtime. O valor salvo no Admin sobrescreve o env.'}
-          </span>
-          {service === 'pagarme' && !pagarmeCanEnable && (
-            <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--admin-danger)', marginTop: 4 }}>
-              {!pagarmeAuthed
-                ? 'Autentique a Secret key (passo 1).'
-                : !pagarmePaymentLinkReady
-                  ? 'Crie um link de pagamento de teste (passo 2).'
-                  : 'Valide os webhooks (passo 3) antes de ativar.'}
-            </span>
-          )}
-        </span>
-      </label>
+      <div className="card ext-card">
+        <ExternalServiceStatusBanner status={moduleStatus} />
 
-      {FREIGHT_SERVICES.has(service) ? (
-        <>
-          {data.sc_blocks_quote_label ? (
-            <p style={{ marginBottom: 12, color: '#664d03', background: '#fff3cd', padding: 8, borderRadius: 4 }}>
-              Pedidos SouCannabis ativo: cotação e etiqueta ficam desligadas. Ative o módulo e use
-              só <strong>Tracking (código de rastreio)</strong> para consultar status.
-            </p>
-          ) : null}
-          <label style={{ display: 'block', marginBottom: 8, opacity: data.sc_blocks_quote_label ? 0.5 : 1 }}>
-            <input
-              type="checkbox"
-              data-testid="use-for-quote"
-              checked={Boolean(data.use_for_quote)}
-              disabled={Boolean(data.sc_blocks_quote_label)}
-              onChange={(e) => onToggle('use_for_quote', e.target.checked)}
-            />{' '}
-            Usar na cotação
-          </label>
-          <label style={{ display: 'block', marginBottom: 8, opacity: data.sc_blocks_quote_label ? 0.5 : 1 }}>
-            <input
-              type="checkbox"
-              data-testid="use-for-label"
-              checked={Boolean(data.use_for_label)}
-              disabled={Boolean(data.sc_blocks_quote_label)}
-              onChange={(e) => onToggle('use_for_label', e.target.checked)}
-            />{' '}
-            Usar na etiqueta
-          </label>
-          <label style={{ display: 'block', marginBottom: 16 }}>
-            <input
-              type="checkbox"
-              data-testid="use-for-tracking"
-              checked={Boolean(data.use_for_tracking)}
-              onChange={(e) => onToggle('use_for_tracking', e.target.checked)}
-            />{' '}
-            Tracking (código de rastreio)
-          </label>
-        </>
-      ) : null}
-
-      {service === 'geoapify' ? (
-        <label style={{ display: 'block', marginBottom: 16 }}>
-          <input
-            type="checkbox"
-            data-testid="use-for-validation"
-            checked={Boolean(data.use_for_validation)}
-            onChange={(e) => onToggle('use_for_validation', e.target.checked)}
-          />{' '}
-          Usar na verificação de endereço
-        </label>
-      ) : null}
-
-      {service === 'pagarme' ? (
-        <>
-          <label style={{ display: 'block', marginBottom: 8 }}>
-            <input
-              type="checkbox"
-              data-testid="use-for-orders"
-              checked={data.use_for_orders !== false}
-              onChange={(e) => onToggle('use_for_orders', e.target.checked)}
-            />{' '}
-            Usar em pedidos
-          </label>
-          <label style={{ display: 'block', marginBottom: 16 }}>
-            <input
-              type="checkbox"
-              data-testid="use-for-services"
-              checked={data.use_for_services !== false}
-              onChange={(e) => onToggle('use_for_services', e.target.checked)}
-            />{' '}
-            Usar em serviços
-          </label>
-        </>
-      ) : null}
-
-      {service === 'soucannabis_orders' ? (
-        <>
-          <label style={{ display: 'block', marginBottom: 8 }}>
-            <input
-              type="checkbox"
-              data-testid="sync-products"
-              checked={data.sync_products !== false}
-              onChange={(e) => onToggle('sync_products', e.target.checked)}
-            />{' '}
-            Sync produtos
-          </label>
-          <label style={{ display: 'block', marginBottom: 8 }}>
-            <input
-              type="checkbox"
-              data-testid="sync-tags"
-              checked={data.sync_tags !== false}
-              onChange={(e) => onToggle('sync_tags', e.target.checked)}
-            />{' '}
-            Sync tags
-          </label>
-          <label style={{ display: 'block', marginBottom: 16 }}>
-            <input
-              type="checkbox"
-              data-testid="sync-orders"
-              checked={data.sync_orders !== false}
-              onChange={(e) => onToggle('sync_orders', e.target.checked)}
-            />{' '}
-            Sync pedidos
-          </label>
-        </>
-      ) : null}
-
-      {service === 'google_calendar' ? (
-        <>
-          <label style={{ display: 'block', marginBottom: 8 }}>
-            <input
-              type="checkbox"
-              data-testid="use-for-scheduling"
-              checked={data.use_for_scheduling !== false}
-              onChange={(e) => onToggle('use_for_scheduling', e.target.checked)}
-            />{' '}
-            Usar no agendamento de serviços
-          </label>
-          <div className="field" style={{ marginBottom: 16 }}>
-            <label htmlFor="primary-calendar">Calendário principal da associação</label>
-            <select
-              id="primary-calendar"
-              className="input"
-              data-testid="primary-calendar"
-              value={data.primary_calendar_id || ''}
-              disabled={!calendars.length}
-              onChange={(e) => onToggle('primary_calendar_id', e.target.value || null)}
+        <section className="ext-section">
+          <h2 className="ext-section-title">Módulo</h2>
+          <div className="ext-flag-tree" data-testid="module-flag-tree">
+            <label
+              className={`ext-flag${data.enabled ? ' ext-flag--active' : ''}`}
+              data-testid="module-enabled-toggle"
             >
-              <option value="">— selecione após autorizar —</option>
-              {calendars.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.summary}
-                  {c.primary ? ' (primary Google)' : ''}
-                </option>
-              ))}
-            </select>
-            <p className="muted" style={{ fontSize: '0.8rem', margin: '0.35rem 0 0' }}>
-              Eventos de consulta vão nos calendários secundários de cada profissional, não neste.
-            </p>
+              <input
+                type="checkbox"
+                checked={Boolean(data.enabled) && (service !== 'pagarme' || pagarmeCanEnable)}
+                disabled={
+                  (service === 'pagarme' && !pagarmeCanEnable) ||
+                  (freightActivationBlocked && !data.enabled)
+                }
+                onChange={(e) => onToggle('enabled', e.target.checked)}
+              />
+              <span className="ext-flag-body">
+                <strong>Módulo ativo</strong>
+                <span className="muted">
+                  {service === 'pagarme'
+                    ? 'Só pode ativar com API autenticada, link de teste e webhooks validados.'
+                    : FREIGHT_SERVICES.has(service)
+                      ? 'Requer Dados de envio completos. Autenticação funciona mesmo com dados incompletos.'
+                      : 'Quando desligado, o módulo fica inativo. Ative apenas pelo Admin.'}
+                </span>
+                <span className="muted" data-testid="module-enabled-status">
+                  Estado: {data.enabled ? 'habilitado' : 'desabilitado'}
+                </span>
+                {service === 'pagarme' && !pagarmeCanEnable ? (
+                  <span className="muted" style={{ color: 'var(--admin-danger)' }}>
+                    {!pagarmeAuthed
+                      ? 'Autentique a Secret key (passo 1).'
+                      : !pagarmePaymentLinkReady
+                        ? 'Crie um link de pagamento de teste (passo 2).'
+                        : 'Valide os webhooks (passo 3) antes de ativar.'}
+                  </span>
+                ) : null}
+                {freightActivationBlocked && !data.enabled ? (
+                  <span className="muted" style={{ color: 'var(--admin-danger)' }}>
+                    Complete Dados de envio para ativar o módulo.
+                  </span>
+                ) : null}
+              </span>
+            </label>
+
+            {FREIGHT_SERVICES.has(service) ||
+            service === 'geoapify' ||
+            service === 'pagarme' ||
+            service === 'soucannabis_orders' ||
+            service === 'google_calendar' ? (
+              <div
+                className="ext-flag-tree-children"
+                data-testid="module-usage-flags"
+                data-locked={data.enabled ? 'false' : 'true'}
+              >
+                {!data.enabled ? (
+                  <p className="muted ext-flag-tree-hint" data-testid="module-usage-locked-hint">
+                    Ative o módulo acima para configurar os usos.
+                  </p>
+                ) : null}
+
+                {FREIGHT_SERVICES.has(service) ? (
+                  <>
+                    {data.sc_blocks_quote_label ? (
+                      <div className="alert ext-status-banner--warning" role="status">
+                        Pedidos SouCannabis ativo: cotação e etiqueta ficam desligadas. Use só{' '}
+                        <strong>Tracking</strong> para consultar status.
+                      </div>
+                    ) : null}
+                    <label
+                      className={`ext-flag ext-flag--child${data.use_for_quote ? ' ext-flag--active' : ''}`}
+                      style={{
+                        opacity:
+                          !data.enabled ||
+                          data.sc_blocks_quote_label ||
+                          (freightActivationBlocked && !data.use_for_quote)
+                            ? 0.5
+                            : 1,
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        data-testid="use-for-quote"
+                        checked={Boolean(data.use_for_quote)}
+                        disabled={
+                          !data.enabled ||
+                          Boolean(data.sc_blocks_quote_label) ||
+                          (freightActivationBlocked && !data.use_for_quote)
+                        }
+                        onChange={(e) => onToggle('use_for_quote', e.target.checked)}
+                      />
+                      <span className="ext-flag-body">
+                        <strong>Usar na cotação</strong>
+                      </span>
+                    </label>
+                    <label
+                      className={`ext-flag ext-flag--child${data.use_for_label ? ' ext-flag--active' : ''}`}
+                      style={{
+                        opacity:
+                          !data.enabled ||
+                          data.sc_blocks_quote_label ||
+                          (freightActivationBlocked && !data.use_for_label)
+                            ? 0.5
+                            : 1,
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        data-testid="use-for-label"
+                        checked={Boolean(data.use_for_label)}
+                        disabled={
+                          !data.enabled ||
+                          Boolean(data.sc_blocks_quote_label) ||
+                          (freightActivationBlocked && !data.use_for_label)
+                        }
+                        onChange={(e) => onToggle('use_for_label', e.target.checked)}
+                      />
+                      <span className="ext-flag-body">
+                        <strong>Usar na etiqueta</strong>
+                      </span>
+                    </label>
+                    <label
+                      className={`ext-flag ext-flag--child${data.use_for_tracking ? ' ext-flag--active' : ''}`}
+                      style={{ opacity: data.enabled ? 1 : 0.5 }}
+                    >
+                      <input
+                        type="checkbox"
+                        data-testid="use-for-tracking"
+                        checked={Boolean(data.use_for_tracking)}
+                        disabled={!data.enabled}
+                        onChange={(e) => onToggle('use_for_tracking', e.target.checked)}
+                      />
+                      <span className="ext-flag-body">
+                        <strong>Tracking (código de rastreio)</strong>
+                      </span>
+                    </label>
+                  </>
+                ) : null}
+
+                {service === 'geoapify' ? (
+                  <label
+                    className={`ext-flag ext-flag--child${data.use_for_validation ? ' ext-flag--active' : ''}`}
+                    style={{ opacity: data.enabled ? 1 : 0.5 }}
+                  >
+                    <input
+                      type="checkbox"
+                      data-testid="use-for-validation"
+                      checked={Boolean(data.use_for_validation)}
+                      disabled={!data.enabled}
+                      onChange={(e) => onToggle('use_for_validation', e.target.checked)}
+                    />
+                    <span className="ext-flag-body">
+                      <strong>Usar na verificação de endereço</strong>
+                    </span>
+                  </label>
+                ) : null}
+
+                {service === 'pagarme' ? (
+                  <>
+                    <label
+                      className={`ext-flag ext-flag--child${data.use_for_orders ? ' ext-flag--active' : ''}`}
+                      style={{ opacity: data.enabled ? 1 : 0.5 }}
+                    >
+                      <input
+                        type="checkbox"
+                        data-testid="use-for-orders"
+                        checked={Boolean(data.use_for_orders)}
+                        disabled={!data.enabled}
+                        onChange={(e) => onToggle('use_for_orders', e.target.checked)}
+                      />
+                      <span className="ext-flag-body">
+                        <strong>Usar em pedidos</strong>
+                      </span>
+                    </label>
+                    <label
+                      className={`ext-flag ext-flag--child${data.use_for_services ? ' ext-flag--active' : ''}`}
+                      style={{ opacity: data.enabled ? 1 : 0.5 }}
+                    >
+                      <input
+                        type="checkbox"
+                        data-testid="use-for-services"
+                        checked={Boolean(data.use_for_services)}
+                        disabled={!data.enabled}
+                        onChange={(e) => onToggle('use_for_services', e.target.checked)}
+                      />
+                      <span className="ext-flag-body">
+                        <strong>Usar em serviços</strong>
+                      </span>
+                    </label>
+                  </>
+                ) : null}
+
+                {service === 'soucannabis_orders' ? (
+                  <>
+                    <label
+                      className={`ext-flag ext-flag--child${data.sync_products ? ' ext-flag--active' : ''}`}
+                      style={{ opacity: data.enabled ? 1 : 0.5 }}
+                    >
+                      <input
+                        type="checkbox"
+                        data-testid="sync-products"
+                        checked={Boolean(data.sync_products)}
+                        disabled={!data.enabled}
+                        onChange={(e) => onToggle('sync_products', e.target.checked)}
+                      />
+                      <span className="ext-flag-body">
+                        <strong>Sync produtos</strong>
+                      </span>
+                    </label>
+                    <label
+                      className={`ext-flag ext-flag--child${data.sync_tags ? ' ext-flag--active' : ''}`}
+                      style={{ opacity: data.enabled ? 1 : 0.5 }}
+                    >
+                      <input
+                        type="checkbox"
+                        data-testid="sync-tags"
+                        checked={Boolean(data.sync_tags)}
+                        disabled={!data.enabled}
+                        onChange={(e) => onToggle('sync_tags', e.target.checked)}
+                      />
+                      <span className="ext-flag-body">
+                        <strong>Sync tags</strong>
+                      </span>
+                    </label>
+                    <label
+                      className={`ext-flag ext-flag--child${data.sync_orders ? ' ext-flag--active' : ''}`}
+                      style={{ opacity: data.enabled ? 1 : 0.5 }}
+                    >
+                      <input
+                        type="checkbox"
+                        data-testid="sync-orders"
+                        checked={Boolean(data.sync_orders)}
+                        disabled={!data.enabled}
+                        onChange={(e) => onToggle('sync_orders', e.target.checked)}
+                      />
+                      <span className="ext-flag-body">
+                        <strong>Sync pedidos</strong>
+                      </span>
+                    </label>
+                  </>
+                ) : null}
+
+                {service === 'google_calendar' ? (
+                  <>
+                    <label
+                      className={`ext-flag ext-flag--child${data.use_for_scheduling ? ' ext-flag--active' : ''}`}
+                      style={{ opacity: data.enabled ? 1 : 0.5 }}
+                    >
+                      <input
+                        type="checkbox"
+                        data-testid="use-for-scheduling"
+                        checked={Boolean(data.use_for_scheduling)}
+                        disabled={!data.enabled}
+                        onChange={(e) => onToggle('use_for_scheduling', e.target.checked)}
+                      />
+                      <span className="ext-flag-body">
+                        <strong>Usar no agendamento de serviços</strong>
+                      </span>
+                    </label>
+                    <div className="field" style={{ marginTop: 4 }}>
+                      <label htmlFor="primary-calendar">Calendário principal da associação</label>
+                      <select
+                        id="primary-calendar"
+                        className="input"
+                        data-testid="primary-calendar"
+                        value={data.primary_calendar_id || ''}
+                        disabled={!data.enabled || !calendars.length}
+                        onChange={(e) => onToggle('primary_calendar_id', e.target.value || null)}
+                      >
+                        <option value="">— selecione após autorizar —</option>
+                        {calendars.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.summary}
+                            {c.primary ? ' (primary Google)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="muted" style={{ fontSize: '0.8rem', margin: '0.35rem 0 0' }}>
+                        Eventos de consulta vão nos calendários secundários de cada profissional, não
+                        neste.
+                      </p>
+                    </div>
+                    {oauth ? (
+                      <p className="muted" style={{ margin: 0 }}>
+                        OAuth:{' '}
+                        <strong>{oauth.authenticated ? 'autorizado' : 'não autorizado'}</strong>
+                      </p>
+                    ) : null}
+                  </>
+                ) : null}
+              </div>
+            ) : null}
           </div>
-          {oauth ? (
-            <p className="muted" style={{ marginTop: 0 }}>
-              OAuth:{' '}
-              <strong>{oauth.authenticated ? 'autorizado' : 'não autorizado'}</strong>
-            </p>
-          ) : null}
-        </>
+          <ExtActionFeedback at="flags" feedbackAt={feedbackAt} error={error} msg={msg} />
+        </section>
+
+      {CREDENTIAL_SETUP_GUIDES[service] ? (
+        <CredentialsSetupGuide service={service} {...CREDENTIAL_SETUP_GUIDES[service]} />
       ) : null}
-
-      {service === 'geoapify' && (
-        <div style={{ marginTop: 0, marginBottom: 16, fontSize: '0.85rem' }}>
-          <p className="muted" style={{ margin: '0 0 0.5rem' }}>
-            Usa Geoapify Geocode Search + ViaCEP (Correios) com a mesma política do Kunk legado.
-            Crie ou copie a API Key no painel do serviço:
-          </p>
-          <p style={{ margin: 0 }}>
-            Site:{' '}
-            <a
-              href="https://www.geoapify.com"
-              target="_blank"
-              rel="noreferrer"
-              data-testid="geoapify-site-link"
-            >
-              geoapify.com
-            </a>
-            {' · '}
-            Painel / API Keys:{' '}
-            <a
-              href="https://myprojects.geoapify.com"
-              target="_blank"
-              rel="noreferrer"
-              data-testid="geoapify-projects-link"
-            >
-              myprojects.geoapify.com
-            </a>
-          </p>
-        </div>
-      )}
-
-      {service === 'google_calendar' && (
-        <div
-          data-testid="google-calendar-setup-guide"
-          style={{
-            marginTop: 0,
-            marginBottom: 16,
-            fontSize: '0.85rem',
-            padding: '0.85rem 1rem',
-            border: '1px solid #ddd',
-            borderRadius: 8,
-            background: '#f7f7f7',
-            color: '#111',
-          }}
-        >
-          <p style={{ margin: '0 0 0.5rem', fontWeight: 600, color: '#111' }}>
-            Como obter as credenciais OAuth
-          </p>
-          <ol style={{ margin: 0, paddingLeft: '1.25rem', color: '#111' }}>
-            <li style={{ marginBottom: 6 }}>
-              Abra o{' '}
-              <a
-                href="https://console.cloud.google.com/"
-                target="_blank"
-                rel="noreferrer"
-                data-testid="gc-console-link"
-                style={{ color: '#0b57d0' }}
-              >
-                Google Cloud Console
-              </a>{' '}
-              e selecione (ou crie) o projeto da associação.
-            </li>
-            <li style={{ marginBottom: 6 }}>
-              Em <strong>APIs e serviços → Biblioteca</strong>, ative a{' '}
-              <a
-                href="https://console.cloud.google.com/apis/library/calendar-json.googleapis.com"
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: '#0b57d0' }}
-              >
-                Google Calendar API
-              </a>
-              .
-            </li>
-            <li style={{ marginBottom: 6 }}>
-              Em <strong>APIs e serviços → Tela de consentimento OAuth</strong>, configure o app
-              (tipo Externo ou Interno).
-            </li>
-            <li style={{ marginBottom: 6 }}>
-              Em <strong>Clientes → Criar clientes</strong>, escolha tipo{' '}
-              <strong>Aplicativo da Web</strong>.
-            </li>
-            <li style={{ marginBottom: 6 }}>
-              Em <strong>URIs de redirecionamento autorizados</strong>, cole a{' '}
-              <strong>Redirect URI</strong> exibida abaixo nesta página (botão copiar).
-            </li>
-            <li style={{ marginBottom: 6 }}>
-              Copie o <strong>Client ID</strong> e o <strong>Client Secret</strong> para os campos
-              abaixo.
-            </li>
-            <li>
-              Clique em <strong>Autenticar</strong> — o sistema salva as credenciais, grava a
-              Redirect URI automaticamente, testa e abre o Google para autorizar a conta da
-              associação. Depois selecione o calendário principal.
-            </li>
-          </ol>
-          <p style={{ margin: '0.75rem 0 0', color: '#444' }}>
-            Docs:{' '}
-            <a
-              href="https://developers.google.com/calendar/api/guides/overview"
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: '#0b57d0' }}
-            >
-              Calendar API
-            </a>
-            {' · '}
-            <a
-              href="https://developers.google.com/identity/protocols/oauth2"
-              target="_blank"
-              rel="noreferrer"
-              style={{ color: '#0b57d0' }}
-            >
-              OAuth 2.0
-            </a>
-          </p>
-        </div>
-      )}
 
       {service === 'melhorenvio' && data.store_freight_ready === false && (
         <div
           role="alert"
-          data-testid="me-freight-gate"
+          data-testid="freight-gate"
           style={{
             background: '#fff3cd',
             border: '1px solid #ffc107',
@@ -1359,9 +1733,9 @@ export function ServicoExternoDetailPage({ api }) {
             color: '#000',
           }}
         >
-          <strong>Dados de envio incompletos.</strong> Preencha remetente, caixa e declaração em{' '}
-          <Link to="/servicos-externos/envio">Dados de envio</Link> antes de ativar cotação/etiqueta
-          ou autenticar.
+          <strong>Dados de envio incompletos.</strong> Você pode autenticar agora, mas só poderá
+          ativar o módulo (e cotação/etiqueta) depois de preencher remetente, caixa e declaração em{' '}
+          <Link to="/servicos-externos/envio">Dados de envio</Link>.
         </div>
       )}
 
@@ -1424,45 +1798,43 @@ export function ServicoExternoDetailPage({ api }) {
             </p>
           )}
           <form onSubmit={onAuthenticate} autoComplete="off">
-            {editableCreds.map((c) => (
-              <CredentialField
-                key={c.field_key}
-                cred={c}
-                value={fields[c.field_key]}
-                editing={Boolean(editing[c.field_key])}
-                alwaysEditable={false}
-                onChange={(v) => setFields((prev) => ({ ...prev, [c.field_key]: v }))}
-                onStartEdit={() => {
-                  setEditing((prev) => ({ ...prev, [c.field_key]: true }));
-                  setFields((prev) => ({
-                    ...prev,
-                    [c.field_key]: c.is_secret ? '' : c.value || prev[c.field_key] || '',
-                  }));
-                }}
-                onCancelEdit={() => {
-                  setEditing((prev) => {
-                    const next = { ...prev };
-                    delete next[c.field_key];
-                    return next;
-                  });
-                  setFields((prev) => {
-                    const next = { ...prev };
-                    if (c.is_secret) delete next[c.field_key];
-                    else if (c.value) next[c.field_key] = c.value;
-                    return next;
-                  });
-                }}
+            <div className="ext-form-grid">
+              {editableCreds.map((c) => (
+                <CredentialField
+                  key={c.field_key}
+                  cred={c}
+                  value={fields[c.field_key]}
+                  editing={Boolean(editing[c.field_key])}
+                  alwaysEditable={false}
+                  onChange={(v) => setFields((prev) => ({ ...prev, [c.field_key]: v }))}
+                  onStartEdit={() => {
+                    setEditing((prev) => ({ ...prev, [c.field_key]: true }));
+                    setFields((prev) => ({
+                      ...prev,
+                      [c.field_key]: c.is_secret ? '' : c.value || prev[c.field_key] || '',
+                    }));
+                  }}
+                  onCancelEdit={() => {
+                    setEditing((prev) => {
+                      const next = { ...prev };
+                      delete next[c.field_key];
+                      return next;
+                    });
+                    setFields((prev) => {
+                      const next = { ...prev };
+                      if (c.is_secret) delete next[c.field_key];
+                      else if (c.value) next[c.field_key] = c.value;
+                      return next;
+                    });
+                  }}
+                />
+              ))}
+            </div>
+            <div className="ext-action-row" style={{ marginTop: 14 }}>
+              <AuthenticateButton
+                busy={busy}
+                label={pagarmeAuthed ? 'Reautenticar' : 'Autenticar'}
               />
-            ))}
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                data-testid="save-credentials"
-                disabled={busy}
-              >
-                {busy ? 'Autenticando…' : pagarmeAuthed ? 'Reautenticar' : 'Autenticar'}
-              </button>
               {pagarmeSetupComplete && (
                 <button
                   type="button"
@@ -1474,6 +1846,7 @@ export function ServicoExternoDetailPage({ api }) {
                 </button>
               )}
             </div>
+            <ExtActionFeedback at="auth" feedbackAt={feedbackAt} error={error} msg={msg} />
             <p className="muted" data-testid="pagarme-auth-hint" style={{ marginTop: 10 }}>
               Autenticar salva secret/public e testa a API (lista recipients → indica se a conta é
               PSP). Contas Gateway só suportam Pagar.me standalone, sem split SouCannabis.
@@ -1486,114 +1859,95 @@ export function ServicoExternoDetailPage({ api }) {
         <>
           <h3>Credenciais de conexão</h3>
           <form onSubmit={onAuthenticate} autoComplete="off">
-            {service === 'melhorenvio' && (
-              <div className="field" style={{ marginBottom: 14 }}>
-                <label>API base URL</label>
-                <div className="cred-value-row" data-testid="cred-display-api_base_url">
-                  <span className="cred-value-text">{pinnedApiBase}</span>
+            <div className="ext-form-grid">
+              {service === 'melhorenvio' && (
+                <div className="field field--wide">
+                  <label>API base URL</label>
+                  <div className="cred-value-row" data-testid="cred-display-api_base_url">
+                    <span className="cred-value-text">{pinnedApiBase}</span>
+                  </div>
                 </div>
-                <p className="muted" style={{ margin: '0.35rem 0 0', fontSize: '0.8rem' }}>
-                  Sandbox: <code>{ME_DEFAULT_URLS.sandbox}</code>
-                  <br />
-                  Produção: <code>{ME_DEFAULT_URLS.production}</code>
-                </p>
-              </div>
-            )}
+              )}
 
-            {(service === 'melhorenvio' || service === 'google_calendar') && (
-              <OAuthRedirectUriCopy uri={data.oauth_redirect_uri} />
-            )}
+              {(service === 'melhorenvio' || service === 'google_calendar') && (
+                <OAuthRedirectUriCopy uri={data.oauth_redirect_uri} />
+              )}
 
-            {editableCreds.map((c) => (
-              <CredentialField
-                key={c.field_key}
-                cred={c}
-                value={fields[c.field_key]}
-                editing={Boolean(editing[c.field_key])}
-                alwaysEditable={service === 'email'}
-                envSuffix={
-                  service === 'melhorenvio' &&
-                  (c.field_key === 'client_id' || c.field_key === 'client_secret')
-                    ? isProduction
-                      ? ' (produção)'
-                      : ' (sandbox)'
-                    : ''
-                }
-                onChange={(v) => setFields((prev) => ({ ...prev, [c.field_key]: v }))}
-                onStartEdit={() => {
-                  setEditing((prev) => ({ ...prev, [c.field_key]: true }));
-                  setFields((prev) => ({
-                    ...prev,
-                    [c.field_key]: c.is_secret ? '' : c.value || prev[c.field_key] || '',
-                  }));
-                }}
-                onCancelEdit={() => {
-                  setEditing((prev) => {
-                    const next = { ...prev };
-                    delete next[c.field_key];
-                    return next;
-                  });
-                  setFields((prev) => {
-                    const next = { ...prev };
-                    if (c.is_secret) delete next[c.field_key];
-                    else if (c.value) next[c.field_key] = c.value;
-                    return next;
-                  });
-                }}
-              />
-            ))}
-
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                data-testid="save-credentials"
-                disabled={busy}
-              >
-                {busy ? 'Autenticando…' : 'Autenticar'}
-              </button>
+              {editableCreds.map((c) => (
+                <CredentialField
+                  key={c.field_key}
+                  cred={c}
+                  value={fields[c.field_key]}
+                  editing={Boolean(editing[c.field_key])}
+                  alwaysEditable={service === 'email'}
+                  onChange={(v) => setFields((prev) => ({ ...prev, [c.field_key]: v }))}
+                  onStartEdit={() => {
+                    setEditing((prev) => ({ ...prev, [c.field_key]: true }));
+                    setFields((prev) => ({
+                      ...prev,
+                      [c.field_key]: c.is_secret ? '' : c.value || prev[c.field_key] || '',
+                    }));
+                  }}
+                  onCancelEdit={() => {
+                    setEditing((prev) => {
+                      const next = { ...prev };
+                      delete next[c.field_key];
+                      return next;
+                    });
+                    setFields((prev) => {
+                      const next = { ...prev };
+                      if (c.is_secret) delete next[c.field_key];
+                      else if (c.value) next[c.field_key] = c.value;
+                      return next;
+                    });
+                  }}
+                />
+              ))}
             </div>
-            {service === 'melhorenvio' && (
-              <p className="muted me-oauth-hint">
-                Autenticar testa as credenciais e, se ok, abre o Melhor Envio para autorizar o app.
-              </p>
-            )}
-            {service === 'google_calendar' && (
-              <p className="muted" data-testid="gc-oauth-hint">
-                Autenticar salva Client ID/Secret, grava a Redirect URI automaticamente, testa e abre o
-                Google para autorizar a conta da associação (tokens ficam só no servidor).
-              </p>
-            )}
-            {service === 'email' && (
-              <p className="muted" data-testid="email-smtp-hint">
-                Autenticar valida a conexão SMTP (VERIFY). Depois use o campo abaixo para enviar um
-                e-mail de teste. Ative o módulo no interruptor acima para liberar o envio nos sistemas.
-              </p>
-            )}
-            {service === 'soucannabis_orders' && (
-              <p className="muted" data-testid="sc-auth-hint">
-                Autenticar obtém token OAuth, valida /me (payment_percentage inteiro) e testa products/tags.
-                Exige Pagar.me ativo e conta PSP.
-              </p>
+
+            {service === 'loggi' ? (
+              <>
+                <div className="ext-action-row ext-action-row--below-form">
+                  <AuthenticateButton busy={busy} />
+                </div>
+                <ExtActionFeedback at="auth" feedbackAt={feedbackAt} error={error} msg={msg} />
+              </>
+            ) : (
+              <>
+                <div className="ext-action-row" style={{ marginTop: 14 }}>
+                  <AuthenticateButton busy={busy} />
+                </div>
+                <ExtActionFeedback at="auth" feedbackAt={feedbackAt} error={error} msg={msg} />
+                {service === 'melhorenvio' && (
+                  <p className="muted me-oauth-hint">
+                    Autenticar testa as credenciais e, se ok, abre o Melhor Envio para autorizar o app.
+                  </p>
+                )}
+                {service === 'google_calendar' && (
+                  <p className="muted" data-testid="gc-oauth-hint">
+                    Autenticar salva Client ID/Secret, grava a Redirect URI automaticamente, testa e abre o
+                    Google para autorizar a conta da associação (tokens ficam só no servidor).
+                  </p>
+                )}
+                {service === 'email' && (
+                  <p className="muted" data-testid="email-smtp-hint">
+                    Autenticar valida a conexão SMTP (VERIFY). Depois use o campo abaixo para enviar um
+                    e-mail de teste. Ative o módulo no interruptor acima para liberar o envio nos sistemas.
+                  </p>
+                )}
+                {service === 'soucannabis_orders' && (
+                  <p className="muted" data-testid="sc-auth-hint">
+                    Autenticar obtém token OAuth, valida /me (payment_percentage inteiro) e testa products/tags.
+                    Exige Pagar.me ativo e conta PSP.
+                  </p>
+                )}
+              </>
             )}
           </form>
         </>
       )}
 
-      {error && (
-        <p
-          role="alert"
-          data-testid="ext-error"
-          style={{ color: '#b00020', margin: '0.75rem 0 0', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-        >
-          {error}
-        </p>
-      )}
-      {msg && (
-        <p data-testid="ext-msg" style={{ color: '#2e7d32', margin: '0.75rem 0 0' }}>
-          {msg}
-        </p>
-      )}
+      {/* feedback legado removido — usa ExtActionFeedback por ação */}
 
       {service === 'pagarme' && pagarmeShowSetup && pagarmeAuthed && (
         <section
@@ -1657,8 +2011,7 @@ export function ServicoExternoDetailPage({ api }) {
             disabled={busy}
             onClick={async () => {
               setSaving(true);
-              setError('');
-              setMsg('');
+              clearFeedback();
               try {
                 const res = await api.createPagarmeTestPaymentLink();
                 const tp = res.data;
@@ -1679,14 +2032,15 @@ export function ServicoExternoDetailPage({ api }) {
                       }
                     : prev
                 );
-                setMsg(
+                reportMsg(
+                  'misc',
                   tp?.payment_url
                     ? 'Link de pagamento criado. Configure os webhooks e valide no passo 3.'
                     : `Pedido ${tp?.order?.id || tp?.code} criado. Configure os webhooks no passo 3.`
                 );
                 await reload();
               } catch (err) {
-                setError(err.message || 'Falha ao criar link de pagamento');
+                reportError('misc', err.message || 'Falha ao criar link de pagamento');
               } finally {
                 setSaving(false);
               }
@@ -1804,8 +2158,7 @@ export function ServicoExternoDetailPage({ api }) {
             onSubmit={async (e) => {
               e.preventDefault();
               setSaving(true);
-              setError('');
-              setMsg('');
+              clearFeedback();
               try {
                 const payload = {};
                 for (const key of ['webhook_user', 'webhook_pass']) {
@@ -1830,46 +2183,48 @@ export function ServicoExternoDetailPage({ api }) {
                 if (Object.keys(payload).length) {
                   await saveExternalCredentials(api, 'pagarme', payload, false);
                 }
-                setMsg('Usuário e senha do webhook salvos — valide os webhooks');
+                reportMsg('misc', 'Usuário e senha do webhook salvos — valide os webhooks');
                 await reload();
               } catch (err) {
-                setError(err.message || 'Falha ao salvar webhooks');
+                reportError('misc', err.message || 'Falha ao salvar webhooks');
               } finally {
                 setSaving(false);
               }
             }}
           >
-            {pagarmeWebhookCreds.map((c) => (
-              <CredentialField
-                key={c.field_key}
-                cred={c}
-                value={fields[c.field_key]}
-                editing={Boolean(editing[c.field_key])}
-                alwaysEditable={false}
-                onChange={(v) => setFields((prev) => ({ ...prev, [c.field_key]: v }))}
-                onStartEdit={() => {
-                  setEditing((prev) => ({ ...prev, [c.field_key]: true }));
-                  setFields((prev) => ({
-                    ...prev,
-                    [c.field_key]: c.is_secret ? '' : c.value || prev[c.field_key] || '',
-                  }));
-                }}
-                onCancelEdit={() => {
-                  setEditing((prev) => {
-                    const next = { ...prev };
-                    delete next[c.field_key];
-                    return next;
-                  });
-                  setFields((prev) => {
-                    const next = { ...prev };
-                    if (c.is_secret) delete next[c.field_key];
-                    else if (c.value) next[c.field_key] = c.value;
-                    return next;
-                  });
-                }}
-              />
-            ))}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <div className="ext-form-grid">
+              {pagarmeWebhookCreds.map((c) => (
+                <CredentialField
+                  key={c.field_key}
+                  cred={c}
+                  value={fields[c.field_key]}
+                  editing={Boolean(editing[c.field_key])}
+                  alwaysEditable={false}
+                  onChange={(v) => setFields((prev) => ({ ...prev, [c.field_key]: v }))}
+                  onStartEdit={() => {
+                    setEditing((prev) => ({ ...prev, [c.field_key]: true }));
+                    setFields((prev) => ({
+                      ...prev,
+                      [c.field_key]: c.is_secret ? '' : c.value || prev[c.field_key] || '',
+                    }));
+                  }}
+                  onCancelEdit={() => {
+                    setEditing((prev) => {
+                      const next = { ...prev };
+                      delete next[c.field_key];
+                      return next;
+                    });
+                    setFields((prev) => {
+                      const next = { ...prev };
+                      if (c.is_secret) delete next[c.field_key];
+                      else if (c.value) next[c.field_key] = c.value;
+                      return next;
+                    });
+                  }}
+                />
+              ))}
+            </div>
+            <div className="ext-action-row" style={{ marginTop: 14 }}>
               <button
                 type="submit"
                 className="btn"
@@ -1885,12 +2240,11 @@ export function ServicoExternoDetailPage({ api }) {
                 disabled={busy || !pagarmeWebhookAuthReady}
                 onClick={async () => {
                   if (!pagarmeWebhookAuthReady) {
-                    setError('Informe e salve usuário e senha do webhook antes de validar');
+                    reportError('misc', 'Informe e salve usuário e senha do webhook antes de validar');
                     return;
                   }
                   setSaving(true);
-                  setError('');
-                  setMsg('');
+                  clearFeedback();
                   try {
                     const payload = {};
                     for (const key of ['webhook_user', 'webhook_pass']) {
@@ -1916,16 +2270,17 @@ export function ServicoExternoDetailPage({ api }) {
                     );
                     if (st?.ready) {
                       setPagarmeForceEdit(false);
-                      setMsg('Webhooks válidos — Pagar.me conectado');
+                      reportMsg('misc', 'Webhooks válidos — Pagar.me conectado');
                     } else {
-                      setError(
+                      reportError(
+                        'misc',
                         st?.reason ||
                           'Ainda não encontramos o webhook do link. Isso pode levar até 1 minuto — tente novamente em breve.'
                       );
                     }
                     await reload();
                   } catch (err) {
-                    setError(err.message || 'Falha ao validar webhooks');
+                    reportError('misc', err.message || 'Falha ao validar webhooks');
                   } finally {
                     setSaving(false);
                   }
@@ -2005,21 +2360,20 @@ export function ServicoExternoDetailPage({ api }) {
               onSubmit={async (e) => {
                 e.preventDefault();
                 setSaving(true);
-                setError('');
-                setMsg('');
+                clearFeedback();
                 try {
                   const id = String(assocRecipientDraft || '').trim();
                   await saveExternalServiceFlags(api, service, {
                     association_recipient_id: id || null,
                   });
-                  setMsg(
+                  reportMsg('misc',
                     id
                       ? `Recebedor da associação gravado: ${id}`
                       : 'Recebedor da associação removido'
                   );
                   await reload();
                 } catch (err) {
-                  setError(err.message || 'Falha ao gravar recipient_id');
+                  reportError('misc', err.message || 'Falha ao gravar recipient_id');
                 } finally {
                   setSaving(false);
                 }
@@ -2070,13 +2424,13 @@ export function ServicoExternoDetailPage({ api }) {
               data-testid="sc-outbound-creds"
               style={{ marginTop: 8 }}
               onClick={async () => {
-                setError('');
+                clearFeedback();
                 try {
                   const res = await api.getSoucannabisOutboundCredentials({ reveal: true });
                   setOutboundCreds(res.data);
-                  setMsg('Credenciais outbound geradas/carregadas');
+                  reportMsg('misc', 'Credenciais outbound geradas/carregadas');
                 } catch (err) {
-                  setError(err.message || 'Falha ao obter outbound');
+                  reportError('misc', err.message || 'Falha ao obter outbound');
                 }
               }}
             >
@@ -2137,13 +2491,13 @@ export function ServicoExternoDetailPage({ api }) {
               data-testid="sc-webhook-info"
               style={{ marginTop: 8 }}
               onClick={async () => {
-                setError('');
+                clearFeedback();
                 try {
                   const res = await api.getSoucannabisWebhooksInfo();
                   setWebhookInfo(res.data);
-                  setMsg('URL do webhook carregada');
+                  reportMsg('misc', 'URL do webhook carregada');
                 } catch (err) {
-                  setError(err.message || 'Falha ao obter webhook');
+                  reportError('misc', err.message || 'Falha ao obter webhook');
                 }
               }}
             >
@@ -2247,92 +2601,167 @@ export function ServicoExternoDetailPage({ api }) {
         </form>
       )}
 
-      {service === 'melhorenvio' && (
-        <section
-          className={`me-prod-block${isProduction ? ' is-production' : ''}`}
-          data-testid="me-env-banner"
-        >
-          <p className="me-prod-kicker">Ambiente</p>
-          <h3 className="me-prod-title">
-            {isProduction ? 'Você está em produção' : 'Comece pelo sandbox'}
-          </h3>
+      {service === 'utalk' && (
+        <section style={{ marginTop: '1.5rem' }}>
+          <h3 style={{ marginTop: 0 }}>Mensagens da triagem</h3>
+          <p className="muted" style={{ fontSize: '0.9rem' }}>
+            Ao preencher o formulário público de triagem, envia esta mensagem WhatsApp para o
+            telefone informado (via Utalk). Requer <code>from_phone</code> nas credenciais e módulo
+            ativo. Placeholders: <code>{'{{nome}}'}</code>, <code>{'{{telefone}}'}</code>.
+          </p>
+          <label
+            className={`ext-flag${data.triage_message_enabled ? ' ext-flag--active' : ''}`}
+          >
+            <input
+              type="checkbox"
+              checked={Boolean(data.triage_message_enabled)}
+              disabled={!data.enabled || busy || triageMessageSaving}
+              onChange={async (e) => {
+                const checked = e.target.checked;
+                clearFeedback();
+                setTriageMessageSaving(true);
+                try {
+                  const payload = { triage_message_enabled: checked };
+                  if (checked) payload.triage_message = triageMessageDraft;
+                  await saveExternalServiceFlags(api, service, payload);
+                  reportMsg(
+                    'misc',
+                    checked
+                      ? 'Envio da mensagem da triagem ativado'
+                      : 'Envio da mensagem da triagem desativado'
+                  );
+                  await reload();
+                } catch (err) {
+                  reportError('misc', err.message || 'Falha ao atualizar mensagem da triagem');
+                } finally {
+                  setTriageMessageSaving(false);
+                }
+              }}
+            />
+            <span className="ext-flag-body">
+              <strong>Enviar mensagem ao criar triagem</strong>
+              <span className="muted">
+                {!data.enabled
+                  ? 'Ative o módulo Utalk acima para habilitar o envio.'
+                  : 'Desligado por padrão. O envio é fail-soft (não bloqueia o formulário).'}
+              </span>
+            </span>
+          </label>
+          <div className="field">
+            <label htmlFor="utalk-triage-message">Texto da mensagem</label>
+            <textarea
+              id="utalk-triage-message"
+              className="input"
+              rows={5}
+              value={triageMessageDraft}
+              disabled={busy || triageMessageSaving}
+              onChange={(e) => setTriageMessageDraft(e.target.value)}
+              placeholder="Olá {{nome}}, recebemos seu contato. Em breve retornamos pelo WhatsApp {{telefone}}."
+            />
+          </div>
+          <div className="ext-action-row">
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={busy || triageMessageSaving}
+            onClick={async () => {
+              setTriageMessageSaving(true);
+              clearFeedback();
+              try {
+                await saveExternalServiceFlags(api, service, {
+                  triage_message: triageMessageDraft,
+                });
+                reportMsg('misc', 'Mensagem da triagem salva');
+                await reload();
+              } catch (err) {
+                reportError('misc', err.message || 'Falha ao salvar mensagem');
+              } finally {
+                setTriageMessageSaving(false);
+              }
+            }}
+          >
+            {triageMessageSaving ? 'Salvando…' : 'Salvar mensagem'}
+          </button>
+          </div>
+        </section>
+      )}
 
-          {!isProduction ? (
-            <>
-              <ol className="me-steps">
-                <li className="me-step">
-                  <span className="me-step-num">1</span>
-                  <p className="me-step-body">
-                    Crie um aplicativo em{' '}
-                    <a href="https://sandbox.melhorenvio.com.br" target="_blank" rel="noreferrer">
-                      sandbox.melhorenvio.com.br
-                    </a>{' '}
-                    (Área Dev).
-                  </p>
-                </li>
-                <li className="me-step">
-                  <span className="me-step-num">2</span>
-                  <p className="me-step-body">
-                    Preencha Client ID, Secret e Redirect URI do sandbox e clique em{' '}
-                    <strong>Autenticar</strong>.
-                  </p>
-                </li>
-                <li className="me-step">
-                  <span className="me-step-num">3</span>
-                  <p className="me-step-body">
-                    Só depois de validar o fluxo de teste, ative a produção com o app real.
-                  </p>
-                </li>
-              </ol>
-              <button
-                type="button"
-                className="btn btn-primary"
-                data-testid="me-activate-production"
-                disabled={busy}
-                onClick={onActivateProduction}
-              >
-                Ativar produção
-              </button>
-            </>
+      {service === 'utalk' && (
+        <section style={{ marginTop: '1.5rem' }}>
+          <h3 style={{ marginTop: 0 }}>Atendentes (utalk_id)</h3>
+          <p className="muted" style={{ fontSize: '0.9rem' }}>
+            O token acima é único e serve para sync/transfer. Cadastre o{' '}
+            <code>utalk_id</code> (member ID Umbler) de cada operador de triagem para mapear
+            assume/transferência no card.
+          </p>
+          {(data.attendants || []).length === 0 ? (
+            <p className="muted">Nenhum operador Acolhimento/Administrador ativo.</p>
           ) : (
-            <>
-              <ol className="me-steps">
-                <li className="me-step">
-                  <span className="me-step-num">1</span>
-                  <p className="me-step-body">
-                    Use Client ID e Secret do app criado em{' '}
-                    <a href="https://melhorenvio.com.br" target="_blank" rel="noreferrer">
-                      melhorenvio.com.br
-                    </a>
-                    .
-                  </p>
-                </li>
-                <li className="me-step">
-                  <span className="me-step-num">2</span>
-                  <p className="me-step-body">
-                    A API base fica fixa em <code>{ME_DEFAULT_URLS.production}</code>.
-                  </p>
-                </li>
-                <li className="me-step">
-                  <span className="me-step-num">3</span>
-                  <p className="me-step-body">
-                    Clique em <strong>Autenticar</strong> para testar e autorizar o app de produção.
-                  </p>
-                </li>
-              </ol>
-              <button
-                type="button"
-                className="btn"
-                data-testid="me-activate-sandbox"
-                disabled={busy}
-                onClick={onActivateSandbox}
-              >
-                Voltar ao sandbox
-              </button>
-            </>
+            <div style={{ display: 'grid', gap: '0.75rem' }}>
+              {(data.attendants || []).map((att) => (
+                <div
+                  key={att.code}
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '0.5rem',
+                    alignItems: 'center',
+                    padding: '0.65rem 0.75rem',
+                    border: '1px solid var(--admin-border)',
+                    borderRadius: 8,
+                  }}
+                >
+                  <div style={{ minWidth: 160, flex: '1 1 140px' }}>
+                    <strong>{att.name}</strong>
+                    {att.email ? (
+                      <div className="muted" style={{ fontSize: '0.8rem' }}>
+                        {att.email}
+                      </div>
+                    ) : null}
+                  </div>
+                  <label className="field" style={{ flex: '1 1 200px', minWidth: 160, margin: 0 }}>
+                    <span>utalk_id</span>
+                    <input
+                      className="input"
+                      placeholder="member ID Umbler"
+                      value={utalkIdDrafts[att.code] ?? ''}
+                      onChange={(e) =>
+                        setUtalkIdDrafts((prev) => ({ ...prev, [att.code]: e.target.value }))
+                      }
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={utalkAttendantSaving === att.code || busy}
+                    onClick={async () => {
+                      setUtalkAttendantSaving(att.code);
+                      clearFeedback();
+                      try {
+                        await api.updateUtalkAttendantAdmin(att.code, {
+                          utalk_id: utalkIdDrafts[att.code] || null,
+                        });
+                        reportMsg('misc', `utalk_id salvo para ${att.name}`);
+                        await reload();
+                      } catch (err) {
+                        reportError('misc', err.message || 'Falha ao salvar utalk_id');
+                      } finally {
+                        setUtalkAttendantSaving(null);
+                      }
+                    }}
+                  >
+                    {utalkAttendantSaving === att.code ? 'Salvando…' : 'Salvar'}
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
         </section>
       )}
+
+      <ExtActionFeedback at="misc" feedbackAt={feedbackAt} error={error} msg={msg} />
+      <ExtActionFeedback at="email-test" feedbackAt={feedbackAt} error={error} msg={msg} />
+    </div>
     </div>
   );
 }

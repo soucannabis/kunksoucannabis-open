@@ -20,8 +20,7 @@
 | `lastname` | string | character varying | — | sim | — | — | input | — |
 | `email` | string | character varying | — | sim | — | — | input | — |
 | `phone` | string | character varying | — | sim | — | — | input | — |
-| `option1` | string | character varying | — | sim | — | — | input | — |
-| `option2` | string | character varying | — | sim | — | — | input | — |
+| `help_topic` | string | character varying | — | sim | — | — | input | — |
 | `isAssociate` | string | character varying | — | sim | — | — | input | — |
 | `message` | text | text | — | sim | — | — | input | — |
 | `code` | uuid | uuid | — | sim | — | — | input | — |

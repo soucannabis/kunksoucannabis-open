@@ -11,7 +11,7 @@ INSERT INTO system_configs (
     false,
     false,
     NULL,
-    'Módulo Google Calendar habilitado (espelha MODULE_GOOGLE_CALENDAR_ENABLED)'
+    'Módulo Google Calendar habilitado (Admin → Serviços externos)'
   ),
   (
     'modules',

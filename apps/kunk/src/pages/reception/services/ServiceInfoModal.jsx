@@ -12,6 +12,12 @@ import {
   TextField,
 } from '@mui/material';
 import { formatDateTime, PAYMENT_TYPES, typeLabel } from './servicesUtils.js';
+import { useCacheConfig } from '../../../lib/cache/CacheConfigProvider.jsx';
+import {
+  fetchCollaboratorProfessionals,
+  fetchTags,
+  invalidateServicesCache,
+} from '../../../lib/cache/fetchers.js';
 
 export default function ServiceInfoModal({ open, service, api, onClose, onSaved }) {
   const [group, setGroup] = useState([]);
@@ -24,6 +30,7 @@ export default function ServiceInfoModal({ open, service, api, onClose, onSaved 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [receiptFile, setReceiptFile] = useState(null);
+  const { enabled: cacheEnabled } = useCacheConfig();
 
   useEffect(() => {
     if (!open || !service) return;
@@ -36,17 +43,17 @@ export default function ServiceInfoModal({ open, service, api, onClose, onSaved 
     setPaymentType(service.payment_type || '');
     (async () => {
       try {
-        const [g, pros, tagsRes] = await Promise.all([
+        const [g, pros, tagList] = await Promise.all([
           service.booking_group_code
             ? api.listServicesByGroup(service.booking_group_code)
             : Promise.resolve({ data: [service] }),
-          api.listProfessionals({ active: 1, role: 'collaborators' }),
-          api.listItems('tags', 'limit=200'),
+          fetchCollaboratorProfessionals(api, cacheEnabled),
+          fetchTags(api, cacheEnabled),
         ]);
         setGroup(g.data || [service]);
-        setProfessionals(pros.data || []);
-        setTagOpts((tagsRes.data || []).map((t) => t.tag).filter(Boolean));
-        const match = (pros.data || []).find(
+        setProfessionals(pros);
+        setTagOpts(tagList.map((t) => t.tag).filter(Boolean));
+        const match = pros.find(
           (p) =>
             String(p.professional_code) === String(service.professional_id) ||
             String(p.id) === String(service.professional_id)
@@ -56,7 +63,7 @@ export default function ServiceInfoModal({ open, service, api, onClose, onSaved 
         setError(err.message || 'Falha ao carregar');
       }
     })();
-  }, [open, service, api]);
+  }, [open, service, api, cacheEnabled]);
 
   async function onSave() {
     setBusy(true);

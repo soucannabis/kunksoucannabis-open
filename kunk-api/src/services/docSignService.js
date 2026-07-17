@@ -1,6 +1,5 @@
 'use strict';
 
-const fs = require('fs');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const { query, withClient } = require('../db/pool');
@@ -141,8 +140,7 @@ async function loadLogoDataUrl(fileId) {
   if (!fileId) return null;
   try {
     const file = await filesRepository.getFile(fileId);
-    if (!file?.storage_path || !fs.existsSync(file.storage_path)) return null;
-    const buf = fs.readFileSync(file.storage_path);
+    const buf = await filesRepository.readFileBuffer(file);
     const mime = file.mime_type || 'image/png';
     return `data:${mime};base64,${buf.toString('base64')}`;
   } catch {
@@ -943,17 +941,16 @@ async function completeSign(token, body, meta = {}) {
 async function verify(contractId) {
   const row = await repo.getContractById(contractId);
   if (!row) throw new AppError(404, 'NOT_FOUND', 'Contrato não encontrado');
-  const fs = require('fs/promises');
   const checks = {};
   if (row.filled_pdf_file_id) {
     const f = await filesRepository.getFile(row.filled_pdf_file_id);
-    const buf = await fs.readFile(f.storage_path);
+    const buf = await filesRepository.readFileBuffer(f);
     const h = sha256(buf);
     checks.filled = { expected: row.filled_pdf_sha256, actual: h, ok: h === row.filled_pdf_sha256 };
   }
   if (row.signed_pdf_file_id && row.signed_pdf_sha256) {
     const f = await filesRepository.getFile(row.signed_pdf_file_id);
-    const buf = await fs.readFile(f.storage_path);
+    const buf = await filesRepository.readFileBuffer(f);
     const h = sha256(buf);
     checks.signed = { expected: row.signed_pdf_sha256, actual: h, ok: h === row.signed_pdf_sha256 };
   }

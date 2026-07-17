@@ -19,8 +19,8 @@ async function getPagarmeConfig() {
   }
   return {
     enabled: await isModuleEnabled('pagarme'),
-    use_for_orders: asBool(values['modules.pagarme.use_for_orders'], true),
-    use_for_services: asBool(values['modules.pagarme.use_for_services'], true),
+    use_for_orders: asBool(values['modules.pagarme.use_for_orders'], false),
+    use_for_services: asBool(values['modules.pagarme.use_for_services'], false),
     success_url: values['modules.pagarme.success_url'] || null,
     card_fee_percent: asNumber(values['modules.pagarme.card_fee_percent'], 5),
     checkout_expires_in: asNumber(values['modules.pagarme.checkout_expires_in'], 10080),

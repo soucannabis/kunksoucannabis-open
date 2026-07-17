@@ -8,10 +8,9 @@
 
 | Flag | Origem |
 |---|---|
-| `MODULE_MELHORENVIO_ENABLED=true` | Env |
-| `modules.melhorenvio.enabled` | `system_configs` |
-| `modules.melhorenvio.use_for_quote` | default `true` |
-| `modules.melhorenvio.use_for_label` | default **`false`** (legado: só cotação) |
+| `modules.melhorenvio.enabled` | Admin (`system_configs`) |
+| `modules.melhorenvio.use_for_quote` | default `false` |
+| `modules.melhorenvio.use_for_label` | default `false` |
 
 ## Prefixo
 

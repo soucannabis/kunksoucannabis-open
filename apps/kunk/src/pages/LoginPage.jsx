@@ -45,7 +45,7 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   const primary = config.darkPrimary || '#5a7a5b';
-  const logo = config.logo || '/kunkLogo.png';
+  const logo = String(config.logo || '').trim();
   const showTestLogin = import.meta.env.DEV;
 
   if (!loading && user && hasRequiredRole) {
@@ -219,7 +219,7 @@ export function LoginPage() {
         md={6}
         style={{
           position: 'relative',
-          backgroundImage: `url(${logo})`,
+          backgroundImage: logo ? `url(${logo})` : 'none',
           backgroundSize: '90%',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

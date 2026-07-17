@@ -24,9 +24,9 @@ async function getScConfig() {
   const values = await getModuleValues();
   return {
     enabled: await isModuleEnabled('soucannabis_orders'),
-    sync_products: asBool(values['modules.soucannabis_orders.sync_products'], true),
-    sync_tags: asBool(values['modules.soucannabis_orders.sync_tags'], true),
-    sync_orders: asBool(values['modules.soucannabis_orders.sync_orders'], true),
+    sync_products: asBool(values['modules.soucannabis_orders.sync_products'], false),
+    sync_tags: asBool(values['modules.soucannabis_orders.sync_tags'], false),
+    sync_orders: asBool(values['modules.soucannabis_orders.sync_orders'], false),
     payment_percentage: asNumberOrNull(values['modules.soucannabis_orders.payment_percentage']),
     remote_app_id: values['modules.soucannabis_orders.remote_app_id'] || null,
     last_me_at: values['modules.soucannabis_orders.last_me_at'] || null,

@@ -14,18 +14,27 @@ const {
 } = require('../schema/collections');
 const { MATRIX } = require('../schema/rbac');
 const externalServices = require('./externalServices');
+const storageAdmin = require('./storageAdmin');
+const sampleDataAdmin = require('./sampleDataAdmin');
+const systemErrorsAdmin = require('./systemErrorsAdmin');
+const webVitalsAdmin = require('./webVitalsAdmin');
+const cacheAdmin = require('./cacheAdmin');
 
 const router = Router();
 router.use(authenticate, requireRole('Administrador'));
 
 router.use('/external-services', externalServices);
+router.use('/storage', storageAdmin);
+router.use('/sample-data', sampleDataAdmin);
+router.use('/system-errors', systemErrorsAdmin);
+router.use('/web-vitals', webVitalsAdmin);
+router.use('/cache', cacheAdmin);
 
 const ROLE_DESCRIPTIONS = {
   Administrador: 'Acesso total + app admin',
   Acolhimento: 'Painel operacional (acolhimento)',
   Produção: 'Painel operacional (produção)',
   Financeiro: 'Painel operacional (financeiro)',
-  Parceiro: 'Escopo parceiro (a redesenhar)',
   Prescritor: 'Escopo do próprio prescritor',
   Profissional: 'Portal do relatório de serviços (próprios dados)',
   api: 'Reservado a tokens de integração',

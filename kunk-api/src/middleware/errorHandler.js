@@ -1,6 +1,7 @@
 'use strict';
 
 const { fail, AppError } = require('../utils/response');
+const systemErrorsService = require('../services/systemErrorsService');
 
 /** Extrai constraint / coluna de erros do node-pg. */
 function pgDetails(err) {
@@ -37,10 +38,25 @@ function mapPgError(err) {
   }
 }
 
+function shouldRecordError(err) {
+  if (err instanceof AppError) {
+    return err.status >= 500;
+  }
+  if (err?.type === 'entity.parse.failed') return false;
+  const mapped = err?.code ? mapPgError(err) : null;
+  if (mapped && mapped.status < 500) return false;
+  return true;
+}
+
 function errorHandler(err, req, res, next) {
   if (res.headersSent) return next(err);
 
   if (err instanceof AppError) {
+    if (shouldRecordError(err)) {
+      void systemErrorsService.recordSafe(
+        systemErrorsService.payloadFromBackendError(err, req)
+      );
+    }
     return res.status(err.status).json(fail(err.code, err.message, err.details));
   }
 
@@ -54,9 +70,10 @@ function errorHandler(err, req, res, next) {
   }
 
   console.error('[kunk-api]', err);
+  void systemErrorsService.recordSafe(systemErrorsService.payloadFromBackendError(err, req));
   const message =
     process.env.NODE_ENV === 'production' ? 'Erro interno' : err.message || 'Erro interno';
   return res.status(500).json(fail('INTERNAL_ERROR', message));
 }
 
-module.exports = { errorHandler, mapPgError };
+module.exports = { errorHandler, mapPgError, shouldRecordError };

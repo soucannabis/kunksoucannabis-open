@@ -4,11 +4,10 @@ Envio de e-mails da instalação via SMTP (Nodemailer), configurável no Admin e
 
 ## Habilitação
 
-1. Admin → Serviços externos → E-mail → interruptor **Módulo ativo** (sobrescreve o env)
+1. Admin → Serviços externos → E-mail → interruptor **Módulo ativo**
 2. Credenciais SMTP em `system_api_credentials` **ou** fallbacks `SMTP_*`
-3. Opcional: `MODULE_EMAIL_ENABLED` no `.env` só como padrão quando o Admin ainda não gravou `modules.email.enabled`
 
-Precedência: **Admin > env**.
+Sem valor no Admin → módulo desligado. Credenciais ainda podem usar fallbacks de env.
 
 ## Credenciais
 

@@ -6,6 +6,7 @@ import {
   saveKunkAppearance,
   uploadAppearanceAsset,
 } from '../lib/kunkAppearanceConfig.js';
+import { AdminLoader } from '../components/AdminLoader.jsx';
 
 function ColorField({ label, value, onChange }) {
   return (
@@ -41,7 +42,7 @@ function normalizeHex(value) {
   return '#000000';
 }
 
-function ImageField({ label, value, onChange, api, onError }) {
+function ImageField({ label, value, onChange, onPersist, api, onError }) {
   const [busy, setBusy] = useState(false);
 
   async function onFile(e) {
@@ -52,7 +53,7 @@ function ImageField({ label, value, onChange, api, onError }) {
     onError('');
     try {
       const url = await uploadAppearanceAsset(api, file);
-      onChange(url);
+      await onPersist(url);
     } catch (err) {
       onError(err.message || 'Falha no upload');
     } finally {
@@ -72,7 +73,7 @@ function ImageField({ label, value, onChange, api, onError }) {
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="/kunkLogo.png ou URL"
+        placeholder="/api/v1/files/…/download ou URL"
       />
       <div className="appearance-upload-row">
         <label className="btn">
@@ -80,7 +81,7 @@ function ImageField({ label, value, onChange, api, onError }) {
           <input type="file" accept="image/*" hidden disabled={busy} onChange={onFile} />
         </label>
         {value ? (
-          <button type="button" className="btn" onClick={() => onChange('')}>
+          <button type="button" className="btn" onClick={() => onPersist('')}>
             Limpar
           </button>
         ) : null}
@@ -89,7 +90,7 @@ function ImageField({ label, value, onChange, api, onError }) {
   );
 }
 
-function LogoField({ value, onChange, api, onError }) {
+function LogoField({ value, onChange, onPersist, api, onError }) {
   const [busy, setBusy] = useState(false);
   const [cropSrc, setCropSrc] = useState(null);
 
@@ -113,7 +114,7 @@ function LogoField({ value, onChange, api, onError }) {
     try {
       const file = new File([blob], 'kunk-logo.png', { type: 'image/png' });
       const uploaded = await uploadAppearanceAsset(api, file);
-      onChange(uploaded);
+      await onPersist(uploaded);
       if (cropSrc) URL.revokeObjectURL(cropSrc);
       setCropSrc(null);
     } catch (err) {
@@ -128,7 +129,7 @@ function LogoField({ value, onChange, api, onError }) {
       <span>Logo</span>
       <p className="muted" style={{ margin: 0 }}>
         Espaço fixo {KUNK_LOGO_FRAME_SIZE}×{KUNK_LOGO_FRAME_SIZE}px no menu. No upload, enquadre a
-        imagem no quadrado.
+        imagem no quadrado — a logo é salva na hora.
       </p>
       <div className="logo-frame-preview" aria-label="Pré-visualização do enquadramento">
         {value ? <img src={value} alt="" /> : <span className="muted">Sem logo</span>}
@@ -137,7 +138,7 @@ function LogoField({ value, onChange, api, onError }) {
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="/kunkLogo.png ou URL"
+        placeholder="/api/v1/files/…/download ou URL"
       />
       <div className="appearance-upload-row">
         <label className="btn">
@@ -145,7 +146,7 @@ function LogoField({ value, onChange, api, onError }) {
           <input type="file" accept="image/*" hidden disabled={busy} onChange={onFile} />
         </label>
         {value ? (
-          <button type="button" className="btn" onClick={() => onChange('')}>
+          <button type="button" className="btn" onClick={() => onPersist('')} disabled={busy}>
             Limpar
           </button>
         ) : null}
@@ -162,7 +163,7 @@ function LogoField({ value, onChange, api, onError }) {
   );
 }
 
-export function AparenciaPage({ api }) {
+export function AppearancePage({ api }) {
   const [form, setForm] = useState({ ...KUNK_APPEARANCE_DEFAULTS });
   const [baseline, setBaseline] = useState({ ...KUNK_APPEARANCE_DEFAULTS });
   const [itemsByKey, setItemsByKey] = useState({});
@@ -198,6 +199,26 @@ export function AparenciaPage({ api }) {
     setMessage('');
   }
 
+  /** Persist logo/bg immediately so Kunk picks it up and download becomes public. */
+  async function persistAssetField(prop, url) {
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const nextForm = { ...form, [prop]: url };
+      const nextItems = await saveKunkAppearance(api, nextForm, baseline, itemsByKey);
+      setForm(nextForm);
+      setItemsByKey(nextItems);
+      setBaseline((prev) => ({ ...prev, [prop]: url }));
+      setMessage(prop === 'logo' ? 'Logo salva.' : 'Imagem de fundo salva.');
+    } catch (err) {
+      setError(err.message || 'Falha ao salvar arquivo de aparência');
+      throw err;
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function onSubmit(e) {
     e.preventDefault();
     setBusy(true);
@@ -221,7 +242,7 @@ export function AparenciaPage({ api }) {
   }
 
   if (loading) {
-    return <div className="muted">Carregando aparência…</div>;
+    return <AdminLoader label="Carregando aparência…" />;
   }
 
   return (
@@ -251,6 +272,7 @@ export function AparenciaPage({ api }) {
           <LogoField
             value={form.logo}
             onChange={(v) => setField('logo', v)}
+            onPersist={(v) => persistAssetField('logo', v)}
             api={api}
             onError={setError}
           />
@@ -290,6 +312,7 @@ export function AparenciaPage({ api }) {
             label="Imagem de fundo"
             value={form.bgImage}
             onChange={(v) => setField('bgImage', v)}
+            onPersist={(v) => persistAssetField('bgImage', v)}
             api={api}
             onError={setError}
           />

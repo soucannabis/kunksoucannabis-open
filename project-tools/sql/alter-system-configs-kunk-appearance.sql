@@ -23,8 +23,8 @@ INSERT INTO system_configs (
     false,
     false,
     true,
-    '/kunkLogo.png',
-    'URL ou path do logo (sidebar / login)'
+    '',
+    'URL do logo (sidebar / login). Vazio = sem logo. Preferir /api/v1/files/{id}/download após upload.'
   ),
   (
     'kunk',

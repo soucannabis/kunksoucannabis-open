@@ -6,6 +6,11 @@ const { stripSensitive } = require('../schema/collections');
 const { parseRoles } = require('../schema/rbac');
 const { query } = require('../db/pool');
 const { AppError } = require('../utils/response');
+const { memoryCache, keys } = require('../cache');
+
+function invalidateAttendantsCache() {
+  memoryCache.invalidate(keys.ATTENDANTS);
+}
 
 function normalizePermissions(value) {
   if (value === undefined) return undefined;
@@ -78,6 +83,7 @@ async function createSystemUser(payload) {
     body.permissions = normalizePermissions(body.permissions);
   }
   const created = await itemsRepository.createItem('system_users', body);
+  invalidateAttendantsCache();
   return stripSensitive('system_users', created);
 }
 
@@ -105,6 +111,7 @@ async function updateSystemUser(id, payload) {
   await assertNotLastAdmin(existing, body.permissions, body.status);
 
   const updated = await itemsRepository.updateItem('system_users', id, body);
+  invalidateAttendantsCache();
   return stripSensitive('system_users', updated);
 }
 
@@ -112,6 +119,7 @@ async function deleteSystemUser(id) {
   const existing = await itemsRepository.getItem('system_users', id);
   await assertNotLastAdmin(existing, '[]', 'inactive');
   await itemsRepository.deleteItem('system_users', id);
+  invalidateAttendantsCache();
   return { id: Number(id) };
 }
 

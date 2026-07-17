@@ -1,14 +1,17 @@
 [
   {
     "service_id": 1,
-    "file_id": "c68fb371-79d3-47b7-b7c4-f1f82ce94304"
+    "file_id": "d31cb5cc-87a8-4bab-8633-31d2496b7448",
+    "is_sample": true
   },
   {
     "service_id": 2,
-    "file_id": "f4e6092d-9ef9-4d44-a69a-779ea249e672"
+    "file_id": "174f1918-8db1-4b1f-8ae7-86a2b61f0723",
+    "is_sample": true
   },
   {
     "service_id": 3,
-    "file_id": "7411e534-4c7f-4777-a4a1-ce7328d737d0"
+    "file_id": "e540dd3b-24b1-4b1c-a634-4baf4c237e43",
+    "is_sample": true
   }
 ]

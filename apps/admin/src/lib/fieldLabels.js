@@ -19,6 +19,8 @@ export const FIELD_LABELS = {
   marital_status: 'Estado civil',
   mobile_number: 'Celular',
   phone: 'Telefone',
+  company_phone: 'Telefone da empresa',
+  representative_mobile: 'Celular',
   street: 'Rua',
   street_number: 'Número',
   complement: 'Complemento',
@@ -26,6 +28,20 @@ export const FIELD_LABELS = {
   city: 'Cidade',
   state: 'Estado',
   cep: 'CEP',
+  number: 'Número',
+  country: 'País',
+  method: 'Método',
+  installments: 'Parcelas',
+  gateway: 'Gateway',
+  provider: 'Provedor',
+  option_key: 'Chave da opção',
+  service_label: 'Serviço',
+  paid: 'Pago',
+  demo: 'Demo',
+  delivery_address: 'Endereço de entrega',
+  custom_payment: 'Pagamento personalizado',
+  freight_option: 'Opção de frete',
+  payment_info: 'Info de pagamento',
   address: 'Endereço',
   avatar_url: 'URL do avatar',
   user_code: 'Código do usuário',
@@ -37,6 +53,7 @@ export const FIELD_LABELS = {
   message: 'Mensagem',
   active: 'Ativo',
   color: 'Cor',
+  is_sample: 'Dado de demonstração',
 
   // users / associados
   associate_name: 'Nome do associado',
@@ -65,7 +82,6 @@ export const FIELD_LABELS = {
   annotations: 'Anotações',
   handbook: 'Prontuário',
   prescriber: 'Prescritor',
-  delivery_address: 'Endereço de entrega',
   prescriber_code: 'Código do prescritor',
   session_token: 'Token de sessão',
   session_expires: 'Expiração da sessão',
@@ -109,11 +125,6 @@ export const FIELD_LABELS = {
   address_validation: 'Validação de endereço',
   created_by_user_code: 'Criado por (código)',
 
-  // partners
-  commission_transactions: 'Transações de comissão',
-  is_favorite: 'Favorito',
-  contest_reports: 'Relatórios de contestação',
-
   // products
   user_created: 'Criado por',
   user_updated: 'Atualizado por',
@@ -136,10 +147,10 @@ export const FIELD_LABELS = {
   recipient_id: 'ID do recebedor',
   donation_balance: 'Saldo de doação',
   calendar_id: 'ID do calendário',
+  contest_reports: 'Relatórios de contestação',
 
   // reception
-  option1: 'Opção 1',
-  option2: 'Opção 2',
+  help_topic: 'Como podemos ajudar?',
   is_associate: 'É associado',
   code: 'Código',
   chat_id: 'ID do chat',
@@ -147,7 +158,6 @@ export const FIELD_LABELS = {
   patient_name: 'Nome do paciente',
   attendant: 'Atendente',
   completion_reason: 'Motivo de conclusão',
-  at: 'Em',
   full_name: 'Nome completo',
   fullname: 'Nome completo',
 

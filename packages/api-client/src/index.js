@@ -13,6 +13,15 @@ export class ApiError extends Error {
   }
 }
 
+export {
+  reportSystemError,
+  shouldReportApiError,
+  payloadFromError,
+  installGlobalErrorListeners,
+} from './systemErrors.js';
+
+export { reportWebVital, createWebVitalSender, isWebVitalsLocalHost } from './webVitals.js';
+
 export function createApiClient({ baseUrl }) {
   const root = String(baseUrl || '').replace(/\/$/, '');
 
@@ -101,6 +110,40 @@ export function createApiClient({ baseUrl }) {
       request('POST', '/admin/external-services/melhorenvio/activate-production', {}),
     activateMelhorEnvioSandbox: () =>
       request('POST', '/admin/external-services/melhorenvio/activate-sandbox', {}),
+
+    // Storage / buckets
+    getStorageStatus: () => request('GET', '/admin/storage'),
+    putStorageConfig: (body) => request('PUT', '/admin/storage', body),
+    testStorage: (body) => request('POST', '/admin/storage/test', body || {}),
+    activateStorage: (body) => request('POST', '/admin/storage/activate', body || {}),
+    getSampleDataSummary: () => request('GET', '/admin/sample-data'),
+    deleteSampleData: () => request('DELETE', '/admin/sample-data'),
+
+    // System errors (admin triage)
+    getSystemErrorsSummary: () => request('GET', '/admin/system-errors/summary'),
+    getSystemErrorsTop: (qs = '') =>
+      request('GET', `/admin/system-errors/top${qs ? `?${qs}` : ''}`),
+    listSystemErrors: (qs = '') =>
+      request('GET', `/admin/system-errors${qs ? `?${qs}` : ''}`),
+    getSystemErrorSamples: (errorHash, qs = '') =>
+      request('GET', `/admin/system-errors/${encodeURIComponent(errorHash)}/samples${qs ? `?${qs}` : ''}`),
+    resolveSystemError: (body) => request('POST', '/admin/system-errors/resolve', body),
+
+    // Web Vitals (admin)
+    getWebVitalsSummary: (qs = '') =>
+      request('GET', `/admin/web-vitals/summary${qs ? `?${qs}` : ''}`),
+    getWebVitalsSeries: (qs = '') =>
+      request('GET', `/admin/web-vitals/series${qs ? `?${qs}` : ''}`),
+    getWebVitalsByPage: (qs = '') =>
+      request('GET', `/admin/web-vitals/by-page${qs ? `?${qs}` : ''}`),
+
+    // Operational cache (admin + kunk)
+    getAdminCacheStatus: () => request('GET', '/admin/cache'),
+    patchAdminCacheStatus: (body) => request('PATCH', '/admin/cache', body),
+    clearAdminCache: () => request('POST', '/admin/cache/clear', {}),
+    getCacheStatus: () => request('GET', '/cache/status'),
+    clearCache: () => request('POST', '/cache/clear', {}),
+
     // Operator password reset
     forgotOperatorPassword: (email, app) =>
       request('POST', '/auth/forgot-password', { email, app }),
@@ -306,8 +349,19 @@ export function createApiClient({ baseUrl }) {
       request('PATCH', `/reception/${id}/attendant`, { attendant }),
     clearReceptionAttendant: (id) =>
       request('PATCH', `/reception/${id}/attendant`, { attendant: null }),
+    setReceptionChatId: (id, chat_id) =>
+      request('PATCH', `/reception/${id}/chat`, { chat_id }),
+    syncReceptionUtalk: (id) => request('POST', `/reception/${id}/utalk-sync`, {}),
+    syncReceptionUtalkWaiting: (body) =>
+      request('POST', '/reception/utalk-sync-waiting', body || {}),
     updateReceptionStatus: (id, status) =>
       request('PATCH', `/reception/${id}/status`, { status }),
+    getUtalkStatus: () => request('GET', '/modules/utalk/status'),
+    getUtalkChat: (chatId) => request('GET', `/modules/utalk/chats/${encodeURIComponent(chatId)}`),
+    transferUtalkChat: (body) => request('POST', '/modules/utalk/transfer', body),
+    listUtalkAttendantsAdmin: () => request('GET', '/admin/external-services/utalk/attendants'),
+    updateUtalkAttendantAdmin: (userCode, body) =>
+      request('PUT', `/admin/external-services/utalk/attendants/${encodeURIComponent(userCode)}`, body),
     linkReceptionAssociate: (id, associate_code) =>
       request('PATCH', `/reception/${id}/link`, { associate_code }),
     unlinkReceptionAssociate: (id) => request('PATCH', `/reception/${id}/unlink`, {}),

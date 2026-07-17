@@ -1,6 +1,6 @@
 # Módulos opcionais
 
-Integrações de terceiros **desabilitadas por padrão**, ativáveis por env ou pela página de módulos do painel (manifesto §3.6).
+Integrações de terceiros **desabilitadas por padrão**, ativáveis apenas pelo Admin (Serviços externos → `system_configs` `modules.*.enabled`).
 
 ## Prefixo
 
@@ -10,21 +10,21 @@ Integrações de terceiros **desabilitadas por padrão**, ativáveis por env ou 
 
 ## Módulos previstos
 
-| Módulo | Env de ativação (exemplo) | Função |
+| Módulo | Ativação | Função |
 |---|---|---|
-| `pagarme` | `MODULE_PAGARME_ENABLED=true` + tokens | Pagamentos (pedidos/serviços) — [pagarme.md](./modules/pagarme.md) |
-| `soucannabis_orders` | `MODULE_SOUCANNABIS_ORDERS_ENABLED=true` + OAuth | Pedidos SouCannabis (catálogo/tags/sync + split) — [soucannabis_orders.md](./modules/soucannabis_orders.md); **requer** `pagarme` |
-| `loggi` | `MODULE_LOGGI_ENABLED=true` | Frete / entrega |
-| `melhorenvio` | `MODULE_MELHORENVIO_ENABLED=true` | Frete |
-| `google_calendar` | `MODULE_GOOGLE_CALENDAR_ENABLED=true` | Agenda |
-| `beeviral` | `MODULE_BEEVIRAL_ENABLED=true` | Afiliados |
-| `utalk` | `MODULE_UTALK_ENABLED=true` | WhatsApp / chat |
-| `pipefy` | `MODULE_PIPEFY_ENABLED=true` | Workflow externo (legado) |
-| `brasilnfe` | `MODULE_BRASILNFE_ENABLED=true` | NF-e / DCE |
-| `scp` | `MODULE_SCP_ENABLED=true` | Estoque externo |
-| `nibo` | `MODULE_NIBO_ENABLED=true` | Financeiro |
-| `geoapify` | `MODULE_GEOAPIFY_ENABLED=true` | Geocoding / verificação de endereço (ViaCEP + Geoapify) |
-| `email` | `MODULE_EMAIL_ENABLED` (padrão se Admin não definiu) | Envio de e-mails — Admin sobrescreve; ver [email.md](./modules/email.md) |
+| `pagarme` | Admin + tokens | Pagamentos (pedidos/serviços) — [pagarme.md](./modules/pagarme.md) |
+| `soucannabis_orders` | Admin + OAuth | Pedidos SouCannabis (catálogo/tags/sync + split) — [soucannabis_orders.md](./modules/soucannabis_orders.md); **requer** `pagarme` |
+| `loggi` | Admin | Frete / entrega |
+| `melhorenvio` | Admin | Frete |
+| `google_calendar` | Admin | Agenda |
+| `beeviral` | Admin | Afiliados |
+| `utalk` | Admin | WhatsApp / chat (triagem: sync + transfer) — [utalk.md](./modules/utalk.md) |
+| `pipefy` | Admin | Workflow externo (legado) |
+| `brasilnfe` | Admin | NF-e / DCE |
+| `scp` | Admin | Estoque externo |
+| `nibo` | Admin | Financeiro |
+| `geoapify` | Admin | Geocoding / verificação de endereço (ViaCEP + Geoapify) |
+| `email` | Admin | Envio de e-mails — ver [email.md](./modules/email.md) |
 
 Lista alinhada ao kunkserver atual; o OSS pode reduzir o conjunto “core”.
 
@@ -50,8 +50,10 @@ GET /modules/loggi/quote
 
 ## Ativação
 
-1. **Env** — variáveis necessárias presentes + `MODULE_*_ENABLED=true`
-2. **Painel** — página de módulos grava config (fase posterior; pode espelhar em env/DB)
+1. **Admin** — Serviços externos → interruptor **Módulo ativo** (`modules.{name}.enabled` em `system_configs`)
+2. Credenciais em `system_api_credentials` (ou fallbacks `*_API_KEY` / `SMTP_*` no `.env` quando aplicável)
+
+Sem valor no Admin → módulo **desligado**.
 
 ## Autorização
 
@@ -66,10 +68,10 @@ Além de enabled, Loggi e Melhor Envio têm flags em `system_configs` (`system=m
 
 | Key | Default | Uso |
 |---|---|---|
-| `modules.loggi.use_for_quote` | `true` | Simulação no carrinho |
-| `modules.loggi.use_for_label` | `true` | Geração de etiqueta em Pedidos |
-| `modules.melhorenvio.use_for_quote` | `true` | Cotação Correios no carrinho |
-| `modules.melhorenvio.use_for_label` | `false` | Etiqueta ME (off no legado SouCannabis) |
+| `modules.loggi.use_for_quote` | `false` | Simulação no carrinho |
+| `modules.loggi.use_for_label` | `false` | Geração de etiqueta em Pedidos |
+| `modules.melhorenvio.use_for_quote` | `false` | Cotação Correios no carrinho |
+| `modules.melhorenvio.use_for_label` | `false` | Etiqueta ME |
 | `modules.freight.label_provider` | `loggi` | Provider preferido para etiqueta |
 
 Spec do carrinho: [`../frontend/kunk/pedidos/README.md`](../frontend/kunk/pedidos/README.md).  
@@ -87,7 +89,7 @@ Credenciais: [`modules/credentials.md`](./modules/credentials.md).
 
 | Key | Default | Uso |
 |---|---|---|
-| `modules.google_calendar.use_for_scheduling` | `true` | Create/update/delete de eventos a partir de Serviços |
+| `modules.google_calendar.use_for_scheduling` | `false` | Create/update/delete de eventos a partir de Serviços |
 | `modules.google_calendar.primary_calendar_id` | `null` | Calendário principal da aplicação (admin) |
 
 Spec: [`../frontend/kunk/servicos/README.md`](../frontend/kunk/servicos/README.md).  
@@ -97,12 +99,12 @@ Módulo: [`modules/google_calendar.md`](./modules/google_calendar.md).
 
 | Key | Default | Uso |
 |---|---|---|
-| `modules.pagarme.use_for_orders` | `true` | PaymentModal em pedidos |
-| `modules.pagarme.use_for_services` | `true` | PaymentModal em serviços |
+| `modules.pagarme.use_for_orders` | `false` | PaymentModal em pedidos |
+| `modules.pagarme.use_for_services` | `false` | PaymentModal em serviços |
 | `modules.pagarme.soucannabis_recipient_id` | `null` | Recipient SC no split |
-| `modules.soucannabis_orders.sync_products` | `true` | Catálogo remoto no carrinho |
-| `modules.soucannabis_orders.sync_tags` | `true` | Seção Tags SouCannabis |
-| `modules.soucannabis_orders.sync_orders` | `true` | Sync de pedidos (create só após pago) |
+| `modules.soucannabis_orders.sync_products` | `false` | Catálogo remoto no carrinho |
+| `modules.soucannabis_orders.sync_tags` | `false` | Seção Tags SouCannabis |
+| `modules.soucannabis_orders.sync_orders` | `false` | Sync de pedidos (create só após pago) |
 
 Ativar SC exige conta Pagarme da associação **PSP** + `payment_percentage` **inteiro** (ver módulos).
 

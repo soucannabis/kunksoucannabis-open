@@ -176,7 +176,7 @@ Fluxo operacional da associação:
 | `modules.google_calendar.primary_calendar_id` | `null` | Calendário principal da aplicação (select no admin) |
 | `modules.google_calendar.use_for_scheduling` | `true` | Permite create/update/delete de eventos a partir de Serviços |
 
-Env: `MODULE_GOOGLE_CALENDAR_ENABLED`.
+Admin: `modules.google_calendar.enabled`.
 
 ---
 

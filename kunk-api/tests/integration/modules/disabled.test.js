@@ -4,7 +4,6 @@ const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const { loginAsAdmin } = require('../../helpers/auth');
-const { env } = require('../../../src/config/env');
 
 describe('modules/disabled', () => {
   let app;
@@ -24,14 +23,12 @@ describe('modules/disabled', () => {
   });
 
   it('returns 503 MODULE_DISABLED when off', async () => {
-    assert.equal(env.modules.loggi, false);
     const res = await request(app).get('/api/v1/modules/loggi').set('Cookie', cookie);
     assert.equal(res.status, 503);
     assert.equal(res.body.errors[0].code, 'MODULE_DISABLED');
   });
 
   it('returns 503 for melhorenvio when off', async () => {
-    assert.equal(env.modules.melhorenvio, false);
     const res = await request(app).get('/api/v1/modules/melhorenvio').set('Cookie', cookie);
     assert.equal(res.status, 503);
     assert.equal(res.body.errors[0].code, 'MODULE_DISABLED');
@@ -46,15 +43,28 @@ describe('modules/disabled', () => {
     assert.equal(res.body.errors[0].code, 'MODULE_DISABLED');
   });
 
-  it('enabled module responds when flag on', async () => {
-    const previous = env.modules.pagarme;
-    env.modules.pagarme = true;
+  it('enabled module responds when Admin flag on', async () => {
+    const off = await request(app)
+      .patch('/api/v1/admin/external-services/email')
+      .set('Cookie', cookie)
+      .send({ enabled: false });
+    assert.ok(off.status === 200 || off.status === 404 || off.status === 400);
+
+    const on = await request(app)
+      .patch('/api/v1/admin/external-services/email')
+      .set('Cookie', cookie)
+      .send({ enabled: true });
+    assert.equal(on.status, 200, JSON.stringify(on.body));
+
     try {
-      const res = await request(app).get('/api/v1/modules/pagarme').set('Cookie', cookie);
+      const res = await request(app).get('/api/v1/modules/email').set('Cookie', cookie);
       assert.equal(res.status, 200);
-      assert.equal(res.body.data.module, 'pagarme');
+      assert.equal(res.body.data.module, 'email');
     } finally {
-      env.modules.pagarme = previous;
+      await request(app)
+        .patch('/api/v1/admin/external-services/email')
+        .set('Cookie', cookie)
+        .send({ enabled: false });
     }
   });
 });

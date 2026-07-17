@@ -24,11 +24,11 @@ describe('domain/orders', () => {
         status: 'Novo',
         associate_name: 'A',
         total: 0,
-        partner_code: 'P1',
+        coupon_id: 'C1',
       });
     assert.equal(dead.status, 400);
     assert.equal(dead.body.errors[0].code, 'VALIDATION_ERROR');
-    assert.match(dead.body.errors[0].message, /partner_code/);
+    assert.match(dead.body.errors[0].message, /coupon_id/);
   });
 
   it('create and status/production/payment/stats', async () => {

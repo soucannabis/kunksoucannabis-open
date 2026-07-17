@@ -24,10 +24,16 @@
 
 ## Não portar (checklist negativo)
 
-- [ ] Utalk (chats, transfer, sync, FAB)
 - [ ] Beeviral (`bvid`, batch nomes)
 - [ ] Histórico de doações (modal e totais)
 - [ ] Dependência de Directus `/api/directus/reception`
+- [ ] Envio de mensagens WhatsApp via Utalk (`POST /message`) — fora de escopo; ver [modules/utalk.md](../../../api/modules/utalk.md)
+
+## Utalk (portado — acesso apenas)
+
+- Sync chat → attendant, transfer/assume/clear, link `chat_id`, FAB sync espera
+- Token **único** no Admin (Serviços externos); `utalk_id` por atendente
+- **Sem** token por usuário e **sem** envio de mensagem pelo Kunk
 
 ## Checklist de entrega
 
@@ -59,7 +65,7 @@
 - [ ] Exibir custom fields
 - [ ] Gate Pedido/Serviço por `associate_code`
 - [ ] Gate módulo docs pela flag
-- [ ] Sem doações / Utalk / Beeviral
+- [ ] Sem doações / Beeviral (Utalk: sync/transfer quando módulo ativo)
 - [ ] E2E básicos (lista, troca status, bloqueio sem vínculo)
 
 ### Docs

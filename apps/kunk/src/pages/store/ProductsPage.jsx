@@ -24,6 +24,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
+import { invalidateProductsCache } from '../../lib/cache/fetchers.js';
 import ProductCsvImportDialog from './products/ProductCsvImportDialog.jsx';
 
 const materialTheme = createTheme({
@@ -180,6 +181,7 @@ export default function ProductsPage() {
       const body = buildPayload(form);
       if (dialog.mode === 'new') await api.createItem('products', body);
       else await api.updateItem('products', dialog.id, body);
+      invalidateProductsCache();
       setDialog(null);
       await load();
     } catch (err) {
@@ -193,6 +195,7 @@ export default function ProductsPage() {
     if (!window.confirm(`Excluir o produto "${row.name}" (${row.sku})?`)) return;
     try {
       await api.deleteItem('products', row.id);
+      invalidateProductsCache();
       await load();
     } catch (err) {
       showError(err);
@@ -232,6 +235,7 @@ export default function ProductsPage() {
     setBusy(true);
     try {
       await api.adjustProductStock(stockDialog.id, { delta, note: stockNote || undefined });
+      invalidateProductsCache();
       setStockDialog(null);
       setStockDelta('');
       setStockNote('');
@@ -537,6 +541,7 @@ export default function ProductsPage() {
         api={api}
         showError={showError}
         onImported={async (result) => {
+          invalidateProductsCache();
           await load();
           if (result?.success) {
             setImportSuccess(result);

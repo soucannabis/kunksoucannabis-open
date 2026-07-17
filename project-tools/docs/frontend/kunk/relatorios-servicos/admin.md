@@ -4,7 +4,7 @@
 
 | App | Rota | Conteúdo |
 |---|---|---|
-| `apps/admin` | `/configs/services` **ou** `/servicos/tipos` | Catálogo de tipos + taxas + preço padrão |
+| `apps/admin` | `/kunk/configuracao-profissionais` | Catálogo de tipos + taxas + preço padrão |
 | `apps/admin` | `/usuarios` | Criar operador com role `Profissional` + `internal_code` |
 | `apps/admin` | `/usuarios/paginas` | Role `Profissional` → só `relatorios-servicos` |
 | `apps/kunk` | `/app/profissionais` | Ação “Criar acesso” / convite vinculado ao `professional_code` |

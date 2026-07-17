@@ -55,7 +55,7 @@ Reusar `/items/orders` quando suficiente. Rotas de domínio opcionais:
 }
 ```
 
-**Não aceitar** no v1: `coupon_id`, `no_commission`, `partner`, `partner_code`, `bvid`.  
+**Não aceitar** no v1: `coupon_id`, `no_commission`, `bvid`.  
 **Aceitar** `discount` e `donation` (campos manuais do carrinho legado).
 
 Server deve:

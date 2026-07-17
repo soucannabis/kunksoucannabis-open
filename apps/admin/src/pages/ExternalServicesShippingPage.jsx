@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CepInput, CpfCnpjInput, PhoneInput, UF_OPTIONS } from '@kunk/forms';
 import {
   getStoreFreightGaps,
   loadStoreFreightConfig,
   saveStoreFreightConfig,
 } from '../lib/storeFreightConfig.js';
+import { ExternalServiceStatusBanner, ExtActionFeedback } from '../components/ExternalServiceStatus.jsx';
+import { AdminLoader } from '../components/AdminLoader.jsx';
 
-function Field({ label, children, required }) {
+function Field({ label, children, required, className = '' }) {
   return (
-    <label style={{ display: 'block', marginBottom: '0.75rem' }}>
-      <span style={{ display: 'block', fontSize: '0.85rem', marginBottom: 4 }}>
+    <label className={`field${className ? ` ${className}` : ''}`}>
+      <span>
         {label}
         {required ? ' *' : ''}
       </span>
@@ -18,15 +21,45 @@ function Field({ label, children, required }) {
   );
 }
 
+const SHIP_FIELDS = [
+  {
+    key: 'name',
+    label: 'Nome / razão social',
+    required: true,
+    placeholder: 'Ex.: Associação Sou Cannabis',
+  },
+  {
+    key: 'document',
+    label: 'CPF / CNPJ',
+    required: true,
+  },
+  { key: 'street', label: 'Rua', required: true, placeholder: 'Ex.: Rua das Flores' },
+  { key: 'number', label: 'Número', required: true, placeholder: 'Ex.: 100' },
+  { key: 'neighborhood', label: 'Bairro', required: true, placeholder: 'Ex.: Centro' },
+  { key: 'complement', label: 'Complemento', required: false, placeholder: 'Apto, sala, bloco…' },
+  { key: 'city', label: 'Cidade', required: true, placeholder: 'Ex.: Goiânia' },
+  { key: 'state', label: 'UF', required: true },
+  { key: 'cep', label: 'CEP', required: true },
+  { key: 'phone', label: 'Telefone', required: true },
+];
+
+const PACKAGE_FIELDS = [
+  { key: 'weight_g', label: 'Peso (g)', placeholder: 'Ex.: 500' },
+  { key: 'length_cm', label: 'Comprimento (cm)', placeholder: 'Ex.: 20' },
+  { key: 'width_cm', label: 'Largura (cm)', placeholder: 'Ex.: 15' },
+  { key: 'height_cm', label: 'Altura (cm)', placeholder: 'Ex.: 10' },
+];
+
 /**
  * Remetente, caixa e declaração — exigidos para ativar Loggi / Melhor Envio.
  */
-export function ServicosExternosEnvioPage({ api }) {
+export function ExternalServicesShippingPage({ api }) {
   const [values, setValues] = useState(null);
   const [baseline, setBaseline] = useState(null);
   const [itemsByKey, setItemsByKey] = useState({});
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
+  const [feedbackAt, setFeedbackAt] = useState(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -39,7 +72,10 @@ export function ServicosExternosEnvioPage({ api }) {
         setBaseline(structuredClone(res.values));
         setItemsByKey(res.itemsByKey);
       } catch (err) {
-        if (!cancelled) setError(err.message || 'Falha ao carregar');
+        if (!cancelled) {
+          setFeedbackAt('load');
+          setError(err.message || 'Falha ao carregar');
+        }
       }
     })();
     return () => {
@@ -63,10 +99,13 @@ export function ServicosExternosEnvioPage({ api }) {
     if (!values) return;
     const gaps = getStoreFreightGaps(values);
     if (gaps.incomplete) {
+      setFeedbackAt('save');
       setError(`Preencha: ${gaps.missing.join(', ')}.`);
+      setMsg('');
       return;
     }
     setSaving(true);
+    setFeedbackAt('save');
     setError('');
     setMsg('');
     try {
@@ -74,6 +113,7 @@ export function ServicosExternosEnvioPage({ api }) {
       setItemsByKey(updated);
       setBaseline(structuredClone(values));
       setMsg('Dados de envio salvos. Agora você pode ativar o Melhor Envio.');
+      window.dispatchEvent(new CustomEvent('kunk:external-services-changed'));
     } catch (err) {
       setError(err.message || 'Falha ao salvar');
     } finally {
@@ -82,7 +122,19 @@ export function ServicosExternosEnvioPage({ api }) {
   }
 
   if (!values) {
-    return <div className="muted">{error || 'Carregando…'}</div>;
+    if (error) {
+      return (
+        <div className="ext-page">
+          <div className="admin-top">
+            <div>
+              <h1 style={{ margin: 0 }}>Dados de envio</h1>
+            </div>
+          </div>
+          <p className="alert alert-error">{error}</p>
+        </div>
+      );
+    }
+    return <AdminLoader />;
   }
 
   const gaps = getStoreFreightGaps(values);
@@ -90,132 +142,166 @@ export function ServicosExternosEnvioPage({ api }) {
   const ship = values.shipFrom || {};
   const pkg = values.package || {};
   const decl = values.contentDeclaration || {};
+  const bannerStatus = incomplete
+    ? { kind: 'warning', label: 'Incompleto', detail: `Faltando: ${gaps.missing.join(', ')}.` }
+    : { kind: 'ok', label: 'Completo', detail: 'Remetente, caixa e declaração preenchidos.' };
+  const stateValue = String(ship.state || '').toUpperCase();
+  const stateKnown = !stateValue || UF_OPTIONS.includes(stateValue);
 
   return (
-    <form onSubmit={onSave} className="card" style={{ padding: '1.25rem', maxWidth: 720 }}>
-      <h2 style={{ marginTop: 0 }}>Dados de envio</h2>
-      <p className="muted" style={{ marginTop: 0 }}>
-        Remetente, caixa e declaração de conteúdo são obrigatórios para cotar frete e ativar Loggi /
-        Melhor Envio.
-      </p>
-
-      {incomplete && (
-        <div
-          role="alert"
-          data-testid="envio-incomplete-banner"
-          style={{
-            background: '#fff3cd',
-            border: '1px solid #ffc107',
-            padding: '0.75rem 1rem',
-            marginBottom: '1rem',
-            borderRadius: 8,
-            color: '#000',
-          }}
-        >
-          Faltando: <strong>{gaps.missing.join(', ')}</strong>. O Melhor Envio não pode ser ativado
-          até preencher estes campos.
+    <div className="ext-page ext-page-wide">
+      <div className="admin-top">
+        <div>
+          <h1 style={{ margin: 0 }}>Dados de envio</h1>
+          <p className="muted" style={{ margin: '0.25rem 0 0' }}>
+            Remetente, caixa e declaração — obrigatórios para cotar frete e ativar Loggi / Melhor Envio
+          </p>
         </div>
-      )}
-      {!incomplete && (
-        <div
-          data-testid="envio-complete-banner"
-          style={{
-            background: '#e8f5e9',
-            border: '1px solid #a5d6a7',
-            padding: '0.75rem 1rem',
-            marginBottom: '1rem',
-            borderRadius: 8,
-          }}
-        >
-          Dados completos.{' '}
-          <Link to="/servicos-externos/melhorenvio">Ir para Melhor Envio</Link> para autenticar e
-          ativar cotação/etiqueta.
+      </div>
+
+      <form onSubmit={onSave} className="card ext-card">
+        <ExternalServiceStatusBanner status={bannerStatus} />
+
+        {!incomplete ? (
+          <p className="muted" style={{ margin: 0 }}>
+            <Link to="/servicos-externos/melhorenvio">Ir para Melhor Envio</Link> para autenticar e
+            ativar cotação/etiqueta.
+          </p>
+        ) : null}
+
+        <section className="ext-section">
+          <h2 className="ext-section-title">Remetente (origem) *</h2>
+          <div className="ext-form-grid">
+            {SHIP_FIELDS.map(({ key, label, required, placeholder }) => (
+              <Field key={key} label={label} required={required}>
+                {key === 'phone' ? (
+                  <PhoneInput
+                    value={ship[key] || ''}
+                    onChange={(v) => patch(`shipFrom.${key}`, v)}
+                    inputClass="input admin-phone-control"
+                    placeholder="(62) 99999-9999"
+                    inputProps={{
+                      name: 'shipFrom.phone',
+                      'data-testid': 'envio-ship-phone',
+                      autoComplete: 'tel',
+                      required: true,
+                      placeholder: '(62) 99999-9999',
+                    }}
+                  />
+                ) : key === 'state' ? (
+                  <select
+                    className="input"
+                    data-testid="envio-ship-state"
+                    value={stateValue}
+                    onChange={(e) => patch('shipFrom.state', e.target.value)}
+                    required={required}
+                  >
+                    <option value="">Selecione a UF</option>
+                    {!stateKnown && stateValue ? (
+                      <option value={stateValue}>{stateValue} (atual)</option>
+                    ) : null}
+                    {UF_OPTIONS.map((uf) => (
+                      <option key={uf} value={uf}>
+                        {uf}
+                      </option>
+                    ))}
+                  </select>
+                ) : key === 'cep' ? (
+                  <CepInput
+                    className="input"
+                    data-testid="envio-ship-cep"
+                    value={ship[key] || ''}
+                    onChange={(v) => patch(`shipFrom.${key}`, v)}
+                    required={required}
+                    placeholder="00000-000"
+                  />
+                ) : key === 'document' ? (
+                  <CpfCnpjInput
+                    className="input"
+                    data-testid="envio-ship-document"
+                    value={ship[key] || ''}
+                    onChange={(v) => patch(`shipFrom.${key}`, v)}
+                    required={required}
+                  />
+                ) : (
+                  <input
+                    className="input"
+                    data-testid={`envio-ship-${key}`}
+                    value={ship[key] || ''}
+                    onChange={(e) => patch(`shipFrom.${key}`, e.target.value)}
+                    required={required}
+                    placeholder={placeholder || `Informe ${label.toLowerCase()}`}
+                  />
+                )}
+              </Field>
+            ))}
+          </div>
+        </section>
+
+        <section className="ext-section">
+          <h2 className="ext-section-title">Caixa (cotação) *</h2>
+          <div className="ext-form-grid">
+            {PACKAGE_FIELDS.map(({ key, label, placeholder }) => (
+              <Field key={key} label={label} required>
+                <input
+                  className="input"
+                  type="number"
+                  min="0"
+                  step="any"
+                  data-testid={`envio-package-${key}`}
+                  value={pkg[key] ?? ''}
+                  onChange={(e) =>
+                    patch(`package.${key}`, e.target.value === '' ? '' : Number(e.target.value))
+                  }
+                  required
+                  placeholder={placeholder}
+                />
+              </Field>
+            ))}
+          </div>
+        </section>
+
+        <section className="ext-section">
+          <h2 className="ext-section-title">Declaração de conteúdo *</h2>
+          <div className="ext-form-grid">
+            <Field label="Descrição" required>
+              <input
+                className="input"
+                data-testid="envio-content-description"
+                value={decl.description || ''}
+                onChange={(e) => patch('contentDeclaration.description', e.target.value)}
+                required
+                placeholder="Ex.: Produtos fitoterápicos"
+              />
+            </Field>
+            <Field label="Valor declarado (R$)" required>
+              <input
+                className="input"
+                type="number"
+                min="0"
+                step="0.01"
+                data-testid="envio-content-total-value"
+                value={decl.total_value ?? ''}
+                onChange={(e) =>
+                  patch(
+                    'contentDeclaration.total_value',
+                    e.target.value === '' ? '' : Number(e.target.value)
+                  )
+                }
+                required
+                placeholder="Ex.: 100.00"
+              />
+            </Field>
+          </div>
+        </section>
+
+        <div className="ext-action-row">
+          <button type="submit" className="btn btn-primary" data-testid="envio-save" disabled={saving}>
+            {saving ? 'Salvando…' : 'Salvar dados de envio'}
+          </button>
         </div>
-      )}
-
-      {error && (
-        <p role="alert" style={{ color: '#b00020' }}>
-          {error}
-        </p>
-      )}
-      {msg && (
-        <p style={{ color: '#2e7d32' }} data-testid="envio-msg">
-          {msg}
-        </p>
-      )}
-
-      <h3>Remetente (origem) *</h3>
-      {['name', 'street', 'number', 'neighborhood', 'complement', 'city', 'state', 'cep', 'phone', 'document'].map(
-        (k) => (
-          <Field
-            key={k}
-            label={k}
-            required={['name', 'street', 'number', 'city', 'state', 'cep', 'phone', 'document'].includes(k)}
-          >
-            <input
-              className="input"
-              data-testid={`envio-ship-${k}`}
-              value={ship[k] || ''}
-              onChange={(e) => patch(`shipFrom.${k}`, e.target.value)}
-              required={['name', 'street', 'number', 'city', 'state', 'cep', 'phone', 'document'].includes(k)}
-            />
-          </Field>
-        )
-      )}
-      <p className="muted" style={{ marginTop: -4 }}>
-        Nome, telefone e CPF/CNPJ do remetente são obrigatórios para etiqueta Loggi.
-      </p>
-
-      <h3>Caixa (cotação) *</h3>
-      {['weight_g', 'length_cm', 'width_cm', 'height_cm'].map((k) => (
-        <Field key={k} label={k} required>
-          <input
-            className="input"
-            type="number"
-            min="0"
-            step="any"
-            data-testid={`envio-package-${k}`}
-            value={pkg[k] ?? ''}
-            onChange={(e) => patch(`package.${k}`, e.target.value === '' ? '' : Number(e.target.value))}
-            required
-          />
-        </Field>
-      ))}
-
-      <h3>Declaração de conteúdo *</h3>
-      <Field label="Descrição" required>
-        <input
-          className="input"
-          data-testid="envio-content-description"
-          value={decl.description || ''}
-          onChange={(e) => patch('contentDeclaration.description', e.target.value)}
-          required
-        />
-      </Field>
-      <Field label="Valor declarado (R$)" required>
-        <input
-          className="input"
-          type="number"
-          min="0"
-          step="0.01"
-          data-testid="envio-content-total-value"
-          value={decl.total_value ?? ''}
-          onChange={(e) =>
-            patch(
-              'contentDeclaration.total_value',
-              e.target.value === '' ? '' : Number(e.target.value)
-            )
-          }
-          required
-        />
-      </Field>
-
-      <button type="submit" className="btn btn-primary" data-testid="envio-save" disabled={saving}>
-        {saving ? 'Salvando…' : 'Salvar dados de envio'}
-      </button>
-      <p className="muted" style={{ fontSize: '0.85rem', marginTop: 8 }}>
-        Também editável em <Link to="/loja/frete">Loja → Frete</Link> (favoritos e opções extras).
-      </p>
-    </form>
+        <ExtActionFeedback at="save" feedbackAt={feedbackAt} error={error} msg={msg} />
+      </form>
+    </div>
   );
 }

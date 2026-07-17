@@ -9,10 +9,9 @@
 
 | Flag | Origem |
 |---|---|
-| `MODULE_LOGGI_ENABLED=true` | Env |
-| `modules.loggi.enabled` | `system_configs` |
-| `modules.loggi.use_for_quote` | default `true` |
-| `modules.loggi.use_for_label` | default `true` |
+| `modules.loggi.enabled` | Admin (`system_configs`) |
+| `modules.loggi.use_for_quote` | default `false` |
+| `modules.loggi.use_for_label` | default `false` |
 
 Desabilitado → `503 MODULE_DISABLED` em todas as rotas abaixo.
 

@@ -8,7 +8,6 @@
   "counts": {
     "system_users": 3,
     "users": 100,
-    "partners": 10,
     "institutional_clients": 10,
     "professionals": 10,
     "products": 12,
@@ -27,7 +26,6 @@
     "files",
     "system_users",
     "users",
-    "partners",
     "institutional_clients",
     "professionals",
     "products",

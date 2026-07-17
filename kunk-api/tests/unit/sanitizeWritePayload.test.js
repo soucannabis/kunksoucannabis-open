@@ -18,7 +18,7 @@ describe('sanitizeWritePayload', () => {
         sanitizeWritePayload('orders', {
           status: 'Novo',
           delivery_problem: { x: 1 },
-          partner_code: 'P1',
+          legacy_affiliate: 'P1',
           melhorenvio_order_id: 'ME-1',
         }),
       (err) => {
@@ -27,8 +27,8 @@ describe('sanitizeWritePayload', () => {
         assert.equal(err.code, 'VALIDATION_ERROR');
         assert.deepEqual(err.details.unknown_fields.sort(), [
           'delivery_problem',
+          'legacy_affiliate',
           'melhorenvio_order_id',
-          'partner_code',
         ]);
         return true;
       }
@@ -40,7 +40,6 @@ describe('sanitizeWritePayload', () => {
       () =>
         sanitizeWritePayload('users', {
           associate_name: 'A',
-          partner_code: 'X',
           pipefy_card_id: '1',
           medical_prescription: 'x.pdf',
           form_error_log: '[]',
@@ -49,7 +48,6 @@ describe('sanitizeWritePayload', () => {
         assert.deepEqual(err.details.unknown_fields.sort(), [
           'form_error_log',
           'medical_prescription',
-          'partner_code',
           'pipefy_card_id',
         ]);
         return true;

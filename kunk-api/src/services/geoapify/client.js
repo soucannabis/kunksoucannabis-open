@@ -41,8 +41,21 @@ async function testConnection(creds) {
   return { ok: true, features: data.features.length };
 }
 
+/** Garante metadados de credenciais mesmo sem o SQL de seed aplicado. */
+async function ensureCredentialRows() {
+  const { query } = require('../../db/pool');
+  await query(
+    `INSERT INTO system_api_credentials (
+       service, field_key, encrypted_value, env_fallback, is_secret, description
+     ) VALUES
+       ('geoapify', 'api_key', NULL, 'GEOAPIFY_API_KEY', true, 'Geoapify Geocoding API key')
+     ON CONFLICT (service, field_key) DO NOTHING`
+  );
+}
+
 module.exports = {
   getApiKey,
   geocodeSearch,
   testConnection,
+  ensureCredentialRows,
 };

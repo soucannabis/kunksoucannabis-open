@@ -47,6 +47,23 @@ export function formatCpf(value) {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
 }
 
+/** Format digits as 00000-000 */
+export function formatCep(value) {
+  const d = String(value || '').replace(/\D/g, '').slice(0, 8);
+  if (d.length <= 5) return d;
+  return `${d.slice(0, 5)}-${d.slice(5)}`;
+}
+
+/** CPF (≤11) 000.000.000-00 ou CNPJ 00.000.000/0000-00 */
+export function formatCpfCnpj(value) {
+  const d = String(value || '').replace(/\D/g, '').slice(0, 14);
+  if (d.length <= 11) return formatCpf(d);
+  if (d.length <= 12) {
+    return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8)}`;
+  }
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+}
+
 export function onlyDigits(value) {
   return String(value || '').replace(/\D/g, '');
 }
@@ -54,6 +71,12 @@ export function onlyDigits(value) {
 export function isValidPhoneBr(value) {
   const digits = onlyDigits(value);
   return digits.length >= 10 && digits.length <= 15;
+}
+
+export function isValidEmail(value) {
+  const email = String(value || '').trim();
+  if (!email) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email);
 }
 
 export function isValidPassword(value) {
@@ -88,6 +111,39 @@ export function CpfInput({ value, onChange, className = 'form-control', ...rest 
       className={className}
       value={formatCpf(value)}
       onChange={(e) => onChange(onlyDigits(e.target.value).slice(0, 11))}
+    />
+  );
+}
+
+/** CEP with 00000-000 mask; onChange receives digits only. */
+export function CepInput({ value, onChange, className = 'form-control', ...rest }) {
+  return (
+    <input
+      {...rest}
+      type="text"
+      inputMode="numeric"
+      autoComplete="postal-code"
+      placeholder="00000-000"
+      className={className}
+      value={formatCep(value)}
+      onChange={(e) => onChange(onlyDigits(e.target.value).slice(0, 8))}
+    />
+  );
+}
+
+/** CPF/CNPJ mask; onChange receives digits only (até 14). */
+export function CpfCnpjInput({ value, onChange, className = 'form-control', ...rest }) {
+  const digits = onlyDigits(value).slice(0, 14);
+  return (
+    <input
+      {...rest}
+      type="text"
+      inputMode="numeric"
+      autoComplete="off"
+      placeholder={digits.length > 11 ? '00.000.000/0000-00' : '000.000.000-00'}
+      className={className}
+      value={formatCpfCnpj(value)}
+      onChange={(e) => onChange(onlyDigits(e.target.value).slice(0, 14))}
     />
   );
 }

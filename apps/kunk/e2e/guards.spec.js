@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { ensurePartnerUser } from './helpers/db.js';
-import { PARTNER_EMAIL, PARTNER_PASSWORD } from './helpers/fixtures.js';
+import { ensureFinanceiroUser } from './helpers/db.js';
+import { FINANCEIRO_EMAIL, FINANCEIRO_PASSWORD } from './helpers/fixtures.js';
 import { loginInBrowser } from './helpers/api.js';
 
 test.describe('guards', () => {
@@ -10,8 +10,8 @@ test.describe('guards', () => {
   });
 
   test('papel sem permissão vai para unauthorized', async ({ page }) => {
-    await ensurePartnerUser();
-    await loginInBrowser(page, PARTNER_EMAIL, PARTNER_PASSWORD);
+    await ensureFinanceiroUser();
+    await loginInBrowser(page, FINANCEIRO_EMAIL, FINANCEIRO_PASSWORD);
     await expect(page).toHaveURL(/\/unauthorized/);
   });
 });

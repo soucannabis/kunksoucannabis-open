@@ -12,7 +12,7 @@ INSERT INTO system_configs (
     false,
     false,
     true,
-    '[{"id":"name","enabled":true,"required":true,"label":"Nome","order":1},{"id":"last_name","enabled":true,"required":true,"label":"Sobrenome","order":2},{"id":"email","enabled":true,"required":true,"label":"E-mail","order":3},{"id":"phone","enabled":true,"required":true,"label":"Telefone","order":4},{"id":"option1","enabled":true,"required":false,"label":"Como podemos ajudar?","order":5,"type":"select","options":["Preciso de óleo / produto","Renovação de receita","Agendamento / consulta","Dúvidas sobre cadastro","Outro"]},{"id":"option2","enabled":false,"required":false,"label":"Opção 2","order":6},{"id":"message","enabled":true,"required":false,"label":"Mensagem","order":7},{"id":"patient_name","enabled":false,"required":false,"label":"Nome do paciente","order":8}]',
+    '[{"id":"name","enabled":true,"required":true,"label":"Nome","order":1},{"id":"last_name","enabled":true,"required":true,"label":"Sobrenome","order":2},{"id":"email","enabled":true,"required":true,"label":"E-mail","order":3},{"id":"phone","enabled":true,"required":true,"label":"Telefone","order":4},{"id":"help_topic","enabled":true,"required":false,"label":"Como podemos ajudar?","order":5,"type":"select","options":["Preciso de óleo / produto","Renovação de receita","Agendamento / consulta","Dúvidas sobre cadastro","Outro"]},{"id":"message","enabled":true,"required":false,"label":"Mensagem","order":6},{"id":"patient_name","enabled":false,"required":false,"label":"Nome do paciente","order":7}]',
     'Campos do formulário público de triagem (padrão)'
   ),
   (
@@ -63,8 +63,8 @@ ON CONFLICT (system, key) DO NOTHING;
 
 -- Keep seed defaults in sync when re-running (does not overwrite operator value)
 UPDATE system_configs
-SET hardcoded_default = '[{"id":"name","enabled":true,"required":true,"label":"Nome","order":1},{"id":"last_name","enabled":true,"required":true,"label":"Sobrenome","order":2},{"id":"email","enabled":true,"required":true,"label":"E-mail","order":3},{"id":"phone","enabled":true,"required":true,"label":"Telefone","order":4},{"id":"option1","enabled":true,"required":false,"label":"Como podemos ajudar?","order":5,"type":"select","options":["Preciso de óleo / produto","Renovação de receita","Agendamento / consulta","Dúvidas sobre cadastro","Outro"]},{"id":"option2","enabled":false,"required":false,"label":"Opção 2","order":6},{"id":"message","enabled":true,"required":false,"label":"Mensagem","order":7},{"id":"patient_name","enabled":false,"required":false,"label":"Nome do paciente","order":8}]',
-    description = 'Campos do formulário público de triagem (option1 = select com options)'
+SET hardcoded_default = '[{"id":"name","enabled":true,"required":true,"label":"Nome","order":1},{"id":"last_name","enabled":true,"required":true,"label":"Sobrenome","order":2},{"id":"email","enabled":true,"required":true,"label":"E-mail","order":3},{"id":"phone","enabled":true,"required":true,"label":"Telefone","order":4},{"id":"help_topic","enabled":true,"required":false,"label":"Como podemos ajudar?","order":5,"type":"select","options":["Preciso de óleo / produto","Renovação de receita","Agendamento / consulta","Dúvidas sobre cadastro","Outro"]},{"id":"message","enabled":true,"required":false,"label":"Mensagem","order":6},{"id":"patient_name","enabled":false,"required":false,"label":"Nome do paciente","order":7}]',
+    description = 'Campos do formulário público de triagem (help_topic = select com options)'
 WHERE system = 'triage' AND key = 'triage.form.fields';
 
 UPDATE system_configs

@@ -7,6 +7,7 @@ import {
   loadTriageConfig,
   saveTriageConfig,
 } from '../lib/triageConfig.js';
+import { AdminLoader } from '../components/AdminLoader.jsx';
 
 export function TriageShell() {
   return (
@@ -102,7 +103,8 @@ export function TriageFormPage({ api }) {
   const embed = useMemo(() => getTriageEmbedSnippet(publicUrl), [publicUrl]);
 
   if (!loaded || !values) {
-    return <p className="muted">{error || 'Carregando…'}</p>;
+    if (error) return <p className="alert alert-error">{error}</p>;
+    return <AdminLoader />;
   }
 
   function updateField(id, patch) {
@@ -207,11 +209,11 @@ export function TriageFormPage({ api }) {
                     />
                   </td>
                 </tr>
-                {f.id === 'option1' || f.type === 'select' ? (
+                {f.id === 'help_topic' || f.type === 'select' ? (
                   <tr>
                     <td colSpan={4} style={{ background: 'var(--admin-surface-2, transparent)' }}>
                       <label className="field" style={{ margin: 0 }}>
-                        <span>Opções do select (uma por linha){f.id === 'option1' ? ' — Como podemos ajudar?' : ''}</span>
+                        <span>Opções do select (uma por linha){f.id === 'help_topic' ? ' — Como podemos ajudar?' : ''}</span>
                         <textarea
                           rows={5}
                           value={(f.options || []).join('\n')}
@@ -346,7 +348,8 @@ export function TriageStatusPage({ api }) {
   const { values, setValues, error, setError, saving, loaded, save } = useTriageForm(api);
 
   if (!loaded || !values) {
-    return <p className="muted">{error || 'Carregando…'}</p>;
+    if (error) return <p className="alert alert-error">{error}</p>;
+    return <AdminLoader />;
   }
 
   function slugifyStatusValue(label, fallback = 'status') {
@@ -605,7 +608,8 @@ export function TriageModulesPage({ api }) {
   const { values, setValues, error, saving, loaded, save } = useTriageForm(api);
 
   if (!loaded || !values) {
-    return <p className="muted">{error || 'Carregando…'}</p>;
+    if (error) return <p className="alert alert-error">{error}</p>;
+    return <AdminLoader />;
   }
 
   async function onSubmit(e) {

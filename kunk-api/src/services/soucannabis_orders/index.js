@@ -95,13 +95,19 @@ async function listProducts() {
   if (!sc.enabled && !(await isModuleEnabled('soucannabis_orders'))) {
     throw new AppError(503, 'MODULE_DISABLED', 'Módulo soucannabis_orders não está ativo');
   }
-  const data = await client.getProducts();
-  return Array.isArray(data) ? data : data?.data || [];
+  const { getOrSet, cacheTtl, keys } = require('../cache');
+  return getOrSet(keys.SOUCANNABIS_PRODUCTS, cacheTtl.PRODUCTS_CATALOG_MS, async () => {
+    const data = await client.getProducts();
+    return Array.isArray(data) ? data : data?.data || [];
+  });
 }
 
 async function listTags() {
-  const data = await client.getTags();
-  return Array.isArray(data) ? data : data?.data || [];
+  const { getOrSet, cacheTtl, keys } = require('../cache');
+  return getOrSet(keys.SOUCANNABIS_TAGS, cacheTtl.TAGS_MS, async () => {
+    const data = await client.getTags();
+    return Array.isArray(data) ? data : data?.data || [];
+  });
 }
 
 async function getMeCached() {

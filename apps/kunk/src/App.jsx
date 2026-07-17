@@ -6,7 +6,9 @@ import { getKunkPublicConfig } from '@kunk/config';
 import { KUNK_APP_ROLES } from './app/menuConfig.js';
 import { buildAppRoutes } from './app/routes.jsx';
 import { KunkConfigProvider } from './config/KunkConfigProvider.jsx';
+import { CacheConfigProvider } from './lib/cache/CacheConfigProvider.jsx';
 import { ErrorModalProvider } from './components/errors/ErrorModalProvider.jsx';
+import { SystemErrorBoundary } from './components/errors/SystemErrorBoundary.jsx';
 import { LoginPage } from './pages/LoginPage.jsx';
 import { NewPasswordPage } from './pages/NewPasswordPage.jsx';
 import { UnauthorizedPage } from './pages/UnauthorizedPage.jsx';
@@ -43,11 +45,15 @@ export default function App() {
   return (
     <OperatorAuthProvider api={api} allowedRoles={KUNK_APP_ROLES}>
       <KunkConfigProvider api={api}>
-        <ErrorModalProvider>
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </ErrorModalProvider>
+        <CacheConfigProvider api={api}>
+          <SystemErrorBoundary app="kunk" baseUrl={bootstrap.apiUrl}>
+            <ErrorModalProvider app="kunk" baseUrl={bootstrap.apiUrl}>
+              <BrowserRouter>
+                <AppRoutes />
+              </BrowserRouter>
+            </ErrorModalProvider>
+          </SystemErrorBoundary>
+        </CacheConfigProvider>
       </KunkConfigProvider>
     </OperatorAuthProvider>
   );

@@ -1,0 +1,88 @@
+import { test, expect } from '@playwright/test';
+import { ensureAdminUser } from './helpers/db.js';
+import { loginInBrowser } from './helpers/api.js';
+
+test.describe('páginas operacionais', () => {
+  test.beforeAll(async () => {
+    await ensureAdminUser();
+  });
+
+  test.beforeEach(async ({ page }) => {
+    await loginInBrowser(page);
+    await expect(page.getByText('Kunk SouCannabis')).toBeVisible();
+  });
+
+  test('associados carrega filtros', async ({ page }) => {
+    await page.goto('/app/acolhimento/cadastramento');
+    await expect(page.getByText(/Filtrar Associados/i)).toBeVisible({ timeout: 20_000 });
+  });
+
+  test('serviços carrega listagem', async ({ page }) => {
+    await page.goto('/app/acolhimento/servicos');
+    await expect(page.getByRole('button', { name: /Novo Serviço/i })).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+
+  test('triagem carrega abas de status', async ({ page }) => {
+    await page.goto('/app/acolhimento/triagem');
+    await expect(page.getByRole('tab').first()).toBeVisible({ timeout: 20_000 });
+  });
+
+  test('clientes institucionais carrega', async ({ page }) => {
+    await page.goto('/app/acolhimento/clientesinstitucionais');
+    await expect(page.getByRole('button', { name: /Criar Cliente Institucional/i })).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+
+  test('produtos carrega listagem', async ({ page }) => {
+    await page.goto('/app/loja/produtos');
+    await expect(page.getByRole('button', { name: /Novo produto/i })).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+
+  test('carrinho (novo pedido) carrega', async ({ page }) => {
+    await page.goto('/app/loja/novo-pedido');
+    await expect(page.getByTestId('cart-page')).toBeVisible({ timeout: 20_000 });
+  });
+
+  test('profissionais carrega listagem', async ({ page }) => {
+    await page.goto('/app/profissionais');
+    await expect(page.getByRole('button', { name: /Novo profissional/i })).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+
+  test('dashboard analytics carrega', async ({ page }) => {
+    await page.goto('/app/relatorios/dashboard');
+    await expect(page.getByText('Dashboard')).toBeVisible({ timeout: 20_000 });
+  });
+
+  test('relatório de serviços carrega', async ({ page }) => {
+    await page.goto('/app/relatorios/servicos');
+    await expect(page.getByText(/Relatório de Serviços/i).first()).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+
+  test('tags carrega listagem', async ({ page }) => {
+    await page.goto('/app/tags');
+    await expect(page.getByRole('button', { name: /Nova tag/i })).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+
+  test('histórico do sistema carrega', async ({ page }) => {
+    await page.goto('/app/historico');
+    await expect(page.getByLabel('Ação')).toBeVisible({ timeout: 20_000 });
+  });
+
+  test('fila pública carrega sem auth staff', async ({ page }) => {
+    await page.goto('/fila');
+    await expect(page.getByRole('heading', { name: /Fila de acolhimento/i })).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+});

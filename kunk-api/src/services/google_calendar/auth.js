@@ -188,7 +188,7 @@ async function getSchedulingEnabled() {
      LIMIT 1`
   );
   const v = result.rows[0]?.value;
-  if (v == null || v === '') return true;
+  if (v == null || v === '') return false;
   return String(v).toLowerCase() === 'true' || v === '1';
 }
 

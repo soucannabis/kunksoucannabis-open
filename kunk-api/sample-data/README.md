@@ -2,13 +2,12 @@
 
 Dados **fictícios** para popular o schema alvo em demos e instalação com sample data.
 
-## Contagens
+## Contagens (demo)
 
 | Tabela | Qtd |
 |---|---:|
 | users | 100 |
 | orders | 50 |
-| partners | 10 |
 | institutional_clients | 10 |
 | professionals | 10 |
 | products | 12 |
@@ -32,9 +31,9 @@ Operadores extras: `acolhimento@demo.kunk.local` e `producao@demo.kunk.local` (m
 
 Para testes automatizados use `admin@kunk-api.test` / `TestAdmin123!` (`ensureAdminUser`).
 
-**Importante:** a suíte `npm test` **não** faz TRUNCATE das tabelas de negócio (sample data permanece). Só `npm run seed:sample` trunca ao reinstalar o seed.
+**Importante:** a suíte `npm test` **não** faz TRUNCATE das tabelas de negócio (sample data permanece). Só `npm run seed:sample` / `seed:load` trunca ao reinstalar o seed.
 
-## Como rodar
+## Como rodar (demo)
 
 Com `DATABASE_URL` definido em `kunk-api/.env`:
 
@@ -51,10 +50,36 @@ Somente gerar JSON em `fixtures/` (sem gravar no banco):
 npm run seed:sample:generate
 ```
 
+## Sample data de carga (stress)
+
+Para testar listagens e filtros com volume alto, use inserts em lote (sem fixtures JSON):
+
+```bash
+cd kunk-api
+npm run seed:load:smoke          # 500 users — valida o script
+npm run seed:load                # medium (default): 5k users / 10k pedidos
+npm run seed:load:medium
+npm run seed:load -- --profile=large --yes
+npm run seed:load -- --profile=xlarge --yes
+```
+
+| Perfil | users | orders | services | reception |
+|---|---:|---:|---:|---:|
+| smoke | 500 | 800 | 200 | 150 |
+| medium | 5 000 | 10 000 | 3 000 | 2 000 |
+| large | 20 000 | 50 000 | 12 000 | 8 000 |
+| xlarge | 50 000 | 120 000 | 30 000 | 15 000 |
+
+Overrides: `--users=2000 --orders=4000 --batch=500`.  
+~20% dos users são pacientes (`status=patient`) ligados a responsáveis.  
+Preserva `system_configs` / `system_api_credentials` (bucket, triage, etc.).
+
 ## Política
 
 - Directus/produção = referência de *shape*, nunca fonte de dump.
-- **Todos os campos** de cada tabela do `target-schema.sql` são preenchidos (sample completo).
+- **Todos os campos** de cada tabela do `target-schema.sql` são preenchidos no seed demo (sample completo).
+- Cada registro do seed grava `is_sample = true`. Dados criados pelo uso normal ficam com `is_sample = false` (default).
+- No admin (**Dados** → Excluir dados de exemplo) é possível remover só as linhas com `is_sample = true`.
 - Produtos: catálogo `KNK-*` com concentrações em **mg**, sem cores/proporções do Directus.
 - CPFs/emails/telefones são inventados e claramente de demo.
 - `reception.status` usa os valores OSS da triagem (`waiting` / `done`), alinhados a `triage.statuses`.

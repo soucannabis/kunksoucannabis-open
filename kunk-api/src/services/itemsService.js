@@ -3,9 +3,25 @@
 const itemsRepository = require('../repositories/itemsRepository');
 const { scopeFilterFor } = require('../schema/rbac');
 const { assertUserDeletable, assertProfessionalDeletable } = require('./linkGuards');
+const { memoryCache, keys } = require('../cache');
 
 function getScope(req) {
   return scopeFilterFor(req.user?.roles || req.user?.permissions, req.user);
+}
+
+function invalidateCollectionCaches(collection) {
+  if (collection === 'tags') {
+    memoryCache.invalidatePrefix('tags:');
+  }
+  if (collection === 'products') {
+    memoryCache.invalidate(keys.PRODUCTS_CATALOG);
+  }
+  if (collection === 'professionals') {
+    memoryCache.invalidate(keys.PROFESSIONALS_PRESCRIBERS);
+  }
+  if (collection === 'system_users') {
+    memoryCache.invalidate(keys.ATTENDANTS);
+  }
 }
 
 async function list(req) {
@@ -21,13 +37,17 @@ async function getById(req) {
 }
 
 async function create(req) {
-  return itemsRepository.createItem(req.params.collection, req.body);
+  const data = await itemsRepository.createItem(req.params.collection, req.body);
+  invalidateCollectionCaches(req.params.collection);
+  return data;
 }
 
 async function update(req) {
-  return itemsRepository.updateItem(req.params.collection, req.params.id, req.body, {
+  const data = await itemsRepository.updateItem(req.params.collection, req.params.id, req.body, {
     scopeFilter: getScope(req),
   });
+  invalidateCollectionCaches(req.params.collection);
+  return data;
 }
 
 async function remove(req) {
@@ -45,9 +65,11 @@ async function remove(req) {
     const ordersService = require('./ordersService');
     return ordersService.deleteOrder(id);
   }
-  return itemsRepository.deleteItem(collection, id, {
+  const data = await itemsRepository.deleteItem(collection, id, {
     scopeFilter: getScope(req),
   });
+  invalidateCollectionCaches(collection);
+  return data;
 }
 
 module.exports = { list, getById, create, update, remove };

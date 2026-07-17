@@ -24,7 +24,6 @@
         "user_id": "1",
         "user_code": "",
         "order_id": "1",
-        "partner_code": "",
         "professional_id": "",
         "product_id": "1",
         "reception_id": "1",
@@ -43,7 +42,6 @@
           "user_id",
           "user_code",
           "order_id",
-          "partner_code",
           "professional_id",
           "product_id",
           "reception_id",
@@ -365,14 +363,6 @@
       "name": "6. Reception",
       "environment": {},
       "metaSortKey": 6
-    },
-    {
-      "_id": "fld_563bb5e314301718",
-      "_type": "request_group",
-      "parentId": "wrk_be0407cb8b4e1d12",
-      "name": "7. Partners",
-      "environment": {},
-      "metaSortKey": 7
     },
     {
       "_id": "fld_ddbaeec71cba0bb6",
@@ -1583,60 +1573,6 @@
         "disabled": false
       },
       "metaSortKey": 3,
-      "isPrivate": false,
-      "settingStoreCookies": false,
-      "settingSendCookies": false,
-      "settingDisableRenderRequestBody": false,
-      "settingEncodeUrl": true,
-      "settingFollowRedirects": "global"
-    },
-    {
-      "_id": "req_c3d9b367478f1a20",
-      "_type": "request",
-      "parentId": "fld_563bb5e314301718",
-      "name": "GET By code",
-      "method": "GET",
-      "url": "{{ _.base_url }}/partners/by-code/{{ _.partner_code }}",
-      "body": {},
-      "parameters": [],
-      "headers": [],
-      "authentication": {
-        "type": "bearer",
-        "token": "{{ _.bearer_token }}",
-        "disabled": false
-      },
-      "metaSortKey": 1,
-      "isPrivate": false,
-      "settingStoreCookies": false,
-      "settingSendCookies": false,
-      "settingDisableRenderRequestBody": false,
-      "settingEncodeUrl": true,
-      "settingFollowRedirects": "global"
-    },
-    {
-      "_id": "req_d87aa20153d9e12d",
-      "_type": "request",
-      "parentId": "fld_563bb5e314301718",
-      "name": "PATCH Favorite",
-      "method": "PATCH",
-      "url": "{{ _.base_url }}/partners/{{ _.item_id }}/favorite",
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"is_favorite\": \"true\"\n}"
-      },
-      "parameters": [],
-      "headers": [
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
-      "authentication": {
-        "type": "bearer",
-        "token": "{{ _.bearer_token }}",
-        "disabled": false
-      },
-      "metaSortKey": 2,
       "isPrivate": false,
       "settingStoreCookies": false,
       "settingSendCookies": false,

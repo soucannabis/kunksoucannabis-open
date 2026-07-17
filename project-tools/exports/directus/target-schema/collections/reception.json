@@ -57,17 +57,8 @@
       "foreign_key_column": null
     },
     {
-      "name": "option1",
+      "name": "help_topic",
       "old_name": "option1",
-      "pg_type": "VARCHAR(255)",
-      "is_primary_key": false,
-      "is_nullable": true,
-      "foreign_key_table": null,
-      "foreign_key_column": null
-    },
-    {
-      "name": "option2",
-      "old_name": "option2",
       "pg_type": "VARCHAR(255)",
       "is_primary_key": false,
       "is_nullable": true,
@@ -194,15 +185,6 @@
     {
       "name": "is_prescriber",
       "old_name": "is_prescriber",
-      "pg_type": "VARCHAR(255)",
-      "is_primary_key": false,
-      "is_nullable": true,
-      "foreign_key_table": null,
-      "foreign_key_column": null
-    },
-    {
-      "name": "at",
-      "old_name": "at",
       "pg_type": "VARCHAR(255)",
       "is_primary_key": false,
       "is_nullable": true,

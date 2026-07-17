@@ -8,12 +8,11 @@
 
 | Flag | Origem |
 |---|---|
-| `MODULE_PAGARME_ENABLED` | Env (default se Admin não gravou) |
 | `modules.pagarme.enabled` | Admin |
-| `modules.pagarme.use_for_orders` | default `true` |
-| `modules.pagarme.use_for_services` | default `true` |
+| `modules.pagarme.use_for_orders` | default `false` |
+| `modules.pagarme.use_for_services` | default `false` |
 
-Precedência **Admin > env**. Off → `503 MODULE_DISABLED`.
+Off → `503 MODULE_DISABLED`.
 
 ## Prefixo
 

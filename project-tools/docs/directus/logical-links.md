@@ -8,11 +8,7 @@ Esses vínculos são candidatos prioritários a virarem chaves estrangeiras no n
 | De (collection.field) | Para (collection.field) | Tipo | Nota |
 |---|---|---|---|
 | `Orders.user_code` | `Users.user_code` | character varying | Espelho do user_code do associado; FK real é Orders.user → Users.id. |
-| `Users.partner_code` | `Partners.user_code` | character varying | Código do parceiro; nome fica em partner_name. |
 | `Users.responsible_for` | `Users.user_code` | character varying | user_code do paciente (registro do responsável); no schema alvo vira patient_user_code. |
 | `services.associate` | `Users.user_code` | character varying | Código/identificador do associado, sem FK. |
 | `Reception.associate_code` | `Users.user_code` | character varying | Código do associado no atendimento, sem FK. |
-| `Partners_files.Partners_id` | `Partners.id` | integer | Junction de arquivos sem meta/relation registrada no Directus. |
-| `Partners_files.directus_files_id` | `directus_files.id` | uuid | Junction → arquivo Directus; relation não registrada. |
 | `Kunk_Users.associates` | `Users.user_code` | character varying | Lista/texto de associados vinculados ao usuário interno. |
-| `Partners.associates` | `Users.user_code` | character varying | Lista/texto de associados do parceiro. |

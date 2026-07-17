@@ -56,7 +56,7 @@ describe('soucannabis_orders mapOrderPayload', () => {
       payment_method: null,
       payment_date: null,
       user_code: null,
-      partner: 'ignored',
+      ignored_remote_field: 'ignored',
     });
     assert.equal(patch.name_associate, 'Novo Nome');
     assert.equal(patch.address.street, 'Rua X');
@@ -64,7 +64,7 @@ describe('soucannabis_orders mapOrderPayload', () => {
     assert.equal(patch.tags, undefined);
     assert.equal(patch.payment_form, undefined);
     assert.equal(patch.user_code, undefined);
-    assert.equal(patch.partner, undefined);
+    assert.equal(patch.ignored_remote_field, undefined);
   });
 
   it('bodyToLocalOutboundPatch atualiza nome nos dois campos e protege endereço/itens', () => {

@@ -11,7 +11,7 @@ describe('roleRedirect', () => {
 
   it('hasAnyRole intersects lists', () => {
     expect(hasAnyRole(['Acolhimento'], KUNK_STAFF_ROLES)).toBe(true);
-    expect(hasAnyRole(['Parceiro'], KUNK_STAFF_ROLES)).toBe(false);
+    expect(hasAnyRole(['Financeiro'], KUNK_STAFF_ROLES)).toBe(false);
   });
 
   it('pageTitleFromPath returns Portuguese titles', () => {

@@ -51,7 +51,7 @@ function isValidCep(value) {
 
 function isValidPhoneBr(value) {
   const digits = String(value || '').replace(/\D/g, '');
-  return digits.length >= 10 && digits.length <= 13;
+  return digits.length >= 10 && digits.length <= 15;
 }
 
 function normalizeCiap(value) {

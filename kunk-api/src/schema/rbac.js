@@ -15,7 +15,7 @@ function expand(mask) {
 const MATRIX = {
   Administrador: Object.fromEntries(
     [
-      'users', 'system_users', 'orders', 'services', 'products', 'partners', 'institutional_clients',
+      'users', 'system_users', 'orders', 'services', 'products', 'institutional_clients',
       'professionals',
       'reception', 'tags', 'reports', 'files', 'orders_files', 'services_files', 'users_files',
       'users_api', 'system_activity',
@@ -27,7 +27,6 @@ const MATRIX = {
     orders: expand('CRUD'),
     services: expand('CRUD'),
     products: expand('R'),
-    partners: expand('R'),
     institutional_clients: expand('CRUD'),
     professionals: expand('CRUD'),
     reception: expand('CRUD'),
@@ -61,7 +60,6 @@ const MATRIX = {
     orders: expand('RU'),
     services: expand('RU'),
     products: expand('R'),
-    partners: expand('R'),
     professionals: expand('R'),
     tags: expand('R'),
     reports: expand('R'),
@@ -69,11 +67,6 @@ const MATRIX = {
     orders_files: expand('R'),
     services_files: expand('R'),
     users_files: expand('R'),
-  },
-  Parceiro: {
-    orders: expand('R'),
-    partners: expand('R'),
-    reports: expand('R'),
   },
   Prescritor: {
     orders: expand('R'),
@@ -90,7 +83,7 @@ const MATRIX = {
   },
   api: Object.fromEntries(
     [
-      'users', 'system_users', 'orders', 'services', 'products', 'partners', 'institutional_clients',
+      'users', 'system_users', 'orders', 'services', 'products', 'institutional_clients',
       'professionals',
       'reception', 'tags', 'reports', 'files', 'orders_files', 'services_files', 'users_files',
       'users_api', 'system_activity',
@@ -99,7 +92,6 @@ const MATRIX = {
 };
 
 const SCOPED_ROLES = {
-  // partner_code removido do schema; escopo Parceiro redesenhado depois
   Prescritor: { field: 'prescriber_code', fromUser: 'internal_code' },
   // services.professional_id = professionals.professional_code
   Profissional: { field: 'professional_id', fromUser: 'internal_code' },

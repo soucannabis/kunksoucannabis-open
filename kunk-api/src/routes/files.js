@@ -2,7 +2,6 @@
 
 const { Router } = require('express');
 const multer = require('multer');
-const fs = require('fs');
 const filesRepository = require('../repositories/filesRepository');
 const associateAuthRepository = require('../repositories/associateAuthRepository');
 const registrationService = require('../services/registrationService');
@@ -158,34 +157,63 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
+/**
+ * Branding assets (logo, fundo, etc.) live in system_configs as /files/:id/download
+ * and must be readable without auth so login/sidebar <img> and favicon work.
+ */
+async function isPublicBrandingFile(fileId) {
+  const id = String(fileId || '').trim();
+  if (!id) return false;
+  const result = await query(
+    `SELECT 1 FROM system_configs
+     WHERE is_sensitive = false
+       AND value IS NOT NULL
+       AND (
+         value = $1
+         OR value = $2
+         OR value LIKE $3
+       )
+     LIMIT 1`,
+    [id, `/api/v1/files/${id}/download`, `%/files/${id}/%`]
+  );
+  return Boolean(result.rows[0]);
+}
+
 router.get('/:id/download', async (req, res, next) => {
   try {
-    const associateRow = await resolveAssociateFromCookie(req).catch(() => null);
-    if (associateRow) {
-      const owned = await query(
-        `SELECT 1 FROM users_files uf
-         WHERE uf.file_id = $1 AND uf.user_id IN (
-           SELECT id FROM users WHERE id = $2 OR responsible_code = $3
-         ) LIMIT 1`,
-        [req.params.id, associateRow.id, associateRow.user_code]
-      );
-      if (!owned.rows[0]) throw new AppError(403, 'FORBIDDEN', 'Arquivo não pertence ao associado');
-    } else {
-      await new Promise((resolve, reject) => {
-        authenticate(req, res, (err) => (err ? reject(err) : resolve()));
-      });
-      await new Promise((resolve, reject) => {
-        authorize('files', 'read')(req, res, (err) => (err ? reject(err) : resolve()));
-      });
+    const publicBranding = await isPublicBrandingFile(req.params.id);
+    if (!publicBranding) {
+      const associateRow = await resolveAssociateFromCookie(req).catch(() => null);
+      if (associateRow) {
+        const owned = await query(
+          `SELECT 1 FROM users_files uf
+           WHERE uf.file_id = $1 AND uf.user_id IN (
+             SELECT id FROM users WHERE id = $2 OR responsible_code = $3
+           ) LIMIT 1`,
+          [req.params.id, associateRow.id, associateRow.user_code]
+        );
+        if (!owned.rows[0]) throw new AppError(403, 'FORBIDDEN', 'Arquivo não pertence ao associado');
+      } else {
+        await new Promise((resolve, reject) => {
+          authenticate(req, res, (err) => (err ? reject(err) : resolve()));
+        });
+        await new Promise((resolve, reject) => {
+          authorize('files', 'read')(req, res, (err) => (err ? reject(err) : resolve()));
+        });
+      }
     }
 
     const file = await filesRepository.getFile(req.params.id);
-    if (!fs.existsSync(file.storage_path)) {
-      throw new AppError(404, 'NOT_FOUND', 'Arquivo físico não encontrado');
-    }
-    res.setHeader('Content-Type', file.mime_type || 'application/octet-stream');
-    res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
-    fs.createReadStream(file.storage_path).pipe(res);
+    const stream = await filesRepository.openFileStream(file);
+    const mime = file.mime_type || 'application/octet-stream';
+    const inline = String(mime).startsWith('image/') || mime === 'application/pdf';
+    res.setHeader('Content-Type', mime);
+    res.setHeader(
+      'Content-Disposition',
+      `${inline ? 'inline' : 'attachment'}; filename="${file.filename}"`
+    );
+    stream.on('error', (err) => next(err));
+    stream.pipe(res);
   } catch (err) {
     next(err);
   }

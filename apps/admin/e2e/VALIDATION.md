@@ -38,17 +38,32 @@
 |---|---|---|
 | 4.1 | systems + edit/clear | salva e limpa key registration |
 
-### 5. Dados — `dados.spec.js`
+### 5. Dados — `data.spec.js`
 
 | # | Teste | Critério |
 |---|---|---|
 | 5.1 | CRUD etiquetas | criar, editar, excluir |
 
-### 6. Serviços externos — `servicos-externos.spec.js`
+### 6. Serviços externos — `external-services.spec.js`
 
 | # | Teste | Critério |
 |---|---|---|
 | 6.1 | secret Loggi | falha de teste não persiste |
+
+### 7. Páginas novas (smoke)
+
+| Spec | Critério |
+|---|---|
+| `storage.spec.js` | `/armazenamento` mostra driver |
+| `cache.spec.js` | limpar cache |
+| `system-errors.spec.js` | heading erros |
+| `web-vitals.spec.js` | heading Web Vitals |
+| `appearance.spec.js` | aparência Kunk |
+| `files.spec.js` | listagem arquivos |
+| `role-pages.spec.js` | permissões de acesso |
+| `triage.spec.js` | form/status/módulos |
+| `ciap2.spec.js` | módulo CIAP-2 |
+| `services-types.spec.js` | tipos profissional |
 
 ## Como revalidar
 

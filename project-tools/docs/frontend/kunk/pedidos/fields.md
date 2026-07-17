@@ -27,7 +27,7 @@
 |---|---|
 | `coupon_id` / cupons | Fora de escopo (doação manual permanece) |
 | `no_commission` | Fora de escopo |
-| `partner` / `partner_code` / `bvid` | Parceiros removidos |
+| `bvid` | Beeviral removido |
 
 ### Campos novos de frete
 
@@ -250,23 +250,23 @@ Completude mínima: `name`, `phone`, `federal_tax_id`, `street`, `number`, `neig
 | `description` | `contentDeclaration.description` | Conteúdo do volume quando aplicável |
 | `total_value` | `contentDeclaration.totalValue` + `goodsValue` | `insurance` / `insurance_value` |
 
-Regras: obrigatório para etiqueta; cotação usa `total_value`; sem aleatório legado; snapshot `dce` no create-label; UI em `/loja/frete`.  
+Regras: obrigatório para etiqueta; cotação usa `total_value`; sem aleatório legado; snapshot `dce` no create-label; UI em `/servicos-externos/envio`.  
 Seed: `is_required=true`, `allow_hardcoded=false`, value vazio até o admin salvar.
 
 ---
 
 ## `system = modules` (flags de papel)
 
-Além de `MODULE_*_ENABLED` (env / enable no admin), cada serviço externo tem flags de uso:
+Além do enable no Admin (`modules.*.enabled`), cada serviço externo tem flags de uso:
 
 | Key | Default sugerido | Descrição |
 |---|---|---|
 | `modules.loggi.enabled` | `false` | Módulo ativo |
-| `modules.loggi.use_for_quote` | `true` | Aparece na simulação do carrinho |
-| `modules.loggi.use_for_label` | `true` | Pode gerar etiqueta |
+| `modules.loggi.use_for_quote` | `false` | Aparece na simulação do carrinho |
+| `modules.loggi.use_for_label` | `false` | Pode gerar etiqueta |
 | `modules.melhorenvio.enabled` | `false` | Módulo ativo |
-| `modules.melhorenvio.use_for_quote` | `true` | Cotação no carrinho |
-| `modules.melhorenvio.use_for_label` | `false` | Default off (legado: ME só cota) |
+| `modules.melhorenvio.use_for_quote` | `false` | Cotação no carrinho |
+| `modules.melhorenvio.use_for_label` | `false` | Default off |
 | `modules.freight.label_provider` | `loggi` | Quem gera etiqueta quando ambos poderiam |
 
 Regra: se `use_for_label` de um serviço for `false`, a UI de Pedidos não oferece criar etiqueta por aquele provider.  

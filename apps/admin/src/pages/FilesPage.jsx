@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { AdminLoader } from '../components/AdminLoader.jsx';
 
-export function ArquivosPage({ api }) {
+export function FilesPage({ api }) {
   const { id } = useParams();
   const [rows, setRows] = useState([]);
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setLoading(true);
       try {
         const res = await api.listFiles('limit=50');
         if (!cancelled) setRows(res.data || []);
@@ -21,10 +24,16 @@ export function ArquivosPage({ api }) {
         }
       } catch (err) {
         if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
   }, [api, id]);
+
+  if (loading) {
+    return <AdminLoader label="Carregando arquivos…" />;
+  }
 
   return (
     <div>

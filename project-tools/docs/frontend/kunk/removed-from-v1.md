@@ -20,7 +20,6 @@ App operacional: [`apps/kunk`](../../../../apps/kunk) · Inventário legado comp
 | Cupons | `/app/servico-social/cupons` | Serviço social / admin futuro |
 | Relatórios (seção) | `/app/relatorios*`, `/app/dashboard(s)` | Analytics SQL — fase posterior |
 | Relatórios Pagamentos / Sou Analytics | filhos da seção Relatórios | Idem |
-| Parceiros (item) | `/app/parceiros` | Afiliados/Beeviral — opcional SC |
 | Usuários (seção) | `/app/usuarios` | Coberto por [`apps/admin`](../../../../apps/admin) `/usuarios` |
 
 ## Também fora do menu v1 (sem rota no app novo)

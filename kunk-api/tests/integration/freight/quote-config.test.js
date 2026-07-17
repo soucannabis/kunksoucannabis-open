@@ -4,7 +4,6 @@ const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const { loginAsAdmin } = require('../../helpers/auth');
-const { env } = require('../../../src/config/env');
 const storeFreight = require('../../../src/services/storeFreightConfig');
 
 describe('freight/quote-config', () => {
@@ -18,8 +17,6 @@ describe('freight/quote-config', () => {
   });
 
   it('returns FREIGHT_NO_QUOTE when no providers enabled', async () => {
-    assert.equal(env.modules.loggi, false);
-    assert.equal(env.modules.melhorenvio, false);
     const res = await request(app)
       .post('/api/v1/freight/quote')
       .set('Cookie', cookie)
@@ -29,9 +26,12 @@ describe('freight/quote-config', () => {
   });
 
   it('CONFIG_INCOMPLETE when module on but store package missing', async () => {
-    const previous = env.modules.loggi;
-    env.modules.loggi = true;
-    // Force incomplete store by stubbing getStoreFreightConfig
+    const enable = await request(app)
+      .patch('/api/v1/admin/external-services/loggi')
+      .set('Cookie', cookie)
+      .send({ enabled: true, use_for_quote: true });
+    assert.equal(enable.status, 200, JSON.stringify(enable.body));
+
     const original = storeFreight.getStoreFreightConfig;
     storeFreight.getStoreFreightConfig = async () => ({
       apply_to_total: true,
@@ -58,8 +58,11 @@ describe('freight/quote-config', () => {
       assert.equal(res.status, 400);
       assert.equal(res.body.errors[0].code, 'CONFIG_INCOMPLETE');
     } finally {
-      env.modules.loggi = previous;
       storeFreight.getStoreFreightConfig = original;
+      await request(app)
+        .patch('/api/v1/admin/external-services/loggi')
+        .set('Cookie', cookie)
+        .send({ enabled: false, use_for_quote: false });
     }
   });
 });

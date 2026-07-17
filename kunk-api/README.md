@@ -63,13 +63,13 @@ Arquivos `tests/integration/modules/*.live.test.js` **não** rodam no `npm test`
 Só executam quando **ambas** as flags estiverem `true`:
 
 ```bash
-MODULE_LOGGI_ENABLED=true RUN_LIVE_FREIGHT_TESTS=true npm test -- tests/integration/modules/loggi.live.test.js
-MODULE_MELHORENVIO_ENABLED=true RUN_LIVE_FREIGHT_TESTS=true npm test -- tests/integration/modules/melhorenvio.live.test.js
+RUN_LIVE_FREIGHT_TESTS=true npm test -- tests/integration/modules/loggi.live.test.js
+RUN_LIVE_FREIGHT_TESTS=true npm test -- tests/integration/modules/melhorenvio.live.test.js
 ```
 
-Também é necessário ter credenciais (`system_api_credentials` ou env) e configs de Loja
+Também é necessário ter o módulo ativo no Admin, credenciais (`system_api_credentials` ou env) e configs de Loja
 (`store.ship_from`, `store.freight.package`, `store.freight.content_declaration`) preenchidas.
-Módulos permanecem **desabilitados** por default (`MODULE_*_ENABLED=false`).
+Módulos permanecem **desabilitados** por default (só Admin ativa via `system_configs`).
 
 ## Relação com kunkserver
 

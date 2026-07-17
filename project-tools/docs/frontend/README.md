@@ -48,6 +48,8 @@ O cadastramento precisa de **auth de associado** (`users`), distinta da auth de 
 |---|---|
 | [structure.md](./structure.md) | Estrutura de monorepo e pacotes |
 | [theming.md](./theming.md) | Branding por associação (env + tokens) |
+| [file-rename-pt-to-en.md](./file-rename-pt-to-en.md) | Inventário de arquivos PT/mistos nos apps + sugestões de rename → inglês |
+| [**Mapa de funcionalidades**](../funcionalidades/) | Módulos/páginas por app + status de testes (visão rápida) |
 | [cadastramento/](./cadastramento/) | App de cadastro de associados (detalhe) |
 | [admin/](./admin/) | App de administração da instância (dados, configs, operadores) |
 | [kunk/](./kunk/) | App operacional Kunk + inventário de páginas do legado |

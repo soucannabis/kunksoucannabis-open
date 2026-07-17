@@ -301,7 +301,6 @@ components:
           - system_users
           - orders
           - orders_files
-          - partners
           - products
           - professionals
           - reception

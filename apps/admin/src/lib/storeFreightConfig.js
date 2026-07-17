@@ -68,7 +68,8 @@ export function isStoreFreightIncomplete(values) {
   const ship = values?.shipFrom || {};
   const pkg = values?.package || {};
   const decl = values?.contentDeclaration || {};
-  const shipOk = ['street', 'number', 'city', 'state', 'cep'].every((k) => String(ship[k] || '').trim());
+  const shipRequired = ['name', 'street', 'number', 'neighborhood', 'city', 'state', 'cep', 'phone', 'document'];
+  const shipOk = shipRequired.every((k) => String(ship[k] || '').trim());
   const pkgOk =
     Number(pkg.weight_g) > 0 &&
     Number(pkg.length_cm) > 0 &&
@@ -84,7 +85,8 @@ export function getStoreFreightGaps(values) {
   const pkg = values?.package || {};
   const decl = values?.contentDeclaration || {};
   const missing = [];
-  if (!['street', 'number', 'city', 'state', 'cep'].every((k) => String(ship[k] || '').trim())) {
+  const shipRequired = ['name', 'street', 'number', 'neighborhood', 'city', 'state', 'cep', 'phone', 'document'];
+  if (!shipRequired.every((k) => String(ship[k] || '').trim())) {
     missing.push('remetente (dados de envio)');
   }
   if (

@@ -10,7 +10,7 @@ Colunas relevantes (snake_case). Fonte: `target-schema.sql` / collection Recepti
 | `date_created` / `date_updated` | Ordenação e “tempo na fila” |
 | `name`, `last_name`, `full_name` | Identidade do contato |
 | `email`, `phone` | Contato; e-mail usado no link automático |
-| `option1`, `option2` | Opções do form (legado: tipo de pedido de ajuda) |
+| `help_topic` | Como podemos ajudar? (select) |
 | `is_associate` | Derivado do vínculo (`associate_code`); **não** é mais campo do formulário público |
 | `message` | Mensagem livre |
 | `code` | UUID público / deep-link `?t=` |
@@ -19,7 +19,7 @@ Colunas relevantes (snake_case). Fonte: `target-schema.sql` / collection Recepti
 | `avatar_url`, `patient_name`, `attendant` | UI operacional |
 | `tags` | JSONB — tags + **custom_fields** do form |
 | `completion_reason` | `Pedido` \| `Serviço` \| `Agendamento` (legado `action`) |
-| `is_prescriber`, `at` | Flags auxiliares |
+| `is_prescriber` | Flags auxiliares |
 | `chat_id` | **Não usar** no v1 (Utalk fora de escopo); coluna pode permanecer null |
 
 Campos legado **não portados**: `bvid` (Beeviral).
@@ -54,8 +54,7 @@ Disponibilizar **todos** os necessários para um cadastro de triagem. O admin po
 | `last_name` | Sobrenome | `last_name` | sim | sim |
 | `email` | E-mail | `email` | sim | sim (desencorajado) |
 | `phone` | Telefone | `phone` | sim | sim |
-| `option1` | Como podemos ajudar? (select) | `option1` | não | sim |
-| `option2` | Opção 2 | `option2` | não | sim |
+| `help_topic` | Como podemos ajudar? (select) | `help_topic` | não | sim |
 | `message` | Mensagem | `message` | não | sim |
 | `patient_name` | Nome do paciente | `patient_name` | não | sim |
 
@@ -67,10 +66,9 @@ Disponibilizar **todos** os necessários para um cadastro de triagem. O admin po
   { "id": "last_name", "enabled": true, "required": true, "label": "Sobrenome", "order": 2 },
   { "id": "email", "enabled": true, "required": true, "label": "E-mail", "order": 3 },
   { "id": "phone", "enabled": true, "required": true, "label": "Telefone", "order": 4 },
-  { "id": "option1", "enabled": true, "required": false, "label": "Como podemos ajudar?", "order": 5, "type": "select", "options": ["Preciso de óleo / produto", "Renovação de receita", "Agendamento / consulta", "Dúvidas sobre cadastro", "Outro"] },
-  { "id": "option2", "enabled": false, "required": false, "label": "Opção 2", "order": 6 },
-  { "id": "message", "enabled": true, "required": false, "label": "Mensagem", "order": 7 },
-  { "id": "patient_name", "enabled": false, "required": false, "label": "Nome do paciente", "order": 8 }
+  { "id": "help_topic", "enabled": true, "required": false, "label": "Como podemos ajudar?", "order": 5, "type": "select", "options": ["Preciso de óleo / produto", "Renovação de receita", "Agendamento / consulta", "Dúvidas sobre cadastro", "Outro"] },
+  { "id": "message", "enabled": true, "required": false, "label": "Mensagem", "order": 6 },
+  { "id": "patient_name", "enabled": false, "required": false, "label": "Nome do paciente", "order": 7 }
 ]
 ```
 

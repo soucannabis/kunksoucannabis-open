@@ -4,8 +4,9 @@
 
 | Rota | Conteúdo |
 |---|---|
-| `/loja` | Índice da área Loja |
-| `/loja/frete` | Aplicar frete no total, pacote padrão, remetente |
+| `/loja` | Redireciona para status dos pedidos |
+| `/loja/status-pedidos` | Status de pedidos da loja |
+| `/servicos-externos/envio` | Remetente, caixa, declaração de conteúdo |
 | `/servicos-externos` | Lista Loggi, Melhor Envio, … — enable/disable |
 | `/servicos-externos/:service` | Assistente de configuração + teste |
 
@@ -15,7 +16,7 @@ Atualizar nav do admin e [`flow.md`](../../admin/flow.md) com essas rotas.
 
 ---
 
-## 1. Loja (`/loja` + `/loja/frete`)
+## 1. Dados de envio (`/servicos-externos/envio`)
 
 ### Objetivos
 
@@ -112,7 +113,7 @@ Cards/linhas por serviço conhecido:
 
 Cada card:
 
-- Switch **Habilitado** (`modules.{service}.enabled` + espelho `MODULE_*_ENABLED` se aplicável)
+- Switch **Habilitado** (`modules.{service}.enabled`)
 - Checkboxes:
   - Usar em **cálculo de frete** (`use_for_quote`)
   - Usar em **geração de etiqueta** (`use_for_label`)
@@ -120,7 +121,7 @@ Cada card:
 - Botão **Configurar** → assistente de API keys
 - Botão **Testar** (se já houver credencial/env)
 
-> Declaração de conteúdo **não** aparece aqui — fica em `/loja/frete` (compartilhada).
+> Declaração de conteúdo **não** aparece aqui — fica em `/servicos-externos/envio` (compartilhada).
 
 ### Default de papéis (legado SouCannabis)
 

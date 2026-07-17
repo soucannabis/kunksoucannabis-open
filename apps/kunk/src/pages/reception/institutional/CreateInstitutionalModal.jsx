@@ -13,6 +13,8 @@ import {
   Typography,
 } from '@mui/material';
 import { contentAreaDialogSx } from './institutionalStatus.js';
+import PhoneField from '../../../components/PhoneField.jsx';
+import { isValidPhoneBr } from '@kunk/forms';
 
 const GREEN = '#5a7a5b';
 
@@ -81,7 +83,7 @@ export default function CreateInstitutionalModal({ open, onClose, onCreated, api
   const canSubmit =
     form.representative_name.trim() &&
     form.representative_cpf.replace(/\D/g, '').length === 11 &&
-    form.representative_mobile.replace(/\D/g, '').length >= 10 &&
+    isValidPhoneBr(form.representative_mobile) &&
     (form.representative_email.includes('@') ||
       (form.is_company && form.company_email.includes('@'))) &&
     form.street.trim() &&
@@ -155,11 +157,11 @@ export default function CreateInstitutionalModal({ open, onClose, onCreated, api
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
+                <PhoneField
                   label="Telefone da empresa"
+                  name="company_phone"
                   value={form.company_phone}
-                  onChange={(e) => setField('company_phone', e.target.value)}
+                  onChange={(v) => setField('company_phone', v)}
                 />
               </Grid>
             </Grid>
@@ -207,12 +209,12 @@ export default function CreateInstitutionalModal({ open, onClose, onCreated, api
             />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              required
+            <PhoneField
               label="Celular"
+              name="representative_mobile"
               value={form.representative_mobile}
-              onChange={(e) => setField('representative_mobile', e.target.value)}
+              onChange={(v) => setField('representative_mobile', v)}
+              required
             />
           </Grid>
         </Grid>

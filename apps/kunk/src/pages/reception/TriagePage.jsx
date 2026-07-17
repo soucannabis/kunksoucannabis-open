@@ -26,6 +26,9 @@ import {
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CachedIcon from '@mui/icons-material/Cached';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import LinkIcon from '@mui/icons-material/Link';
+import Fab from '@mui/material/Fab';
 import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -61,6 +64,8 @@ import AvatarGroup from '@mui/material/AvatarGroup';
 import { useOperatorAuth } from '@kunk/auth-session';
 import { createApiClient } from '@kunk/api-client';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
+import { useCacheConfig } from '../../lib/cache/CacheConfigProvider.jsx';
+import { fetchAttendants } from '../../lib/cache/fetchers.js';
 import {
   getEntryStatusValue,
   getKunkPublicConfig,
@@ -205,6 +210,7 @@ export default function TriagePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const deepLinkCode = searchParams.get('t');
   const { user: loggedUser } = useOperatorAuth();
+  const { enabled: cacheEnabled } = useCacheConfig();
   const myCode = useMemo(() => myAttendantCode(loggedUser), [loggedUser]);
 
   const api = useMemo(() => {
@@ -238,6 +244,12 @@ export default function TriagePage() {
   const [docsUser, setDocsUser] = useState(null);
   const [docsFiles, setDocsFiles] = useState([]);
   const [docsLoading, setDocsLoading] = useState(false);
+
+  const [utalkEnabled, setUtalkEnabled] = useState(false);
+  const [utalkSyncBusyId, setUtalkSyncBusyId] = useState(null);
+  const [utalkBulkBusy, setUtalkBulkBusy] = useState(false);
+  const [chatModal, setChatModal] = useState({ open: false, row: null, value: '' });
+  const [chatBusy, setChatBusy] = useState(false);
 
   const statuses = useMemo(
     () => (triageConfig.statuses || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0)),
@@ -295,12 +307,33 @@ export default function TriagePage() {
 
   const loadAttendants = useCallback(async () => {
     try {
-      const res = await api.receptionAttendants();
-      setAttendants(res.data || []);
+      const list = await fetchAttendants(api, cacheEnabled);
+      setAttendants(list);
     } catch {
       setAttendants([]);
     }
+  }, [api, cacheEnabled]);
+
+  const loadUtalkStatus = useCallback(async () => {
+    try {
+      const res = await api.getUtalkStatus();
+      setUtalkEnabled(
+        Boolean(res.data?.enabled && res.data?.has_api_token && res.data?.has_organization_id)
+      );
+    } catch {
+      setUtalkEnabled(false);
+    }
   }, [api]);
+
+  const notifyUtalkSideEffect = useCallback((payload) => {
+    const u = payload?.utalk;
+    if (!u) return;
+    if (u.ok === false && !u.skipped) {
+      showError(u.message || 'Falha ao sincronizar atendente no Utalk');
+    } else if (u.skipped && u.code === 'UTALK_ID_MISSING') {
+      showError(u.message || 'Operador sem utalk_id — cadastre no Admin → Utalk');
+    }
+  }, [showError]);
 
   const loadCounts = useCallback(async () => {
     const res = await api.receptionStatusCounts();
@@ -337,7 +370,8 @@ export default function TriagePage() {
   useEffect(() => {
     loadConfig();
     loadAttendants();
-  }, [loadConfig, loadAttendants]);
+    loadUtalkStatus();
+  }, [loadConfig, loadAttendants, loadUtalkStatus]);
 
   useEffect(() => {
     refresh();
@@ -363,8 +397,9 @@ export default function TriagePage() {
     }
     setAttendantBusyId(row.id);
     try {
-      await api.assignReceptionAttendant(row.id, myCode);
+      const res = await api.assignReceptionAttendant(row.id, myCode);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, attendant: myCode } : r)));
+      notifyUtalkSideEffect(res.data);
     } catch (err) {
       showError(err.message || 'Falha ao assumir contato');
     } finally {
@@ -377,8 +412,9 @@ export default function TriagePage() {
     if (!attendantCode) return;
     setAttendantBusyId(row.id);
     try {
-      await api.assignReceptionAttendant(row.id, attendantCode);
+      const res = await api.assignReceptionAttendant(row.id, attendantCode);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, attendant: attendantCode } : r)));
+      notifyUtalkSideEffect(res.data);
     } catch (err) {
       showError(err.message || 'Falha ao transferir contato');
     } finally {
@@ -389,13 +425,73 @@ export default function TriagePage() {
   async function clearAttendant(row) {
     setAttendantBusyId(row.id);
     try {
-      await api.clearReceptionAttendant(row.id);
+      const res = await api.clearReceptionAttendant(row.id);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, attendant: null } : r)));
+      notifyUtalkSideEffect(res.data);
     } catch (err) {
       showError(err.message || 'Falha ao remover atendente');
     } finally {
       setAttendantBusyId(null);
     }
+  }
+
+  async function syncUtalkRow(row) {
+    if (!row?.chat_id) return;
+    setUtalkSyncBusyId(row.id);
+    try {
+      const res = await api.syncReceptionUtalk(row.id);
+      const next = res.data?.reception;
+      if (next) {
+        setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, ...next } : r)));
+      }
+      if (res.data?.utalk?.unknown_member) {
+        showError('Membro Utalk do chat não corresponde a nenhum operador com utalk_id');
+      }
+    } catch (err) {
+      showError(err.message || 'Falha ao sincronizar Utalk');
+    } finally {
+      setUtalkSyncBusyId(null);
+    }
+  }
+
+  async function syncUtalkWaitingBulk() {
+    if (utalkBulkBusy) return;
+    setUtalkBulkBusy(true);
+    try {
+      const res = await api.syncReceptionUtalkWaiting({});
+      const d = res.data || {};
+      await refresh();
+      if (d.failed) {
+        showError(`Utalk: ${d.updated || 0} atualizado(s), ${d.failed} falha(s)`);
+      }
+    } catch (err) {
+      showError(err.message || 'Falha no sync Utalk em espera');
+    } finally {
+      setUtalkBulkBusy(false);
+    }
+  }
+
+  async function saveChatId() {
+    const row = chatModal.row;
+    if (!row) return;
+    setChatBusy(true);
+    try {
+      const value = String(chatModal.value || '').trim() || null;
+      const res = await api.setReceptionChatId(row.id, value);
+      setRows((prev) =>
+        prev.map((r) => (r.id === row.id ? { ...r, chat_id: res.data?.chat_id ?? value } : r))
+      );
+      setChatModal({ open: false, row: null, value: '' });
+    } catch (err) {
+      showError(err.message || 'Falha ao vincular chat Utalk');
+    } finally {
+      setChatBusy(false);
+    }
+  }
+
+  function openUtalkChat(row) {
+    if (!row?.chat_id) return;
+    window.open(`https://app-utalk.umbler.com/chats/${encodeURIComponent(row.chat_id)}`, '_blank', 'noopener,noreferrer');
   }
 
   function toggleAttendantFilter(code) {
@@ -852,15 +948,15 @@ export default function TriagePage() {
                         }}
                       >
                         <Box sx={{ display: 'grid', gap: 1.25 }}>
-                          {row.option1 ? (
+                          {row.help_topic ? (
                             <Box>
                               <Typography
                                 component="div"
                                 sx={{ fontSize: 12, fontWeight: 400, color: '#666', mb: 0.35 }}
                               >
-                                Como posso ajudar
+                                Como podemos ajudar?
                               </Typography>
-                              <Typography sx={{ fontSize: 16 }}>{row.option1}</Typography>
+                              <Typography sx={{ fontSize: 16 }}>{row.help_topic}</Typography>
                             </Box>
                           ) : null}
                           <Box>
@@ -897,59 +993,117 @@ export default function TriagePage() {
                             pr: 1,
                           }}
                         >
-                          <Tooltip title="Assumir o contato">
-                            <span>
-                              <IconButton
-                                onClick={() => assumeContact(row)}
-                                disabled={attendantBusy || busy || !myCode}
-                                aria-label="Assumir o contato"
-                              >
-                                {attendantBusy ? (
-                                  <CircularProgress size={22} color="primary" />
-                                ) : (
-                                  <SupportAgentIcon color="primary" />
-                                )}
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                          <Tooltip title="Transferir contato">
-                            <span>
-                              <IconButton
-                                onClick={(e) => setTransferMenu({ anchor: e.currentTarget, row })}
-                                disabled={attendantBusy || busy}
-                                aria-label="Transferir contato"
-                              >
-                                <GroupIcon color="primary" />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                          {row.attendant ? (
-                            <Chip
-                              avatar={(
-                                <Avatar
-                                  src={rowAttendant?.avatar_url || undefined}
-                                  alt={attendantDisplayName(rowAttendant) || row.attendant}
+                          {utalkEnabled && !row.chat_id ? (
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              sx={{ color: '#1976d2', borderColor: '#1976d2' }}
+                              onClick={() => setChatModal({ open: true, row, value: '' })}
+                              disabled={busy}
+                            >
+                              Linkar com Utalk
+                            </Button>
+                          ) : (
+                            <>
+                              <Tooltip title="Assumir o contato">
+                                <span>
+                                  <IconButton
+                                    onClick={() => assumeContact(row)}
+                                    disabled={attendantBusy || busy || !myCode}
+                                    aria-label="Assumir o contato"
+                                  >
+                                    {attendantBusy ? (
+                                      <CircularProgress size={22} color="primary" />
+                                    ) : (
+                                      <SupportAgentIcon color="primary" />
+                                    )}
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                              <Tooltip title="Transferir contato">
+                                <span>
+                                  <IconButton
+                                    onClick={(e) => setTransferMenu({ anchor: e.currentTarget, row })}
+                                    disabled={attendantBusy || busy}
+                                    aria-label="Transferir contato"
+                                  >
+                                    <GroupIcon color="primary" />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                              {utalkEnabled && row.chat_id ? (
+                                <>
+                                  <Tooltip title="Ver no Utalk">
+                                    <IconButton
+                                      onClick={() => openUtalkChat(row)}
+                                      color="success"
+                                      aria-label="Ver no Utalk"
+                                    >
+                                      <WhatsAppIcon />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Sincronizar atendente com Utalk">
+                                    <span>
+                                      <IconButton
+                                        onClick={() => syncUtalkRow(row)}
+                                        disabled={busy || utalkSyncBusyId === row.id || attendantBusy}
+                                        aria-label="Sincronizar atendente Utalk"
+                                        sx={{
+                                          color: '#1976d2',
+                                          border: '1px solid #1976d2',
+                                          borderRadius: 1,
+                                          p: 0.75,
+                                        }}
+                                      >
+                                        {utalkSyncBusyId === row.id ? (
+                                          <CircularProgress size={18} color="inherit" />
+                                        ) : (
+                                          <CachedIcon fontSize="small" />
+                                        )}
+                                      </IconButton>
+                                    </span>
+                                  </Tooltip>
+                                  <Tooltip title="Alterar chat Utalk">
+                                    <IconButton
+                                      onClick={() =>
+                                        setChatModal({ open: true, row, value: row.chat_id || '' })
+                                      }
+                                      aria-label="Alterar chat Utalk"
+                                    >
+                                      <LinkIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                </>
+                              ) : null}
+                              {row.attendant ? (
+                                <Chip
+                                  avatar={(
+                                    <Avatar
+                                      src={rowAttendant?.avatar_url || undefined}
+                                      alt={attendantDisplayName(rowAttendant) || row.attendant}
+                                    />
+                                  )}
+                                  label={attendantDisplayName(rowAttendant) || row.attendant}
+                                  onDelete={attendantBusy ? undefined : () => clearAttendant(row)}
+                                  deleteIcon={<DeleteIcon />}
+                                  sx={{
+                                    backgroundColor: '#1976d2',
+                                    color: 'white',
+                                    fontSize: '12px',
+                                    '& .MuiChip-deleteIcon': {
+                                      color: 'white',
+                                      '&:hover': { color: 'rgba(255,255,255,0.8)' },
+                                    },
+                                  }}
+                                />
+                              ) : (
+                                <Chip
+                                  label="Sem atendente"
+                                  size="small"
+                                  sx={{ bgcolor: '#f5f5f5', border: '1px solid #e0e0e0', fontSize: 12 }}
                                 />
                               )}
-                              label={attendantDisplayName(rowAttendant) || row.attendant}
-                              onDelete={attendantBusy ? undefined : () => clearAttendant(row)}
-                              deleteIcon={<DeleteIcon />}
-                              sx={{
-                                backgroundColor: '#1976d2',
-                                color: 'white',
-                                fontSize: '12px',
-                                '& .MuiChip-deleteIcon': {
-                                  color: 'white',
-                                  '&:hover': { color: 'rgba(255,255,255,0.8)' },
-                                },
-                              }}
-                            />
-                          ) : (
-                            <Chip
-                              label="Sem atendente"
-                              size="small"
-                              sx={{ bgcolor: '#f5f5f5', border: '1px solid #e0e0e0', fontSize: 12 }}
-                            />
+                            </>
                           )}
                           {triageConfig.associateDocs && linked ? (
                             <Tooltip title="Documentos / dados">
@@ -1031,7 +1185,14 @@ export default function TriagePage() {
         {attendants.length === 0 ? (
           <MenuItem disabled>Nenhum atendente disponível</MenuItem>
         ) : (
-          attendants.map((att) => (
+          [...attendants]
+            .sort((a, b) => {
+              const au = a.utalk_id ? 0 : 1;
+              const bu = b.utalk_id ? 0 : 1;
+              if (au !== bu) return au - bu;
+              return attendantDisplayName(a).localeCompare(attendantDisplayName(b), 'pt-BR');
+            })
+            .map((att) => (
             <MenuItem
               key={att.code}
               selected={transferMenu.row?.attendant === att.code}
@@ -1040,6 +1201,11 @@ export default function TriagePage() {
             >
               <Avatar src={att.avatar_url || undefined} sx={{ width: 32, height: 32, mr: 1 }} />
               {attendantDisplayName(att)}
+              {!att.utalk_id ? (
+                <Typography component="span" sx={{ ml: 1, fontSize: 11, color: '#999' }}>
+                  sem utalk_id
+                </Typography>
+              ) : null}
             </MenuItem>
           ))
         )}
@@ -1205,6 +1371,66 @@ export default function TriagePage() {
           ) : null}
         </Box>
       </Modal>
+
+      <Modal
+        open={chatModal.open}
+        onClose={() => !chatBusy && setChatModal({ open: false, row: null, value: '' })}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: '#fff',
+            borderRadius: '16px',
+            p: 3,
+            width: 'min(440px, 92vw)',
+            outline: 'none',
+          }}
+        >
+          <Typography variant="h6" sx={{ mb: 1 }}>Linkar com Utalk</Typography>
+          <Typography variant="body2" sx={{ mb: 2, color: '#666' }}>
+            Cole o Chat ID do Umbler Utalk para vincular a este contato.
+          </Typography>
+          <TextField
+            fullWidth
+            size="small"
+            label="Chat ID do Utalk"
+            value={chatModal.value}
+            onChange={(e) => setChatModal((prev) => ({ ...prev, value: e.target.value }))}
+            autoFocus
+          />
+          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 2 }}>
+            <Button
+              onClick={() => setChatModal({ open: false, row: null, value: '' })}
+              disabled={chatBusy}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="contained"
+              sx={{ bgcolor: '#1976d2' }}
+              onClick={saveChatId}
+              disabled={chatBusy || !String(chatModal.value || '').trim()}
+            >
+              {chatBusy ? 'Salvando…' : 'Salvar'}
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
+      {utalkEnabled && activeStatus === getEntryStatusValue(statuses) ? (
+        <Fab
+          color="success"
+          aria-label="Sincronizar Utalk em espera"
+          onClick={syncUtalkWaitingBulk}
+          disabled={utalkBulkBusy}
+          sx={{ position: 'fixed', right: 24, bottom: 24, zIndex: 20 }}
+        >
+          {utalkBulkBusy ? <CircularProgress size={24} color="inherit" /> : <SyncIcon />}
+        </Fab>
+      ) : null}
     </Box>
     </ThemeProvider>
   );

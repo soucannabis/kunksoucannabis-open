@@ -35,6 +35,13 @@ import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { PATHS } from '../../app/menuConfig.js';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
+import { useCacheConfig } from '../../lib/cache/CacheConfigProvider.jsx';
+import {
+  fetchLocalProducts,
+  fetchPrescribers,
+  fetchSoucannabisProducts,
+  fetchTags,
+} from '../../lib/cache/fetchers.js';
 import AddressEditDialog from '../../components/store/AddressEditDialog.jsx';
 import DatePrescriptionEdit from '../../components/store/DatePrescriptionEdit.jsx';
 
@@ -184,6 +191,7 @@ function statusPill(status) {
 export default function CartPage() {
   const bootstrap = getKunkPublicConfig();
   const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const { enabled: cacheEnabled } = useCacheConfig();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const userCodeFromQuery = (searchParams.get('u') || '').trim();
@@ -379,8 +387,7 @@ export default function CartPage() {
       setCatalogSource(scCatalog ? 'soucannabis' : 'local');
       try {
         if (scCatalog) {
-          const res = await api.listSoucannabisProducts();
-          const rows = Array.isArray(res.data) ? res.data : [];
+          const rows = await fetchSoucannabisProducts(api, cacheEnabled);
           setProducts(
             rows.map((p) => ({
               id: p.id,
@@ -394,8 +401,8 @@ export default function CartPage() {
             }))
           );
         } else {
-          const res = await api.listItems('products', 'limit=200');
-          setProducts(res.data || []);
+          const rows = await fetchLocalProducts(api, cacheEnabled, 'limit=200');
+          setProducts(rows);
         }
       } catch {
         setProducts([]);
@@ -403,15 +410,14 @@ export default function CartPage() {
         setProductsLoading(false);
       }
       try {
-        const res = await api.listItems('professionals', 'filter[is_prescriber][_eq]=true&limit=100');
-        setProfessionals(res.data || []);
+        const rows = await fetchPrescribers(api, cacheEnabled);
+        setProfessionals(rows);
       } catch {
         /* ignore */
       }
       try {
-        const res = await api.listItems('tags', 'limit=200');
-        const tags = (res.data || []).map((t) => t.tag || t.name).filter(Boolean);
-        setTagOptions(tags);
+        const tags = await fetchTags(api, cacheEnabled);
+        setTagOptions(tags.map((t) => t.tag || t.name).filter(Boolean));
       } catch {
         setTagOptions([]);
       }
@@ -438,7 +444,7 @@ export default function CartPage() {
         setFreightQuoteEnabled(false);
       }
     })();
-  }, [api, userCodeFromQuery, institutionalCodeFromQuery, orderRefFromQuery]);
+  }, [api, cacheEnabled, userCodeFromQuery, institutionalCodeFromQuery, orderRefFromQuery]);
 
   const groupedTagOptions = useMemo(() => {
     return [

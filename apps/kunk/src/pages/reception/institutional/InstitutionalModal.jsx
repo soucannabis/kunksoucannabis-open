@@ -26,6 +26,7 @@ import {
   parseAnnotations,
   receiverDisplayName,
 } from './institutionalStatus.js';
+import PhoneField from '../../../components/PhoneField.jsx';
 
 const GREEN = '#5a7a5b';
 
@@ -278,8 +279,9 @@ export default function InstitutionalModal({
                   />
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                  <Field
+                  <PhoneField
                     label="Telefone empresa"
+                    name="company_phone"
                     value={form.company_phone}
                     onChange={(v) => setField('company_phone', v)}
                   />
@@ -320,8 +322,9 @@ export default function InstitutionalModal({
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <Field
+                <PhoneField
                   label="Celular"
+                  name="representative_mobile"
                   value={form.representative_mobile}
                   onChange={(v) => setField('representative_mobile', v)}
                 />

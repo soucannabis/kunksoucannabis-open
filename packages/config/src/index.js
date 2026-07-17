@@ -74,7 +74,7 @@ export const KUNK_LOGO_EXPORT_SIZE = 512;
 /** Hardcoded defaults for Kunk appearance (mirrors SQL seed). */
 export const KUNK_APPEARANCE_DEFAULTS = {
   title: 'Kunk SouCannabis',
-  logo: '/kunkLogo.png',
+  logo: '',
   bgMode: 'color',
   bgColor: '#2a3b2b',
   bgImage: '',
@@ -98,8 +98,8 @@ export const KUNK_CONFIG_TO_ENV = Object.fromEntries(
   Object.entries(ENV_TO_KUNK_CONFIG).map(([envKey, prop]) => [prop, envKey]),
 );
 
-/** Default options for “Como podemos ajudar?” (option1 select). */
-export const TRIAGE_DEFAULT_OPTION1_OPTIONS = [
+/** Default options for “Como podemos ajudar?” (help_topic select). */
+export const TRIAGE_DEFAULT_HELP_TOPIC_OPTIONS = [
   'Preciso de óleo / produto',
   'Renovação de receita',
   'Agendamento / consulta',
@@ -114,31 +114,31 @@ export const TRIAGE_DEFAULT_FORM_FIELDS = [
   { id: 'email', enabled: true, required: true, label: 'E-mail', order: 3 },
   { id: 'phone', enabled: true, required: true, label: 'Telefone', order: 4 },
   {
-    id: 'option1',
+    id: 'help_topic',
     enabled: true,
-    required: false,
+    required: true,
     label: 'Como podemos ajudar?',
     order: 5,
     type: 'select',
-    options: [...TRIAGE_DEFAULT_OPTION1_OPTIONS],
+    options: [...TRIAGE_DEFAULT_HELP_TOPIC_OPTIONS],
   },
-  { id: 'option2', enabled: false, required: false, label: 'Opção 2', order: 6 },
-  { id: 'message', enabled: true, required: false, label: 'Mensagem', order: 7 },
-  { id: 'patient_name', enabled: false, required: false, label: 'Nome do paciente', order: 8 },
+  { id: 'message', enabled: true, required: true, label: 'Mensagem', order: 6 },
+  { id: 'patient_name', enabled: false, required: true, label: 'Nome do paciente', order: 7 },
 ];
 
-/** Ensure option1 is a select; drop removed form fields (e.g. is_associate). */
+/** Ensure help_topic is a select; drop removed form fields (e.g. is_associate, option2). */
 export function normalizeTriageFormFields(fields) {
   const list = Array.isArray(fields) ? fields : [];
   return list
-    .filter((f) => f && f.id !== 'is_associate')
+    .filter((f) => f && f.id !== 'is_associate' && f.id !== 'option2')
     .map((f) => {
-      if (f.id !== 'option1') return { ...f };
-      const options = Array.isArray(f.options) && f.options.length
-        ? f.options.map((o) => String(o).trim()).filter(Boolean)
-        : [...TRIAGE_DEFAULT_OPTION1_OPTIONS];
+      const field = f.id === 'option1' ? { ...f, id: 'help_topic' } : { ...f };
+      if (field.id !== 'help_topic') return field;
+      const options = Array.isArray(field.options) && field.options.length
+        ? field.options.map((o) => String(o).trim()).filter(Boolean)
+        : [...TRIAGE_DEFAULT_HELP_TOPIC_OPTIONS];
       return {
-        ...f,
+        ...field,
         type: 'select',
         options,
       };

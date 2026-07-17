@@ -22,6 +22,8 @@ import OrdersOrderCard from './orders/OrdersOrderCard.jsx';
 import TrackingDetailsModal from './orders/TrackingDetailsModal.jsx';
 import OrdersBulkActions, { OrdersBulkResultDialog } from './orders/OrdersBulkActions.jsx';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
+import { useCacheConfig } from '../../lib/cache/CacheConfigProvider.jsx';
+import { fetchLocalProducts, fetchTags } from '../../lib/cache/fetchers.js';
 import OrderDetailsModal, { displayTrackingCode } from './orders/OrderDetailsModal.jsx';
 import AddressValidationDetailModal from './orders/AddressValidationDetailModal.jsx';
 import { processAutoAddressValidation } from '../../lib/addressValidation.js';
@@ -50,6 +52,7 @@ function buildQs(filters, { limit = PAGE_SIZE, offset = 0 } = {}) {
 export default function OrdersPage() {
   const bootstrap = getKunkPublicConfig();
   const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const { enabled: cacheEnabled } = useCacheConfig();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -106,9 +109,9 @@ export default function OrdersPage() {
 
   const loadProductStock = useCallback(async () => {
     try {
-      const res = await api.listItems('products', 'limit=500&fields=id,sku,amount,name');
+      const products = await fetchLocalProducts(api, cacheEnabled, 'limit=500&fields=id,sku,amount,name');
       const map = new Map();
-      for (const p of res.data || []) {
+      for (const p of products) {
         if (p?.id != null) map.set(Number(p.id), Number(p.amount) || 0);
         if (p?.sku) map.set(String(p.sku), Number(p.amount) || 0);
       }
@@ -116,7 +119,7 @@ export default function OrdersPage() {
     } catch {
       /* opcional para exibição */
     }
-  }, [api]);
+  }, [api, cacheEnabled]);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -184,8 +187,8 @@ export default function OrdersPage() {
         /* defaults */
       }
       try {
-        const tags = await api.listItems('tags', 'limit=200');
-        setTagOptions((tags.data || []).map((t) => t.tag || t.name).filter(Boolean));
+        const tags = await fetchTags(api, cacheEnabled);
+        setTagOptions(tags.map((t) => t.tag || t.name).filter(Boolean));
       } catch {
         setTagOptions([]);
       }
@@ -207,7 +210,7 @@ export default function OrdersPage() {
         setPagarmeForOrders(false);
       }
     })();
-  }, [api]);
+  }, [api, cacheEnabled]);
 
   useEffect(() => {
     loadOrders();

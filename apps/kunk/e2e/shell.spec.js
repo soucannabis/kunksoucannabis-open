@@ -14,7 +14,7 @@ test.describe('shell', () => {
     await expect(sidebar.getByText('Kunk SouCannabis')).toBeVisible();
     await expect(sidebar.getByText('Acolhimento', { exact: true })).toBeVisible();
     await expect(sidebar.getByText('Loja', { exact: true })).toBeVisible();
-    await expect(sidebar.getByText('Parceiros e Prescritores', { exact: true })).toBeVisible();
+    await expect(sidebar.getByText('Profissionais', { exact: true }).first()).toBeVisible();
 
     await expect(sidebar.getByText('Dashboard', { exact: true })).toHaveCount(0);
     await expect(sidebar.getByText('Painel geral')).toHaveCount(0);

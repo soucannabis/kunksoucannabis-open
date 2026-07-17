@@ -11,7 +11,7 @@ INSERT INTO system_configs (
     false,
     false,
     NULL,
-    'Módulo Geoapify habilitado (espelha MODULE_GEOAPIFY_ENABLED)'
+    'Módulo Geoapify habilitado (Admin → Serviços externos)'
   ),
   (
     'modules',

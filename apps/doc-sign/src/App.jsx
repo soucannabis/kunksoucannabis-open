@@ -11,6 +11,7 @@ import { SignPage } from './pages/SignPage.jsx';
 import { ContractPage } from './pages/ContractPage.jsx';
 import { ContractsPage } from './pages/ContractsPage.jsx';
 import { AuditPage } from './pages/AuditPage.jsx';
+import { SystemErrorBoundary } from './components/errors/SystemErrorBoundary.jsx';
 
 function RedirectContratoToTermo() {
   const { id } = useParams();
@@ -69,30 +70,32 @@ export default function App() {
   const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
 
   return (
-    <OperatorAuthProvider api={api} requiredRole="Administrador">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage api={api} />} />
-          <Route path="/nova-senha" element={<NewPasswordPage api={api} />} />
-          <Route path="/assinar/:token" element={<SignPage api={api} />} />
-          <Route
-            element={(
-              <RequireAdmin>
-                <OperatorShell api={api} />
-              </RequireAdmin>
-            )}
-          >
-            <Route path="/" element={<Navigate to="/termos" replace />} />
-            <Route path="/contratos" element={<Navigate to="/termos" replace />} />
-            <Route path="/contratos/:id" element={<RedirectContratoToTermo />} />
-            <Route path="/termos" element={<ContractsPage api={api} />} />
-            <Route path="/termos/:id" element={<ContractPage api={api} />} />
-            <Route path="/termos/:id/audit" element={<AuditPage api={api} />} />
-            <Route path="/modelos" element={<TemplatesPage api={api} />} />
-            <Route path="/modelos/:kind" element={<TemplateEditorPage api={api} />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </OperatorAuthProvider>
+    <SystemErrorBoundary app="doc-sign" baseUrl={bootstrap.apiUrl}>
+      <OperatorAuthProvider api={api} requiredRole="Administrador">
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage api={api} />} />
+            <Route path="/nova-senha" element={<NewPasswordPage api={api} />} />
+            <Route path="/assinar/:token" element={<SignPage api={api} />} />
+            <Route
+              element={(
+                <RequireAdmin>
+                  <OperatorShell api={api} />
+                </RequireAdmin>
+              )}
+            >
+              <Route path="/" element={<Navigate to="/termos" replace />} />
+              <Route path="/contratos" element={<Navigate to="/termos" replace />} />
+              <Route path="/contratos/:id" element={<RedirectContratoToTermo />} />
+              <Route path="/termos" element={<ContractsPage api={api} />} />
+              <Route path="/termos/:id" element={<ContractPage api={api} />} />
+              <Route path="/termos/:id/audit" element={<AuditPage api={api} />} />
+              <Route path="/modelos" element={<TemplatesPage api={api} />} />
+              <Route path="/modelos/:kind" element={<TemplateEditorPage api={api} />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </OperatorAuthProvider>
+    </SystemErrorBoundary>
   );
 }

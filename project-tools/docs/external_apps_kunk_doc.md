@@ -134,7 +134,7 @@ Retorna apenas dados de identificação da app autenticada e o percentual config
 ```json
 {
   "id": "6e2d7a86-4978-4c48-9e02-c296108a09d6",
-  "name": "Parceiro X",
+  "name": "Integração X",
   "client_id": "parceiro-x",
   "active": true,
   "payment_percentage": 8
@@ -283,7 +283,6 @@ Outros valores podem existir no painel; alinhe com a equipe Kunk se precisar de 
 | `email` | E-mail |
 | `address` | Objeto `{ street, number, complement, neighborhood, city, state, cep }` |
 | `delivery_price` | Frete |
-| `partner` / `partner_code` | Parceiro |
 | `prescriber` / `prescriber_code` | Prescritor |
 | `discount` / `donation` | Desconto / doação |
 | `info` | Observações |
@@ -443,7 +442,7 @@ Nas demais chamadas: `Authorization: Bearer <access_token>`.
 
 ### Payload do PATCH (campos quando presentes)
 
-`status`, `items`, `total`, `user`, `user_code`, `name_associate`, `email`, `address`, `delivery_price`, `partner`, `partner_code`, `prescriber`, `prescriber_code`, `discount`, `donation`, `info`, `tags`, `tracking_code`, `tracking_code_date`, `payment_date`, `payment_form`, `order_code`, `external_id`, `external_payment_info`, `kunk_order_id`
+`status`, `items`, `total`, `user`, `user_code`, `name_associate`, `email`, `address`, `delivery_price`, `prescriber`, `prescriber_code`, `discount`, `donation`, `info`, `tags`, `tracking_code`, `tracking_code_date`, `payment_date`, `payment_form`, `order_code`, `external_id`, `external_payment_info`, `kunk_order_id`
 
 ---
 

@@ -64,7 +64,7 @@ Helpers no pacote: `getKunkPublicConfig()` / `mergeKunkPublicConfigFromApi()` (`
 | Token / env | Default | Uso |
 |---|---|---|
 | `VITE_KUNK_TITLE` | `Kunk SouCannabis` | Título da sidebar / document.title |
-| `VITE_KUNK_LOGO` | `/kunkLogo.png` | Logo sidebar e login (quadro fixo 120×120px; upload com enquadramento no admin) |
+| `VITE_KUNK_LOGO` | _(vazio)_ | Logo sidebar e login (quadro 120×120px; upload no admin salva na hora → `/api/v1/files/{id}/download`, download público enquanto a config apontar para o arquivo). Sem fallback estático. |
 | `VITE_KUNK_BG_MODE` | `color` | `color` (usa fundo dos temas) ou `image` |
 | `VITE_KUNK_BG_IMAGE` | _(vazio)_ | URL da imagem (mode=image) |
 | `VITE_KUNK_MENU_BG` | `#5a7a5b` | Fundo do menu |

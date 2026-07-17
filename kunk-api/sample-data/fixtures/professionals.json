@@ -1,7 +1,7 @@
 [
   {
     "sort": 1,
-    "date_created": "2026-05-27T23:42:25.349Z",
+    "date_created": "2026-06-02T17:23:18.646Z",
     "name": "Lucas",
     "last_name": "Nogueira",
     "type": "medic",
@@ -15,7 +15,7 @@
     "active": 1,
     "is_prescriber": "true",
     "is_collaborator": "true",
-    "professional_code": "ee54d72a-f48a-4722-b4bb-07b93563e699",
+    "professional_code": "08dbb94f-c982-4b2b-8431-7be03e07d165",
     "fingerprint": "fp-demo-1",
     "contest_reports": {
       "demo": true,
@@ -24,11 +24,12 @@
     "met_us": "indicação",
     "recipient_id": "rcp-demo-1",
     "donation_balance": 50,
-    "calendar_id": "cal-demo-1"
+    "calendar_id": "cal-demo-1",
+    "is_sample": true
   },
   {
     "sort": 2,
-    "date_created": "2026-05-28T23:42:25.349Z",
+    "date_created": "2026-06-03T17:23:18.646Z",
     "name": "Marina",
     "last_name": "Oliveira",
     "type": "therapist",
@@ -42,7 +43,7 @@
     "active": 1,
     "is_prescriber": "false",
     "is_collaborator": "true",
-    "professional_code": "d040bef7-8ad4-4c1c-a288-07c4502e7ac6",
+    "professional_code": "a0baecaa-3605-495d-b695-738689b8edba",
     "fingerprint": "fp-demo-2",
     "contest_reports": {
       "demo": true,
@@ -51,11 +52,12 @@
     "met_us": "evento",
     "recipient_id": "rcp-demo-2",
     "donation_balance": 100,
-    "calendar_id": "cal-demo-2"
+    "calendar_id": "cal-demo-2",
+    "is_sample": true
   },
   {
     "sort": 3,
-    "date_created": "2026-05-29T23:42:25.349Z",
+    "date_created": "2026-06-04T17:23:18.646Z",
     "name": "Nuno",
     "last_name": "Pereira",
     "type": "therapist",
@@ -69,7 +71,7 @@
     "active": 1,
     "is_prescriber": "true",
     "is_collaborator": "true",
-    "professional_code": "28877253-7e63-417a-af33-fe590b081114",
+    "professional_code": "6cb37310-9ebd-46d5-a961-d87123f3588e",
     "fingerprint": "fp-demo-3",
     "contest_reports": {
       "demo": true,
@@ -78,11 +80,12 @@
     "met_us": "site",
     "recipient_id": "rcp-demo-3",
     "donation_balance": 150,
-    "calendar_id": "cal-demo-3"
+    "calendar_id": "cal-demo-3",
+    "is_sample": true
   },
   {
     "sort": 4,
-    "date_created": "2026-05-30T23:42:25.349Z",
+    "date_created": "2026-06-05T17:23:18.646Z",
     "name": "Olívia",
     "last_name": "Queiroz",
     "type": "medic",
@@ -96,7 +99,7 @@
     "active": 1,
     "is_prescriber": "false",
     "is_collaborator": "true",
-    "professional_code": "4715690c-e819-48f8-b9cc-23e420d70f12",
+    "professional_code": "fd155aa4-ecc8-4d82-ab46-e33d9961d5e6",
     "fingerprint": "fp-demo-4",
     "contest_reports": {
       "demo": true,
@@ -105,11 +108,12 @@
     "met_us": "parceiro",
     "recipient_id": "rcp-demo-4",
     "donation_balance": 200,
-    "calendar_id": "cal-demo-4"
+    "calendar_id": "cal-demo-4",
+    "is_sample": true
   },
   {
     "sort": 5,
-    "date_created": "2026-05-31T23:42:25.349Z",
+    "date_created": "2026-06-06T17:23:18.646Z",
     "name": "Paulo",
     "last_name": "Ramos",
     "type": "therapist",
@@ -123,7 +127,7 @@
     "active": 1,
     "is_prescriber": "true",
     "is_collaborator": "false",
-    "professional_code": "edbb912b-5379-49c6-bcc8-06a2f4f17b0a",
+    "professional_code": "9472fdf3-30c2-4014-a312-5ed6d8ad7d1b",
     "fingerprint": "fp-demo-5",
     "contest_reports": {
       "demo": true,
@@ -132,11 +136,12 @@
     "met_us": "indicação",
     "recipient_id": "rcp-demo-5",
     "donation_balance": 250,
-    "calendar_id": "cal-demo-5"
+    "calendar_id": "cal-demo-5",
+    "is_sample": true
   },
   {
     "sort": 6,
-    "date_created": "2026-06-01T23:42:25.349Z",
+    "date_created": "2026-06-07T17:23:18.646Z",
     "name": "Queila",
     "last_name": "Silva",
     "type": "therapist",
@@ -150,7 +155,7 @@
     "active": 1,
     "is_prescriber": "false",
     "is_collaborator": "false",
-    "professional_code": "13d453ea-2510-48ce-8c12-cbb3396dbd51",
+    "professional_code": "0ff70bde-4b8f-4b5d-a62d-c1373ea2b92e",
     "fingerprint": "fp-demo-6",
     "contest_reports": {
       "demo": true,
@@ -159,11 +164,12 @@
     "met_us": "evento",
     "recipient_id": "rcp-demo-6",
     "donation_balance": 300,
-    "calendar_id": "cal-demo-6"
+    "calendar_id": "cal-demo-6",
+    "is_sample": true
   },
   {
     "sort": 7,
-    "date_created": "2026-06-02T23:42:25.349Z",
+    "date_created": "2026-06-08T17:23:18.646Z",
     "name": "Rafael",
     "last_name": "Teixeira",
     "type": "medic",
@@ -177,7 +183,7 @@
     "active": 1,
     "is_prescriber": "true",
     "is_collaborator": "false",
-    "professional_code": "dac7f491-4895-4a6a-b8a7-50447ce69b2b",
+    "professional_code": "1369e8a9-9151-411e-ad0b-0ede62407f7b",
     "fingerprint": "fp-demo-7",
     "contest_reports": {
       "demo": true,
@@ -186,11 +192,12 @@
     "met_us": "site",
     "recipient_id": "rcp-demo-7",
     "donation_balance": 350,
-    "calendar_id": "cal-demo-7"
+    "calendar_id": "cal-demo-7",
+    "is_sample": true
   },
   {
     "sort": 8,
-    "date_created": "2026-06-03T23:42:25.349Z",
+    "date_created": "2026-06-09T17:23:18.646Z",
     "name": "Sofia",
     "last_name": "Uchoa",
     "type": "therapist",
@@ -204,7 +211,7 @@
     "active": 1,
     "is_prescriber": "false",
     "is_collaborator": "false",
-    "professional_code": "f761f61e-546c-48ae-82c0-7c311431e5d3",
+    "professional_code": "a8b3462d-ef98-4e40-ad20-ef42c8ca7d31",
     "fingerprint": "fp-demo-8",
     "contest_reports": {
       "demo": true,
@@ -213,11 +220,12 @@
     "met_us": "parceiro",
     "recipient_id": "rcp-demo-8",
     "donation_balance": 400,
-    "calendar_id": "cal-demo-8"
+    "calendar_id": "cal-demo-8",
+    "is_sample": true
   },
   {
     "sort": 9,
-    "date_created": "2026-06-04T23:42:25.349Z",
+    "date_created": "2026-06-10T17:23:18.646Z",
     "name": "Tiago",
     "last_name": "Vieira",
     "type": "therapist",
@@ -231,7 +239,7 @@
     "active": 1,
     "is_prescriber": "true",
     "is_collaborator": "false",
-    "professional_code": "8c52283c-b202-4909-8425-fe5e4a5141a8",
+    "professional_code": "cf655a47-6372-4ca0-81ed-adeff6ff479f",
     "fingerprint": "fp-demo-9",
     "contest_reports": {
       "demo": true,
@@ -240,11 +248,12 @@
     "met_us": "indicação",
     "recipient_id": "rcp-demo-9",
     "donation_balance": 450,
-    "calendar_id": "cal-demo-9"
+    "calendar_id": "cal-demo-9",
+    "is_sample": true
   },
   {
     "sort": 10,
-    "date_created": "2026-06-05T23:42:25.350Z",
+    "date_created": "2026-06-11T17:23:18.646Z",
     "name": "Úrsula",
     "last_name": "Wagner",
     "type": "medic",
@@ -258,7 +267,7 @@
     "active": 1,
     "is_prescriber": "false",
     "is_collaborator": "false",
-    "professional_code": "647bc7a7-cc7d-4c7e-9362-945d9efbef30",
+    "professional_code": "24611120-8ec2-4bc1-ba86-761fe2fd81f4",
     "fingerprint": "fp-demo-10",
     "contest_reports": {
       "demo": true,
@@ -267,6 +276,7 @@
     "met_us": "evento",
     "recipient_id": "rcp-demo-10",
     "donation_balance": 500,
-    "calendar_id": "cal-demo-10"
+    "calendar_id": "cal-demo-10",
+    "is_sample": true
   }
 ]

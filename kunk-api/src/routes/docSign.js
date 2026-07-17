@@ -1,6 +1,5 @@
 'use strict';
 
-const fs = require('fs');
 const { Router } = require('express');
 const docSignService = require('../services/docSignService');
 const filesRepository = require('../repositories/filesRepository');
@@ -329,12 +328,11 @@ router.get('/sign/:token/pdf', async (req, res, next) => {
     const row = await repo.getContractByTokenHash(hashToken(req.params.token), { status: 'pending' });
     if (!row) throw new AppError(404, 'TOKEN_INVALID', 'Link inválido');
     const file = await filesRepository.getFile(row.filled_pdf_file_id);
-    if (!fs.existsSync(file.storage_path)) {
-      throw new AppError(404, 'NOT_FOUND', 'PDF não encontrado');
-    }
+    const stream = await filesRepository.openFileStream(file);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${file.filename}"`);
-    fs.createReadStream(file.storage_path).pipe(res);
+    stream.on('error', (err) => next(err));
+    stream.pipe(res);
   } catch (err) {
     next(err);
   }

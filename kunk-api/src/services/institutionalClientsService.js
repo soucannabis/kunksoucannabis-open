@@ -54,7 +54,7 @@ function isValidCep(value) {
 
 function isValidPhoneBr(value) {
   const digits = onlyDigits(value);
-  return digits.length >= 10 && digits.length <= 13;
+  return digits.length >= 10 && digits.length <= 15;
 }
 
 function isCompanyFlag(value) {

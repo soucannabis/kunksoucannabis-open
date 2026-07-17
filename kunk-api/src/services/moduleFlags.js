@@ -1,7 +1,6 @@
 'use strict';
 
 const { query } = require('../db/pool');
-const { env } = require('../config/env');
 
 function asBool(v, fallback = false) {
   if (v === undefined || v === null || v === '') return fallback;
@@ -11,8 +10,8 @@ function asBool(v, fallback = false) {
 
 /**
  * Resolve whether a module is enabled.
- * Precedence: Admin (`system_configs` modules.{name}.enabled) always overrides env.
- * If there is no admin value, fall back to MODULE_*_ENABLED.
+ * Source of truth: Admin (`system_configs` modules.{name}.enabled).
+ * Sem valor no Admin → desabilitado.
  */
 async function isModuleEnabled(name) {
   const key = `modules.${name}.enabled`;
@@ -23,8 +22,6 @@ async function isModuleEnabled(name) {
   let enabled = false;
   if (result.rows[0] && result.rows[0].value != null && result.rows[0].value !== '') {
     enabled = asBool(result.rows[0].value, false);
-  } else {
-    enabled = env.modules[name] === true;
   }
   if (!enabled) return false;
 
@@ -45,9 +42,9 @@ async function isModuleEnabled(name) {
   return true;
 }
 
-/** Sync peek of env default only (no DB). Prefer isModuleEnabled for runtime gates. */
-function envModuleDefault(name) {
-  return env.modules[name] === true;
+/** @deprecated Env não ativa mais módulos — sempre false. Mantido por compat da API admin. */
+function envModuleDefault() {
+  return false;
 }
 
 module.exports = {

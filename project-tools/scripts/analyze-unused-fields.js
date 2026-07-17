@@ -44,7 +44,6 @@ const GENERIC_FIELDS = new Set([
   "price",
   "items",
   "details",
-  "partner",
   "products",
   "services",
   "reports",

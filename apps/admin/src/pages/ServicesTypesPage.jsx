@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { AdminLoader } from '../components/AdminLoader.jsx';
 
 const EMPTY_TYPE = {
   id: '',
@@ -9,6 +9,26 @@ const EMPTY_TYPE = {
   active: true,
   sort: 100,
 };
+
+function slugifyTypeId(label, fallback = 'tipo') {
+  const base = String(label || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 48);
+  return base || fallback;
+}
+
+function uniqueTypeId(desired, existingIds) {
+  const used = new Set((existingIds || []).map((id) => String(id)));
+  if (!used.has(desired)) return desired;
+  let n = 2;
+  while (used.has(`${desired}_${n}`)) n += 1;
+  return `${desired}_${n}`;
+}
 
 export function ServicesTypesPage({ api }) {
   const [types, setTypes] = useState([]);
@@ -48,7 +68,10 @@ export function ServicesTypesPage({ api }) {
   }, [api]);
 
   const sorted = useMemo(
-    () => [...types].sort((a, b) => (a.sort || 0) - (b.sort || 0) || String(a.label).localeCompare(b.label, 'pt-BR')),
+    () =>
+      [...types].sort(
+        (a, b) => (a.sort || 0) - (b.sort || 0) || String(a.label).localeCompare(b.label, 'pt-BR')
+      ),
     [types]
   );
 
@@ -99,14 +122,27 @@ export function ServicesTypesPage({ api }) {
 
   async function onSubmitType(e) {
     e.preventDefault();
-    const id = String(form.id || '').trim();
-    if (!id || !String(form.label || '').trim()) {
-      setError('Código e label são obrigatórios');
+    const label = String(form.label || '').trim();
+    if (!label) {
+      setError('Label é obrigatório');
       return;
     }
+
+    let id = String(form.id || '').trim();
+    if (isNew) {
+      id = uniqueTypeId(
+        slugifyTypeId(label),
+        types.map((t) => t.id)
+      );
+    }
+    if (!id) {
+      setError('Não foi possível gerar o código a partir do label');
+      return;
+    }
+
     const row = {
       id,
-      label: String(form.label).trim(),
+      label,
       association_fee: Number(form.association_fee) || 0,
       default_consultation_price:
         form.default_consultation_price === '' || form.default_consultation_price == null
@@ -115,16 +151,7 @@ export function ServicesTypesPage({ api }) {
       active: Boolean(form.active),
       sort: Number(form.sort) || 100,
     };
-    let next;
-    if (isNew) {
-      if (types.some((t) => t.id === id)) {
-        setError('Já existe um tipo com este código');
-        return;
-      }
-      next = [...types, row];
-    } else {
-      next = types.map((t) => (t.id === editing ? row : t));
-    }
+    const next = isNew ? [...types, row] : types.map((t) => (t.id === editing ? row : t));
     await saveTypes(next);
   }
 
@@ -149,27 +176,29 @@ export function ServicesTypesPage({ api }) {
     }
   }
 
-  if (loading) return <p className="muted">Carregando…</p>;
+  if (loading) return <AdminLoader />;
 
   return (
     <div style={{ display: 'grid', gap: '1.25rem', maxWidth: 900 }}>
       <div>
-        <p className="muted" style={{ margin: '0 0 0.5rem' }}>
-          <Link to="/configs">← Configs</Link>
-        </p>
-        <h2 style={{ marginTop: 0 }}>Tipos de profissional e relatório</h2>
+        <h2 style={{ marginTop: 0 }}>Configuração de profissionais</h2>
         <p className="muted" style={{ margin: 0 }}>
           Taxas por tipo (valor retido pela associação) e preço padrão de consulta. Default do
           sistema: taxa 0 e doação não desconta o pagamento ao profissional.
         </p>
       </div>
 
-      {error ? <p style={{ color: 'var(--admin-danger)', margin: 0 }}>{error}</p> : null}
+      {error && !editing ? (
+        <p style={{ color: 'var(--admin-danger)', margin: 0 }}>{error}</p>
+      ) : null}
       {message ? <p style={{ color: 'var(--admin-success, #2e7d32)', margin: 0 }}>{message}</p> : null}
 
       <form className="card" style={{ padding: '1.25rem' }} onSubmit={saveSettings}>
         <h3 style={{ marginTop: 0 }}>Relatório de serviços</h3>
-        <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.75rem' }}>
+        <label
+          className={`ext-flag${settings.deduct_donation_from_payable ? ' ext-flag--active' : ''}`}
+          data-testid="deduct-donation-toggle"
+        >
           <input
             type="checkbox"
             checked={Boolean(settings.deduct_donation_from_payable)}
@@ -177,9 +206,8 @@ export function ServicesTypesPage({ api }) {
               setSettings((s) => ({ ...s, deduct_donation_from_payable: e.target.checked }))
             }
           />
-          <span>
-            Descontar doação do valor a pagar ao profissional
-            <br />
+          <span className="ext-flag-body">
+            <strong>Descontar doação do valor a pagar ao profissional</strong>
             <span className="muted">
               Se ligado: valor a receber = preço − taxa − doação. Default: desligado.
             </span>
@@ -200,7 +228,6 @@ export function ServicesTypesPage({ api }) {
         <table className="data-table" style={{ width: '100%', marginTop: '1rem' }}>
           <thead>
             <tr>
-              <th>Código</th>
               <th>Label</th>
               <th>Taxa (R$)</th>
               <th>Preço padrão</th>
@@ -211,9 +238,6 @@ export function ServicesTypesPage({ api }) {
           <tbody>
             {sorted.map((row) => (
               <tr key={row.id}>
-                <td>
-                  <code>{row.id}</code>
-                </td>
                 <td>{row.label}</td>
                 <td>{Number(row.association_fee || 0).toFixed(2)}</td>
                 <td>
@@ -237,70 +261,83 @@ export function ServicesTypesPage({ api }) {
       </div>
 
       {editing ? (
-        <form className="card" style={{ padding: '1.25rem', display: 'grid', gap: '0.75rem' }} onSubmit={onSubmitType}>
-          <h3 style={{ margin: 0 }}>{isNew ? 'Novo tipo' : `Editar ${editing}`}</h3>
-          <label className="field">
-            Código
-            <input
-              value={form.id}
-              disabled={!isNew}
-              onChange={(e) => setForm((f) => ({ ...f, id: e.target.value }))}
-              required
-            />
-          </label>
-          <label className="field">
-            Label
-            <input
-              value={form.label}
-              onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
-              required
-            />
-          </label>
-          <label className="field">
-            Taxa da associação (R$)
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.association_fee}
-              onChange={(e) => setForm((f) => ({ ...f, association_fee: e.target.value }))}
-            />
-          </label>
-          <label className="field">
-            Preço padrão da consulta (vazio = usa o do profissional)
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.default_consultation_price}
-              onChange={(e) => setForm((f) => ({ ...f, default_consultation_price: e.target.value }))}
-            />
-          </label>
-          <label className="field">
-            Ordem
-            <input
-              type="number"
-              value={form.sort}
-              onChange={(e) => setForm((f) => ({ ...f, sort: e.target.value }))}
-            />
-          </label>
-          <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
-            <input
-              type="checkbox"
-              checked={Boolean(form.active)}
-              onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
-            />
-            Ativo
-          </label>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Salvando…' : 'Salvar tipo'}
-            </button>
-            <button type="button" className="btn" onClick={closeForm}>
-              Cancelar
-            </button>
-          </div>
-        </form>
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label={isNew ? 'Novo tipo' : 'Editar tipo'}
+          onClick={() => !saving && closeForm()}
+        >
+          <form
+            className="modal-card"
+            style={{ display: 'grid', gap: '0.75rem' }}
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={onSubmitType}
+          >
+            <h3 style={{ margin: 0 }}>{isNew ? 'Novo tipo' : 'Editar tipo'}</h3>
+            {error ? <p style={{ color: 'var(--admin-danger)', margin: 0 }}>{error}</p> : null}
+            <label className="field">
+              Label
+              <input
+                value={form.label}
+                onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
+                required
+                autoFocus
+              />
+            </label>
+            <label className="field">
+              Taxa da associação (R$)
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.association_fee}
+                onChange={(e) => setForm((f) => ({ ...f, association_fee: e.target.value }))}
+              />
+            </label>
+            <label className="field">
+              Preço padrão da consulta (vazio = usa o do profissional)
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.default_consultation_price}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, default_consultation_price: e.target.value }))
+                }
+              />
+            </label>
+            <label className="field">
+              Ordem
+              <input
+                type="number"
+                value={form.sort}
+                onChange={(e) => setForm((f) => ({ ...f, sort: e.target.value }))}
+              />
+            </label>
+            <label
+              className={`ext-flag${form.active ? ' ext-flag--active' : ''}`}
+              data-testid="service-type-active-toggle"
+            >
+              <input
+                type="checkbox"
+                checked={Boolean(form.active)}
+                onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+              />
+              <span className="ext-flag-body">
+                <strong>Ativo</strong>
+              </span>
+            </label>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn" onClick={closeForm} disabled={saving}>
+                Cancelar
+              </button>
+              <button type="submit" className="btn btn-primary" disabled={saving}>
+                {saving ? 'Salvando…' : 'Salvar tipo'}
+              </button>
+            </div>
+          </form>
+        </div>
       ) : null}
     </div>
   );

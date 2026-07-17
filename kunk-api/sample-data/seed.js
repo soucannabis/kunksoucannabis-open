@@ -242,33 +242,6 @@ async function buildDataset(passwordHash) {
     },
   ];
 
-  const partners = Array.from({ length: counts.partners }, (_, i) => {
-    const first = pick(FIRST_NAMES, i + 3);
-    const last = pick(LAST_NAMES, i + 7);
-    const [city, state] = pick(CITIES, i);
-    return {
-      status: 'active',
-      sort: i + 1,
-      date_created: daysAgo(40 - i),
-      date_updated: daysAgo(i % 10),
-      first_name: first,
-      last_name: last,
-      email: `partner${String(i + 1).padStart(2, '0')}@demo.kunk.local`,
-      account_password: passwordHash,
-      mobile_number: fakePhone(200 + i),
-      user_code: uuid(),
-      documents_folder_id: `folder-partner-${i + 1}`,
-      commission_value: 5 + (i % 6),
-      commission_total: 100 * (i + 1),
-      type: i % 2 === 0 ? 'affiliate' : 'prescriber_partner',
-      pix_key: `partner${i + 1}@pix.demo`,
-      commission_transactions: JSON.stringify([{ id: i + 1, amount: 50, demo: true }]),
-      cpf: fakeCpf(200 + i),
-      is_favorite: i < 3 ? 'true' : 'false',
-      contest_reports: { demo: true, city, state, score: i + 1 },
-    };
-  });
-
   const professionals = Array.from({ length: counts.professionals }, (_, i) => {
     const first = pick(FIRST_NAMES, i + 11);
     const last = pick(LAST_NAMES, i + 13);
@@ -339,7 +312,7 @@ async function buildDataset(passwordHash) {
     const product = products[i % products.length];
 
     return {
-      status: i % 17 === 0 ? 'inactive' : 'active',
+      status: isPatientLink ? 'patient' : 'Associado',
       sort: i + 1,
       date_created: daysAgo(100 - (i % 90)),
       date_updated: daysAgo(i % 30),
@@ -367,11 +340,11 @@ async function buildDataset(passwordHash) {
       associate_cpf: fakeCpf(i + 1),
       associate_rg: `${String(1000000 + i)}`,
       mobile_number: fakePhone(i + 1),
-      associate_status: i % 17 === 0 ? 0 : 1,
+      associate_status: isPatientLink ? null : 5,
       prescription: `prescription-${i + 1}.pdf`,
       documents_folder_id: `docs-user-${i + 1}`,
       rg_patient_proof: isPatientLink ? `rg-patient-${i + 1}.pdf` : `rg-self-${i + 1}.pdf`,
-      adhesion_term: 'Termo de adesão fictício — sample-data Kunk OSS.',
+      adhesion_term: null,
       ciap_codes: `${pick(CIAP, i)};${pick(CIAP, i + 3)}`,
       associate_birth_date: `19${70 + (i % 30)}-${String((i % 12) + 1).padStart(2, '0')}-15`,
       preferred_products: product.sku,
@@ -401,9 +374,13 @@ async function buildDataset(passwordHash) {
   });
 
   for (let i = 80; i < 100; i++) {
+    users[i].status = 'patient';
     users[i].responsible_type = 'paciente';
     users[i].responsible_code = users[i - 80].user_code;
     users[i].patient_user_code = null;
+    users[i].associate_status = null;
+    users[i - 80].patient_user_code = users[i].user_code;
+    users[i - 80].responsible_type = 'another';
   }
 
   const orders = Array.from({ length: counts.orders }, (_, i) => {
@@ -538,8 +515,7 @@ async function buildDataset(passwordHash) {
       last_name: last,
       email: `reception${String(i + 1).padStart(2, '0')}@demo.kunk.local`,
       phone: fakePhone(400 + i),
-      option1: pick(['informação', 'cadastro', 'agendamento'], i),
-      option2: pick(['whatsapp', 'site', 'indicação'], i),
+      help_topic: pick(['informação', 'cadastro', 'agendamento'], i),
       is_associate: i % 3 === 0 ? 'true' : 'false',
       message: 'Contato fictício de acolhimento com todos os campos (sample-data).',
       code: uuid(),
@@ -555,7 +531,6 @@ async function buildDataset(passwordHash) {
       tags: [{ tag: 'demo' }, { tag: 'novo-contato' }],
       completion_reason: status === 'done' ? 'Atendido' : null,
       is_prescriber: i % 4 === 0 ? 'true' : 'false',
-      at: pick(['manhã', 'tarde', 'noite'], i),
       full_name: `${first} ${last}`,
     };
   });
@@ -638,7 +613,6 @@ async function buildDataset(passwordHash) {
     files,
     system_users,
     users,
-    partners,
     institutional_clients,
     professionals,
     products,
@@ -651,10 +625,16 @@ async function buildDataset(passwordHash) {
   };
 }
 
+function markSampleRows(rows) {
+  if (!Array.isArray(rows)) return rows;
+  return rows.map((row) => ({ ...row, is_sample: true }));
+}
+
 function writeFixtures(dataset) {
   ensureDir(FIXTURES_DIR);
   for (const [key, value] of Object.entries(dataset)) {
-    fs.writeFileSync(path.join(FIXTURES_DIR, `${key}.json`), JSON.stringify(value, null, 2));
+    const marked = markSampleRows(value);
+    fs.writeFileSync(path.join(FIXTURES_DIR, `${key}.json`), JSON.stringify(marked, null, 2));
   }
   console.log(`Fixtures written to ${FIXTURES_DIR}`);
 }
@@ -663,7 +643,7 @@ async function truncateAll(client) {
   await client.query(`
     TRUNCATE TABLE
       orders_files, services_files, users_files,
-      orders, services, reception, reports, tags, products, partners, institutional_clients,
+      orders, services, reception, reports, tags, products, institutional_clients,
       professionals,
       users, system_users, users_api, files
     RESTART IDENTITY CASCADE
@@ -672,7 +652,8 @@ async function truncateAll(client) {
 }
 
 async function insertObject(client, table, row, { returning = 'id' } = {}) {
-  const entries = Object.entries(row).filter(([k, v]) => !k.startsWith('_') && v !== undefined);
+  const payload = { ...row, is_sample: true };
+  const entries = Object.entries(payload).filter(([k, v]) => !k.startsWith('_') && v !== undefined);
   const cols = entries.map(([k]) => quoteCol(k));
   const vals = entries.map(([, v]) => serializeValue(v));
   const ph = vals.map((_, i) => `$${i + 1}`);
@@ -708,11 +689,6 @@ async function seedDatabase(dataset, { truncate }) {
       userIds.push(inserted.id);
     }
     console.log(`users: ${userIds.length} (all columns)`);
-
-    for (const row of dataset.partners) {
-      await insertObject(client, 'partners', row);
-    }
-    console.log(`partners: ${dataset.partners.length}`);
 
     for (const row of dataset.institutional_clients || []) {
       await insertObject(client, 'institutional_clients', row);
@@ -789,9 +765,9 @@ async function seedDatabase(dataset, { truncate }) {
     }
     console.log(`services_files: ${services_files.length}`);
 
-    fs.writeFileSync(path.join(FIXTURES_DIR, 'users_files.json'), JSON.stringify(users_files, null, 2));
-    fs.writeFileSync(path.join(FIXTURES_DIR, 'orders_files.json'), JSON.stringify(orders_files, null, 2));
-    fs.writeFileSync(path.join(FIXTURES_DIR, 'services_files.json'), JSON.stringify(services_files, null, 2));
+    fs.writeFileSync(path.join(FIXTURES_DIR, 'users_files.json'), JSON.stringify(markSampleRows(users_files), null, 2));
+    fs.writeFileSync(path.join(FIXTURES_DIR, 'orders_files.json'), JSON.stringify(markSampleRows(orders_files), null, 2));
+    fs.writeFileSync(path.join(FIXTURES_DIR, 'services_files.json'), JSON.stringify(markSampleRows(services_files), null, 2));
 
     // Validação: users deve ter todas as colunas do schema preenchidas (exceto id e session_*)
     const colCheck = await client.query(`
@@ -826,7 +802,6 @@ async function seedDatabase(dataset, { truncate }) {
     const counts = await client.query(`
       SELECT 'users' AS t, COUNT(*)::int AS c FROM users
       UNION ALL SELECT 'orders', COUNT(*)::int FROM orders
-      UNION ALL SELECT 'partners', COUNT(*)::int FROM partners
       UNION ALL SELECT 'institutional_clients', COUNT(*)::int FROM institutional_clients
       UNION ALL SELECT 'professionals', COUNT(*)::int FROM professionals
       UNION ALL SELECT 'products', COUNT(*)::int FROM products

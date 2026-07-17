@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AdminLoader } from '../components/AdminLoader.jsx';
 
 function parsePerms(value) {
   if (Array.isArray(value)) return value;
@@ -11,24 +12,32 @@ function parsePerms(value) {
   }
 }
 
-export function UsuariosPage({ api }) {
+export function UsersPage({ api }) {
   const [rows, setRows] = useState([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setLoading(true);
       try {
         const res = await api.listSystemUsers();
         if (!cancelled) setRows(res.data || []);
       } catch (err) {
         if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [api]);
+
+  if (loading) {
+    return <AdminLoader label="Carregando usuários…" />;
+  }
 
   return (
     <div>
@@ -40,8 +49,8 @@ export function UsuariosPage({ api }) {
         <Link className="btn btn-primary" to="/usuarios/novo">
           Convidar operador
         </Link>
-        <Link className="btn" to="/usuarios/paginas">
-          Páginas por role
+        <Link className="btn" to="/kunk/permissoes">
+          Permissões de acesso
         </Link>
       </div>
       {error ? <div className="alert alert-error">{error}</div> : null}
@@ -75,7 +84,7 @@ export function UsuariosPage({ api }) {
   );
 }
 
-export function UsuarioFormPage({ api, isNew = false }) {
+export function UserFormPage({ api, isNew = false }) {
   const id = !isNew ? window.location.pathname.split('/').pop() : null;
   const [rolesCatalog, setRolesCatalog] = useState([]);
   const [form, setForm] = useState({
@@ -91,10 +100,12 @@ export function UsuarioFormPage({ api, isNew = false }) {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setLoading(true);
       try {
         const rolesRes = await api.adminRoles();
         if (!cancelled) setRolesCatalog(rolesRes.data || []);
@@ -115,6 +126,8 @@ export function UsuarioFormPage({ api, isNew = false }) {
         }
       } catch (err) {
         if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => {
@@ -231,6 +244,10 @@ export function UsuarioFormPage({ api, isNew = false }) {
     } catch {
       setMessage(inviteInfo.invite_url);
     }
+  }
+
+  if (loading) {
+    return <AdminLoader label="Carregando usuário…" />;
   }
 
   return (

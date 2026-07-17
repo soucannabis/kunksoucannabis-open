@@ -7,11 +7,10 @@
 
 | Flag | Origem |
 |---|---|
-| `MODULE_GEOAPIFY_ENABLED=true` | Env |
-| `modules.geoapify.enabled` | `system_configs` (espelho) |
+| `modules.geoapify.enabled` | Admin (`system_configs`) |
 | `modules.geoapify.use_for_validation` | default `false` — toggle no admin |
 
-Desabilitado no env → `503 MODULE_DISABLED`.  
+Desabilitado → `503 MODULE_DISABLED`.  
 Flag `use_for_validation=false` → `403 VALIDATION_DISABLED` em `POST /validate-address`.
 
 ## Prefixo

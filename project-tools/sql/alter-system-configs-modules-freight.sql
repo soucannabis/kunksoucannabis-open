@@ -13,7 +13,7 @@ INSERT INTO system_configs (
     false,
     false,
     NULL,
-    'Módulo Loggi habilitado (espelha MODULE_LOGGI_ENABLED)'
+    'Módulo Loggi habilitado (Admin → Serviços externos)'
   ),
   (
     'modules',

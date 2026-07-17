@@ -52,13 +52,13 @@ async function getModuleFreightFlags() {
   return {
     loggi: {
       enabled: await isModuleEnabled('loggi'),
-      use_for_quote: asBool(map['modules.loggi.use_for_quote'], true),
-      use_for_label: asBool(map['modules.loggi.use_for_label'], true),
+      use_for_quote: asBool(map['modules.loggi.use_for_quote'], false),
+      use_for_label: asBool(map['modules.loggi.use_for_label'], false),
       use_for_tracking: asBool(map['modules.loggi.use_for_tracking'], false),
     },
     melhorenvio: {
       enabled: await isModuleEnabled('melhorenvio'),
-      use_for_quote: asBool(map['modules.melhorenvio.use_for_quote'], true),
+      use_for_quote: asBool(map['modules.melhorenvio.use_for_quote'], false),
       use_for_label: asBool(map['modules.melhorenvio.use_for_label'], false),
       use_for_tracking: asBool(map['modules.melhorenvio.use_for_tracking'], false),
     },
@@ -72,8 +72,28 @@ function assertShipFrom(shipFrom) {
       missing: ['store.ship_from'],
     });
   }
-  const required = ['street', 'number', 'city', 'state', 'cep'];
-  const missing = required.filter((k) => !String(shipFrom[k] || '').trim());
+  const required = [
+    'name',
+    'street',
+    'number',
+    'neighborhood',
+    'city',
+    'state',
+    'cep',
+    'phone',
+    'document',
+  ];
+  const missing = required.filter((k) => {
+    if (k === 'phone') {
+      return !String(shipFrom.phone || shipFrom.phoneNumber || '').replace(/\D/g, '');
+    }
+    if (k === 'document') {
+      return !String(
+        shipFrom.document || shipFrom.federalTaxId || shipFrom.cnpj || shipFrom.cpf || ''
+      ).replace(/\D/g, '');
+    }
+    return !String(shipFrom[k] || '').trim();
+  });
   if (missing.length) {
     throw new AppError(400, 'CONFIG_INCOMPLETE', 'store.ship_from incompleto', {
       missing: missing.map((k) => `store.ship_from.${k}`),
@@ -81,25 +101,9 @@ function assertShipFrom(shipFrom) {
   }
 }
 
-/** Remetente completo exigido para etiqueta Loggi (nome, telefone, documento). */
+/** Alias — remetente completo (exceto complemento) é obrigatório para cotação e etiqueta. */
 function assertShipFromForLabel(shipFrom) {
   assertShipFrom(shipFrom);
-  const missing = [];
-  if (!String(shipFrom.name || '').trim()) missing.push('store.ship_from.name');
-  if (!String(shipFrom.phone || shipFrom.phoneNumber || '').replace(/\D/g, '')) {
-    missing.push('store.ship_from.phone');
-  }
-  if (!String(shipFrom.document || shipFrom.federalTaxId || shipFrom.cnpj || '').replace(/\D/g, '')) {
-    missing.push('store.ship_from.document');
-  }
-  if (missing.length) {
-    throw new AppError(
-      400,
-      'CONFIG_INCOMPLETE',
-      'Remetente incompleto para etiqueta Loggi (nome, telefone e CPF/CNPJ). Ajuste em Serviços externos → Dados de envio.',
-      { missing }
-    );
-  }
 }
 
 function assertPackage(pkg) {

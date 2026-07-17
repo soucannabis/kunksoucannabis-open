@@ -27,10 +27,10 @@ function resolveEnvironmentKey(raw) {
   const v = String(raw || '')
     .trim()
     .toLowerCase();
-  if (v === 'production' || v === 'prod' || v === 'producao' || v === 'produção') {
-    return 'production';
+  if (v === 'sandbox' || v === 'test' || v === 'homolog' || v === 'homologacao' || v === 'homologação') {
+    return 'sandbox';
   }
-  return 'sandbox';
+  return 'production';
 }
 
 /**
@@ -65,12 +65,12 @@ function meSiteOrigin(apiBase) {
   try {
     return new URL(base.replace(/\/api\/v2\/?$/, '')).origin;
   } catch {
-    return ME_ENVIRONMENTS.sandbox.site;
+    return ME_ENVIRONMENTS.production.site;
   }
 }
 
 function detectEnvironmentFromApiBase(apiBase) {
-  const normalized = normalizeMeApiBase(apiBase || ME_ENVIRONMENTS.sandbox.api_base_url);
+  const normalized = normalizeMeApiBase(apiBase || ME_ENVIRONMENTS.production.api_base_url);
   if (/sandbox\.melhorenvio\.com\.br/i.test(normalized)) return 'sandbox';
   return 'production';
 }
@@ -82,7 +82,7 @@ async function getEnvironment() {
   if (envVal) return resolveEnvironmentKey(envVal);
   const apiVal = credentialsService.resolveFromRow(byKey.api_base_url).value;
   if (apiVal) return detectEnvironmentFromApiBase(apiVal);
-  return 'sandbox';
+  return 'production';
 }
 
 async function getApiBase() {
@@ -91,16 +91,39 @@ async function getApiBase() {
   return ME_ENVIRONMENTS[envKey].api_base_url;
 }
 
-async function ensureEnvironmentRow() {
+/** Garante metadados de credenciais mesmo sem o SQL de seed aplicado. */
+async function ensureCredentialRows() {
   await query(
     `INSERT INTO system_api_credentials (
        service, field_key, encrypted_value, env_fallback, is_secret, description
-     ) VALUES (
-       'melhorenvio', 'environment', NULL, 'MELHOR_ENVIO_ENVIRONMENT', false,
-       'Ambiente Melhor Envio: sandbox ou production'
-     )
+     ) VALUES
+       ('melhorenvio', 'client_id', NULL, 'MELHOR_ENVIO_CLIENT_ID', true, 'Melhor Envio OAuth client_id'),
+       ('melhorenvio', 'client_secret', NULL, 'MELHOR_ENVIO_CLIENT_SECRET', true, 'Melhor Envio OAuth client_secret'),
+       ('melhorenvio', 'redirect_uri', NULL, 'MELHOR_ENVIO_REDIRECT_URI', false, 'OAuth redirect URI (API callback)'),
+       ('melhorenvio', 'api_base_url', NULL, 'MELHOR_ENVIO_API_URL', false, 'Melhor Envio API base URL'),
+       ('melhorenvio', 'environment', NULL, 'MELHOR_ENVIO_ENVIRONMENT', false, 'Ambiente Melhor Envio: production (padrão) ou sandbox'),
+       ('melhorenvio', 'access_token', NULL, NULL, true, 'Melhor Envio OAuth access token'),
+       ('melhorenvio', 'refresh_token', NULL, NULL, true, 'Melhor Envio OAuth refresh token')
      ON CONFLICT (service, field_key) DO NOTHING`
   );
+}
+
+async function ensureEnvironmentRow() {
+  await ensureCredentialRows();
+  // Sem valor gravado → produção (não exige sandbox antes).
+  const rows = await credentialsService.listRows('melhorenvio');
+  const envRow = rows.find((r) => r.field_key === 'environment');
+  const hasValue = envRow && credentialsService.hasValueFromRow(envRow);
+  if (!hasValue) {
+    await credentialsService.putCredentials(
+      'melhorenvio',
+      {
+        environment: 'production',
+        api_base_url: ME_ENVIRONMENTS.production.api_base_url,
+      },
+      { runTest: false }
+    );
+  }
 }
 
 /**
@@ -339,6 +362,7 @@ module.exports = {
   getEnvironment,
   setEnvironment,
   ensureEnvironmentRow,
+  ensureCredentialRows,
   getTokens,
   saveTokens,
   buildAuthorizeUrl,

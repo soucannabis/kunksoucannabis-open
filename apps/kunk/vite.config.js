@@ -18,6 +18,8 @@ export default defineConfig({
       '@kunk/config': path.resolve(root, 'packages/config/src/index.js'),
       '@kunk/api-client': path.resolve(root, 'packages/api-client/src/index.js'),
       '@kunk/auth-session': path.resolve(root, 'packages/auth-session/src/index.jsx'),
+      '@kunk/forms': path.resolve(root, 'packages/forms/src/index.jsx'),
+      'web-vitals': path.resolve(root, 'node_modules/web-vitals'),
     },
   },
   server: {

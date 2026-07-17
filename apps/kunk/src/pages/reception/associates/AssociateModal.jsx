@@ -27,6 +27,11 @@ import {
   TermStubMenu,
 } from './AssociateTabs.jsx';
 import { displayName, formatCreated, parseAnnotations, contentAreaDialogSx } from './associatesStatus.js';
+import { useCacheConfig } from '../../../lib/cache/CacheConfigProvider.jsx';
+import {
+  fetchAssociateUser,
+  invalidateAssociateCache,
+} from '../../../lib/cache/fetchers.js';
 
 const GREEN = '#5a7a5b';
 
@@ -42,6 +47,7 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
   const [confirmMake, setConfirmMake] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [ciap2Enabled, setCiap2Enabled] = useState(true);
+  const { enabled: cacheEnabled } = useCacheConfig();
 
   useEffect(() => {
     let cancelled = false;
@@ -69,8 +75,9 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
     try {
       let u = initialUser;
       if (initialUser?.user_code) {
-        const res = await api.getUserByCode(initialUser.user_code, 'patients=1');
-        u = res.data || initialUser;
+        u =
+          (await fetchAssociateUser(api, cacheEnabled, initialUser.user_code, 'patients=1')) ||
+          initialUser;
       }
       setUser(u);
       if (u?.id) {
@@ -88,7 +95,7 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
     }
     // initialUser usado só como fallback; identidade controlada por userKey
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [api, userKey]);
+  }, [api, cacheEnabled, userKey]);
 
   useEffect(() => {
     if (!open) return;
@@ -105,6 +112,7 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
     try {
       const res = await api.updateUser(user.id, patch);
       setUser(res.data);
+      invalidateAssociateCache(user.user_code);
       onChanged?.();
       setMsg('Salvo');
     } catch (err) {
@@ -119,6 +127,7 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
     try {
       const res = await api.makeAssociate(user.id);
       setUser(res.data);
+      invalidateAssociateCache(user.user_code);
       onChanged?.();
       setConfirmMake(false);
     } catch (err) {

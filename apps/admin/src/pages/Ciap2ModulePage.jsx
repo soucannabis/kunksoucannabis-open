@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { AdminLoader } from '../components/AdminLoader.jsx';
 
 export function Ciap2ModulePage({ api }) {
   const [enabled, setEnabled] = useState(true);
@@ -48,18 +48,22 @@ export function Ciap2ModulePage({ api }) {
     }
   }
 
-  if (loading) return <p className="muted">Carregando…</p>;
+  if (loading) return <AdminLoader />;
 
   return (
     <form
       onSubmit={onSubmit}
       className="card"
-      style={{ padding: '1.25rem', display: 'grid', gap: '1rem', maxWidth: 560 }}
+      style={{
+        padding: '1.25rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+        maxWidth: 560,
+        width: '100%',
+      }}
     >
       <div>
-        <p className="muted" style={{ margin: '0 0 0.5rem' }}>
-          <Link to="/configs">← Configs</Link>
-        </p>
         <h2 style={{ marginTop: 0 }}>Módulo CIAP-2</h2>
         <p className="muted" style={{ margin: 0 }}>
           Controla o seletor de motivos CIAP-2 no Kunk (associados/pacientes) e no cadastramento.
@@ -68,16 +72,18 @@ export function Ciap2ModulePage({ api }) {
       </div>
       {error ? <p style={{ color: 'var(--admin-danger)', margin: 0 }}>{error}</p> : null}
       {message ? <p style={{ color: 'var(--admin-success, #2e7d32)', margin: 0 }}>{message}</p> : null}
-      <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.75rem' }}>
+      <label
+        className={`ext-flag${enabled ? ' ext-flag--active' : ''}`}
+        data-testid="ciap2-enabled-toggle"
+      >
         <input
           type="checkbox"
           checked={enabled}
           onChange={(e) => setEnabled(e.target.checked)}
         />
-        <span>
-          Habilitar módulo CIAP-2
-          <br />
-          <span className="muted">Default ligado. Pode forçar off com MODULE_CIAP2_ENABLED=false.</span>
+        <span className="ext-flag-body">
+          <strong>Habilitar módulo CIAP-2</strong>
+          <span className="muted">Default ligado. Controle pelo Admin (CIAP-2).</span>
         </span>
       </label>
       <div>
