@@ -27,9 +27,10 @@ const { Pool } = require('pg');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const manifest = require('./manifest-load.json');
-const demoManifest = require('./manifest.json');
 
-const DEMO_PASSWORD = manifest.demo_login.password;
+/** Senha das contas de associado no sample de carga (não cria operadores). */
+const SAMPLE_ASSOCIATE_PASSWORD = 'DemoAssociate123!';
+const SAMPLE_CREATED_BY = 'sample-seed';
 const SALT_ROUNDS = 8;
 const QUOTED = new Set(['user']);
 
@@ -155,10 +156,10 @@ async function truncateAll(client) {
       orders_files, services_files, users_files,
       orders, services, reception, reports, tags, products, institutional_clients,
       professionals,
-      users, system_users, users_api, files
+      users, users_api, files
     RESTART IDENTITY CASCADE
   `);
-  console.log('Tabelas truncadas');
+  console.log('Tabelas truncadas (system_users preservada — operadores não são seed)');
 }
 
 async function insertBatch(client, table, columns, rows) {
@@ -193,107 +194,6 @@ async function insertBatches(client, table, columns, buildRow, total, batchSize,
   const ms = Date.now() - t0;
   console.log(`\r  ${label}: ${total}/${total} (${ms}ms)          `);
   return ids;
-}
-
-function buildSystemUsers(passwordHash) {
-  return [
-    {
-      date_created: daysAgo(60),
-      date_updated: daysAgo(1),
-      name: 'Admin',
-      last_name: 'Demo',
-      status: 'active',
-      user_code: uuid(),
-      permissions: JSON.stringify(['Administrador']),
-      email: manifest.demo_login.email,
-      password: passwordHash,
-      cpf: fakeCpf(9001),
-      rg: '9000001',
-      birth_date: '1985-03-12',
-      gender: 'homem-cis',
-      nationality: 'Brasileira',
-      marital_status: 'solteiro',
-      mobile_number: fakePhone(9001),
-      street: 'Rua Admin Demo 1',
-      neighborhood: 'Centro',
-      city: 'São Paulo',
-      state: 'SP',
-      cep: fakeCep(9001),
-      pix_key: 'admin@demo.kunk.local',
-      commission_value: '0',
-      transactions: '[]',
-      commission_total: '0',
-      session_token: null,
-      session_expires: null,
-      last_activity: daysAgo(0),
-      is_session_active: false,
-      internal_code: 'KNK-ADMIN',
-    },
-    {
-      date_created: daysAgo(55),
-      date_updated: daysAgo(2),
-      name: 'Lia',
-      last_name: 'Acolhimento',
-      status: 'active',
-      user_code: uuid(),
-      permissions: JSON.stringify(['Acolhimento']),
-      email: 'acolhimento@demo.kunk.local',
-      password: passwordHash,
-      cpf: fakeCpf(9002),
-      rg: '9000002',
-      birth_date: '1990-07-21',
-      gender: 'mulher-cis',
-      nationality: 'Brasileira',
-      marital_status: 'casado',
-      mobile_number: fakePhone(9002),
-      street: 'Rua Acolhimento Demo 2',
-      neighborhood: 'Jardins',
-      city: 'Campinas',
-      state: 'SP',
-      cep: fakeCep(9002),
-      pix_key: 'acolhimento@pix.demo',
-      commission_value: '0',
-      transactions: '[]',
-      commission_total: '0',
-      session_token: null,
-      session_expires: null,
-      last_activity: daysAgo(1),
-      is_session_active: false,
-      internal_code: 'KNK-ACOL',
-    },
-    {
-      date_created: daysAgo(50),
-      date_updated: daysAgo(3),
-      name: 'Pedro',
-      last_name: 'Produção',
-      status: 'active',
-      user_code: uuid(),
-      permissions: JSON.stringify(['Produção']),
-      email: 'producao@demo.kunk.local',
-      password: passwordHash,
-      cpf: fakeCpf(9003),
-      rg: '9000003',
-      birth_date: '1988-11-05',
-      gender: 'homem-cis',
-      nationality: 'Brasileira',
-      marital_status: 'união estável',
-      mobile_number: fakePhone(9003),
-      street: 'Rua Produção Demo 3',
-      neighborhood: 'Industrial',
-      city: 'Curitiba',
-      state: 'PR',
-      cep: fakeCep(9003),
-      pix_key: 'producao@pix.demo',
-      commission_value: '0',
-      transactions: '[]',
-      commission_total: '0',
-      session_token: null,
-      session_expires: null,
-      last_activity: daysAgo(2),
-      is_session_active: false,
-      internal_code: 'KNK-PROD',
-    },
-  ];
 }
 
 async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHash }) {
@@ -341,22 +241,6 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
       'id', 'filename', 'mime_type', 'storage_path', 'storage_driver', 'storage_key', 'created_at', 'is_sample',
     ], fileRows);
     console.log(`  files: ${fileRows.length}`);
-
-    // system_users
-    const sysCols = [
-      'date_created', 'date_updated', 'name', 'last_name', 'status', 'user_code', 'permissions',
-      'email', 'password', 'cpf', 'rg', 'birth_date', 'gender', 'nationality', 'marital_status',
-      'mobile_number', 'street', 'neighborhood', 'city', 'state', 'cep', 'pix_key',
-      'commission_value', 'transactions', 'commission_total', 'session_token', 'session_expires',
-      'last_activity', 'is_session_active', 'internal_code', 'is_sample',
-    ];
-    await insertBatch(
-      client,
-      'system_users',
-      sysCols,
-      buildSystemUsers(passwordHash).map((r) => ({ ...r, is_sample: true }))
-    );
-    console.log('  system_users: 3');
 
     // users
     const userCols = [
@@ -414,7 +298,7 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
           associate_cpf: fakeCpf(i + 1),
           associate_rg: `${1000000 + i}`,
           mobile_number: fakePhone(i + 1),
-          associate_status: isPatient ? null : 5,
+          associate_status: isPatient ? null : 'concluido',
           prescription: `rx-${i + 1}.pdf`,
           responsible_code: isPatient ? userCodes[responsibleIdx] : null,
           documents_folder_id: `docs-${i + 1}`,
@@ -798,7 +682,7 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
         dashboard_queries: { load: true },
         layout_positions: { x: (i % 6) * 2, y: Math.floor(i / 6) * 4, w: 6, h: 4 },
         chart_config: { type: pick(['bar', 'pie', 'line'], i) },
-        created_by: manifest.demo_login.email,
+        created_by: SAMPLE_CREATED_BY,
         tags: [{ tag: 'load' }],
         column_maps: { status: 'Status', count: 'Total' },
         embedded_report_codes: [],
@@ -821,7 +705,6 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
       UNION ALL SELECT 'professionals', COUNT(*)::int FROM professionals
       UNION ALL SELECT 'products', COUNT(*)::int FROM products
       UNION ALL SELECT 'tags', COUNT(*)::int FROM tags
-      UNION ALL SELECT 'system_users', COUNT(*)::int FROM system_users
       UNION ALL SELECT 'files', COUNT(*)::int FROM files
       UNION ALL SELECT 'reports', COUNT(*)::int FROM reports
       ORDER BY t
@@ -854,7 +737,7 @@ async function main() {
     process.exit(1);
   }
 
-  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, SALT_ROUNDS);
+  const passwordHash = await bcrypt.hash(SAMPLE_ASSOCIATE_PASSWORD, SALT_ROUNDS);
   const t0 = Date.now();
   await seedLoad(counts, {
     truncate: !args.noTruncate,
@@ -863,8 +746,7 @@ async function main() {
     passwordHash,
   });
   console.log(`\nConcluído em ${((Date.now() - t0) / 1000).toFixed(1)}s`);
-  console.log(`Login: ${manifest.demo_login.email} / ${DEMO_PASSWORD}`);
-  console.log(`(demo legado: ${demoManifest.demo_login.email} — recriado neste seed)`);
+  console.log(`Sample de carga instalado (sem operadores). Senha associados: ${SAMPLE_ASSOCIATE_PASSWORD}`);
 }
 
 main().catch((err) => {

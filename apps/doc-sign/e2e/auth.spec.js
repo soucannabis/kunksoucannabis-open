@@ -11,7 +11,7 @@ test.describe('auth', () => {
   test('login com Administrador entra em Termos', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(page).toHaveURL(/\/termos/);
-    await expect(page.getByText('Doc-sign')).toBeVisible();
+    await expect(page.getByText('ASSINATURA DE TERMOS')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Termos' })).toBeVisible();
   });
 
@@ -26,7 +26,7 @@ test.describe('auth', () => {
 
   test('logout volta para login', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page.getByText('Doc-sign')).toBeVisible();
+    await expect(page.getByText('ASSINATURA DE TERMOS')).toBeVisible();
     await page.getByRole('button', { name: 'Sair' }).click();
     await expect(page).toHaveURL(/\/login/);
   });

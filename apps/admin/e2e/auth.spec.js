@@ -10,9 +10,9 @@ test.describe('auth', () => {
 
   test('login com Administrador entra no shell', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page).toHaveURL(/\/dados/);
-    await expect(page.getByText('Kunk Admin')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Dados' })).toBeVisible();
+    await expect(page).toHaveURL(/\/inicio\/?$/);
+    await expect(page.locator('.admin-nav .brand')).toHaveText('Kunk Admin');
+    await expect(page.getByRole('heading', { name: 'Central de ajuda', exact: true })).toBeVisible();
   });
 
   test('credencial inválida mostra erro', async ({ page }) => {
@@ -26,7 +26,7 @@ test.describe('auth', () => {
 
   test('logout volta para login', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page.getByText('Kunk Admin')).toBeVisible();
+    await expect(page.locator('.admin-nav .brand')).toHaveText('Kunk Admin');
     await page.getByRole('button', { name: 'Sair' }).click();
     await expect(page).toHaveURL(/\/login/);
   });

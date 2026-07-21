@@ -10,7 +10,7 @@ test.describe('servicos externos', () => {
 
   test('lista e form de secret não reexibe valor; teste falho não salva', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page.getByText('Kunk Admin')).toBeVisible();
+    await expect(page.locator('.admin-nav .brand')).toHaveText('Kunk Admin');
     await page.goto(appUrl('/servicos-externos/loggi'));
     await expect(page.getByRole('heading', { name: 'loggi' })).toBeVisible();
 

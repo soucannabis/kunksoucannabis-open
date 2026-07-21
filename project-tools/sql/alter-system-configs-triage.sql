@@ -58,6 +58,61 @@ INSERT INTO system_configs (
     true,
     'true',
     'Formulário público de triagem habilitado'
+  ),
+  (
+    'triage',
+    'triage.form.theme',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    'dark',
+    'Tema visual do formulário público de triagem (dark|light)'
+  ),
+  (
+    'triage',
+    'triage.form.title',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    'Fila de acolhimento',
+    'Título do formulário público de triagem'
+  ),
+  (
+    'triage',
+    'triage.form.subtitle',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    'Preencha para entrar na fila de contato do acolhimento',
+    'Subtítulo do formulário público de triagem'
+  ),
+  (
+    'triage',
+    'triage.form.success_title',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    'Você entrou na fila',
+    'Título da mensagem após envio do formulário público de triagem'
+  ),
+  (
+    'triage',
+    'triage.form.success_subtitle',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    'Em breve a equipe de acolhimento entrará em contato.',
+    'Subtítulo da mensagem após envio do formulário público de triagem'
   )
 ON CONFLICT (system, key) DO NOTHING;
 

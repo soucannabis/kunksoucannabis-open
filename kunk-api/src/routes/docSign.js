@@ -105,6 +105,14 @@ router.post('/templates/:kind/reset', authenticate, authorizeAdmin, async (req, 
   }
 });
 
+router.delete('/templates/:kind', authenticate, authorizeAdmin, async (req, res, next) => {
+  try {
+    res.json(ok(await docSignService.deleteTemplate(req.params.kind)));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/templates/versions/:versionId', authenticate, authorizeAdmin, async (req, res, next) => {
   try {
     const version = await repo.getVersionById(req.params.versionId);

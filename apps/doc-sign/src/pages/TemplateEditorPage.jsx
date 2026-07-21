@@ -7,6 +7,7 @@ import { kindLabel, variableLabel } from '../labels.js';
 
 function EditableSampleFields({ fields, values, onChange, kind }) {
   const visible = fields.filter((f) => {
+    if (String(f.name || '').startsWith('association_')) return false;
     if (kind !== 'with_patient' && (f.name === 'patient_full_name' || f.name === 'patient_cpf')) {
       return false;
     }
@@ -42,10 +43,11 @@ export function TemplateEditorPage({ api }) {
   const [cropSrc, setCropSrc] = useState(null);
   const [error, setError] = useState(null);
   const [msg, setMsg] = useState(null);
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [sampleFields, setSampleFields] = useState([]);
   const [sampleValues, setSampleValues] = useState({});
+  const busy = Boolean(busyAction);
 
   async function loadLogos() {
     try {
@@ -97,7 +99,7 @@ export function TemplateEditorPage({ api }) {
   }
 
   async function saveDraft() {
-    setBusy(true);
+    setBusyAction('save');
     setError(null);
     setMsg(null);
     try {
@@ -108,12 +110,12 @@ export function TemplateEditorPage({ api }) {
     } catch (err) {
       setError(err.message);
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
   async function publish() {
-    setBusy(true);
+    setBusyAction('publish');
     setError(null);
     setMsg(null);
     try {
@@ -125,25 +127,24 @@ export function TemplateEditorPage({ api }) {
     } catch (err) {
       setError(err.message);
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
-  async function resetModel() {
-    const okConfirm = window.confirm(
-      'Excluir este modelo? O rascunho, a logo e as versões publicadas serão limpos e o texto padrão será restaurado.'
-    );
+  async function deleteModel() {
+    const label = title || tpl?.display_name || kindLabel(kind);
+    const okConfirm = window.confirm(`Excluir o modelo "${label}"? Esta ação não pode ser desfeita.`);
     if (!okConfirm) return;
-    setBusy(true);
+    setBusyAction('delete');
     setError(null);
     setMsg(null);
     try {
-      await api.post(`/doc-sign/templates/${kind}/reset`, {});
+      await api.del(`/doc-sign/templates/${encodeURIComponent(kind)}`);
       navigate('/modelos');
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Falha ao excluir modelo');
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
@@ -155,7 +156,7 @@ export function TemplateEditorPage({ api }) {
   }
 
   async function onCropConfirm(blob) {
-    setBusy(true);
+    setBusyAction('logo');
     setError(null);
     try {
       const fd = new FormData();
@@ -175,12 +176,12 @@ export function TemplateEditorPage({ api }) {
     } finally {
       if (cropSrc) URL.revokeObjectURL(cropSrc);
       setCropSrc(null);
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
   async function selectExistingLogo(logo) {
-    setBusy(true);
+    setBusyAction('logo');
     setError(null);
     try {
       setLogoFileId(logo.id);
@@ -190,11 +191,12 @@ export function TemplateEditorPage({ api }) {
     } catch (err) {
       setError(err.message);
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
   async function openPreviewPanel() {
+    setBusyAction('preview');
     setError(null);
     setMsg(null);
     try {
@@ -202,6 +204,8 @@ export function TemplateEditorPage({ api }) {
       setPreviewOpen(true);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setBusyAction(null);
     }
   }
 
@@ -210,7 +214,7 @@ export function TemplateEditorPage({ api }) {
   }
 
   async function downloadPreviewPdf() {
-    setBusy(true);
+    setBusyAction('download');
     setError(null);
     setMsg(null);
     try {
@@ -242,7 +246,7 @@ export function TemplateEditorPage({ api }) {
     } catch (err) {
       setError(err.message);
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   }
 
@@ -268,10 +272,10 @@ export function TemplateEditorPage({ api }) {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={tpl.default_title || 'Termo de Adesão à Associação Terapêutica…'}
+            placeholder={tpl.default_title || 'Termo de Adesão à…'}
           />
           <p className="muted" style={{ margin: '0.35rem 0 0', fontSize: '0.9rem' }}>
-            Sugestão a partir do nome no admin: {tpl.default_title}
+            Padrão: {tpl.default_title}
           </p>
         </div>
 
@@ -328,22 +332,48 @@ export function TemplateEditorPage({ api }) {
       {error && <div className="alert alert-error">{error}</div>}
       {msg && <div className="alert">{msg}</div>}
       <p className="muted" style={{ marginBottom: '0.75rem' }}>
-        {tpl.current_version_number != null
-          ? `Publicado — versão ${tpl.current_version_number}`
-          : 'Ainda não publicado'}
+        {tpl.current_version_id ? 'Publicado' : 'Ainda não publicado'}
       </p>
       <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-        <button type="button" className="btn" disabled={busy} onClick={saveDraft}>
-          Salvar rascunho
+        <button type="button" className="btn btn-loading" disabled={busy} onClick={saveDraft}>
+          {busyAction === 'save' ? (
+            <>
+              <span className="spinner" aria-hidden />
+              Salvando…
+            </>
+          ) : (
+            'Salvar rascunho'
+          )}
         </button>
-        <button type="button" className="btn btn-primary" disabled={busy} onClick={publish}>
-          Publicar versão
+        <button type="button" className="btn btn-primary btn-loading" disabled={busy} onClick={publish}>
+          {busyAction === 'publish' ? (
+            <>
+              <span className="spinner" aria-hidden />
+              Publicando…
+            </>
+          ) : (
+            'Publicar'
+          )}
         </button>
-        <button type="button" className="btn" disabled={busy} onClick={openPreviewPanel}>
-          Baixar PDF de teste
+        <button type="button" className="btn btn-loading" disabled={busy} onClick={openPreviewPanel}>
+          {busyAction === 'preview' ? (
+            <>
+              <span className="spinner" aria-hidden />
+              Carregando…
+            </>
+          ) : (
+            'Baixar PDF de teste'
+          )}
         </button>
-        <button type="button" className="btn btn-danger" disabled={busy} onClick={resetModel}>
-          Excluir modelo
+        <button type="button" className="btn btn-danger btn-loading" disabled={busy} onClick={deleteModel}>
+          {busyAction === 'delete' ? (
+            <>
+              <span className="spinner" aria-hidden />
+              Excluindo…
+            </>
+          ) : (
+            'Excluir modelo'
+          )}
         </button>
       </div>
 
@@ -360,8 +390,20 @@ export function TemplateEditorPage({ api }) {
             onChange={(name, value) => setSampleValues((prev) => ({ ...prev, [name]: value }))}
           />
           <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-            <button type="button" className="btn btn-primary" disabled={busy} onClick={downloadPreviewPdf}>
-              Gerar e baixar PDF
+            <button
+              type="button"
+              className="btn btn-primary btn-loading"
+              disabled={busy}
+              onClick={downloadPreviewPdf}
+            >
+              {busyAction === 'download' ? (
+                <>
+                  <span className="spinner" aria-hidden />
+                  Gerando PDF…
+                </>
+              ) : (
+                'Gerar e baixar PDF'
+              )}
             </button>
             <button type="button" className="btn" disabled={busy} onClick={resetSampleData}>
               Restaurar fictícios

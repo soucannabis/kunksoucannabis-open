@@ -23,7 +23,7 @@
       "type": "bar",
       "stacked": false
     },
-    "created_by": "admin@demo.kunk.local",
+    "created_by": "sample-seed",
     "tags": [
       {
         "tag": "demo"
@@ -64,7 +64,7 @@
     "chart_config": {
       "type": "pie"
     },
-    "created_by": "admin@demo.kunk.local",
+    "created_by": "sample-seed",
     "tags": [
       {
         "tag": "demo"
@@ -108,7 +108,7 @@
     "chart_config": {
       "type": "mixed"
     },
-    "created_by": "admin@demo.kunk.local",
+    "created_by": "sample-seed",
     "tags": [
       {
         "tag": "demo"
@@ -117,9 +117,7 @@
     "column_maps": {},
     "embedded_report_codes": [],
     "favorites": {
-      "users": [
-        "admin@demo.kunk.local"
-      ]
+      "users": []
     },
     "is_sample": true
   }

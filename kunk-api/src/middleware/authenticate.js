@@ -1,6 +1,7 @@
 'use strict';
 
 const authRepository = require('../repositories/authRepository');
+const systemConfigService = require('../services/systemConfigService');
 const { AppError } = require('../utils/response');
 const { OPERATOR_SESSION_COOKIE } = require('../constants/authCookies');
 
@@ -26,6 +27,10 @@ async function authenticate(req, res, next) {
     }
 
     if (bearer) {
+      const enabled = await systemConfigService.isApiAccessEnabled();
+      if (!enabled) {
+        throw new AppError(401, 'API_DISABLED', 'Acesso via API está desabilitado');
+      }
       const apiToken = await authRepository.resolveBearer(bearer);
       if (!apiToken) {
         throw new AppError(401, 'UNAUTHORIZED', 'Token inválido');

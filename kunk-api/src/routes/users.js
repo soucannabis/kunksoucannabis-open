@@ -69,6 +69,15 @@ router.get('/me/documents/status', requireAssociate, async (req, res, next) => {
   }
 });
 
+router.get('/me/extras/status', requireAssociate, async (req, res, next) => {
+  try {
+    const data = await registrationService.extrasStatus(req.associateRow);
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/me/advance', requireAssociate, async (req, res, next) => {
   try {
     const data = await registrationService.advance(req.associateRow);

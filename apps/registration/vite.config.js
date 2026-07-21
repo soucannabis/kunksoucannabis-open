@@ -22,7 +22,6 @@ export default defineConfig({
       '@kunk/theme': path.resolve(root, 'packages/theme/src/index.js'),
       '@kunk/ui': path.resolve(root, 'packages/ui/src/index.jsx'),
       '@kunk/forms': path.resolve(root, 'packages/forms/src/index.jsx'),
-      'web-vitals': path.resolve(root, 'node_modules/web-vitals'),
     },
   },
   server: {

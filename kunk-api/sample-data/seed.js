@@ -19,8 +19,10 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const manifest = require('./manifest.json');
 const FIXTURES_DIR = path.join(__dirname, 'fixtures');
-const DEMO_PASSWORD = manifest.demo_login.password;
+/** Senha das contas de associado no sample (não cria operadores). */
+const SAMPLE_ASSOCIATE_PASSWORD = 'DemoAssociate123!';
 const SALT_ROUNDS = 8;
+const SAMPLE_CREATED_BY = 'sample-seed';
 
 const FIRST_NAMES = [
   'Ana', 'Bruno', 'Carla', 'Diego', 'Elena', 'Fábio', 'Gabriela', 'Hugo', 'Iris', 'João',
@@ -123,8 +125,8 @@ function serializeValue(v) {
   return v;
 }
 
-async function buildDataset(passwordHash) {
-  const counts = manifest.counts;
+async function buildDataset(passwordHash, countsOverride = null) {
+  const counts = { ...manifest.counts, ...(countsOverride || {}) };
 
   const files = Array.from({ length: counts.files }, (_, i) => ({
     id: uuid(),
@@ -133,114 +135,6 @@ async function buildDataset(passwordHash) {
     storage_path: `sample-data/assets/demo-doc-${String(i + 1).padStart(2, '0')}.pdf`,
     created_at: daysAgo(30 - i),
   }));
-
-  const system_users = [
-    {
-      date_created: daysAgo(60),
-      date_updated: daysAgo(1),
-      name: 'Admin',
-      last_name: 'Demo',
-      status: 'active',
-      user_code: uuid(),
-      permissions: JSON.stringify(['Administrador']),
-      email: manifest.demo_login.email,
-      password: passwordHash,
-      cpf: fakeCpf(9001),
-      rg: '9000001',
-      birth_date: '1985-03-12',
-      gender: 'homem-cis',
-      nationality: 'Brasileira',
-      marital_status: 'solteiro',
-      mobile_number: fakePhone(9001),
-      street: 'Rua Admin Demo 1',
-      neighborhood: 'Centro',
-      city: 'São Paulo',
-      state: 'SP',
-      cep: fakeCep(9001),
-      pix_key: 'admin@demo.kunk.local',
-      commission_value: '0',
-      transactions: '[]',
-      commission_total: '0',
-      avatar_url: 'https://cdn.demo.kunk.local/avatars/admin.png',
-      utalk_id: 'utalk-admin-demo',
-      utalk_token: 'demo-utalk-token-admin',
-      session_token: 'inactive-admin-session',
-      session_expires: daysAgo(-1),
-      last_activity: daysAgo(0),
-      is_session_active: false,
-      internal_code: 'KNK-ADMIN',
-    },
-    {
-      date_created: daysAgo(55),
-      date_updated: daysAgo(2),
-      name: 'Lia',
-      last_name: 'Acolhimento',
-      status: 'active',
-      user_code: uuid(),
-      permissions: JSON.stringify(['Acolhimento']),
-      email: 'acolhimento@demo.kunk.local',
-      password: passwordHash,
-      cpf: fakeCpf(9002),
-      rg: '9000002',
-      birth_date: '1990-07-21',
-      gender: 'mulher-cis',
-      nationality: 'Brasileira',
-      marital_status: 'casado',
-      mobile_number: fakePhone(9002),
-      street: 'Rua Acolhimento Demo 2',
-      neighborhood: 'Jardins',
-      city: 'Campinas',
-      state: 'SP',
-      cep: fakeCep(9002),
-      pix_key: 'acolhimento@pix.demo',
-      commission_value: '0',
-      transactions: '[]',
-      commission_total: '0',
-      avatar_url: 'https://cdn.demo.kunk.local/avatars/lia.png',
-      utalk_id: 'utalk-lia-demo',
-      utalk_token: 'demo-utalk-token-lia',
-      session_token: 'inactive-lia-session',
-      session_expires: daysAgo(-1),
-      last_activity: daysAgo(1),
-      is_session_active: false,
-      internal_code: 'KNK-ACOL',
-    },
-    {
-      date_created: daysAgo(50),
-      date_updated: daysAgo(3),
-      name: 'Pedro',
-      last_name: 'Produção',
-      status: 'active',
-      user_code: uuid(),
-      permissions: JSON.stringify(['Produção']),
-      email: 'producao@demo.kunk.local',
-      password: passwordHash,
-      cpf: fakeCpf(9003),
-      rg: '9000003',
-      birth_date: '1988-11-05',
-      gender: 'homem-cis',
-      nationality: 'Brasileira',
-      marital_status: 'união estável',
-      mobile_number: fakePhone(9003),
-      street: 'Rua Produção Demo 3',
-      neighborhood: 'Industrial',
-      city: 'Curitiba',
-      state: 'PR',
-      cep: fakeCep(9003),
-      pix_key: 'producao@pix.demo',
-      commission_value: '0',
-      transactions: '[]',
-      commission_total: '0',
-      avatar_url: 'https://cdn.demo.kunk.local/avatars/pedro.png',
-      utalk_id: 'utalk-pedro-demo',
-      utalk_token: 'demo-utalk-token-pedro',
-      session_token: 'inactive-pedro-session',
-      session_expires: daysAgo(-1),
-      last_activity: daysAgo(2),
-      is_session_active: false,
-      internal_code: 'KNK-PROD',
-    },
-  ];
 
   const professionals = Array.from({ length: counts.professionals }, (_, i) => {
     const first = pick(FIRST_NAMES, i + 11);
@@ -340,7 +234,7 @@ async function buildDataset(passwordHash) {
       associate_cpf: fakeCpf(i + 1),
       associate_rg: `${String(1000000 + i)}`,
       mobile_number: fakePhone(i + 1),
-      associate_status: isPatientLink ? null : 5,
+      associate_status: isPatientLink ? null : 'concluido',
       prescription: `prescription-${i + 1}.pdf`,
       documents_folder_id: `docs-user-${i + 1}`,
       rg_patient_proof: isPatientLink ? `rg-patient-${i + 1}.pdf` : `rg-self-${i + 1}.pdf`,
@@ -373,14 +267,16 @@ async function buildDataset(passwordHash) {
     };
   });
 
-  for (let i = 80; i < 100; i++) {
+  for (let i = 80; i < Math.min(100, users.length); i++) {
+    const responsible = users[i - 80];
+    if (!users[i] || !responsible) break;
     users[i].status = 'patient';
     users[i].responsible_type = 'paciente';
-    users[i].responsible_code = users[i - 80].user_code;
+    users[i].responsible_code = responsible.user_code;
     users[i].patient_user_code = null;
     users[i].associate_status = null;
-    users[i - 80].patient_user_code = users[i].user_code;
-    users[i - 80].responsible_type = 'another';
+    responsible.patient_user_code = users[i].user_code;
+    responsible.responsible_type = 'another';
   }
 
   const orders = Array.from({ length: counts.orders }, (_, i) => {
@@ -547,7 +443,7 @@ async function buildDataset(passwordHash) {
       dashboard_queries: { orders_by_status: true },
       layout_positions: { x: 0, y: 0, w: 6, h: 4 },
       chart_config: { type: 'bar', stacked: false },
-      created_by: manifest.demo_login.email,
+      created_by: SAMPLE_CREATED_BY,
       tags: [{ tag: 'demo' }],
       column_maps: { status: 'Status', count: 'Total' },
       embedded_report_codes: [],
@@ -564,7 +460,7 @@ async function buildDataset(passwordHash) {
       dashboard_queries: { active_users: true },
       layout_positions: { x: 6, y: 0, w: 6, h: 4 },
       chart_config: { type: 'pie' },
-      created_by: manifest.demo_login.email,
+      created_by: SAMPLE_CREATED_BY,
       tags: [{ tag: 'demo' }],
       column_maps: { fullname: 'Nome', status: 'Status' },
       embedded_report_codes: [],
@@ -581,11 +477,11 @@ async function buildDataset(passwordHash) {
       dashboard_queries: { orders: true, services: true, reception: true },
       layout_positions: { x: 0, y: 4, w: 12, h: 6 },
       chart_config: { type: 'mixed' },
-      created_by: manifest.demo_login.email,
+      created_by: SAMPLE_CREATED_BY,
       tags: [{ tag: 'demo' }],
       column_maps: {},
       embedded_report_codes: [],
-      favorites: { users: [manifest.demo_login.email] },
+      favorites: { users: [] },
     },
   ].slice(0, counts.reports);
 
@@ -611,7 +507,6 @@ async function buildDataset(passwordHash) {
 
   return {
     files,
-    system_users,
     users,
     institutional_clients,
     professionals,
@@ -622,6 +517,7 @@ async function buildDataset(passwordHash) {
     reception,
     reports,
     users_api,
+    _counts: counts,
   };
 }
 
@@ -633,6 +529,7 @@ function markSampleRows(rows) {
 function writeFixtures(dataset) {
   ensureDir(FIXTURES_DIR);
   for (const [key, value] of Object.entries(dataset)) {
+    if (key.startsWith('_') || !Array.isArray(value)) continue;
     const marked = markSampleRows(value);
     fs.writeFileSync(path.join(FIXTURES_DIR, `${key}.json`), JSON.stringify(marked, null, 2));
   }
@@ -645,10 +542,10 @@ async function truncateAll(client) {
       orders_files, services_files, users_files,
       orders, services, reception, reports, tags, products, institutional_clients,
       professionals,
-      users, system_users, users_api, files
+      users, users_api, files
     RESTART IDENTITY CASCADE
   `);
-  console.log('Tables truncated');
+  console.log('Tables truncated (system_users preservada — operadores não são seed)');
 }
 
 async function insertObject(client, table, row, { returning = 'id' } = {}) {
@@ -662,10 +559,11 @@ async function insertObject(client, table, row, { returning = 'id' } = {}) {
   return result.rows[0];
 }
 
-async function seedDatabase(dataset, { truncate }) {
+async function seedDatabase(dataset, { truncate, writeFixtures: shouldWriteFixtures = true } = {}) {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error('DATABASE_URL is required');
 
+  const counts = dataset._counts || manifest.counts;
   const pool = new Pool({ connectionString: databaseUrl });
   const client = await pool.connect();
 
@@ -677,11 +575,6 @@ async function seedDatabase(dataset, { truncate }) {
       await insertObject(client, 'files', f, { returning: 'id' });
     }
     console.log(`files: ${dataset.files.length}`);
-
-    for (const row of dataset.system_users) {
-      await insertObject(client, 'system_users', row);
-    }
-    console.log(`system_users: ${dataset.system_users.length}`);
 
     const userIds = [];
     for (const row of dataset.users) {
@@ -742,7 +635,8 @@ async function seedDatabase(dataset, { truncate }) {
     console.log(`users_api: ${dataset.users_api.length}`);
 
     const users_files = [];
-    for (let i = 0; i < manifest.counts.users_files; i++) {
+    const usersFilesN = Math.min(counts.users_files || 0, userIds.length, dataset.files.length || 1);
+    for (let i = 0; i < usersFilesN; i++) {
       const row = { user_id: userIds[i], file_id: dataset.files[i % dataset.files.length].id };
       users_files.push(row);
       await insertObject(client, 'users_files', row);
@@ -750,7 +644,8 @@ async function seedDatabase(dataset, { truncate }) {
     console.log(`users_files: ${users_files.length}`);
 
     const orders_files = [];
-    for (let i = 0; i < manifest.counts.orders_files; i++) {
+    const ordersFilesN = Math.min(counts.orders_files || 0, orderIds.length, dataset.files.length || 1);
+    for (let i = 0; i < ordersFilesN; i++) {
       const row = { order_id: orderIds[i], file_id: dataset.files[i % dataset.files.length].id };
       orders_files.push(row);
       await insertObject(client, 'orders_files', row);
@@ -758,17 +653,20 @@ async function seedDatabase(dataset, { truncate }) {
     console.log(`orders_files: ${orders_files.length}`);
 
     const services_files = [];
-    for (let i = 0; i < manifest.counts.services_files; i++) {
+    const servicesFilesN = Math.min(counts.services_files || 0, serviceIds.length, dataset.files.length || 1);
+    for (let i = 0; i < servicesFilesN; i++) {
       const row = { service_id: serviceIds[i], file_id: dataset.files[i % dataset.files.length].id };
       services_files.push(row);
       await insertObject(client, 'services_files', row);
     }
     console.log(`services_files: ${services_files.length}`);
 
-    fs.writeFileSync(path.join(FIXTURES_DIR, 'users_files.json'), JSON.stringify(markSampleRows(users_files), null, 2));
-    fs.writeFileSync(path.join(FIXTURES_DIR, 'orders_files.json'), JSON.stringify(markSampleRows(orders_files), null, 2));
-    fs.writeFileSync(path.join(FIXTURES_DIR, 'services_files.json'), JSON.stringify(markSampleRows(services_files), null, 2));
-
+    if (shouldWriteFixtures) {
+      ensureDir(FIXTURES_DIR);
+      fs.writeFileSync(path.join(FIXTURES_DIR, 'users_files.json'), JSON.stringify(markSampleRows(users_files), null, 2));
+      fs.writeFileSync(path.join(FIXTURES_DIR, 'orders_files.json'), JSON.stringify(markSampleRows(orders_files), null, 2));
+      fs.writeFileSync(path.join(FIXTURES_DIR, 'services_files.json'), JSON.stringify(markSampleRows(services_files), null, 2));
+    }
     // Validação: users deve ter todas as colunas do schema preenchidas (exceto id e session_*)
     const colCheck = await client.query(`
       SELECT column_name
@@ -799,7 +697,7 @@ async function seedDatabase(dataset, { truncate }) {
 
     await client.query('COMMIT');
 
-    const counts = await client.query(`
+    const summary = await client.query(`
       SELECT 'users' AS t, COUNT(*)::int AS c FROM users
       UNION ALL SELECT 'orders', COUNT(*)::int FROM orders
       UNION ALL SELECT 'institutional_clients', COUNT(*)::int FROM institutional_clients
@@ -808,13 +706,13 @@ async function seedDatabase(dataset, { truncate }) {
       UNION ALL SELECT 'services', COUNT(*)::int FROM services
       UNION ALL SELECT 'reception', COUNT(*)::int FROM reception
       UNION ALL SELECT 'tags', COUNT(*)::int FROM tags
-      UNION ALL SELECT 'system_users', COUNT(*)::int FROM system_users
       UNION ALL SELECT 'reports', COUNT(*)::int FROM reports
       UNION ALL SELECT 'files', COUNT(*)::int FROM files
       ORDER BY t
     `);
     console.log('\nContagens no banco:');
-    for (const r of counts.rows) console.log(`  ${r.t}: ${r.c}`);
+    for (const r of summary.rows) console.log(`  ${r.t}: ${r.c}`);
+    return Object.fromEntries(summary.rows.map((r) => [r.t, r.c]));
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -824,13 +722,39 @@ async function seedDatabase(dataset, { truncate }) {
   }
 }
 
+/** Contagens reduzidas para instalação demo pós-bootstrap. */
+const SMALL_COUNTS = {
+  users: 12,
+  institutional_clients: 2,
+  professionals: 3,
+  products: 6,
+  tags: 4,
+  orders: 8,
+  services: 5,
+  reception: 5,
+  reports: 2,
+  files: 3,
+  users_files: 3,
+  orders_files: 2,
+  services_files: 2,
+  users_api: 1,
+};
+
+/**
+ * Instala sample data pequeno sem truncar (preserva system_users e logo da instalação).
+ * Delega ao serviço da API (mesmo entrypoint do install-sample).
+ */
+async function seedSmallSample() {
+  return require('../src/services/seedSmallSample').seedSmallSample();
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const generateOnly = args.includes('--generate');
   const noTruncate = args.includes('--no-truncate');
 
   console.log('Building full-field fictional sample dataset…');
-  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, SALT_ROUNDS);
+  const passwordHash = await bcrypt.hash(SAMPLE_ASSOCIATE_PASSWORD, SALT_ROUNDS);
   const dataset = await buildDataset(passwordHash);
 
   ensureDir(FIXTURES_DIR);
@@ -848,12 +772,22 @@ async function main() {
     return;
   }
 
-  await seedDatabase(dataset, { truncate: !noTruncate });
-  console.log('\nSample data completo instalado.');
-  console.log(`Login: ${manifest.demo_login.email} / ${DEMO_PASSWORD}`);
+  await seedDatabase(dataset, { truncate: !noTruncate, writeFixtures: true });
+  console.log('\nSample data completo instalado (sem operadores).');
+  console.log(`Senha das contas de associado sample: ${SAMPLE_ASSOCIATE_PASSWORD}`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  buildDataset,
+  seedDatabase,
+  seedSmallSample,
+  SMALL_COUNTS,
+  SAMPLE_ASSOCIATE_PASSWORD,
+};

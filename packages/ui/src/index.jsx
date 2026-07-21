@@ -1,11 +1,29 @@
 import React from 'react';
 
-export function AlertError({ message, emptyFields }) {
-  if (!message && !emptyFields) return null;
+export function AlertError({ message, emptyFields, className = '' }) {
+  const fields = Array.isArray(emptyFields)
+    ? emptyFields.filter(Boolean)
+    : emptyFields
+      ? [emptyFields]
+      : [];
+  if (!message && !fields.length) return null;
   return (
-    <div className="alert alert-danger" role="alert">
+    <div className={`alert alert-danger${className ? ` ${className}` : ''}`} role="alert">
       {message}
-      {emptyFields ? <span> {Array.isArray(emptyFields) ? emptyFields.join(', ') : emptyFields}</span> : null}
+      {fields.length ? (
+        <span>
+          {message ? ' ' : ''}
+          campos que faltam:
+          {' '}
+          {fields.map((field, index) => (
+            <React.Fragment key={`${field}-${index}`}>
+              {index > 0 ? ', ' : null}
+              <strong>{field}</strong>
+            </React.Fragment>
+          ))}
+          .
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -21,15 +39,29 @@ export function Loader({ text = 'carregando...' }) {
 export function ProgressSidebar({ steps, contactUrl }) {
   return (
     <aside className="sidebar p-3">
-      <ul className="list-unstyled">
-        {steps.map((step) => (
-          <li key={step.id} className={`progress-step mb-2 ${step.state}`}>
-            {step.label}
-          </li>
-        ))}
+      <ul className="list-unstyled sidebar-steps mb-0">
+        {steps.map((step) => {
+          const state = String(step.state || '');
+          const isDone = state.split(/\s+/).includes('done');
+          const isCurrent = state.split(/\s+/).includes('current');
+          const isLocked = state.split(/\s+/).includes('locked');
+          return (
+            <li
+              key={step.id}
+              className={[
+                'progress-step',
+                isDone ? 'done' : '',
+                isCurrent ? 'current' : '',
+                isLocked ? 'locked' : '',
+              ].filter(Boolean).join(' ')}
+            >
+              {step.label}
+            </li>
+          );
+        })}
       </ul>
       {contactUrl ? (
-        <a className="btn btn-sm btn-contact mt-3" href={contactUrl} target="_blank" rel="noreferrer">
+        <a className="btn btn-sm btn-contact mt-auto" href={contactUrl} target="_blank" rel="noreferrer">
           Solicitar contato
         </a>
       ) : null}

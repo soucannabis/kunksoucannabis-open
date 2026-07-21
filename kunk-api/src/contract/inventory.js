@@ -34,6 +34,7 @@ const ERROR_CODES = [
   'TEMPLATE_INVALID_VARIABLES',
   'PDF_RENDER_FAILED',
   'LAST_ADMIN',
+  'ALREADY_INSTALLED',
   'CONFIG_ERROR',
   'TOTAL_MISMATCH',
   'INSUFFICIENT_STOCK',
@@ -63,6 +64,7 @@ const AUTH_ROUTES = [
   ['GET', '/auth/me'],
   ['POST', '/auth/tokens'],
   ['GET', '/auth/tokens'],
+  ['PATCH', '/auth/tokens/:id'],
   ['DELETE', '/auth/tokens/:id'],
   ['POST', '/auth/associate/register-email'],
   ['POST', '/auth/associate/login'],
@@ -72,6 +74,9 @@ const AUTH_ROUTES = [
   ['POST', '/auth/associate/reset-password'],
   ['GET', '/auth/system-invite/preview'],
   ['POST', '/auth/system-invite/accept'],
+  ['GET', '/auth/install-status'],
+  ['POST', '/auth/install'],
+  ['POST', '/auth/install-sample'],
 ];
 
 const DOMAIN_ROUTES = [
@@ -85,6 +90,7 @@ const DOMAIN_ROUTES = [
   ['POST', '/users/me/patients'],
   ['PATCH', '/users/me/patients/:id'],
   ['GET', '/users/me/documents/status'],
+  ['GET', '/users/me/extras/status'],
   ['POST', '/users/me/advance'],
   ['POST', '/users/me/complete'],
   ['PATCH', '/users/:id'],
@@ -200,6 +206,7 @@ const DOMAIN_ROUTES = [
   ['GET', '/doc-sign/templates-logos'],
   ['POST', '/doc-sign/templates/reset-defaults'],
   ['POST', '/doc-sign/templates/:kind/reset'],
+  ['DELETE', '/doc-sign/templates/:kind'],
   ['GET', '/doc-sign/templates/:kind'],
   ['PUT', '/doc-sign/templates/:kind/draft'],
   ['POST', '/doc-sign/templates/:kind/publish'],

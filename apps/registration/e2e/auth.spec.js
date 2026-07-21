@@ -13,7 +13,7 @@ test.describe('Auth — cadastro, login, reset', () => {
     await page.getByRole('button', { name: /Se cadastrar como Associado/i }).click();
     await expect(page).toHaveURL(/\/bem-vindo/);
     await expect(page.getByRole('heading', { name: /Bem-vindo/i })).toBeVisible();
-    await expect(page.getByText(email)).toBeVisible();
+    await expect(page.getByRole('link', { name: /Iniciar cadastro/i })).toBeVisible();
   });
 
   test('session persists after reload', async ({ page }) => {
@@ -85,6 +85,6 @@ test.describe('Auth — cadastro, login, reset', () => {
     await page.goto('/bem-vindo');
     await page.getByRole('button', { name: /Sair/i }).click();
     await page.goto('/bem-vindo');
-    await expect(page).toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/\/cadastro$/);
   });
 });

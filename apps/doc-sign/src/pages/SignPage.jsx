@@ -126,6 +126,19 @@ function typedNameToDataUrl(name) {
   return canvas.toDataURL('image/png');
 }
 
+/** Lê return_url da query (enviado pelo registration após “Assinar termo”). */
+function resolveReturnUrl() {
+  try {
+    const raw = new URLSearchParams(window.location.search).get('return_url');
+    if (!raw) return null;
+    const url = new URL(raw);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
 export function SignPage({ api }) {
   const { token } = useParams();
   const [payload, setPayload] = useState(null);
@@ -137,6 +150,7 @@ export function SignPage({ api }) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [alreadySigned, setAlreadySigned] = useState(false);
+  const returnUrl = resolveReturnUrl();
   const drawActive = Boolean(payload) && method === 'draw' && !done;
   const { canvasRef, clear, toDataUrl } = useSignatureCanvas(drawActive);
 
@@ -187,6 +201,14 @@ export function SignPage({ api }) {
     }
   }
 
+  useEffect(() => {
+    if (!done || !returnUrl) return undefined;
+    const timer = window.setTimeout(() => {
+      window.location.assign(returnUrl);
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [done, returnUrl]);
+
   if (done) {
     const name = payload?.variables?.responsible_full_name;
     return (
@@ -205,9 +227,18 @@ export function SignPage({ api }) {
                 ? `Obrigado, ${name}. Sua assinatura foi registrada.`
                 : 'Sua assinatura foi registrada com sucesso.'}
           </p>
-          <p className="muted" style={{ marginBottom: 0 }}>
-            Você já pode fechar esta página.
-          </p>
+          {returnUrl ? (
+            <>
+              <p className="muted">Redirecionando para continuar o cadastro…</p>
+              <a className="btn btn-primary" href={returnUrl} style={{ marginTop: 8 }}>
+                Continuar cadastro
+              </a>
+            </>
+          ) : (
+            <p className="muted" style={{ marginBottom: 0 }}>
+              Você já pode fechar esta página.
+            </p>
+          )}
         </div>
       </div>
     );

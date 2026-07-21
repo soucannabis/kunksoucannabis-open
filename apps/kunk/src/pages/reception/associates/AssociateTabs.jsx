@@ -711,14 +711,30 @@ export function TermStubMenu({ onNewTerm, onCopyLink, canCreate }) {
   );
 }
 
-export function ConfirmDialog({ open, title, onClose, onConfirm }) {
+export function ConfirmDialog({ open, title, onClose, onConfirm, busy = false, error = '' }) {
   return (
-    <Dialog open={open} onClose={onClose} sx={contentAreaDialogSx}>
+    <Dialog
+      open={open}
+      onClose={busy ? undefined : onClose}
+      sx={{
+        ...contentAreaDialogSx,
+        zIndex: (theme) => theme.zIndex.modal + 10,
+      }}
+    >
       <DialogTitle>{title}</DialogTitle>
+      {error ? (
+        <Box px={3} pb={1}>
+          <Typography color="error" variant="body2">
+            {error}
+          </Typography>
+        </Box>
+      ) : null}
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button color="error" variant="contained" onClick={onConfirm}>
-          Confirmar
+        <Button onClick={onClose} disabled={busy}>
+          Cancelar
+        </Button>
+        <Button color="error" variant="contained" onClick={onConfirm} disabled={busy}>
+          {busy ? 'Excluindo…' : 'Confirmar'}
         </Button>
       </DialogActions>
     </Dialog>

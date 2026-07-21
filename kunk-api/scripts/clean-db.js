@@ -2,8 +2,8 @@
 'use strict';
 
 /**
- * Limpa dados operacionais do PostgreSQL, remove uploads (local + storage ativo)
- * e deixa apenas um operador de teste com role Administrador.
+ * Limpa dados operacionais do PostgreSQL e remove uploads (local + storage ativo).
+ * Também remove todos os system_users — operadores só devem ser criados pela UI/API.
  *
  * Uso:
  *   cd kunk-api && npm run clean:db              # dry-run
@@ -18,9 +18,6 @@
  *   --wipe-configs        Também limpa system_configs (recria role_pages mínimo)
  *   --wipe-credentials    Também limpa system_api_credentials
  *
- * Login residual (manifest sample-data):
- *   admin@demo.kunk.local / DemoAdmin123!
- *
  * Preserva por padrão: system_configs e system_api_credentials (branding, módulos, secrets).
  *
  * Storage:
@@ -31,16 +28,13 @@
 
 const fsp = require('fs/promises');
 const path = require('path');
-const crypto = require('crypto');
 
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const { withClient, closePool } = require('../src/db/pool');
 const { env } = require('../src/config/env');
-const authRepository = require('../src/repositories/authRepository');
 const { getDriverForFile, getActiveStorageDriver, buildDriver } = require('../src/storage');
 const { assertCloudConfig } = require('../src/storage/resolveConfig');
-const manifest = require('../sample-data/manifest.json');
 
 /** Tabelas de negócio / telemetria (ordem não importa com CASCADE). */
 const DATA_TABLES = [
@@ -71,9 +65,6 @@ const DATA_TABLES = [
   'system_errors',
   'web_vitals',
 ];
-
-const DEMO_EMAIL = manifest.demo_login.email;
-const DEMO_PASSWORD = manifest.demo_login.password;
 
 const DEFAULT_ROLE_PAGES = {
   Administrador: ['*'],
@@ -135,45 +126,6 @@ function groupFilesByDriver(files) {
     map[driver] = (map[driver] || 0) + 1;
   }
   return map;
-}
-
-async function ensureDemoAdmin(client) {
-  const hash = await authRepository.hashPassword(DEMO_PASSWORD);
-  const permissions = JSON.stringify(['Administrador']);
-  const existing = await client.query(`SELECT id FROM system_users WHERE lower(email) = lower($1)`, [
-    DEMO_EMAIL,
-  ]);
-
-  if (existing.rows[0]) {
-    await client.query(
-      `UPDATE system_users SET
-         password = $1,
-         permissions = $2,
-         status = 'active',
-         name = COALESCE(NULLIF(name, ''), 'Admin'),
-         last_name = COALESCE(NULLIF(last_name, ''), 'Demo'),
-         internal_code = COALESCE(internal_code, 'ADMIN-DEMO'),
-         session_token = NULL,
-         session_expires = NULL,
-         is_session_active = false,
-         password_reset_token = NULL,
-         password_reset_expires = NULL,
-         date_updated = NOW()
-       WHERE id = $3`,
-      [hash, permissions, existing.rows[0].id]
-    );
-    return { id: existing.rows[0].id, created: false };
-  }
-
-  const inserted = await client.query(
-    `INSERT INTO system_users (
-       email, password, name, last_name, permissions, status, internal_code,
-       user_code, date_created, date_updated, is_sample, is_session_active
-     ) VALUES ($1, $2, 'Admin', 'Demo', $3, 'active', 'ADMIN-DEMO', $4, NOW(), NOW(), false, false)
-     RETURNING id`,
-    [DEMO_EMAIL, hash, permissions, crypto.randomUUID()]
-  );
-  return { id: inserted.rows[0].id, created: true };
 }
 
 async function ensureRolePages(client) {
@@ -428,11 +380,10 @@ async function runClean(client, args, files, storageConfig) {
     const quoted = tables.map(quoteIdent).join(', ');
     await client.query(`TRUNCATE TABLE ${quoted} RESTART IDENTITY CASCADE`);
 
-    const admin = await ensureDemoAdmin(client);
-    const rolePages = await ensureRolePages(client);
+    const rolePages = args.wipeConfigs ? await ensureRolePages(client) : 'skipped';
 
     await client.query('COMMIT');
-    return { truncated: tables, admin, rolePages, blobs, localSweep, cloudPurge };
+    return { truncated: tables, rolePages, blobs, localSweep, cloudPurge };
   } catch (err) {
     try {
       await client.query('ROLLBACK');
@@ -461,7 +412,7 @@ async function main() {
       const preview = await plan(client, args);
       const total = [...preview.tables, ...preview.extras].reduce((s, r) => s + r.count, 0);
 
-      console.log('Plano: truncar dados, apagar uploads e recriar operador Administrador.\n');
+      console.log('Plano: truncar dados (incl. system_users) e apagar uploads. Não cria operadores.\n');
       for (const row of preview.tables) {
         console.log(`  ${row.table.padEnd(32)} ${row.count} linha(s)`);
       }
@@ -490,7 +441,7 @@ async function main() {
         console.log('  arquivos no banco: 0');
       }
 
-      console.log(`\nOperador final: ${DEMO_EMAIL} / ${DEMO_PASSWORD} (Administrador, role_pages=*)\n`);
+      console.log('\nOperadores: nenhum será criado (use Admin/API para cadastrar).\n');
 
       if (!args.yes) {
         console.log('Dry-run. Para executar: npm run clean:db -- --yes');
@@ -515,11 +466,8 @@ async function main() {
         );
       }
       console.log(`Truncadas: ${result.truncated.join(', ')}`);
-      console.log(
-        `Operador ${result.admin.created ? 'criado' : 'atualizado'}: id=${result.admin.id} ${DEMO_EMAIL}`
-      );
       console.log(`role_pages: ${result.rolePages}`);
-      console.log('\nPronto. Apps: Admin, Kunk e Doc-sign com a mesma conta Administrador.');
+      console.log('\nPronto. Cadastre o primeiro operador pelo Admin (ou API).');
     });
   } finally {
     await closePool();

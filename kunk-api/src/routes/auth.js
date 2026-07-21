@@ -92,17 +92,31 @@ router.get('/me', authenticate, async (req, res, next) => {
   }
 });
 
-router.post('/tokens', authenticate, authorizeAdmin, async (req, res, next) => {
+async function requireApiAccessEnabled(req, res, next) {
   try {
-    const { email, scopes } = req.body || {};
-    const token = await authRepository.createApiToken({ email, scopes });
+    const systemConfigService = require('../services/systemConfigService');
+    const { AppError } = require('../utils/response');
+    const enabled = await systemConfigService.isApiAccessEnabled();
+    if (!enabled) {
+      throw new AppError(403, 'API_DISABLED', 'Acesso via API está desabilitado');
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+
+router.post('/tokens', authenticate, authorizeAdmin, requireApiAccessEnabled, async (req, res, next) => {
+  try {
+    const { email, label, scopes } = req.body || {};
+    const token = await authRepository.createApiToken({ email, label, scopes });
     res.status(201).json(ok(token));
   } catch (err) {
     next(err);
   }
 });
 
-router.get('/tokens', authenticate, authorizeAdmin, async (req, res, next) => {
+router.get('/tokens', authenticate, authorizeAdmin, requireApiAccessEnabled, async (req, res, next) => {
   try {
     const tokens = await authRepository.listApiTokens();
     res.json(ok(tokens));
@@ -111,7 +125,17 @@ router.get('/tokens', authenticate, authorizeAdmin, async (req, res, next) => {
   }
 });
 
-router.delete('/tokens/:id', authenticate, authorizeAdmin, async (req, res, next) => {
+router.patch('/tokens/:id', authenticate, authorizeAdmin, requireApiAccessEnabled, async (req, res, next) => {
+  try {
+    const { email, label, scopes } = req.body || {};
+    const token = await authRepository.updateApiToken(req.params.id, { email, label, scopes });
+    res.json(ok(token));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/tokens/:id', authenticate, authorizeAdmin, requireApiAccessEnabled, async (req, res, next) => {
   try {
     const result = await authRepository.revokeApiToken(req.params.id);
     res.json(ok(result));
@@ -136,6 +160,35 @@ router.post('/system-invite/accept', async (req, res, next) => {
   try {
     const data = await systemInviteService.acceptInvite(req.body || {});
     res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+const installService = require('../services/installService');
+
+router.get('/install-status', async (req, res, next) => {
+  try {
+    const data = await installService.getInstallStatus();
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/install', async (req, res, next) => {
+  try {
+    const data = await installService.runInstall(req.body || {});
+    res.status(201).json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/install-sample', async (req, res, next) => {
+  try {
+    const data = await installService.seedDemoSample();
+    res.status(201).json(ok(data));
   } catch (err) {
     next(err);
   }

@@ -19,6 +19,11 @@ const CANONICAL_VARIABLES = [
   'cep',
   'current_date',
   'association_name',
+  'association_full_name',
+  'association_city',
+  'association_state',
+  'association_cnpj',
+  'association_site',
   'signature',
   'user_code',
 ];
@@ -41,6 +46,11 @@ const VARIABLE_LABELS = {
   cep: 'CEP',
   current_date: 'Data atual',
   association_name: 'Nome da associação',
+  association_full_name: 'Nome completo da associação',
+  association_city: 'Cidade associação',
+  association_state: 'Estado associação',
+  association_cnpj: 'CNPJ associação',
+  association_site: 'Site da associação',
   signature: 'Assinatura',
   user_code: 'USERCODE',
 };
@@ -58,9 +68,39 @@ function formatCurrentDate(date = new Date()) {
   });
 }
 
+function associationDefaults(association = {}) {
+  return {
+    association_name: association.name || 'SouCannabis',
+    association_full_name: association.fullName || association.name || 'SouCannabis',
+    association_city: association.city || null,
+    association_state: association.state || null,
+    association_cnpj: association.cnpj || null,
+    association_site: association.site || null,
+  };
+}
+
+const ASSOCIATION_VARIABLE_KEYS = new Set([
+  'association_name',
+  'association_full_name',
+  'association_city',
+  'association_state',
+  'association_cnpj',
+  'association_site',
+]);
+
 /** Fictional defaults for template PDF preview (operator may override). */
-function sampleVariables(kind = 'self', overrides = {}, { now = new Date() } = {}) {
+function sampleVariables(kind = 'self', overrides = {}, { now = new Date(), association = null } = {}) {
   const withPatient = kind === 'with_patient';
+  const assoc = associationDefaults(
+    association || {
+      name: 'SouCannabis',
+      fullName: 'ASSOCIAÇÃO TERAPÊUTICA SOUCANNABIS',
+      city: 'Anápolis',
+      state: 'GO',
+      cnpj: '00.000.000/0001-00',
+      site: 'soucannabis.ong.br',
+    }
+  );
   const base = {
     responsible_full_name: 'Maria Fernanda Oliveira',
     patient_full_name: withPatient ? 'João Pedro Oliveira' : null,
@@ -78,7 +118,7 @@ function sampleVariables(kind = 'self', overrides = {}, { now = new Date() } = {
     state: 'MG',
     cep: '30130-000',
     current_date: formatCurrentDate(now),
-    association_name: 'SouCannabis',
+    ...assoc,
     signature: null,
     user_code: '11111111-1111-4111-8111-111111111111',
   };
@@ -86,10 +126,13 @@ function sampleVariables(kind = 'self', overrides = {}, { now = new Date() } = {
   const merged = { ...base };
   if (overrides && typeof overrides === 'object') {
     for (const key of CANONICAL_VARIABLES) {
-      if (Object.prototype.hasOwnProperty.call(overrides, key)) {
-        const value = overrides[key];
-        merged[key] = value === '' ? null : value;
+      if (!Object.prototype.hasOwnProperty.call(overrides, key)) continue;
+      const value = overrides[key];
+      // Dados da associação vêm do admin; override vazio não apaga o perfil.
+      if (ASSOCIATION_VARIABLE_KEYS.has(key) && association) {
+        if (value == null || String(value).trim() === '') continue;
       }
+      merged[key] = value === '' ? null : value;
     }
   }
   if (!withPatient) {
@@ -106,7 +149,15 @@ function resolveKind(responsible) {
   return 'self';
 }
 
-function resolveVariables(responsible, patient = null, { now = new Date(), associationName = null } = {}) {
+function resolveVariables(
+  responsible,
+  patient = null,
+  { now = new Date(), associationName = null, association = null } = {}
+) {
+  const assoc = associationDefaults({
+    ...(association || {}),
+    name: associationName || association?.name || null,
+  });
   return {
     responsible_full_name: fullName(responsible),
     patient_full_name: patient ? fullName(patient) : null,
@@ -124,7 +175,7 @@ function resolveVariables(responsible, patient = null, { now = new Date(), assoc
     state: responsible?.state || null,
     cep: responsible?.cep || null,
     current_date: formatCurrentDate(now),
-    association_name: associationName || 'SouCannabis',
+    ...assoc,
     signature: null,
     user_code: responsible?.user_code || null,
   };
@@ -200,7 +251,13 @@ function applyVariablesToContent(contentJson, variables) {
       const name = node.attrs?.name;
       const value = variables?.[name];
       node.type = 'text';
-      node.text = value == null || value === '' ? '____________________' : String(value);
+      const empty = value == null || value === '';
+      // Variáveis da associação não usam underline de formulário.
+      node.text = empty
+        ? ASSOCIATION_VARIABLE_KEYS.has(String(name || ''))
+          ? ''
+          : '____________________'
+        : String(value);
       node.marks = [{ type: 'bold' }];
       delete node.attrs;
       return;
@@ -242,6 +299,7 @@ function removeOrphanSignatureLabels(contentJson) {
 module.exports = {
   CANONICAL_VARIABLES,
   VARIABLE_LABELS,
+  ASSOCIATION_VARIABLE_KEYS,
   fullName,
   formatCurrentDate,
   sampleVariables,
@@ -255,4 +313,5 @@ module.exports = {
   missingRequiredVariables,
   REQUIRED_VARIABLES_SELF,
   REQUIRED_VARIABLES_WITH_PATIENT,
+  associationDefaults,
 };

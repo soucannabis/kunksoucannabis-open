@@ -160,7 +160,9 @@ async function resolvePublic(system) {
   const values = {};
   for (const item of items) {
     if (item.is_sensitive) continue;
-    if (item.source === 'db' || item.source === 'env') {
+    // Inclui db, env e hardcoded — senão o front fica só com Vite bootstrap
+    // e ignora defaults/valores do Admin em system_configs.
+    if (item.source === 'db' || item.source === 'env' || item.source === 'hardcoded') {
       values[item.key] = item.value;
     }
   }
@@ -298,6 +300,22 @@ async function deleteConfig(id) {
   return { id: Number(result.rows[0].id) };
 }
 
+/**
+ * Feature flag for external Bearer API access (system=api, key=api.enabled).
+ * Default false when missing / unset.
+ */
+async function isApiAccessEnabled() {
+  try {
+    const { values } = await resolveAll('api');
+    const raw = values['api.enabled'];
+    if (raw === undefined || raw === null || raw === '') return false;
+    const normalized = String(raw).trim().toLowerCase();
+    return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on';
+  } catch {
+    return false;
+  }
+}
+
 module.exports = {
   listBySystem,
   listSystems,
@@ -312,4 +330,5 @@ module.exports = {
   clearConfigValue,
   deleteConfig,
   encryptForStorage,
+  isApiAccessEnabled,
 };

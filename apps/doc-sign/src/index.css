@@ -73,6 +73,33 @@ a { color: var(--accent); }
 
 .muted { color: var(--muted); }
 
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2f5d3a;
+  padding: 1.5rem;
+}
+
+.login-page-panel {
+  max-width: 420px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.login-page-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.login-page-title {
+  text-align: center;
+  color: #fff;
+}
+
 .btn {
   appearance: none;
   border: 1px solid var(--line);
@@ -739,10 +766,17 @@ label {
 .spinner {
   width: 1rem;
   height: 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #fff;
+  border: 2px solid rgba(28, 36, 22, 0.2);
+  border-top-color: var(--ink);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.btn-primary .spinner,
+.btn-danger .spinner {
+  border-color: rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
 }
 
 @keyframes spin {

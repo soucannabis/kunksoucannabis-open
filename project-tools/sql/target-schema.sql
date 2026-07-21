@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS users (
   associate_cpf VARCHAR(255),
   associate_rg VARCHAR(255),
   mobile_number VARCHAR(255),
-  associate_status INTEGER,
+  associate_status VARCHAR(64),
   prescription VARCHAR(255),
   responsible_code UUID,
   documents_folder_id VARCHAR(255),

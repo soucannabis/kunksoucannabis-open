@@ -7,6 +7,13 @@ const { isKnownColumn } = require('../schema/collections');
 const associateAuthRepository = require('../repositories/associateAuthRepository');
 const { env } = require('../config/env');
 const ciap2Config = require('./ciap2Config');
+const {
+  PHASE,
+  normalizePhase,
+  phaseAtMost,
+  phaseEquals,
+  isAssociateStatus,
+} = require('../constants/associatePhases');
 
 const PATCHABLE = [
   'responsible_type', 'associate_name', 'associate_last_name', 'associate_birth_date',
@@ -121,11 +128,11 @@ async function prepareCiapForSave(value) {
   return { ok: true, value: codes.join(';') };
 }
 
-const PHASE5_PATCHABLE = new Set(['prescription', 'preferred_products', 'date_prescription']);
+const ASSOCIADO_PATCHABLE = new Set(['prescription', 'preferred_products', 'date_prescription']);
 
 function assertPhaseWritable(phase, maxPhase) {
-  if (Number(phase) > maxPhase) {
-    throw new AppError(403, 'PHASE_LOCKED', `Fase ${phase} não permite esta ação`);
+  if (!phaseAtMost(phase, maxPhase)) {
+    throw new AppError(403, 'PHASE_LOCKED', `Fase ${normalizePhase(phase)} não permite esta ação`);
   }
 }
 
@@ -138,14 +145,14 @@ async function patchMe(associateRow, body) {
     throw new AppError(400, 'VALIDATION_ERROR', 'Nenhum campo conhecido no body');
   }
 
-  const phase = Number(associateRow.associate_status) || 1;
-  const onlyPhase5Fields = knownKeys.every((k) => PHASE5_PATCHABLE.has(k));
-  if (onlyPhase5Fields) {
-    if (phase < 5) {
-      throw new AppError(403, 'PHASE_LOCKED', 'Campos de consulta só na fase 5');
+  const phase = normalizePhase(associateRow.associate_status);
+  const onlyAssociadoFields = knownKeys.every((k) => ASSOCIADO_PATCHABLE.has(k));
+  if (onlyAssociadoFields) {
+    if (!isAssociateStatus(associateRow)) {
+      throw new AppError(403, 'PHASE_LOCKED', 'Campos de consulta só após se tornar Associado');
     }
   } else {
-    assertPhaseWritable(phase, 2);
+    assertPhaseWritable(phase, PHASE.DADOS_PESSOAIS);
   }
 
   const savedFields = [];
@@ -189,9 +196,13 @@ async function patchMe(associateRow, body) {
   params.push(JSON.stringify(invalidFields));
   setParts.push('date_updated = NOW()');
 
-  if (Number(associateRow.associate_status) === 1 && invalidFields.length === 0 && savedFields.length) {
+  if (
+    phaseEquals(associateRow.associate_status, PHASE.CADASTRO_CRIADO)
+    && invalidFields.length === 0
+    && savedFields.length
+  ) {
     setParts.push(`associate_status = $${i++}`);
-    params.push(2);
+    params.push(PHASE.DADOS_PESSOAIS);
   }
 
   params.push(associateRow.id);
@@ -220,7 +231,7 @@ async function listMyPatients(associateRow) {
 }
 
 async function createMyPatient(associateRow, body) {
-  assertPhaseWritable(associateRow.associate_status, 2);
+  assertPhaseWritable(associateRow.associate_status, PHASE.DADOS_PESSOAIS);
   if (associateRow.responsible_type !== 'another') {
     throw new AppError(400, 'VALIDATION_ERROR', 'Paciente só é permitido quando responsible_type=another');
   }
@@ -283,7 +294,7 @@ async function createMyPatient(associateRow, body) {
 }
 
 async function patchMyPatient(associateRow, patientId, body) {
-  assertPhaseWritable(associateRow.associate_status, 2);
+  assertPhaseWritable(associateRow.associate_status, PHASE.DADOS_PESSOAIS);
   const result = await query(
     `SELECT * FROM users WHERE id = $1 AND responsible_code = $2 AND status = 'patient'`,
     [patientId, associateRow.user_code]
@@ -349,13 +360,25 @@ async function patchMyPatient(associateRow, patientId, body) {
 
 async function getIdentityFiles(userId) {
   const result = await query(
-    `SELECT uf.*, f.id AS file_uuid, f.filename
+    `SELECT uf.doc_type, uf.side, uf.subject, uf.doc_kind,
+            f.id AS file_id, f.filename, f.mime_type, f.created_at
      FROM users_files uf
      JOIN files f ON f.id = uf.file_id
-     WHERE uf.user_id = $1 AND (uf.doc_kind IS NULL OR uf.doc_kind = 'identity')`,
+     WHERE uf.user_id = $1 AND (uf.doc_kind IS NULL OR uf.doc_kind = 'identity')
+     ORDER BY f.created_at ASC`,
     [userId]
   );
-  return result.rows;
+  return result.rows.map((row) => ({
+    id: row.file_id,
+    filename: row.filename,
+    mime_type: row.mime_type,
+    created_at: row.created_at,
+    doc_type: row.doc_type,
+    side: row.side,
+    subject: row.subject,
+    doc_kind: row.doc_kind || 'identity',
+    url: `/api/v1/files/${row.file_id}/download`,
+  }));
 }
 
 function subjectComplete(files, subject) {
@@ -363,15 +386,29 @@ function subjectComplete(files, subject) {
   const hasRgFront = mine.some((f) => f.doc_type === 'rg' && f.side === 'front');
   const hasRgBack = mine.some((f) => f.doc_type === 'rg' && f.side === 'back');
   const hasCnh = mine.some((f) => f.doc_type === 'cnh' && (f.side === 'front' || !f.side));
-  if (hasCnh) return { complete: true, mode: 'cnh', missing: [] };
-  if (hasRgFront && hasRgBack) return { complete: true, mode: 'rg', missing: [] };
+  if (hasCnh) {
+    return {
+      complete: true,
+      mode: 'cnh',
+      missing: [],
+      files: mine.filter((f) => f.doc_type === 'cnh'),
+    };
+  }
+  if (hasRgFront && hasRgBack) {
+    return {
+      complete: true,
+      mode: 'rg',
+      missing: [],
+      files: mine.filter((f) => f.doc_type === 'rg'),
+    };
+  }
   const missing = [];
   if (!hasCnh && !(hasRgFront && hasRgBack)) {
     if (!hasRgFront) missing.push({ subject, doc_type: 'rg', side: 'front' });
     if (!hasRgBack) missing.push({ subject, doc_type: 'rg', side: 'back' });
     missing.push({ subject, doc_type: 'cnh', side: 'front' });
   }
-  return { complete: false, mode: null, missing };
+  return { complete: false, mode: null, missing, files: mine };
 }
 
 async function documentsStatus(associateRow) {
@@ -386,7 +423,7 @@ async function documentsStatus(associateRow) {
   if (associateRow.responsible_type === 'another') {
     const patients = await listMyPatients(associateRow);
     if (!patients.length) {
-      result.patient = { complete: false, mode: null, missing: [{ subject: 'patient', reason: 'no_patient' }] };
+      result.patient = { complete: false, mode: null, missing: [{ subject: 'patient', reason: 'no_patient' }], files: [] };
       result.complete = false;
     } else {
       const patientFiles = await getIdentityFiles(patients[0].id);
@@ -398,14 +435,50 @@ async function documentsStatus(associateRow) {
   return result;
 }
 
+const EXTRA_DOC_KINDS = ['prescription', 'report', 'exam'];
+
+async function extrasStatus(associateRow) {
+  const result = await query(
+    `SELECT uf.doc_kind, uf.doc_type, uf.side, uf.subject,
+            f.id AS file_id, f.filename, f.mime_type, f.created_at
+     FROM users_files uf
+     JOIN files f ON f.id = uf.file_id
+     WHERE uf.user_id = $1 AND uf.doc_kind = ANY($2::text[])
+     ORDER BY f.created_at ASC`,
+    [associateRow.id, EXTRA_DOC_KINDS]
+  );
+
+  const grouped = {
+    prescription: [],
+    report: [],
+    exam: [],
+  };
+
+  for (const row of result.rows) {
+    const kind = String(row.doc_kind || '');
+    if (!grouped[kind]) continue;
+    grouped[kind].push({
+      id: row.file_id,
+      filename: row.filename,
+      mime_type: row.mime_type,
+      created_at: row.created_at,
+      doc_kind: kind,
+      subject: row.subject || 'responsible',
+      url: `/api/v1/files/${row.file_id}/download`,
+    });
+  }
+
+  return grouped;
+}
+
 async function formComplete(row, required) {
   return (await computeInvalidFields(row, required)).length === 0;
 }
 
 async function advance(associateRow) {
-  const phase = Number(associateRow.associate_status) || 1;
+  const phase = normalizePhase(associateRow.associate_status);
 
-  if (phase === 1) {
+  if (phase === PHASE.CADASTRO_CRIADO) {
     const okForm = await formComplete(associateRow, REQUIRED_RESPONSIBLE);
     if (!okForm) {
       throw new AppError(400, 'VALIDATION_ERROR', 'Formulário do responsável incompleto', {
@@ -413,13 +486,13 @@ async function advance(associateRow) {
       });
     }
     const result = await query(
-      `UPDATE users SET associate_status = 2, date_updated = NOW() WHERE id = $1 RETURNING *`,
-      [associateRow.id]
+      `UPDATE users SET associate_status = $2, date_updated = NOW() WHERE id = $1 RETURNING *`,
+      [associateRow.id, PHASE.DADOS_PESSOAIS]
     );
     return associateAuthRepository.publicAssociate(result.rows[0]);
   }
 
-  if (phase === 2) {
+  if (phase === PHASE.DADOS_PESSOAIS) {
     const okForm = await formComplete(associateRow, REQUIRED_RESPONSIBLE);
     if (!okForm) {
       throw new AppError(400, 'VALIDATION_ERROR', 'Formulário do responsável incompleto');
@@ -435,57 +508,49 @@ async function advance(associateRow) {
       }
     }
     const result = await query(
-      `UPDATE users SET associate_status = 3, date_updated = NOW() WHERE id = $1 RETURNING *`,
-      [associateRow.id]
+      `UPDATE users SET associate_status = $2, date_updated = NOW() WHERE id = $1 RETURNING *`,
+      [associateRow.id, PHASE.DOCUMENTOS]
     );
     return associateAuthRepository.publicAssociate(result.rows[0]);
   }
 
-  if (phase === 3) {
+  if (phase === PHASE.DOCUMENTOS) {
     const docs = await documentsStatus(associateRow);
     if (!docs.complete) {
       throw new AppError(400, 'VALIDATION_ERROR', 'Documentos de identidade incompletos', { documents: docs });
     }
     const result = await query(
-      `UPDATE users SET associate_status = 4, date_updated = NOW() WHERE id = $1 RETURNING *`,
-      [associateRow.id]
+      `UPDATE users SET associate_status = $2, date_updated = NOW() WHERE id = $1 RETURNING *`,
+      [associateRow.id, PHASE.ASSINATURA_TERMO]
     );
     return associateAuthRepository.publicAssociate(result.rows[0]);
   }
 
-  if (phase === 4) {
-    if (associateRow.adhesion_term) {
+  if (phase === PHASE.ASSINATURA_TERMO) {
+    if (associateRow.adhesion_term || env.termsDevBypass) {
       const result = await query(
-        `UPDATE users SET associate_status = 5, date_updated = NOW() WHERE id = $1 RETURNING *`,
+        `UPDATE users SET status = 'Associado', date_updated = NOW() WHERE id = $1 RETURNING *`,
         [associateRow.id]
       );
       return associateAuthRepository.publicAssociate(result.rows[0]);
     }
-    if (!env.termsDevBypass) {
-      throw new AppError(
-        400,
-        'VALIDATION_ERROR',
-        'Assine o termo de adesão antes de avançar para a fase 5'
-      );
-    }
-    const result = await query(
-      `UPDATE users SET associate_status = 5, date_updated = NOW() WHERE id = $1 RETURNING *`,
-      [associateRow.id]
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'Assine o termo de adesão antes de se tornar Associado'
     );
-    return associateAuthRepository.publicAssociate(result.rows[0]);
   }
 
   throw new AppError(400, 'VALIDATION_ERROR', `Não é possível avançar a partir da fase ${phase}`);
 }
 
 async function complete(associateRow) {
-  const phase = Number(associateRow.associate_status) || 1;
-  if (phase < 5) {
-    throw new AppError(403, 'PHASE_LOCKED', 'Conclusão só é permitida na fase 5');
+  if (!isAssociateStatus(associateRow)) {
+    throw new AppError(403, 'PHASE_LOCKED', 'Conclusão só é permitida após se tornar Associado');
   }
   const result = await query(
-    `UPDATE users SET status = 'Associado', date_updated = NOW() WHERE id = $1 RETURNING *`,
-    [associateRow.id]
+    `UPDATE users SET associate_status = $2, status = 'Associado', date_updated = NOW() WHERE id = $1 RETURNING *`,
+    [associateRow.id, PHASE.CONCLUIDO]
   );
   return associateAuthRepository.publicAssociate(result.rows[0]);
 }
@@ -506,6 +571,7 @@ module.exports = {
   createMyPatient,
   patchMyPatient,
   documentsStatus,
+  extrasStatus,
   advance,
   complete,
   usersExists,

@@ -13,6 +13,7 @@ const {
   resolveKind,
   resolveVariables,
   sampleVariables,
+  associationDefaults,
   fullName,
   missingRequiredVariables,
   CANONICAL_VARIABLES,
@@ -121,19 +122,56 @@ function logoUrl(fileId) {
   return fileId ? `/api/v1/files/${fileId}/download` : null;
 }
 
-async function getAssociationName() {
+async function getAssociationProfile() {
+  const defaults = {
+    name: process.env.VITE_ASSOCIATION_NAME || 'SouCannabis',
+    fullName: process.env.VITE_ASSOCIATION_FULL_NAME || '',
+    email: process.env.VITE_ASSOCIATION_EMAIL || '',
+    phone: process.env.VITE_ASSOCIATION_PHONE || '',
+    site: process.env.VITE_ASSOCIATION_SITE || '',
+    cnpj: process.env.VITE_ASSOCIATION_CNPJ || '',
+    city: process.env.VITE_ASSOCIATION_CITY || '',
+    state: process.env.VITE_ASSOCIATION_STATE || '',
+  };
+  const keyMap = {
+    VITE_ASSOCIATION_NAME: 'name',
+    VITE_ASSOCIATION_FULL_NAME: 'fullName',
+    VITE_ASSOCIATION_EMAIL: 'email',
+    VITE_ASSOCIATION_PHONE: 'phone',
+    VITE_ASSOCIATION_SITE: 'site',
+    VITE_ASSOCIATION_CNPJ: 'cnpj',
+    VITE_ASSOCIATION_CITY: 'city',
+    VITE_ASSOCIATION_STATE: 'state',
+  };
   try {
     const result = await query(
-      `SELECT value FROM system_configs
-       WHERE system = 'registration' AND key = 'VITE_ASSOCIATION_NAME'
-       LIMIT 1`
+      `SELECT key, value FROM system_configs
+       WHERE system = 'registration'
+         AND key = ANY($1::text[])`,
+      [Object.keys(keyMap)]
     );
-    const value = result.rows[0]?.value;
-    if (value && String(value).trim()) return String(value).trim();
+    for (const row of result.rows) {
+      const prop = keyMap[row.key];
+      if (!prop) continue;
+      if (row.value != null && String(row.value).trim()) {
+        defaults[prop] = String(row.value).trim();
+      }
+    }
   } catch {
     /* ignore */
   }
-  return process.env.VITE_ASSOCIATION_NAME || 'SouCannabis';
+  return defaults;
+}
+
+async function getAssociationName() {
+  const profile = await getAssociationProfile();
+  return profile.name || 'SouCannabis';
+}
+
+/** Nome usado no título padrão do termo (preferência: nome completo). */
+async function getAssociationTitleName() {
+  const profile = await getAssociationProfile();
+  return (profile.fullName || profile.name || 'SouCannabis').trim() || 'SouCannabis';
 }
 
 async function loadLogoDataUrl(fileId) {
@@ -175,6 +213,7 @@ function publicContract(row, { token = null } = {}) {
 }
 
 async function status() {
+  await ensureDefaultTemplates();
   const templates = await repo.listTemplates();
   const published = templates.filter((t) => t.current_version_id);
   return {
@@ -185,11 +224,12 @@ async function status() {
       published: Boolean(t.current_version_id),
       current_version_number: t.current_version_number || null,
     })),
-    ready_to_contract: published.length === 2,
+    ready_to_contract: published.filter((t) => t.kind === 'self' || t.kind === 'with_patient').length >= 2,
   };
 }
 
 async function listTemplates() {
+  await ensureDefaultTemplates();
   const rows = await repo.listTemplates();
   return rows.map((t) => ({
     ...t,
@@ -218,8 +258,7 @@ function slugifyKind(input) {
 
 async function createTemplate(body = {}) {
   const mode = body.mode || body.type || 'custom';
-  const associationName = await getAssociationName();
-  const defaultTit = defaultTitle(associationName);
+  const defaultTit = defaultTitle(await getAssociationTitleName());
 
   let kind;
   let displayName;
@@ -290,7 +329,7 @@ async function getTemplate(kind) {
     title: row.title,
     display_name: row.display_name || kindDisplayFallback(row.kind),
     requires_patient: requiresPatient,
-    default_title: defaultTitle(associationName),
+    default_title: defaultTitle(await getAssociationTitleName()),
     association_name: associationName,
     logo_file_id: row.logo_file_id || null,
     logo_url: logoUrl(row.logo_file_id),
@@ -339,9 +378,45 @@ async function listTemplateLogos() {
   return repo.listTemplateLogos();
 }
 
+/**
+ * Garante os dois modelos padrão (Associado / Associado com paciente).
+ * Idempotente — só cria se ainda não existirem.
+ */
+async function ensureDefaultTemplates() {
+  const title = defaultTitle(await getAssociationTitleName());
+  const specs = [
+    {
+      kind: 'self',
+      displayName: 'Associado',
+      requiresPatient: false,
+      draftContentJson: DEFAULT_SELF_CONTENT,
+    },
+    {
+      kind: 'with_patient',
+      displayName: 'Associado com paciente',
+      requiresPatient: true,
+      draftContentJson: DEFAULT_WITH_PATIENT_CONTENT,
+    },
+  ];
+  const created = [];
+  for (const spec of specs) {
+    const existing = await repo.getTemplateByKind(spec.kind);
+    if (existing) continue;
+    await repo.createTemplate({
+      kind: spec.kind,
+      title,
+      displayName: spec.displayName,
+      requiresPatient: spec.requiresPatient,
+      draftContentJson: spec.draftContentJson,
+    });
+    created.push(spec.kind);
+  }
+  return { created, kinds: specs.map((s) => s.kind) };
+}
+
 async function resetDefaultTemplates() {
   const associationName = await getAssociationName();
-  const title = defaultTitle(associationName);
+  const title = defaultTitle(await getAssociationTitleName());
   await repo.resetTemplatesToDefaults({
     selfContent: DEFAULT_SELF_CONTENT,
     withPatientContent: DEFAULT_WITH_PATIENT_CONTENT,
@@ -358,8 +433,7 @@ async function resetDefaultTemplates() {
 async function resetTemplateKind(kind) {
   const template = await repo.getTemplateByKind(kind);
   if (!template) throw new AppError(404, 'NOT_FOUND', `Template ${kind} não encontrado`);
-  const associationName = await getAssociationName();
-  const title = defaultTitle(associationName);
+  const title = defaultTitle(await getAssociationTitleName());
   const requiresPatient = Boolean(template.requires_patient || kind === 'with_patient');
   const content = requiresPatient ? DEFAULT_WITH_PATIENT_CONTENT : DEFAULT_SELF_CONTENT;
   const row = await repo.resetTemplateKind(kind, { content, title });
@@ -367,11 +441,32 @@ async function resetTemplateKind(kind) {
   return getTemplate(kind);
 }
 
+async function deleteTemplate(kind) {
+  const template = await repo.getTemplateByKind(kind);
+  if (!template) throw new AppError(404, 'NOT_FOUND', `Modelo ${kind} não encontrado`);
+
+  const contractsCount = await repo.countContractsByKind(kind);
+  if (contractsCount > 0) {
+    throw new AppError(
+      409,
+      'TEMPLATE_HAS_CONTRACTS',
+      `Não é possível excluir: existem ${contractsCount} termo(s) gerado(s) com este modelo`
+    );
+  }
+
+  const deleted = await repo.deleteTemplateByKind(kind);
+  if (!deleted) throw new AppError(404, 'NOT_FOUND', `Modelo ${kind} não encontrado`);
+  return { kind: deleted.kind, deleted: true };
+}
+
 async function getSampleVariables(kind, overrides = {}) {
   const template = await repo.getTemplateByKind(kind);
   if (!template) throw new AppError(404, 'NOT_FOUND', `Template ${kind} não encontrado`);
   const requiresPatient = Boolean(template.requires_patient || kind === 'with_patient');
-  const variables = sampleVariables(requiresPatient ? 'with_patient' : 'self', overrides);
+  const association = await getAssociationProfile();
+  const variables = sampleVariables(requiresPatient ? 'with_patient' : 'self', overrides, {
+    association,
+  });
   return {
     kind,
     variables,
@@ -401,8 +496,11 @@ async function previewPdf(kind, { contentJson = null, variables: overrides = {} 
     throw new AppError(400, 'TEMPLATE_INVALID_VARIABLES', check.message, { unknown: check.unknown });
   }
 
-  const variables = sampleVariables(requiresPatient ? 'with_patient' : 'self', overrides || {});
-  variables.association_name = await getAssociationName();
+  const association = await getAssociationProfile();
+  const variables = sampleVariables(requiresPatient ? 'with_patient' : 'self', overrides || {}, {
+    association,
+  });
+  Object.assign(variables, associationDefaults(association));
   const filled = applyVariablesToContent(doc, variables);
   const logoDataUrl = await loadLogoDataUrl(template.logo_file_id);
   let pdf;
@@ -452,33 +550,52 @@ async function publish(kind, { notes = null, createdBy = null } = {}) {
 
   const file = await filesRepository.createFile({
     buffer: pdf.buffer,
-    filename: `term-template-${kind}-v.pdf`,
+    filename: `term-template-${kind}.pdf`,
     mimeType: 'application/pdf',
   });
 
-  const versionId = uuidv4();
   const contentSha = sha256(Buffer.from(JSON.stringify(contentJson)));
+  const existingVersionId = template.current_version_id || template.published_version_id || null;
 
   const version = await withClient(async (client) => {
     const q = clientQuery(client);
     await client.query('BEGIN');
     try {
-      const n = await repo.nextVersionNumber(template.id, q);
-      const ver = await repo.insertVersion(
-        {
-          id: versionId,
-          template_id: template.id,
-          version_number: n,
-          content_json: contentJson,
-          content_sha256: contentSha,
-          pdf_file_id: file.id,
-          pdf_sha256: pdf.sha256,
-          created_by: createdBy,
-          notes,
-        },
-        q
-      );
-      await repo.setCurrentVersion(template.id, versionId, q);
+      let ver;
+      if (existingVersionId) {
+        ver = await repo.updateVersion(
+          {
+            id: existingVersionId,
+            content_json: contentJson,
+            content_sha256: contentSha,
+            pdf_file_id: file.id,
+            pdf_sha256: pdf.sha256,
+            created_by: createdBy,
+            notes,
+          },
+          q
+        );
+        if (!ver) {
+          throw new AppError(404, 'NOT_FOUND', 'Versão publicada do modelo não encontrada');
+        }
+      } else {
+        const versionId = uuidv4();
+        ver = await repo.insertVersion(
+          {
+            id: versionId,
+            template_id: template.id,
+            version_number: 1,
+            content_json: contentJson,
+            content_sha256: contentSha,
+            pdf_file_id: file.id,
+            pdf_sha256: pdf.sha256,
+            created_by: createdBy,
+            notes,
+          },
+          q
+        );
+        await repo.setCurrentVersion(template.id, versionId, q);
+      }
       await client.query('COMMIT');
       return ver;
     } catch (e) {
@@ -558,8 +675,8 @@ async function createContract({
     patient = await repo.findUserByCode(user.patient_user_code);
   }
 
-  const associationName = await getAssociationName();
-  const variables = resolveVariables(user, patient, { associationName });
+  const association = await getAssociationProfile();
+  const variables = resolveVariables(user, patient, { association });
   const missing = missingRequiredVariables(variables, requiresPatient);
   if (missing.length) {
     const labels = missing.map((name) => VARIABLE_LABELS[name] || name);
@@ -641,7 +758,7 @@ async function createContract({
       signerName: fullName(user),
       token,
       contractId: contract.id,
-      associationName,
+      associationName: association?.name || null,
     });
   }
 
@@ -1003,8 +1120,10 @@ module.exports = {
   getTemplate,
   saveDraft,
   listTemplateLogos,
+  ensureDefaultTemplates,
   resetDefaultTemplates,
   resetTemplateKind,
+  deleteTemplate,
   getSampleVariables,
   previewPdf,
   publish,

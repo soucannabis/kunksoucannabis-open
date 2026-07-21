@@ -31,6 +31,15 @@ describe('mapPgError', () => {
     assert.equal(mapped.code, 'VALIDATION_ERROR');
   });
 
+  it('maps integer+phase string 22P02 to SCHEMA_MISMATCH', () => {
+    const mapped = mapPgError({
+      code: '22P02',
+      message: 'invalid input syntax for type integer: "assinatura_termo"',
+    });
+    assert.equal(mapped.status, 500);
+    assert.equal(mapped.code, 'SCHEMA_MISMATCH');
+  });
+
   it('returns null for unknown codes', () => {
     assert.equal(mapPgError({ code: '42P01' }), null);
   });

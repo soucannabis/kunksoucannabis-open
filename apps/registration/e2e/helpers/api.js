@@ -1,5 +1,26 @@
 import { API_URL, PASSWORD, responsiblePayload, patientPayload } from './fixtures.js';
 
+const PHASE = {
+  1: 'cadastro_criado',
+  2: 'dados_pessoais',
+  3: 'documentos',
+  4: 'assinatura_termo',
+  5: 'associado',
+};
+
+const PHASE_ORDER = {
+  cadastro_criado: 1,
+  dados_pessoais: 2,
+  documentos: 3,
+  assinatura_termo: 4,
+  concluido: 5,
+};
+
+function phaseRank(value) {
+  if (typeof value === 'number') return value;
+  return PHASE_ORDER[value] || PHASE_ORDER[PHASE[value]] || 1;
+}
+
 /**
  * API helpers bound to Playwright's context.request (shares cookies with the browser).
  */
@@ -80,9 +101,11 @@ export async function ensureDocSignTemplatesPublished(request) {
 /**
  * Seed associate via API using page.context().request so the session cookie
  * is available to subsequent page.goto calls.
+ * `phase` aceita 1–5 (legado e2e) ou string pt-BR.
  */
 export async function seedAssociate(page, { email, phase = 1, responsibleType = 'himself' } = {}) {
-  if (phase >= 3) {
+  const targetRank = phaseRank(phase);
+  if (targetRank >= 3) {
     await ensureDocSignTemplatesPublished(page.context().request);
   }
   const api = createApi(page.context().request);
@@ -91,7 +114,7 @@ export async function seedAssociate(page, { email, phase = 1, responsibleType = 
     throw new Error(`register failed: ${reg.status} ${JSON.stringify(reg.data)}`);
   }
 
-  if (phase <= 1) {
+  if (targetRank <= 1) {
     return { api, email, user: reg.data.data.user };
   }
 
@@ -108,7 +131,7 @@ export async function seedAssociate(page, { email, phase = 1, responsibleType = 
   }
 
   let me = await api.me();
-  while ((me.data?.data?.user?.associate_status || 1) < 3 && phase >= 3) {
+  while (phaseRank(me.data?.data?.user?.associate_status) < 3 && targetRank >= 3) {
     const adv = await api.advance();
     if (adv.status !== 200) {
       throw new Error(`advance failed: ${adv.status} ${JSON.stringify(adv.data)}`);
@@ -116,7 +139,7 @@ export async function seedAssociate(page, { email, phase = 1, responsibleType = 
     me = await api.me();
   }
 
-  if (phase >= 4) {
+  if (targetRank >= 4) {
     const up = await api.uploadIdentity({ docType: 'cnh', subject: 'responsible' });
     if (up.status !== 201) throw new Error(`upload failed: ${up.status} ${JSON.stringify(up.data)}`);
     if (responsibleType === 'another') {
@@ -125,13 +148,16 @@ export async function seedAssociate(page, { email, phase = 1, responsibleType = 
     }
     const adv = await api.advance();
     if (adv.status !== 200) {
-      throw new Error(`advance to 4 failed: ${adv.status} ${JSON.stringify(adv.data)}`);
+      throw new Error(`advance to assinatura_termo failed: ${adv.status} ${JSON.stringify(adv.data)}`);
     }
   }
 
-  if (phase >= 5) {
-    const { forceAssociatePhase } = await import('./db.js');
-    await forceAssociatePhase(email, 5);
+  if (targetRank >= 5) {
+    const { forceAssociateStatus } = await import('./db.js');
+    await forceAssociateStatus(email, {
+      status: 'Associado',
+      associate_status: 'assinatura_termo',
+    });
   }
 
   me = await api.me();

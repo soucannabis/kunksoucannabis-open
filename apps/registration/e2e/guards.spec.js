@@ -8,7 +8,7 @@ test.describe('Guards de fase', () => {
     await seedAssociate(page, { email, phase: 1 });
     await page.goto('/documentos');
     await expect(page).not.toHaveURL(/\/documentos$/);
-    await expect(page).toHaveURL(/\/(bem-vindo|cadastro-associado|login)/);
+    await expect(page).toHaveURL(/\/(bem-vindo|cadastro-associado|cadastro|login)/);
   });
 
   test('phase 3 cannot open cadastro-associado', async ({ page }) => {
@@ -18,17 +18,17 @@ test.describe('Guards de fase', () => {
     await expect(page).toHaveURL(/\/documentos/);
   });
 
-  test('phase 4 stays on documentos stub not consulta', async ({ page }) => {
+  test('phase 4 stays on documentos stub not finalizar', async ({ page }) => {
     const email = uniqueEmail('guard4');
     await seedAssociate(page, { email, phase: 4 });
-    await page.goto('/consulta');
-    await expect(page).not.toHaveURL(/\/consulta/);
+    await page.goto('/finalizar');
+    await expect(page).not.toHaveURL(/\/finalizar/);
     await expect(page.getByRole('heading', { name: /Assinatura do termo/i })).toBeVisible();
   });
 
-  test('unauthenticated / redirects to login', async ({ page }) => {
+  test('unauthenticated / redirects to cadastro', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/\/cadastro$/);
   });
 
   test('root redirects by phase', async ({ page }) => {

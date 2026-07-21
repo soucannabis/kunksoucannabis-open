@@ -32,6 +32,31 @@ const KEY_META = {
     description: 'Formulário público de triagem habilitado',
     serialize: (v) => (v ? 'true' : 'false'),
   },
+  [TRIAGE_CONFIG_KEYS.formTheme]: {
+    value_type: 'string',
+    description: 'Tema visual do formulário público de triagem (dark|light)',
+    serialize: (v) => (String(v || '').toLowerCase() === 'light' ? 'light' : 'dark'),
+  },
+  [TRIAGE_CONFIG_KEYS.formTitle]: {
+    value_type: 'string',
+    description: 'Título do formulário público de triagem',
+    serialize: (v) => String(v ?? '').trim(),
+  },
+  [TRIAGE_CONFIG_KEYS.formSubtitle]: {
+    value_type: 'string',
+    description: 'Subtítulo do formulário público de triagem',
+    serialize: (v) => String(v ?? '').trim(),
+  },
+  [TRIAGE_CONFIG_KEYS.successTitle]: {
+    value_type: 'string',
+    description: 'Título da mensagem após envio do formulário público de triagem',
+    serialize: (v) => String(v ?? '').trim(),
+  },
+  [TRIAGE_CONFIG_KEYS.successSubtitle]: {
+    value_type: 'string',
+    description: 'Subtítulo da mensagem após envio do formulário público de triagem',
+    serialize: (v) => String(v ?? '').trim(),
+  },
 };
 
 const VALUE_PROPS = {
@@ -40,6 +65,11 @@ const VALUE_PROPS = {
   [TRIAGE_CONFIG_KEYS.statuses]: 'statuses',
   [TRIAGE_CONFIG_KEYS.associateDocs]: 'associateDocs',
   [TRIAGE_CONFIG_KEYS.publicFormEnabled]: 'publicFormEnabled',
+  [TRIAGE_CONFIG_KEYS.formTheme]: 'formTheme',
+  [TRIAGE_CONFIG_KEYS.formTitle]: 'formTitle',
+  [TRIAGE_CONFIG_KEYS.formSubtitle]: 'formSubtitle',
+  [TRIAGE_CONFIG_KEYS.successTitle]: 'successTitle',
+  [TRIAGE_CONFIG_KEYS.successSubtitle]: 'successSubtitle',
 };
 
 function valuesEqual(a, b) {
@@ -83,11 +113,18 @@ export async function saveTriageConfig(api, nextValues, baselineValues, itemsByK
   for (const [key, prop] of Object.entries(VALUE_PROPS)) {
     const next = nextValues[prop];
     const prev = baselineValues[prop];
-    if (valuesEqual(next, prev)) continue;
+    const existing = updatedItems[key];
+    const forceCreate = !existing?.id && (
+      prop === 'formTheme'
+      || prop === 'formTitle'
+      || prop === 'formSubtitle'
+      || prop === 'successTitle'
+      || prop === 'successSubtitle'
+    );
+    if (!forceCreate && valuesEqual(next, prev)) continue;
 
     const meta = KEY_META[key];
     const serialized = meta.serialize(next);
-    const existing = updatedItems[key];
 
     if (existing?.id) {
       const res = await api.updateConfig(existing.id, {
@@ -121,12 +158,13 @@ export function getTriagePublicUrl() {
     || import.meta.env.VITE_KUNK_URL
     || 'http://localhost:4257'
   ).replace(/\/$/, '');
-  return `${base}/fila`;
+  return `${base}/contato`;
 }
 
-export function getTriageEmbedSnippet(publicUrl = getTriagePublicUrl()) {
+export function getTriageEmbedSnippet(publicUrl = getTriagePublicUrl(), theme = 'dark') {
+  const themeQs = theme === 'light' ? '&theme=light' : '&theme=dark';
   return `<iframe
-  src="${publicUrl}?embed=1"
+  src="${publicUrl}?embed=1${themeQs}"
   title="Formulário de triagem"
   width="100%"
   height="720"

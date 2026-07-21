@@ -14,7 +14,7 @@
 | Nova senha | `/nova-senha` | Reset de senha | e2e: Não · API: Sim |
 | Convite operador | `/cadastro` | Aceite de invite | e2e: Não · API: Não |
 | Portal profissional | `/relatorio/servicos` | Relatório do próprio profissional | e2e: Não · API: Parcial |
-| Fila pública | `/fila` | Fila de triagem pública | e2e: Sim · API: Sim (reception) |
+| Formulário público | `/contato` | Formulário de triagem / contato | e2e: Sim · API: Sim (reception) |
 | Não autorizado | `/unauthorized` | Sem permissão de página | e2e: Sim |
 | Não conectado | `/not-connected` | Sem sessão / offline | e2e: Não |
 

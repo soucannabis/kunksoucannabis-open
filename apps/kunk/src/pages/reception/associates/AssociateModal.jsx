@@ -46,6 +46,7 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
   const [termAnchor, setTermAnchor] = useState(null);
   const [confirmMake, setConfirmMake] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [ciap2Enabled, setCiap2Enabled] = useState(true);
   const { enabled: cacheEnabled } = useCacheConfig();
 
@@ -137,16 +138,17 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
     }
   }
 
-  async function deleteUser() {
+  async function confirmDeleteUser() {
     setBusy(true);
+    setDeleteError('');
     try {
       await api.deleteUser(user.id);
       setConfirmDelete(false);
       onChanged?.();
       onClose();
     } catch (err) {
+      setDeleteError(err.message || 'Não foi possível excluir');
       setMsg(err.message || 'Não foi possível excluir');
-      setConfirmDelete(false);
     } finally {
       setBusy(false);
     }
@@ -164,6 +166,7 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
         fullWidth
         sx={contentAreaDialogSx}
         PaperProps={{ sx: { height: '88vh', maxWidth: 1020, borderRadius: '20px' } }}
+        disableEnforceFocus={confirmDelete || confirmMake}
       >
         <DialogTitle sx={{ pr: 6 }}>
           <Stack direction="row" spacing={2} alignItems="center">
@@ -259,7 +262,9 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
               sx={{
                 mb: 1,
                 flexShrink: 0,
-                color: /falha|erro/i.test(msg) ? 'error.main' : 'text.secondary',
+                color: /falha|erro|excluir|inválid|possível|vinculad/i.test(msg)
+                  ? 'error.main'
+                  : 'text.secondary',
                 wordBreak: 'break-word',
               }}
             >
@@ -366,12 +371,19 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
         title="Tornar este cadastro Associado? (não gera termo)"
         onClose={() => setConfirmMake(false)}
         onConfirm={makeAssociate}
+        busy={busy}
       />
       <ConfirmDialog
         open={confirmDelete}
         title="Excluir associado? Só funciona sem pedidos, serviços ou pacientes."
-        onClose={() => setConfirmDelete(false)}
-        onConfirm={deleteUser}
+        onClose={() => {
+          if (busy) return;
+          setConfirmDelete(false);
+          setDeleteError('');
+        }}
+        onConfirm={confirmDeleteUser}
+        busy={busy}
+        error={deleteError}
       />
     </>
   );

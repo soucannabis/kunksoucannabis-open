@@ -54,14 +54,21 @@ export function formatCep(value) {
   return `${d.slice(0, 5)}-${d.slice(5)}`;
 }
 
+/** Format digits as 00.000.000/0000-00 */
+export function formatCnpj(value) {
+  const d = String(value || '').replace(/\D/g, '').slice(0, 14);
+  if (d.length <= 2) return d;
+  if (d.length <= 5) return `${d.slice(0, 2)}.${d.slice(2)}`;
+  if (d.length <= 8) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5)}`;
+  if (d.length <= 12) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8)}`;
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+}
+
 /** CPF (≤11) 000.000.000-00 ou CNPJ 00.000.000/0000-00 */
 export function formatCpfCnpj(value) {
   const d = String(value || '').replace(/\D/g, '').slice(0, 14);
   if (d.length <= 11) return formatCpf(d);
-  if (d.length <= 12) {
-    return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8)}`;
-  }
-  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+  return formatCnpj(d);
 }
 
 export function onlyDigits(value) {
@@ -111,6 +118,22 @@ export function CpfInput({ value, onChange, className = 'form-control', ...rest 
       className={className}
       value={formatCpf(value)}
       onChange={(e) => onChange(onlyDigits(e.target.value).slice(0, 11))}
+    />
+  );
+}
+
+/** CNPJ with 00.000.000/0000-00 mask; onChange receives digits only. */
+export function CnpjInput({ value, onChange, className = 'form-control', ...rest }) {
+  return (
+    <input
+      {...rest}
+      type="text"
+      inputMode="numeric"
+      autoComplete="off"
+      placeholder="00.000.000/0000-00"
+      className={className}
+      value={formatCnpj(value)}
+      onChange={(e) => onChange(onlyDigits(e.target.value).slice(0, 14))}
     />
   );
 }
@@ -184,7 +207,13 @@ export function PhoneInput({
   );
 }
 
-export function GenderSelect({ value, onChange, name = 'gender', className = 'form-select' }) {
+export function GenderSelect({
+  value,
+  onChange,
+  name = 'gender',
+  className = 'form-select',
+  required = false,
+}) {
   const [other, setOther] = useState('');
   const isOther = value && !GENDER_OPTIONS.some((o) => o.value === value && o.value !== 'outro');
   const selectValue = GENDER_OPTIONS.some((o) => o.value === value) ? value : value ? 'outro' : '';
@@ -193,6 +222,7 @@ export function GenderSelect({ value, onChange, name = 'gender', className = 'fo
       <select
         className={className}
         name={name}
+        required={required}
         value={selectValue === 'outro' || isOther ? 'outro' : selectValue}
         onChange={(e) => {
           if (e.target.value === 'outro') onChange(other || 'outro');
@@ -223,7 +253,7 @@ export function GenderSelect({ value, onChange, name = 'gender', className = 'fo
  * CIAP-2 multi-select (Bootstrap) — UX alinhada ao Kunk/cadastramento legado:
  * chips selecionados + “Adicionar CIAP” + busca + categorias com checkboxes.
  */
-export function Ciap2Select({ value = [], onChange, max = 10 }) {
+export function Ciap2Select({ value = [], onChange, max = 10, hideCount = false, invalid = false }) {
   const [q, setQ] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [openCat, setOpenCat] = useState(null);
@@ -260,12 +290,12 @@ export function Ciap2Select({ value = [], onChange, max = 10 }) {
   }
 
   return (
-    <div className="kunk-ciap2">
-      <div className="d-flex flex-wrap gap-1 align-items-center mb-2">
+    <div className={`kunk-ciap2${invalid ? ' is-invalid' : ''}`}>
+      <div className="d-flex flex-wrap gap-2 align-items-center mb-2">
         {selectedItems.map((item) => (
           <span
             key={item.value}
-            className="badge text-bg-primary"
+            className="badge text-bg-primary kunk-ciap2-chip"
             title={item.category || undefined}
             style={{ fontWeight: 500 }}
           >
@@ -280,51 +310,58 @@ export function Ciap2Select({ value = [], onChange, max = 10 }) {
           </span>
         ))}
         {selected.length < max && !pickerOpen ? (
-          <button type="button" className="btn btn-sm btn-success" onClick={() => setPickerOpen(true)}>
+          <button type="button" className="btn btn-success kunk-ciap2-add" onClick={() => setPickerOpen(true)}>
             + Adicionar CIAP
           </button>
         ) : null}
-      </div>
-      <div className="text-muted small mb-1">
-        {selected.length}/{max} motivos
+        {!hideCount ? (
+          <span className="kunk-ciap2-count">
+            {selected.length}/{max} motivos
+          </span>
+        ) : null}
       </div>
       {pickerOpen ? (
-        <div className="border rounded p-2 bg-white">
-          <label className="form-label">Pesquise pelo motivo do tratamento:</label>
+        <div className="kunk-ciap2-picker">
+          <label className="kunk-ciap2-picker-label">Pesquise pelo motivo do tratamento:</label>
           <input
             className="form-control mb-2"
-            placeholder="Motivo do tratamento"
+            placeholder="Pesquisa aqui pelos sintomas do seu tratamento"
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
               setOpenCat('all');
             }}
           />
-          <div className="fw-semibold text-center mb-2">Selecione as opções abaixo</div>
-          <div style={{ maxHeight: 280, overflow: 'auto' }}>
+          <div className="kunk-ciap2-picker-title">Selecione as opções abaixo</div>
+          <div className="kunk-ciap2-picker-list">
             {filteredCategories.map((cat, index) => {
               const catKey = `cat-${index}`;
               const expanded = openCat === 'all' || openCat === catKey || Boolean(q.trim());
               return (
-                <div key={cat.category} className="mb-2 border-bottom pb-1">
+                <div key={cat.category} className="kunk-ciap2-cat">
                   <button
                     type="button"
-                    className="btn btn-link text-decoration-none p-0 fw-semibold text-start w-100"
+                    className="kunk-ciap2-cat-title"
                     onClick={() => setOpenCat((prev) => (prev === catKey ? null : catKey))}
                   >
                     {cat.category}
+                    {' '}
+                    <span className="kunk-ciap2-cat-hint">clique aqui</span>
                   </button>
                   {expanded ? (
-                    <div className="ps-1 mt-1">
+                    <div className="kunk-ciap2-cat-options">
+                      <p className="kunk-ciap2-cat-help">
+                        Escolha uma ou mais opções que descrevem o motivo do seu tratamento.
+                      </p>
                       {cat.subcategories.map((sub) => (
-                        <label key={sub.value} className="d-block">
+                        <label key={sub.value} className="kunk-ciap2-option">
                           <input
                             type="checkbox"
                             checked={selected.includes(sub.value)}
                             disabled={!selected.includes(sub.value) && selected.length >= max}
                             onChange={() => toggle(sub.value)}
-                          />{' '}
-                          {sub.value} — {sub.label}
+                          />
+                          <span>{sub.value} — {sub.label}</span>
                         </label>
                       ))}
                     </div>

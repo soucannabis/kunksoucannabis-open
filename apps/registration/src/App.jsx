@@ -11,7 +11,9 @@ import { AssociateRegistrationPage } from './pages/AssociateRegistrationPage.jsx
 import { PatientRegistrationPage } from './pages/PatientRegistrationPage.jsx';
 import { DocumentsPage } from './pages/DocumentsPage.jsx';
 import { RegistrationCompletePage, ConsultationPage } from './pages/ConsultationPages.jsx';
+import { ContactPage } from './pages/ContactPage.jsx';
 import { SystemErrorBoundary } from './components/errors/SystemErrorBoundary.jsx';
+import { PHASE } from './lib/associatePhases.js';
 
 export default function App() {
   const bootstrap = getPublicConfig();
@@ -29,12 +31,14 @@ export default function App() {
                 <Route path="/nova-senha" element={<NewPasswordPage api={api} />} />
               </Route>
 
+              <Route path="/contato" element={<ContactPage />} />
+
               <Route element={<AppShell />}>
                 <Route path="/" element={<PhaseHomeRedirect />} />
                 <Route
                   path="/bem-vindo"
                   element={(
-                    <PhaseGuard allow={[1]}>
+                    <PhaseGuard allow={[PHASE.CADASTRO_CRIADO]}>
                       <WelcomePage />
                     </PhaseGuard>
                   )}
@@ -42,7 +46,7 @@ export default function App() {
                 <Route
                   path="/cadastro-associado"
                   element={(
-                    <PhaseGuard allow={[1, 2]}>
+                    <PhaseGuard allow={[PHASE.CADASTRO_CRIADO, PHASE.DADOS_PESSOAIS]}>
                       <AssociateRegistrationPage api={api} />
                     </PhaseGuard>
                   )}
@@ -50,7 +54,7 @@ export default function App() {
                 <Route
                   path="/cadastro-paciente"
                   element={(
-                    <PhaseGuard allow={[2]}>
+                    <PhaseGuard allow={[PHASE.DADOS_PESSOAIS]}>
                       <PatientRegistrationPage api={api} />
                     </PhaseGuard>
                   )}
@@ -58,23 +62,24 @@ export default function App() {
                 <Route
                   path="/documentos"
                   element={(
-                    <PhaseGuard allow={[3, 4]}>
+                    <PhaseGuard allow={[PHASE.DOCUMENTOS, PHASE.ASSINATURA_TERMO]}>
                       <DocumentsPage api={api} />
                     </PhaseGuard>
                   )}
                 />
                 <Route
-                  path="/consulta"
+                  path="/finalizar"
                   element={(
-                    <PhaseGuard allow={[5]}>
+                    <PhaseGuard allow={['associado']}>
                       <ConsultationPage api={api} />
                     </PhaseGuard>
                   )}
                 />
+                <Route path="/consulta" element={<Navigate to="/finalizar" replace />} />
                 <Route
                   path="/cadastro-concluido"
                   element={(
-                    <PhaseGuard allow={['done', 5]}>
+                    <PhaseGuard allow={['done']}>
                       <RegistrationCompletePage />
                     </PhaseGuard>
                   )}

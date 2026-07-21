@@ -2,7 +2,7 @@
 
 const request = require('supertest');
 const { getApp } = require('./app');
-const { ensureAdminUser } = require('./db');
+const { ensureAdminUser, query } = require('./db');
 
 function extractCookie(setCookie, name = 'kunk_oss_session') {
   if (!setCookie) return null;
@@ -13,6 +13,20 @@ function extractCookie(setCookie, name = 'kunk_oss_session') {
 
 function extractAssociateCookie(setCookie) {
   return extractCookie(setCookie, 'associate_session');
+}
+
+async function setApiAccessEnabled(enabled) {
+  const value = enabled ? 'true' : 'false';
+  await query(
+    `INSERT INTO system_configs (
+       system, key, value, value_type, is_sensitive, is_required, allow_hardcoded, hardcoded_default, description, date_created
+     ) VALUES (
+       'api', 'api.enabled', $1, 'boolean', false, false, true, 'false',
+       'Habilita autenticação Bearer e gestão de tokens de API no Admin', NOW()
+     )
+     ON CONFLICT (system, key) DO UPDATE SET value = EXCLUDED.value, date_updated = NOW()`,
+    [value]
+  );
 }
 
 async function loginAsAdmin() {
@@ -40,16 +54,24 @@ async function loginAsOperator(overrides = {}) {
   return { app, cookie, user: res.body.data.user, creds };
 }
 
-async function createBearerToken(cookie) {
+async function createBearerToken(cookie, scopes = ['*']) {
+  await setApiAccessEnabled(true);
   const app = getApp();
   const res = await request(app)
     .post('/api/v1/auth/tokens')
     .set('Cookie', cookie)
-    .send({ email: 'integration-token', scopes: ['*'] });
+    .send({ email: 'integration-token', scopes });
   if (res.status !== 201) {
     throw new Error(`token create failed: ${res.status} ${JSON.stringify(res.body)}`);
   }
   return res.body.data.token;
 }
 
-module.exports = { loginAsAdmin, loginAsOperator, createBearerToken, extractCookie, extractAssociateCookie };
+module.exports = {
+  loginAsAdmin,
+  loginAsOperator,
+  createBearerToken,
+  setApiAccessEnabled,
+  extractCookie,
+  extractAssociateCookie,
+};

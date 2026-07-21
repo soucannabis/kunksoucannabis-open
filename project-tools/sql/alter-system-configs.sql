@@ -30,7 +30,84 @@ INSERT INTO system_configs (
     false,
     true,
     'Kunk',
-    'Nome da associação exibido no cadastramento'
+    'Nome curto da associação (ex.: SouCannabis)'
+  ),
+  (
+    'registration',
+    'VITE_ASSOCIATION_FULL_NAME',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    '',
+    'Nome completo / razão social da associação'
+  ),
+  (
+    'registration',
+    'VITE_ASSOCIATION_EMAIL',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    '',
+    'E-mail de contato da associação'
+  ),
+  (
+    'registration',
+    'VITE_ASSOCIATION_PHONE',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    '',
+    'Telefone de contato da associação'
+  ),
+  (
+    'registration',
+    'VITE_ASSOCIATION_SITE',
+    NULL,
+    'url',
+    false,
+    false,
+    true,
+    '',
+    'Site da associação'
+  ),
+  (
+    'registration',
+    'VITE_ASSOCIATION_CNPJ',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    '',
+    'CNPJ da associação'
+  ),
+  (
+    'registration',
+    'VITE_ASSOCIATION_CITY',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    '',
+    'Cidade da associação'
+  ),
+  (
+    'registration',
+    'VITE_ASSOCIATION_STATE',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    '',
+    'UF (estado) da associação'
   ),
   (
     'registration',
@@ -73,8 +150,41 @@ INSERT INTO system_configs (
     false,
     false,
     true,
-    'Bem-vindo ao cadastro de associados.',
-    'Texto de boas-vindas'
+    'Ao continuar, você preencherá seus dados pessoais, enviará documentos de identidade e assinará o termo de adesão. Depois poderá anexar receitas, exames ou laudos e agendar uma consulta com a associação. O processo é simples e leva poucos minutos — tenha em mãos RG ou CNH e, se tiver, receitas e laudos médicos.',
+    'Texto de boas-vindas do cadastramento'
+  ),
+  (
+    'registration',
+    'VITE_COMPLETION_TEXT',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    'Obrigado por concluir seu cadastro. Se precisar de atendimento, abra uma solicitação de contato pelo botão abaixo. A associação responderá pelo canal da triagem.',
+    'Texto da tela de cadastro concluído'
+  ),
+  (
+    'registration',
+    'VITE_SHOW_TRIAGE_BUTTON',
+    NULL,
+    'boolean',
+    false,
+    false,
+    true,
+    'true',
+    'Exibir botão da triagem na tela de cadastro concluído'
+  ),
+  (
+    'registration',
+    'VITE_TRIAGE_FORM_URL',
+    NULL,
+    'string',
+    false,
+    false,
+    true,
+    '/contato',
+    'URL de redirecionamento do formulário de contato/triagem'
   ),
   (
     'registration',

@@ -1,6 +1,6 @@
 const STORAGE_KEY = 'kunk_admin_last_route';
 
-export function safeInternalPath(raw, fallback = '/dados') {
+export function safeInternalPath(raw, fallback = '/inicio') {
   if (!raw || typeof raw !== 'string') return fallback;
   if (!raw.startsWith('/') || raw.startsWith('//')) return fallback;
   if (raw.startsWith('/login') || raw.startsWith('/sem-permissao')) return fallback;
@@ -17,7 +17,7 @@ export function rememberAdminRoute(pathname, search = '') {
   return path;
 }
 
-export function readRememberedAdminRoute(fallback = '/dados') {
+export function readRememberedAdminRoute(fallback = '/inicio') {
   try {
     return safeInternalPath(sessionStorage.getItem(STORAGE_KEY), fallback);
   } catch {

@@ -37,6 +37,11 @@ export const VARIABLE_LABEL = {
   cep: 'CEP',
   current_date: 'Data atual',
   association_name: 'Nome da associação',
+  association_full_name: 'Nome completo da associação',
+  association_city: 'Cidade associação',
+  association_state: 'Estado associação',
+  association_cnpj: 'CNPJ associação',
+  association_site: 'Site da associação',
   signature: 'Assinatura',
   user_code: 'Código do usuário',
 };

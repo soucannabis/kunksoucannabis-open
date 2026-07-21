@@ -45,7 +45,7 @@ describe('doc-sign integration', () => {
 
     await query(
       `UPDATE users SET
-         associate_status = 4,
+         associate_status = 'assinatura_termo',
          associate_name = 'Paulo',
          associate_last_name = 'Teste',
          associate_cpf = '123.456.789-00',
@@ -106,7 +106,8 @@ describe('doc-sign integration', () => {
 
     const me = await request(app).get('/api/v1/auth/associate/me').set('Cookie', cookie);
     assert.equal(me.status, 200);
-    assert.equal(me.body.data.user.associate_status, 5);
+    assert.equal(me.body.data.user.associate_status, 'assinatura_termo');
+    assert.equal(me.body.data.user.status, 'Associado');
     assert.ok(me.body.data.user.adhesion_term);
 
     const again = await request(app)

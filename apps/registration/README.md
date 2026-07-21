@@ -30,8 +30,8 @@ Abra [http://localhost:4255](http://localhost:4255). Volumes montam `src/` e `pa
 | `/cadastro-associado` | 1–2 |
 | `/cadastro-paciente` | 2 (`another`) |
 | `/documentos` | 3–4 (fase 4 = stub termos) |
-| `/consulta` | 5 |
-| `/cadastro-concluido` | Associado |
+| `/finalizar` | Associado (pós-termo) |
+| `/cadastro-concluido` | concluído |
 
 Sessão: cookie HttpOnly `associate_session` na API (não no localStorage).
 

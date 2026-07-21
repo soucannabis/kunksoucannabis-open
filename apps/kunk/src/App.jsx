@@ -29,7 +29,7 @@ function AppRoutes() {
         <Route path="/relatorio/servicos" element={<ProfessionalReportPortalPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/not-connected" element={<NotConnectedPage />} />
-        <Route path="/fila" element={<PublicQueuePage />} />
+        <Route path="/contato" element={<PublicQueuePage />} />
         <Route path="/" element={<Navigate to="/app" replace />} />
         {buildAppRoutes({ roles })}
         <Route path="*" element={<NotFoundPage />} />

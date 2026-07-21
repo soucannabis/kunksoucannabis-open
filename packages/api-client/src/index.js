@@ -57,6 +57,13 @@ export function createApiClient({ baseUrl }) {
     login: (email, password) => request('POST', '/auth/login', { email, password }),
     logout: () => request('POST', '/auth/logout', {}),
     me: () => request('GET', '/auth/me'),
+    installStatus: () => request('GET', '/auth/install-status'),
+    install: (body) => request('POST', '/auth/install', body),
+    installSample: () => request('POST', '/auth/install-sample'),
+    listApiTokens: () => request('GET', '/auth/tokens'),
+    createApiToken: (body) => request('POST', '/auth/tokens', body),
+    updateApiToken: (id, body) => request('PATCH', `/auth/tokens/${id}`, body),
+    revokeApiToken: (id) => request('DELETE', `/auth/tokens/${id}`),
 
     // Associate auth
     registerEmail: (email, password) => request('POST', '/auth/associate/register-email', { email, password }),
@@ -75,6 +82,7 @@ export function createApiClient({ baseUrl }) {
     advance: () => request('POST', '/users/me/advance', {}),
     complete: () => request('POST', '/users/me/complete', {}),
     documentsStatus: () => request('GET', '/users/me/documents/status'),
+    extrasStatus: () => request('GET', '/users/me/extras/status'),
     uploadFile: (formData) => request('POST', '/files', formData),
     deleteFile: (id) => request('DELETE', `/files/${id}`),
     listFiles: (qs = '') => request('GET', `/files${qs ? `?${qs}` : ''}`),

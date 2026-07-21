@@ -1,35 +1,68 @@
 import React, { useMemo } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAssociateAuth } from '@kunk/auth-session';
+import { KUNK_LOGO_FRAME_SIZE } from '@kunk/config';
 import { Loader, ProgressSidebar } from '@kunk/ui';
 import { usePublicConfig } from '../config/PublicConfigProvider.jsx';
+import {
+  PHASE,
+  normalizePhase,
+  phaseIndex,
+  isAssociado,
+  isConcluido,
+} from '../lib/associatePhases.js';
 
 const STEPS = [
-  { id: 1, label: 'Cadastro', phases: [1, 2] },
-  { id: 2, label: 'Documentos', phases: [3, 4] },
-  { id: 3, label: 'Consulta', phases: [5] },
-  { id: 4, label: 'Concluído', phases: [] },
+  { id: 1, label: 'Cadastro', phases: [PHASE.CADASTRO_CRIADO, PHASE.DADOS_PESSOAIS] },
+  { id: 2, label: 'Documentos', phases: [PHASE.DOCUMENTOS, PHASE.ASSINATURA_TERMO] },
+  { id: 3, label: 'Finalizar', phases: [] },
+  { id: 4, label: 'Concluído', phases: [PHASE.CONCLUIDO] },
 ];
 
-function stepState(step, phase, status) {
-  if (status === 'Associado' && step.id === 4) return 'done current';
-  if (status === 'Associado' && step.id < 4) return 'done';
+const PUBLIC_AUTH_PATH = '/cadastro';
+
+function stepState(step, phase, user) {
+  const associado = isAssociado(user);
+  const concluido = isConcluido(user);
+
+  if (step.id === 4) {
+    if (concluido) return 'done current';
+    return 'locked';
+  }
+  if (step.id === 3) {
+    if (concluido) return 'done';
+    if (associado) return 'current';
+    return 'locked';
+  }
+  if (concluido || associado) return 'done';
   if (step.phases.includes(phase)) return 'current';
-  const maxPhase = Math.max(...step.phases, 0);
-  if (phase > maxPhase && step.phases.length) return 'done';
+  const maxIdx = Math.max(...step.phases.map((p) => phaseIndex(p)), -1);
+  if (phaseIndex(phase) > maxIdx && step.phases.length) return 'done';
   return 'locked';
 }
 
 export function PublicLayout() {
   const { config: cfg } = usePublicConfig();
+  const logo = String(cfg.appearanceLogo || '').trim();
+  const fullName = String(cfg.associationFullName || cfg.associationName || '').trim();
+
   return (
     <div className="container vertical-center">
-      <div className="col-md-6 col-12 text-center">
-        <img
-          src={cfg.associationLogo}
-          alt={cfg.associationName}
-          style={{ maxWidth: cfg.associationLogoSize, marginBottom: '1.5rem' }}
-        />
+      <div className="col-md-6 col-12 text-center auth-public-panel">
+        {logo ? (
+          <div className="auth-public-logo">
+            <img
+              src={logo}
+              alt={fullName || 'Logo da associação'}
+              style={{
+                width: KUNK_LOGO_FRAME_SIZE,
+                height: KUNK_LOGO_FRAME_SIZE,
+                objectFit: 'contain',
+              }}
+            />
+          </div>
+        ) : null}
+        {fullName ? <p className="auth-association-name">{fullName}</p> : null}
         <Outlet />
       </div>
     </div>
@@ -42,26 +75,40 @@ export function AppShell() {
   const location = useLocation();
 
   const steps = useMemo(() => {
-    const phase = Number(user?.associate_status) || 1;
+    const phase = normalizePhase(user?.associate_status);
     return STEPS.map((s) => ({
       ...s,
-      state: stepState(s, phase, user?.status),
+      state: stepState(s, phase, user),
     }));
   }, [user]);
 
   if (loading) return <Loader />;
-  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (!user) return <Navigate to={PUBLIC_AUTH_PATH} replace state={{ from: location }} />;
+
+  const navLogo = String(cfg.appearanceLogo || '').trim();
+  const navAlt = String(cfg.associationFullName || cfg.associationName || 'Logo').trim();
+  const fullName = String(cfg.associationFullName || cfg.associationName || '').trim();
 
   return (
     <div className="wrapper">
-      <nav className="navbar navbar-dark px-3 w-100" style={{ position: 'fixed', top: 0, zIndex: 10 }}>
-        <img src={cfg.associationLogoMenu} alt={cfg.associationName} height={36} />
+      <nav className="navbar navbar-dark px-3 w-100 app-navbar">
+        <div className="app-navbar-brand">
+          {navLogo ? (
+            <img
+              className="app-navbar-logo"
+              src={navLogo}
+              alt={navAlt}
+              height={40}
+            />
+          ) : null}
+          {fullName ? <span className="app-navbar-title">{fullName}</span> : null}
+        </div>
         <button type="button" className="btn btn-sm btn-outline-light" onClick={() => logout()}>
           Sair
         </button>
       </nav>
-      <div className="d-flex w-100" style={{ paddingTop: 56 }}>
-        <div className="d-none d-md-block" style={{ width: 220 }}>
+      <div className="app-body">
+        <div className="app-sidebar-col d-none d-md-flex">
           <ProgressSidebar steps={steps} contactUrl={cfg.contactUrl} />
         </div>
         <main className="content">
@@ -76,28 +123,45 @@ export function AppShell() {
 export function PhaseHomeRedirect() {
   const { user, loading } = useAssociateAuth();
   if (loading) return <Loader />;
-  if (!user) return <Navigate to="/login" replace />;
-  if (user.status === 'Associado') return <Navigate to="/cadastro-concluido" replace />;
-  const phase = Number(user.associate_status) || 1;
-  if (phase === 1) return <Navigate to="/bem-vindo" replace />;
-  if (phase === 2) {
+  if (!user) return <Navigate to={PUBLIC_AUTH_PATH} replace />;
+  if (isConcluido(user)) return <Navigate to="/cadastro-concluido" replace />;
+  if (isAssociado(user)) return <Navigate to="/finalizar" replace />;
+  const phase = normalizePhase(user.associate_status);
+  if (phase === PHASE.CADASTRO_CRIADO) return <Navigate to="/bem-vindo" replace />;
+  if (phase === PHASE.DADOS_PESSOAIS) {
     if (user.responsible_type === 'another') return <Navigate to="/cadastro-paciente" replace />;
     return <Navigate to="/cadastro-associado" replace />;
   }
-  if (phase === 3 || phase === 4) return <Navigate to="/documentos" replace />;
-  if (phase >= 5) return <Navigate to="/consulta" replace />;
+  if (phase === PHASE.DOCUMENTOS || phase === PHASE.ASSINATURA_TERMO) {
+    return <Navigate to="/documentos" replace />;
+  }
   return <Navigate to="/bem-vindo" replace />;
 }
 
 export function PhaseGuard({ allow, children }) {
   const { user, loading } = useAssociateAuth();
   if (loading) return <Loader />;
-  if (!user) return <Navigate to="/login" replace />;
-  const phase = Number(user.associate_status) || 1;
-  if (user.status === 'Associado' && !allow.includes('done')) {
-    return <Navigate to="/cadastro-concluido" replace />;
+  if (!user) return <Navigate to={PUBLIC_AUTH_PATH} replace />;
+
+  const phase = normalizePhase(user.associate_status);
+  const associado = isAssociado(user);
+  const concluido = isConcluido(user);
+
+  if (allow.includes('done')) {
+    if (concluido) return children;
+    return <PhaseHomeRedirect />;
   }
-  if (!allow.includes(phase) && !(user.status === 'Associado' && allow.includes('done'))) {
+
+  if (allow.includes('associado')) {
+    if (associado && !concluido) return children;
+    return <PhaseHomeRedirect />;
+  }
+
+  if (associado || concluido) {
+    return <PhaseHomeRedirect />;
+  }
+
+  if (!allow.includes(phase)) {
     return <PhaseHomeRedirect />;
   }
   return children;

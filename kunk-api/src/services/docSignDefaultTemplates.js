@@ -19,6 +19,25 @@ function h2(text) {
   return { type: 'heading', attrs: { level: 2 }, content: [bold(text)] };
 }
 
+/** Trecho comum: adesão + identificação jurídica da associação. */
+function adhesionIdentityTail() {
+  return [
+    t(', voluntariamente me comprometo pelo presente instrumento particular de adesão à '),
+    v('association_full_name'),
+    t(', pessoa jurídica de direito privado, inscrita no CNPJ nº '),
+    v('association_cnpj'),
+    t(', com sede em '),
+    v('association_city'),
+    t('-'),
+    v('association_state'),
+    t(', aqui denominada '),
+    v('association_name'),
+    t(
+      ' ou Associação, com o objetivo de regulamentar a relação entre os associados e a associação mediante as cláusulas e condições a seguir enunciadas.'
+    ),
+  ];
+}
+
 /** Introdução do associado (sem paciente). */
 function introSelf() {
   return p(
@@ -48,9 +67,7 @@ function introSelf() {
     v('state'),
     t(', CEP '),
     v('cep'),
-    t(
-      ', voluntariamente me comprometo pelo presente instrumento particular de adesão à ASSOCIAÇÃO TERAPÊUTICA SOUCANNABIS, pessoa jurídica de direito privado, inscrita no CNPJ nº 43.624.868/0001-75, com sede em Anápolis-GO, aqui denominada SouCannabis ou Associação, com o objetivo de regulamentar a relação entre os associados e a associação mediante as cláusulas e condições a seguir enunciadas.'
-    )
+    ...adhesionIdentityTail()
   );
 }
 
@@ -87,9 +104,7 @@ function introWithPatient() {
     v('patient_full_name'),
     t(' CPF '),
     v('patient_cpf'),
-    t(
-      ', voluntariamente me comprometo pelo presente instrumento particular de adesão à ASSOCIAÇÃO TERAPÊUTICA SOUCANNABIS, pessoa jurídica de direito privado, inscrita no CNPJ nº 43.624.868/0001-75, com sede em Anápolis-GO, aqui denominada SouCannabis ou Associação, com o objetivo de regulamentar a relação entre os associados e a associação mediante as cláusulas e condições a seguir enunciadas.'
-    )
+    ...adhesionIdentityTail()
   );
 }
 
@@ -97,9 +112,9 @@ function clauseValorSelf() {
   return [
     h2('CLÁUSULA TERCEIRA – DO VALOR DA ASSOCIAÇÃO'),
     p(
-      t(
-        'A SouCannabis não cobra de Associados Pacientes nenhuma taxa de adesão ou mensalidade.'
-      )
+      t('A '),
+      v('association_name'),
+      t(' não cobra de Associados Pacientes nenhuma taxa de adesão ou mensalidade.')
     ),
   ];
 }
@@ -108,13 +123,15 @@ function clauseValorWithPatient() {
   return [
     h2('CLÁUSULA TERCEIRA – DO VALOR DA ASSOCIAÇÃO'),
     p(
-      t(
-        '3.1. - A SouCannabis não cobra de Associados Pacientes nenhuma taxa de adesão ou mensalidade.'
-      )
+      t('3.1. - A '),
+      v('association_name'),
+      t(' não cobra de Associados Pacientes nenhuma taxa de adesão ou mensalidade.')
     ),
     p(
+      t('3.2. - A '),
+      v('association_name'),
       t(
-        '3.2. - A SouCannabis pode oferecer aos seus associados, mediante pagamento financeiro, produtos educativos para fins de ampliação do conhecimento acerca do uso consciente da Cannabis e de saúde integrativa.'
+        ' pode oferecer aos seus associados, mediante pagamento financeiro, produtos educativos para fins de ampliação do conhecimento acerca do uso consciente da Cannabis e de saúde integrativa.'
       )
     ),
     p(
@@ -123,13 +140,17 @@ function clauseValorWithPatient() {
       )
     ),
     p(
+      t('3.4. - A '),
+      v('association_name'),
       t(
-        '3.4. - A SouCannabis pode receber valores financeiros através da venda de produtos souvenirs e outros produtos agroecológicos e fitoterápicos produzidos por ela ou por parceiros.'
+        ' pode receber valores financeiros através da venda de produtos souvenirs e outros produtos agroecológicos e fitoterápicos produzidos por ela ou por parceiros.'
       )
     ),
     p(
+      t('3.5. - A '),
+      v('association_name'),
       t(
-        '3.5. - A SouCannabis aceita doações de associados que voluntariamente desejam contribuir financeiramente para a manutenção das atividades da associação.'
+        ' aceita doações de associados que voluntariamente desejam contribuir financeiramente para a manutenção das atividades da associação.'
       )
     ),
   ];
@@ -211,8 +232,10 @@ function sharedClausesAfterValor() {
       )
     ),
     p(
+      t('6.9. - O associado signatário declara estar habilitado para o tratamento com derivados de cannabis, desonerando a '),
+      v('association_full_name'),
       t(
-        '6.9. - O associado signatário declara estar habilitado para o tratamento com derivados de cannabis, desonerando a Associação Terapêutica Soucannabis de quaisquer responsabilidade seja por agravamento da enfermidade e/ou patologia que possa vir a ocorrer, especialmente pelo uso inadequado ou fora das prescrições ou determinações do profissional prescritor.'
+        ' de quaisquer responsabilidade seja por agravamento da enfermidade e/ou patologia que possa vir a ocorrer, especialmente pelo uso inadequado ou fora das prescrições ou determinações do profissional prescritor.'
       )
     ),
 
@@ -228,15 +251,19 @@ function sharedClausesAfterValor() {
       )
     ),
     p(
+      t('7.3. – O associado paciente que assina este termo de adesão, legitima e autoriza expressamente a '),
+      v('association_full_name'),
       t(
-        '7.3. – O associado paciente que assina este termo de adesão, legitima e autoriza expressamente a Associação Terapêutica SouCannabis, tal como descrito no art. 5º, XXI, da Constituição Federal, a representá-lo na busca do melhor produto derivado da Cannabis que melhor lhe atenderia, tal como receitado pelo seu médico, levando em consideração, valor e qualidade, e também a intermediar a aquisição do remédio.'
+        ', tal como descrito no art. 5º, XXI, da Constituição Federal, a representá-lo na busca do melhor produto derivado da Cannabis que melhor lhe atenderia, tal como receitado pelo seu médico, levando em consideração, valor e qualidade, e também a intermediar a aquisição do remédio.'
       )
     ),
 
     h2('CLÁUSULA OITAVA – DAS REGRAS CONTIDAS NO TERMO DE ADESÃO'),
     p(
+      t('8.1. – As determinações contidas nesse documento poderão ser revistas a qualquer momento pela '),
+      v('association_full_name'),
       t(
-        '8.1. – As determinações contidas nesse documento poderão ser revistas a qualquer momento pela Associação Terapêutica Soucannabis. Assim ocorrendo, será disponibilizado novo documento para ter aprovação e assinatura do associado.'
+        '. Assim ocorrendo, será disponibilizado novo documento para ter aprovação e assinatura do associado.'
       )
     ),
 
@@ -248,19 +275,23 @@ function sharedClausesBeforeValor() {
   return [
     h2('CLÁUSULA PRIMEIRA – DAS CONDIÇÕES INICIAIS'),
     p(
+      t('Através do presente Termo de Adesão, o associado manifesta a sua vontade de adesão ao quadro de associados da '),
+      v('association_name'),
       t(
-        'Através do presente Termo de Adesão, o associado manifesta a sua vontade de adesão ao quadro de associados da SouCannabis, como associado paciente, declarando conhecer e concordar com as normas estatutárias, subordinando-se a elas e às cláusulas abaixo.'
+        ', como associado paciente, declarando conhecer e concordar com as normas estatutárias, subordinando-se a elas e às cláusulas abaixo.'
       )
     ),
     p(
-      t(
-        '§1º O acesso ao documento se dará através do cadastro de associação no site da SouCannabis, endereço eletrônico: soucannabis.ong.br,'
-      )
+      t('§1º O acesso ao documento se dará através do cadastro de associação no site da '),
+      v('association_name'),
+      t(', endereço eletrônico: '),
+      v('association_site'),
+      t('.')
     ),
     p(
-      t(
-        '§2º O referido cadastro será analisado pela SouCannabis para aprovação, conforme previsto no seu Estatuto;'
-      )
+      t('§2º O referido cadastro será analisado pela '),
+      v('association_name'),
+      t(' para aprovação, conforme previsto no seu Estatuto;')
     ),
 
     h2('CLÁUSULA SEGUNDA – DO ASSOCIADO'),
@@ -270,9 +301,9 @@ function sharedClausesBeforeValor() {
       )
     ),
     p(
-      t(
-        '2.2. - No caso de busca de tratamento para menor de idade ou incapaz, a associação junto à Soucannabis deve ser feita exclusivamente por representante legal.'
-      )
+      t('2.2. - No caso de busca de tratamento para menor de idade ou incapaz, a associação junto à '),
+      v('association_name'),
+      t(' deve ser feita exclusivamente por representante legal.')
     ),
     p(
       t(
@@ -291,9 +322,9 @@ function buildDoc(kind) {
   };
 }
 
-function defaultTitle(associationName) {
-  const name = (associationName || 'SouCannabis').trim() || 'SouCannabis';
-  return `Termo de Adesão à Associação Terapêutica ${name}`;
+function defaultTitle(associationFullName) {
+  const name = (associationFullName || 'SouCannabis').trim() || 'SouCannabis';
+  return `Termo de Adesão à ${name}`;
 }
 
 module.exports = {

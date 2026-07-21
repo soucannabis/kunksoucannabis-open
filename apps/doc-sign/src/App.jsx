@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, NavLink, Outlet, useParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
 import { OperatorAuthProvider, useOperatorAuth } from '@kunk/auth-session';
@@ -12,15 +12,55 @@ import { ContractPage } from './pages/ContractPage.jsx';
 import { ContractsPage } from './pages/ContractsPage.jsx';
 import { AuditPage } from './pages/AuditPage.jsx';
 import { SystemErrorBoundary } from './components/errors/SystemErrorBoundary.jsx';
+import { getMissingAssociationFields } from './lib/associationGate.js';
 
 function RedirectContratoToTermo() {
   const { id } = useParams();
   return <Navigate to={`/termos/${id}`} replace />;
 }
 
-function RequireAdmin({ children }) {
+function RequireAdmin({ api, children }) {
   const { user, loading, hasRequiredRole, logout } = useOperatorAuth();
-  if (loading) return <div className="shell"><p className="muted">Carregando sessão…</p></div>;
+  const [assocState, setAssocState] = useState({ checking: true, missing: null });
+
+  useEffect(() => {
+    if (loading) return undefined;
+    if (!user || !hasRequiredRole) {
+      setAssocState((prev) => (prev.missing?.length ? prev : { checking: false, missing: null }));
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      setAssocState({ checking: true, missing: null });
+      try {
+        const missing = await getMissingAssociationFields(api);
+        if (cancelled) return;
+        if (missing.length) {
+          setAssocState({ checking: false, missing });
+          await logout();
+          return;
+        }
+        setAssocState({ checking: false, missing: null });
+      } catch {
+        if (cancelled) return;
+        setAssocState({ checking: false, missing: null });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [api, user, loading, hasRequiredRole, logout]);
+
+  if (assocState.missing?.length) {
+    return <Navigate to="/login" replace state={{ associationMissing: assocState.missing }} />;
+  }
+  if (loading || (user && hasRequiredRole && assocState.checking)) {
+    return (
+      <div className="shell">
+        <p className="muted">Carregando sessão…</p>
+      </div>
+    );
+  }
   if (!user) return <Navigate to="/login" replace />;
   if (!hasRequiredRole) {
     return (
@@ -40,7 +80,7 @@ function OperatorShell({ api }) {
   return (
     <div className="shell">
       <div className="topbar">
-        <div className="brand">Doc-sign</div>
+        <div className="brand">ASSINATURA DE TERMOS</div>
         <div className="topbar-nav">
           <span className="muted">{user?.email}</span>
           <NavLink
@@ -79,7 +119,7 @@ export default function App() {
             <Route path="/assinar/:token" element={<SignPage api={api} />} />
             <Route
               element={(
-                <RequireAdmin>
+                <RequireAdmin api={api}>
                   <OperatorShell api={api} />
                 </RequireAdmin>
               )}

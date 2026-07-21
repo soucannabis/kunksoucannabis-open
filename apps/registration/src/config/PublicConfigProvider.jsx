@@ -1,15 +1,29 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { getPublicConfig, mergePublicConfigFromApi } from '@kunk/config';
+import {
+  getPublicConfig,
+  mergePublicConfigFromApi,
+  getKunkPublicConfig,
+  mergeKunkPublicConfigFromApi,
+} from '@kunk/config';
+
+function withAppearanceLogo(registrationConfig, kunkConfig) {
+  const appearanceLogo = String(kunkConfig?.logo || '').trim();
+  return {
+    ...registrationConfig,
+    appearanceLogo,
+  };
+}
 
 const PublicConfigContext = createContext({
-  config: getPublicConfig(),
+  config: withAppearanceLogo(getPublicConfig(), getKunkPublicConfig()),
   configErrors: [],
   configReady: false,
 });
 
 export function PublicConfigProvider({ api, children }) {
   const bootstrap = useMemo(() => getPublicConfig(), []);
-  const [config, setConfig] = useState(bootstrap);
+  const kunkBootstrap = useMemo(() => getKunkPublicConfig(), []);
+  const [config, setConfig] = useState(() => withAppearanceLogo(bootstrap, kunkBootstrap));
   const [configErrors, setConfigErrors] = useState([]);
   const [configReady, setConfigReady] = useState(false);
 
@@ -17,15 +31,30 @@ export function PublicConfigProvider({ api, children }) {
     let cancelled = false;
     (async () => {
       try {
-        const json = await api.get('/config/public?system=registration');
-        const data = json?.data || {};
+        const [regResult, kunkResult] = await Promise.allSettled([
+          api.get('/config/public?system=registration'),
+          api.get('/config/public?system=kunk'),
+        ]);
         if (cancelled) return;
-        setConfig(mergePublicConfigFromApi(bootstrap, data.values));
-        setConfigErrors(Array.isArray(data.errors) ? data.errors : []);
+
+        let mergedReg = bootstrap;
+        let errors = [];
+        if (regResult.status === 'fulfilled') {
+          const data = regResult.value?.data || {};
+          mergedReg = mergePublicConfigFromApi(bootstrap, data.values);
+          errors = Array.isArray(data.errors) ? data.errors : [];
+        }
+
+        let mergedKunk = kunkBootstrap;
+        if (kunkResult.status === 'fulfilled') {
+          mergedKunk = mergeKunkPublicConfigFromApi(kunkBootstrap, kunkResult.value?.data?.values);
+        }
+
+        setConfig(withAppearanceLogo(mergedReg, mergedKunk));
+        setConfigErrors(errors);
       } catch {
         if (cancelled) return;
-        // Keep Vite/hardcoded branding if API is unreachable
-        setConfig(bootstrap);
+        setConfig(withAppearanceLogo(bootstrap, kunkBootstrap));
         setConfigErrors([]);
       } finally {
         if (!cancelled) setConfigReady(true);
@@ -34,7 +63,33 @@ export function PublicConfigProvider({ api, children }) {
     return () => {
       cancelled = true;
     };
-  }, [api, bootstrap]);
+  }, [api, bootstrap, kunkBootstrap]);
+
+  useEffect(() => {
+    const href = String(config.appearanceLogo || config.associationLogo || '').trim();
+    let link = document.querySelector("link[rel='icon']");
+    if (!href) {
+      if (link) link.setAttribute('href', '/favicon.svg');
+      return;
+    }
+    if (!link) {
+      link = document.createElement('link');
+      link.setAttribute('rel', 'icon');
+      document.head.appendChild(link);
+    }
+    const lower = href.split('?')[0].toLowerCase();
+    const type = lower.endsWith('.svg')
+      ? 'image/svg+xml'
+      : lower.endsWith('.ico')
+        ? 'image/x-icon'
+        : lower.endsWith('.jpg') || lower.endsWith('.jpeg')
+          ? 'image/jpeg'
+          : lower.endsWith('.webp')
+            ? 'image/webp'
+            : 'image/png';
+    link.setAttribute('type', type);
+    link.setAttribute('href', href);
+  }, [config.appearanceLogo, config.associationLogo]);
 
   const value = useMemo(
     () => ({ config, configErrors, configReady }),

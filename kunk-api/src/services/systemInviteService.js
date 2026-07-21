@@ -116,16 +116,8 @@ async function previewInvite(token) {
 async function acceptInvite(body) {
   const payload = verifyToken(body?.token);
   const password = String(body?.password || '');
-  if (password.length < 8) {
-    throw new AppError(400, 'VALIDATION_ERROR', 'Senha deve ter no mínimo 8 caracteres');
-  }
-  if (!/[A-Z]/.test(password) || !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
-    throw new AppError(
-      400,
-      'VALIDATION_ERROR',
-      'Senha precisa de maiúscula e caractere especial'
-    );
-  }
+  const authRepository = require('../repositories/authRepository');
+  authRepository.assertOperatorPassword(password);
 
   const userId = payload.system_user_id;
   const existing = await systemUsersService.getSystemUser(userId);

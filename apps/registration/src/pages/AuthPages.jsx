@@ -43,7 +43,7 @@ export function SignupPage() {
 
   return (
     <form onSubmit={onSubmit} className="text-start">
-      <h1 className="h3 mb-3">Cadastro de associado</h1>
+      <h1 className="auth-page-title">Cadastro de associado</h1>
       <AlertError message={error} />
       <label className="form-label text-white">E-mail</label>
       <input
@@ -108,7 +108,7 @@ export function LoginPage() {
 
   return (
     <form onSubmit={onSubmit} className="text-start">
-      <h1 className="h3 mb-3">Login</h1>
+      <h1 className="auth-page-title">Login</h1>
       <AlertError message={error} />
       <label className="form-label text-white">E-mail</label>
       <input className="form-control mb-2" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />

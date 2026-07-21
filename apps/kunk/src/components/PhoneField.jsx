@@ -31,7 +31,7 @@ const phoneBoxSx = {
 };
 
 /**
- * Telefone padrão (mesmo do /fila): DDI + número, valor em dígitos com código do país.
+ * Telefone padrão (mesmo do /contato): DDI + número, valor em dígitos com código do país.
  */
 export default function PhoneField({
   label,

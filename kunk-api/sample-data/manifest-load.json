@@ -1,10 +1,6 @@
 {
   "version": "1.0.0",
   "description": "Sample data massivo para teste de carga do Kunk OSS",
-  "demo_login": {
-    "email": "admin@demo.kunk.local",
-    "password": "DemoAdmin123!"
-  },
   "profiles": {
     "smoke": {
       "description": "Validação rápida do script (~segundos)",
@@ -67,6 +63,7 @@
   "notes": [
     "Não grava fixtures JSON (volume grande).",
     "Trunca tabelas de negócio e reinsere com is_sample=true.",
+    "Não cria nem trunca system_users — operadores só via Admin/API.",
     "Preserva system_configs / system_api_credentials (buckets, triage, etc.).",
     "Rodar: npm run seed:load -- --profile=medium"
   ]

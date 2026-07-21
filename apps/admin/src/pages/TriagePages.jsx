@@ -1,6 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
-import { TRIAGE_DEFAULT_FORM_FIELDS, TRIAGE_DEFAULT_STATUSES, TRIAGE_STATUS_ICON_OPTIONS } from '@kunk/config';
+import {
+  TRIAGE_DEFAULT_FORM_FIELDS,
+  TRIAGE_DEFAULT_STATUSES,
+  TRIAGE_STATUS_ICON_OPTIONS,
+  normalizeTriageSelectOptions,
+  triageSelectOptionLabels,
+} from '@kunk/config';
 import {
   getTriageEmbedSnippet,
   getTriagePublicUrl,
@@ -8,6 +14,7 @@ import {
   saveTriageConfig,
 } from '../lib/triageConfig.js';
 import { AdminLoader } from '../components/AdminLoader.jsx';
+import { TriageFormLivePreview } from '../components/TriageFormLivePreview.jsx';
 
 export function TriageShell() {
   return (
@@ -21,9 +28,6 @@ export function TriageShell() {
         </div>
       </div>
       <nav className="triage-subnav" style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-        <NavLink to="/triagem" end className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}>
-          Índice
-        </NavLink>
         <NavLink to="/triagem/formulario" className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}>
           Formulário
         </NavLink>
@@ -96,11 +100,103 @@ function useTriageForm(api) {
   return { values, setValues, baseline, itemsByKey, error, setError, saving, loaded, save };
 }
 
+function SelectOptionsEditor({ options, onChange, min = 2 }) {
+  const list = normalizeTriageSelectOptions(options);
+
+  function setOptionLabel(index, label) {
+    onChange(list.map((opt, i) => (i === index ? { ...opt, label } : opt)));
+  }
+
+  function setOptionEnabled(index, enabled) {
+    onChange(list.map((opt, i) => (i === index ? { ...opt, enabled } : opt)));
+  }
+
+  function addOption() {
+    onChange([...list, { label: '', enabled: true }]);
+  }
+
+  function removeOption(index) {
+    onChange(list.filter((_, i) => i !== index));
+  }
+
+  const activeCount = triageSelectOptionLabels(list).length;
+
+  return (
+    <div className="triage-options-editor">
+      <p className="triage-options-editor__hint muted">
+        Edite as opções do select. Mínimo de {min} valores preenchidos.
+      </p>
+      <ul className="triage-options-editor__list">
+        {list.map((opt, index) => (
+          <li
+            key={`opt-${index}`}
+            className={`triage-options-editor__row${opt.enabled ? '' : ' is-disabled'}`}
+          >
+            <input
+              type="checkbox"
+              checked={opt.enabled}
+              onChange={(e) => setOptionEnabled(index, e.target.checked)}
+              aria-label={`${opt.enabled ? 'Desativar' : 'Ativar'} opção ${index + 1}`}
+            />
+            <input
+              type="text"
+              className="triage-options-editor__input"
+              value={opt.label}
+              placeholder={`Opção ${index + 1}`}
+              onChange={(e) => setOptionLabel(index, e.target.value)}
+            />
+            <button
+              type="button"
+              className="btn btn-danger triage-options-editor__remove"
+              onClick={() => removeOption(index)}
+              aria-label={`Remover opção ${index + 1}`}
+            >
+              ×
+            </button>
+          </li>
+        ))}
+      </ul>
+      <button type="button" className="btn triage-options-editor__add" onClick={addOption}>
+        Adicionar opção
+      </button>
+      {activeCount < min ? (
+        <p className="triage-options-editor__error">
+          Inclua pelo menos {min} opções preenchidas e marcadas.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function countSelectOptions(field) {
+  return triageSelectOptionLabels(field?.options).length;
+}
+
+function sanitizeSelectOptions(options) {
+  return normalizeTriageSelectOptions(options)
+    .map((o) => ({ label: o.label, enabled: o.enabled }))
+    .filter((o) => o.label);
+}
+
+function validateSelectOptions(values) {
+  const fields = [
+    ...(values.formFields || []).filter((f) => f && (f.type === 'select' || f.id === 'help_topic') && f.enabled !== false),
+    ...(values.customFields || []).filter((f) => f && f.type === 'select' && f.enabled !== false),
+  ];
+  for (const field of fields) {
+    if (countSelectOptions(field) < 2) {
+      return `O select “${field.label || field.id}” precisa de pelo menos 2 opções.`;
+    }
+  }
+  return '';
+}
+
 export function TriageFormPage({ api }) {
   const { values, setValues, error, setError, saving, loaded, save } = useTriageForm(api);
   const [copied, setCopied] = useState('');
   const publicUrl = useMemo(() => getTriagePublicUrl(), []);
-  const embed = useMemo(() => getTriageEmbedSnippet(publicUrl), [publicUrl]);
+  const theme = values?.formTheme === 'light' ? 'light' : 'dark';
+  const embed = useMemo(() => getTriageEmbedSnippet(publicUrl, theme), [publicUrl, theme]);
 
   if (!loaded || !values) {
     if (error) return <p className="alert alert-error">{error}</p>;
@@ -159,188 +255,312 @@ export function TriageFormPage({ api }) {
 
   async function onSubmit(e) {
     e.preventDefault();
+    const validationError = validateSelectOptions(values);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     try {
-      await save();
+      await save({
+        ...values,
+        formTheme: values.formTheme === 'light' ? 'light' : 'dark',
+        formFields: (values.formFields || []).map((f) => (
+          f.type === 'select' || f.id === 'help_topic'
+            ? {
+              ...f,
+              type: 'select',
+              options: sanitizeSelectOptions(f.options),
+            }
+            : f
+        )),
+        customFields: (values.customFields || []).map((f) => (
+          f.type === 'select'
+            ? {
+              ...f,
+              options: sanitizeSelectOptions(f.options),
+            }
+            : f
+        )),
+      });
     } catch {
       /* shown */
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="card" style={{ padding: '1.25rem', display: 'grid', gap: '1.5rem' }}>
-      {error ? <p style={{ color: 'var(--admin-danger)', margin: 0 }}>{error}</p> : null}
+    <div className="triage-form-layout">
+      {error ? <p className="triage-form-error" style={{ color: 'var(--admin-danger)', margin: 0 }}>{error}</p> : null}
 
-      <section>
-        <h2 style={{ marginTop: 0 }}>Campos padrão</h2>
-        <p className="muted">Desative para ocultar no formulário público. “Como podemos ajudar?” é um select — edite as opções abaixo.</p>
-        <table className="data">
-          <thead>
-            <tr>
-              <th>Campo</th>
-              <th>Label</th>
-              <th>Visível</th>
-              <th>Obrigatório</th>
-            </tr>
-          </thead>
-          <tbody>
-            {values.formFields.map((f) => (
-              <React.Fragment key={f.id}>
-                <tr>
-                  <td><code>{f.id}</code></td>
-                  <td>
-                    <input
-                      type="text"
-                      value={f.label || ''}
-                      onChange={(e) => updateField(f.id, { label: e.target.value })}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={f.enabled !== false}
-                      onChange={(e) => updateField(f.id, { enabled: e.target.checked })}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={Boolean(f.required)}
-                      onChange={(e) => updateField(f.id, { required: e.target.checked })}
-                    />
-                  </td>
-                </tr>
-                {f.id === 'help_topic' || f.type === 'select' ? (
+      <form onSubmit={onSubmit} className="card triage-form-main triage-admin">
+        <section className="ext-card" style={{ padding: '1rem', display: 'grid', gap: '0.85rem' }}>
+          <h2 style={{ margin: 0 }}>Formulário público</h2>
+          <label
+            className={`ext-flag${values.publicFormEnabled ? ' ext-flag--active' : ''}`}
+            style={{ maxWidth: '100%' }}
+          >
+            <input
+              type="checkbox"
+              checked={Boolean(values.publicFormEnabled)}
+              onChange={(e) => setValues((prev) => ({ ...prev, publicFormEnabled: e.target.checked }))}
+            />
+            <span className="ext-flag-body">
+              <strong>Formulário público habilitado</strong>
+              <span className="muted">Quando desligado, /contato e o iframe ficam indisponíveis.</span>
+            </span>
+          </label>
+        </section>
+
+        <section>
+          <h2 style={{ marginTop: 0 }}>Campos padrão</h2>
+          <p className="muted">Desative para ocultar no formulário público. Campos do tipo select usam opções com checkbox.</p>
+          <table className="data triage-fields-table">
+            <thead>
+              <tr>
+                <th>Label</th>
+                <th className="triage-fields-flags-col">Visível / Obrigatório</th>
+              </tr>
+            </thead>
+            <tbody>
+              {values.formFields.map((f) => (
+                <React.Fragment key={f.id}>
                   <tr>
-                    <td colSpan={4} style={{ background: 'var(--admin-surface-2, transparent)' }}>
-                      <label className="field" style={{ margin: 0 }}>
-                        <span>Opções do select (uma por linha){f.id === 'help_topic' ? ' — Como podemos ajudar?' : ''}</span>
-                        <textarea
-                          rows={5}
-                          value={(f.options || []).join('\n')}
-                          onChange={(e) => updateField(f.id, {
-                            type: 'select',
-                            options: e.target.value.split('\n').map((s) => s.trim()).filter(Boolean),
-                          })}
-                          placeholder={'Opção A\nOpção B\nOpção C'}
-                        />
-                      </label>
+                    <td>
+                      <input
+                        type="text"
+                        value={f.label || ''}
+                        onChange={(e) => updateField(f.id, { label: e.target.value })}
+                      />
+                    </td>
+                    <td className="triage-fields-flags-col">
+                      <div className="triage-field-flags">
+                        <label className="triage-field-flag">
+                          <input
+                            type="checkbox"
+                            checked={f.enabled !== false}
+                            onChange={(e) => updateField(f.id, { enabled: e.target.checked })}
+                          />
+                          <span>Visível</span>
+                        </label>
+                        <label className="triage-field-flag">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(f.required)}
+                            onChange={(e) => updateField(f.id, { required: e.target.checked })}
+                          />
+                          <span>Obrigatório</span>
+                        </label>
+                      </div>
                     </td>
                   </tr>
-                ) : null}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
-        <button
-          type="button"
-          className="btn"
-          style={{ marginTop: '0.75rem' }}
-          onClick={() => setValues((prev) => ({ ...prev, formFields: TRIAGE_DEFAULT_FORM_FIELDS.map((f) => ({ ...f, options: f.options ? [...f.options] : f.options })) }))}
-        >
-          Restaurar campos padrão
-        </button>
-      </section>
+                  {f.id === 'help_topic' || f.type === 'select' ? (
+                    <tr>
+                      <td colSpan={2} className="triage-options-cell">
+                        <SelectOptionsEditor
+                          options={f.options || []}
+                          onChange={(options) => updateField(f.id, { type: 'select', options })}
+                        />
+                      </td>
+                    </tr>
+                  ) : null}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+          <button
+            type="button"
+            className="btn"
+            style={{ marginTop: '0.75rem' }}
+            onClick={() => setValues((prev) => ({
+              ...prev,
+              formFields: TRIAGE_DEFAULT_FORM_FIELDS.map((f) => ({
+                ...f,
+                options: f.options ? [...f.options] : f.options,
+              })),
+            }))}
+          >
+            Restaurar campos padrão
+          </button>
+        </section>
 
-      <section>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-          <h2 style={{ margin: 0 }}>Campos personalizados</h2>
-          <button type="button" className="btn" onClick={addCustomField}>Adicionar</button>
-        </div>
-        {values.customFields.length === 0 ? (
-          <p className="muted">Nenhum campo personalizado.</p>
-        ) : (
-          <div style={{ display: 'grid', gap: '0.75rem', marginTop: '0.75rem' }}>
-            {values.customFields.map((f) => (
-              <div key={f.id} className="card" style={{ padding: '0.75rem', display: 'grid', gap: '0.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
-                <label className="field">
-                  <span>ID</span>
-                  <input type="text" value={f.id} onChange={(e) => updateCustom(f.id, { id: e.target.value })} />
-                </label>
-                <label className="field">
-                  <span>Label</span>
-                  <input type="text" value={f.label || ''} onChange={(e) => updateCustom(f.id, { label: e.target.value })} />
-                </label>
-                <label className="field">
-                  <span>Tipo</span>
-                  <select value={f.type || 'text'} onChange={(e) => updateCustom(f.id, { type: e.target.value })}>
-                    <option value="text">text</option>
-                    <option value="textarea">textarea</option>
-                    <option value="select">select</option>
-                    <option value="checkbox">checkbox</option>
-                  </select>
-                </label>
-                <label className="field">
-                  <span>Ordem</span>
-                  <input
-                    type="number"
-                    value={f.order ?? 0}
-                    onChange={(e) => updateCustom(f.id, { order: Number(e.target.value) || 0 })}
-                  />
-                </label>
-                <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
-                  <input type="checkbox" checked={f.enabled !== false} onChange={(e) => updateCustom(f.id, { enabled: e.target.checked })} />
-                  <span>Visível</span>
-                </label>
-                <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
-                  <input type="checkbox" checked={Boolean(f.required)} onChange={(e) => updateCustom(f.id, { required: e.target.checked })} />
-                  <span>Obrigatório</span>
-                </label>
-                {f.type === 'select' ? (
-                  <label className="field" style={{ gridColumn: '1 / -1' }}>
-                    <span>Opções (uma por linha)</span>
-                    <textarea
-                      rows={3}
-                      value={(f.options || []).join('\n')}
+        <section>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+            <h2 style={{ margin: 0 }}>Campos personalizados</h2>
+            <button type="button" className="btn" onClick={addCustomField}>Adicionar</button>
+          </div>
+          {values.customFields.length === 0 ? (
+            <p className="muted">Nenhum campo personalizado.</p>
+          ) : (
+            <div style={{ display: 'grid', gap: '0.75rem', marginTop: '0.75rem' }}>
+              {values.customFields.map((f) => (
+                <div key={f.id} className="card triage-custom-field">
+                  <label className="field">
+                    <span>Label</span>
+                    <input type="text" value={f.label || ''} onChange={(e) => updateCustom(f.id, { label: e.target.value })} />
+                  </label>
+                  <label className="field">
+                    <span>Tipo</span>
+                    <select
+                      value={f.type || 'text'}
                       onChange={(e) => updateCustom(f.id, {
-                        options: e.target.value.split('\n').map((s) => s.trim()).filter(Boolean),
+                        type: e.target.value,
+                        options: e.target.value === 'select'
+                          ? (Array.isArray(f.options) && f.options.length ? f.options : ['Opção 1', 'Opção 2'])
+                          : f.options,
                       })}
+                    >
+                      <option value="text">text</option>
+                      <option value="textarea">textarea</option>
+                      <option value="select">select</option>
+                      <option value="checkbox">checkbox</option>
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span>Ordem</span>
+                    <input
+                      type="number"
+                      value={f.order ?? 0}
+                      onChange={(e) => updateCustom(f.id, { order: Number(e.target.value) || 0 })}
                     />
                   </label>
-                ) : null}
-                <div>
-                  <button type="button" className="btn btn-danger" onClick={() => removeCustom(f.id)}>Remover</button>
+                  <div className="triage-field-flags field" style={{ marginBottom: '0.85rem' }}>
+                    <label className="triage-field-flag">
+                      <input type="checkbox" checked={f.enabled !== false} onChange={(e) => updateCustom(f.id, { enabled: e.target.checked })} />
+                      <span>Visível</span>
+                    </label>
+                    <label className="triage-field-flag">
+                      <input type="checkbox" checked={Boolean(f.required)} onChange={(e) => updateCustom(f.id, { required: e.target.checked })} />
+                      <span>Obrigatório</span>
+                    </label>
+                  </div>
+                  {f.type === 'select' ? (
+                    <div className="triage-options-cell" style={{ gridColumn: '1 / -1' }}>
+                      <SelectOptionsEditor
+                        options={f.options || []}
+                        onChange={(options) => updateCustom(f.id, { options })}
+                      />
+                    </div>
+                  ) : null}
+                  <div>
+                    <button type="button" className="btn btn-danger" onClick={() => removeCustom(f.id)}>Remover</button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+              ))}
+            </div>
+          )}
+        </section>
 
-      <section>
-        <h2>Publicação / Incorporação</h2>
-        <label className="field">
-          <span>URL pública</span>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input type="text" readOnly value={publicUrl} style={{ flex: 1 }} />
-            <button type="button" className="btn" onClick={() => onCopy(publicUrl, 'url')}>
-              {copied === 'url' ? 'Copiado' : 'Copiar link'}
+        <section className="ext-card" style={{ padding: '1rem', display: 'grid', gap: '0.85rem' }}>
+          <h2 style={{ margin: 0 }}>Textos do formulário</h2>
+          <p className="muted" style={{ margin: 0 }}>
+            Título e subtítulo exibidos no formulário público e na mensagem após o envio.
+          </p>
+          <label className="field">
+            <span>Título do formulário</span>
+            <input
+              type="text"
+              value={values.formTitle || ''}
+              onChange={(e) => setValues((prev) => ({ ...prev, formTitle: e.target.value }))}
+              placeholder="Fila de acolhimento"
+            />
+          </label>
+          <label className="field">
+            <span>Subtítulo do formulário</span>
+            <input
+              type="text"
+              value={values.formSubtitle || ''}
+              onChange={(e) => setValues((prev) => ({ ...prev, formSubtitle: e.target.value }))}
+              placeholder="Preencha para entrar na fila de contato do acolhimento"
+            />
+          </label>
+          <label className="field">
+            <span>Título após envio</span>
+            <input
+              type="text"
+              value={values.successTitle || ''}
+              onChange={(e) => setValues((prev) => ({ ...prev, successTitle: e.target.value }))}
+              placeholder="Você entrou na fila"
+            />
+          </label>
+          <label className="field">
+            <span>Subtítulo após envio</span>
+            <input
+              type="text"
+              value={values.successSubtitle || ''}
+              onChange={(e) => setValues((prev) => ({ ...prev, successSubtitle: e.target.value }))}
+              placeholder="Em breve a equipe de acolhimento entrará em contato."
+            />
+          </label>
+        </section>
+
+        <section className="ext-card" style={{ padding: '1rem', display: 'grid', gap: '0.85rem' }}>
+          <h2 style={{ margin: 0 }}>Estilo do formulário</h2>
+          <p className="muted" style={{ margin: 0 }}>
+            Escolha o visual aplicado nas páginas públicas e no iframe incorporado.
+          </p>
+          <div className="ext-flags" style={{ display: 'grid', gap: '0.55rem' }}>
+            <label className={`ext-flag${theme === 'dark' ? ' ext-flag--active' : ''}`}>
+              <input
+                type="checkbox"
+                checked={theme === 'dark'}
+                onChange={() => setValues((prev) => ({ ...prev, formTheme: 'dark' }))}
+              />
+              <span className="ext-flag-body">
+                <strong>Padrão escuro</strong>
+                <span className="muted">Fundo escuro, contraste alto (padrão atual)</span>
+              </span>
+            </label>
+            <label className={`ext-flag${theme === 'light' ? ' ext-flag--active' : ''}`}>
+              <input
+                type="checkbox"
+                checked={theme === 'light'}
+                onChange={() => setValues((prev) => ({ ...prev, formTheme: 'light' }))}
+              />
+              <span className="ext-flag-body">
+                <strong>Padrão claro</strong>
+                <span className="muted">Fundo claro, tipografia escura</span>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <section>
+          <h2>Publicação / Incorporação</h2>
+          <label className="field">
+            <span>URL pública</span>
+            <div>
+              <input type="text" className="input-readonly" readOnly value={publicUrl} />
+              <button type="button" className="btn" onClick={() => onCopy(publicUrl, 'url')}>
+                {copied === 'url' ? 'Copiado' : 'Copiar link'}
+              </button>
+            </div>
+          </label>
+          <label className="field">
+            <span>Código de incorporação (iframe)</span>
+            <textarea readOnly rows={8} value={embed} style={{ fontFamily: 'var(--admin-mono)', fontSize: '0.85rem' }} />
+            <button type="button" className="btn" style={{ marginTop: '0.5rem' }} onClick={() => onCopy(embed, 'embed')}>
+              {copied === 'embed' ? 'Copiado' : 'Copiar código'}
             </button>
-          </div>
-        </label>
-        <label className="field">
-          <span>Código de incorporação (iframe)</span>
-          <textarea readOnly rows={8} value={embed} style={{ fontFamily: 'var(--admin-mono)', fontSize: '0.85rem' }} />
-          <button type="button" className="btn" style={{ marginTop: '0.5rem' }} onClick={() => onCopy(embed, 'embed')}>
-            {copied === 'embed' ? 'Copiado' : 'Copiar código'}
-          </button>
-        </label>
-        <p className="muted">O iframe usa <code>?embed=1</code> (layout enxuto).</p>
-        <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
-          <input
-            type="checkbox"
-            checked={Boolean(values.publicFormEnabled)}
-            onChange={(e) => setValues((prev) => ({ ...prev, publicFormEnabled: e.target.checked }))}
-          />
-          <span>Formulário público habilitado</span>
-        </label>
-      </section>
+          </label>
+        </section>
 
-      <div>
-        <button type="submit" className="btn btn-primary" disabled={saving}>
-          {saving ? 'Salvando…' : 'Salvar formulário'}
-        </button>
-      </div>
-    </form>
+        <div>
+          <button type="submit" className="btn btn-primary" disabled={saving}>
+            {saving ? 'Salvando…' : 'Salvar formulário'}
+          </button>
+        </div>
+      </form>
+
+      <aside className="triage-form-preview">
+        <div className="triage-form-preview-head">
+          <h2 style={{ margin: 0 }}>Pré-visualização</h2>
+          <p className="muted" style={{ margin: '0.35rem 0 0' }}>
+            Atualiza ao alterar campos, textos, visibilidade, obrigatório e estilo (ainda não salvos).
+            No botão “Entrar na fila” da prévia, veja a mensagem pós-envio.
+          </p>
+        </div>
+        <TriageFormLivePreview values={values} />
+      </aside>
+    </div>
   );
 }
 
@@ -458,7 +678,7 @@ export function TriageStatusPage({ api }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="card" style={{ padding: '1.25rem', display: 'grid', gap: '1rem' }}>
+    <form onSubmit={onSubmit} className="card triage-admin" style={{ padding: '1.25rem', display: 'grid', gap: '1rem' }}>
       {error ? <p style={{ color: 'var(--admin-danger)', margin: 0 }}>{error}</p> : null}
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
         <h2 style={{ margin: 0 }}>Status da fila</h2>
@@ -534,7 +754,6 @@ export function TriageStatusPage({ api }) {
                         value={s.color || ''}
                         onChange={(e) => updateStatus(s.id, { color: e.target.value })}
                         placeholder="#7A5B7A"
-                        style={{ width: 96 }}
                       />
                     </div>
                   </td>
@@ -543,7 +762,6 @@ export function TriageStatusPage({ api }) {
                       type="number"
                       value={s.order ?? 0}
                       onChange={(e) => updateStatus(s.id, { order: Number(e.target.value) || 0 })}
-                      style={{ width: 80 }}
                     />
                   </td>
                   <td>
@@ -621,22 +839,39 @@ export function TriageModulesPage({ api }) {
     }
   }
 
+  const associateDocs = Boolean(values.associateDocs);
+
   return (
-    <form onSubmit={onSubmit} className="card" style={{ padding: '1.25rem', display: 'grid', gap: '1rem', maxWidth: 560 }}>
+    <form onSubmit={onSubmit} className="triage-admin" style={{ display: 'grid', gap: '1rem', maxWidth: 640 }}>
       {error ? <p style={{ color: 'var(--admin-danger)', margin: 0 }}>{error}</p> : null}
-      <h2 style={{ marginTop: 0 }}>Módulos</h2>
-      <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.75rem' }}>
-        <input
-          type="checkbox"
-          checked={Boolean(values.associateDocs)}
-          onChange={(e) => setValues((prev) => ({ ...prev, associateDocs: e.target.checked }))}
-        />
-        <span>
-          Documentos / dados do associado na triagem
-          <br />
-          <span className="muted">Sem histórico de doações. Default off.</span>
-        </span>
-      </label>
+
+      <section className="ext-card" style={{ padding: '1.1rem', display: 'grid', gap: '0.85rem' }}>
+        <div>
+          <h2 style={{ margin: 0 }}>Módulos</h2>
+          <p className="muted" style={{ margin: '0.35rem 0 0' }}>
+            Ative recursos opcionais da triagem operacional no Kunk.
+          </p>
+        </div>
+
+        <label
+          className={`ext-flag${associateDocs ? ' ext-flag--active' : ''}`}
+          style={{ maxWidth: '100%' }}
+          data-testid="triage-associate-docs-toggle"
+        >
+          <input
+            type="checkbox"
+            checked={associateDocs}
+            onChange={(e) => setValues((prev) => ({ ...prev, associateDocs: e.target.checked }))}
+          />
+          <span className="ext-flag-body">
+            <strong>Documentos / dados do associado</strong>
+            <span className="muted">
+              Exibe documentos e dados do associado na triagem. Sem histórico de doações. Default desligado.
+            </span>
+          </span>
+        </label>
+      </section>
+
       <div>
         <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? 'Salvando…' : 'Salvar módulos'}

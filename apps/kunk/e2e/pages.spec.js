@@ -79,8 +79,8 @@ test.describe('páginas operacionais', () => {
     await expect(page.getByLabel('Ação')).toBeVisible({ timeout: 20_000 });
   });
 
-  test('fila pública carrega sem auth staff', async ({ page }) => {
-    await page.goto('/fila');
+  test('formulário público /contato carrega sem auth staff', async ({ page }) => {
+    await page.goto('/contato');
     await expect(page.getByRole('heading', { name: /Fila de acolhimento/i })).toBeVisible({
       timeout: 20_000,
     });

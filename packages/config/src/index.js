@@ -3,15 +3,133 @@
 /** Env keys that stay on Vite/build only — never loaded from system_configs. */
 export const BOOTSTRAP_ENV_KEYS = ['VITE_API_URL', 'VITE_URL'];
 
+/** Parse env/config boolean strings (`true`/`1`/`yes`). */
+export function parseEnvBool(value, fallback = false) {
+  if (value === undefined || value === null || value === '') return Boolean(fallback);
+  if (typeof value === 'boolean') return value;
+  const raw = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(raw)) return true;
+  if (['0', 'false', 'no', 'off'].includes(raw)) return false;
+  return Boolean(fallback);
+}
+
 /** Branding keys resolved via API (DB → env → hardcoded) for system=registration. */
 export const BRANDING_ENV_KEYS = [
   'VITE_ASSOCIATION_NAME',
+  'VITE_ASSOCIATION_FULL_NAME',
+  'VITE_ASSOCIATION_EMAIL',
+  'VITE_ASSOCIATION_PHONE',
+  'VITE_ASSOCIATION_SITE',
+  'VITE_ASSOCIATION_CNPJ',
+  'VITE_ASSOCIATION_CITY',
+  'VITE_ASSOCIATION_STATE',
   'VITE_ASSOCIATION_LOGO',
   'VITE_ASSOCIATION_LOGO_MENU',
   'VITE_ASSOCIATION_LOGO_SIZE',
   'VITE_WELCOME_TEXT',
+  'VITE_COMPLETION_TEXT',
+  'VITE_SHOW_TRIAGE_BUTTON',
+  'VITE_TRIAGE_FORM_URL',
   'VITE_CONTACT_URL',
 ];
+
+/** Defaults for association identity (Admin → Dados da associação). */
+export const ASSOCIATION_DATA_DEFAULTS = {
+  associationName: '',
+  associationFullName: '',
+  associationEmail: '',
+  associationPhone: '',
+  associationSite: '',
+  associationCnpj: '',
+  associationCity: '',
+  associationState: '',
+};
+
+/** Form field → env key for association identity configs. */
+export const ASSOCIATION_DATA_CONFIG_TO_ENV = {
+  associationName: 'VITE_ASSOCIATION_NAME',
+  associationFullName: 'VITE_ASSOCIATION_FULL_NAME',
+  associationEmail: 'VITE_ASSOCIATION_EMAIL',
+  associationPhone: 'VITE_ASSOCIATION_PHONE',
+  associationSite: 'VITE_ASSOCIATION_SITE',
+  associationCnpj: 'VITE_ASSOCIATION_CNPJ',
+  associationCity: 'VITE_ASSOCIATION_CITY',
+  associationState: 'VITE_ASSOCIATION_STATE',
+};
+
+export const ASSOCIATION_DATA_ENV_KEYS = Object.values(ASSOCIATION_DATA_CONFIG_TO_ENV);
+
+/** Defaults for registration funnel copy (Admin → Sistema de cadastro). */
+export const REGISTRATION_SYSTEM_DEFAULTS = {
+  welcomeText:
+    'Ao continuar, você preencherá seus dados pessoais, enviará documentos de identidade e assinará o termo de adesão. Depois poderá anexar receitas, exames ou laudos e agendar uma consulta com a associação. O processo é simples e leva poucos minutos — tenha em mãos RG ou CNH e, se tiver, receitas e laudos médicos.',
+  completionText:
+    'Obrigado por concluir seu cadastro. Se precisar de atendimento, abra uma solicitação de contato pelo botão abaixo. A associação responderá pelo canal da triagem.',
+  showTriageButton: true,
+  triageFormUrl: '/contato',
+};
+
+/** Form field → env key for registration system configs. */
+export const REGISTRATION_SYSTEM_CONFIG_TO_ENV = {
+  welcomeText: 'VITE_WELCOME_TEXT',
+  completionText: 'VITE_COMPLETION_TEXT',
+  showTriageButton: 'VITE_SHOW_TRIAGE_BUTTON',
+  triageFormUrl: 'VITE_TRIAGE_FORM_URL',
+};
+
+export const REGISTRATION_SYSTEM_ENV_KEYS = Object.values(REGISTRATION_SYSTEM_CONFIG_TO_ENV);
+
+/** Defaults for Admin → API access feature flag. */
+export const API_ACCESS_DEFAULTS = {
+  enabled: false,
+};
+
+export const API_ACCESS_CONFIG_KEY = 'api.enabled';
+export const API_ACCESS_CONFIG_SYSTEM = 'api';
+
+/** Collections grantable on API tokens (mirrors kunk-api RBAC api role minus users_api). */
+export const API_TOKEN_COLLECTIONS = [
+  'users',
+  'system_users',
+  'orders',
+  'services',
+  'products',
+  'institutional_clients',
+  'professionals',
+  'reception',
+  'tags',
+  'reports',
+  'files',
+  'orders_files',
+  'services_files',
+  'users_files',
+  'system_activity',
+];
+
+export const API_TOKEN_ACTIONS = [
+  { key: 'read', label: 'Ler' },
+  { key: 'write', label: 'Escrever' },
+  { key: 'delete', label: 'Excluir' },
+];
+
+/** Human labels for API token collections in Admin. */
+export const API_TOKEN_COLLECTION_LABELS = {
+  users: 'Associados (users)',
+  system_users: 'Usuários do sistema',
+  orders: 'Pedidos',
+  services: 'Serviços',
+  products: 'Produtos',
+  institutional_clients: 'Clientes institucionais',
+  professionals: 'Profissionais',
+  reception: 'Recepção',
+  tags: 'Tags',
+  reports: 'Relatórios',
+  files: 'Arquivos',
+  orders_files: 'Arquivos de pedidos',
+  services_files: 'Arquivos de serviços',
+  users_files: 'Arquivos de associados',
+  system_activity: 'Atividade do sistema',
+};
 
 /** Appearance keys resolved via API for system=kunk (operational app). */
 export const KUNK_BRANDING_ENV_KEYS = [
@@ -39,10 +157,20 @@ export const PUBLIC_ENV_KEYS = [...BOOTSTRAP_ENV_KEYS, ...BRANDING_ENV_KEYS];
 
 const ENV_TO_CONFIG = {
   VITE_ASSOCIATION_NAME: 'associationName',
+  VITE_ASSOCIATION_FULL_NAME: 'associationFullName',
+  VITE_ASSOCIATION_EMAIL: 'associationEmail',
+  VITE_ASSOCIATION_PHONE: 'associationPhone',
+  VITE_ASSOCIATION_SITE: 'associationSite',
+  VITE_ASSOCIATION_CNPJ: 'associationCnpj',
+  VITE_ASSOCIATION_CITY: 'associationCity',
+  VITE_ASSOCIATION_STATE: 'associationState',
   VITE_ASSOCIATION_LOGO: 'associationLogo',
   VITE_ASSOCIATION_LOGO_MENU: 'associationLogoMenu',
   VITE_ASSOCIATION_LOGO_SIZE: 'associationLogoSize',
   VITE_WELCOME_TEXT: 'welcomeText',
+  VITE_COMPLETION_TEXT: 'completionText',
+  VITE_SHOW_TRIAGE_BUTTON: 'showTriageButton',
+  VITE_TRIAGE_FORM_URL: 'triageFormUrl',
   VITE_CONTACT_URL: 'contactUrl',
 };
 
@@ -126,6 +254,28 @@ export const TRIAGE_DEFAULT_FORM_FIELDS = [
   { id: 'patient_name', enabled: false, required: true, label: 'Nome do paciente', order: 7 },
 ];
 
+/** Normalize a select option (string or { label, enabled }). */
+export function normalizeTriageSelectOption(o) {
+  if (o && typeof o === 'object' && !Array.isArray(o)) {
+    return {
+      label: String(o.label ?? o.value ?? '').trim(),
+      enabled: o.enabled !== false,
+    };
+  }
+  return { label: String(o ?? '').trim(), enabled: true };
+}
+
+export function normalizeTriageSelectOptions(options) {
+  return (Array.isArray(options) ? options : []).map(normalizeTriageSelectOption);
+}
+
+/** Labels for public selects; by default only enabled options. */
+export function triageSelectOptionLabels(options, { enabledOnly = true } = {}) {
+  return normalizeTriageSelectOptions(options)
+    .filter((o) => o.label && (!enabledOnly || o.enabled))
+    .map((o) => o.label);
+}
+
 /** Ensure help_topic is a select; drop removed form fields (e.g. is_associate, option2). */
 export function normalizeTriageFormFields(fields) {
   const list = Array.isArray(fields) ? fields : [];
@@ -133,14 +283,19 @@ export function normalizeTriageFormFields(fields) {
     .filter((f) => f && f.id !== 'is_associate' && f.id !== 'option2')
     .map((f) => {
       const field = f.id === 'option1' ? { ...f, id: 'help_topic' } : { ...f };
-      if (field.id !== 'help_topic') return field;
-      const options = Array.isArray(field.options) && field.options.length
-        ? field.options.map((o) => String(o).trim()).filter(Boolean)
-        : [...TRIAGE_DEFAULT_HELP_TOPIC_OPTIONS];
+      if (field.id !== 'help_topic' && field.type !== 'select') return field;
+      const raw = Array.isArray(field.options) && field.options.length
+        ? field.options
+        : (field.id === 'help_topic' ? TRIAGE_DEFAULT_HELP_TOPIC_OPTIONS : []);
+      const options = normalizeTriageSelectOptions(raw).filter((o) => o.label);
       return {
         ...field,
         type: 'select',
-        options,
+        options: options.length
+          ? options
+          : (field.id === 'help_topic'
+            ? TRIAGE_DEFAULT_HELP_TOPIC_OPTIONS.map((label) => ({ label, enabled: true }))
+            : options),
       };
     });
 }
@@ -232,6 +387,19 @@ export const TRIAGE_CONFIG_KEYS = {
   statuses: 'triage.statuses',
   associateDocs: 'triage.module.associate_docs',
   publicFormEnabled: 'triage.public_form_enabled',
+  formTheme: 'triage.form.theme',
+  formTitle: 'triage.form.title',
+  formSubtitle: 'triage.form.subtitle',
+  successTitle: 'triage.form.success_title',
+  successSubtitle: 'triage.form.success_subtitle',
+};
+
+/** Textos padrão do formulário público de triagem. */
+export const TRIAGE_DEFAULT_COPY = {
+  formTitle: 'Fila de acolhimento',
+  formSubtitle: 'Preencha para entrar na fila de contato do acolhimento',
+  successTitle: 'Você entrou na fila',
+  successSubtitle: 'Em breve a equipe de acolhimento entrará em contato.',
 };
 
 export function parseJsonConfig(raw, fallback) {
@@ -253,6 +421,20 @@ export function parseBoolConfig(raw, fallback = false) {
   return fallback;
 }
 
+/** Texto configurável: trim; vazio → fallback. */
+export function normalizeTriageText(raw, fallback = '') {
+  const value = String(raw ?? '').trim();
+  return value || String(fallback || '');
+}
+
+/** Tema visual do formulário público: `dark` (padrão) ou `light`. */
+export function normalizeTriageFormTheme(raw, fallback = 'dark') {
+  const value = String(raw || '').trim().toLowerCase();
+  if (value === 'light' || value === 'claro') return 'light';
+  if (value === 'dark' || value === 'escuro') return 'dark';
+  return fallback === 'light' ? 'light' : 'dark';
+}
+
 export function getTriageDefaults() {
   return {
     formFields: TRIAGE_DEFAULT_FORM_FIELDS.map((f) => ({
@@ -263,6 +445,11 @@ export function getTriageDefaults() {
     statuses: TRIAGE_DEFAULT_STATUSES.map((s) => ({ ...s })),
     associateDocs: false,
     publicFormEnabled: true,
+    formTheme: 'dark',
+    formTitle: TRIAGE_DEFAULT_COPY.formTitle,
+    formSubtitle: TRIAGE_DEFAULT_COPY.formSubtitle,
+    successTitle: TRIAGE_DEFAULT_COPY.successTitle,
+    successSubtitle: TRIAGE_DEFAULT_COPY.successSubtitle,
   };
 }
 
@@ -287,6 +474,11 @@ export function mergeTriageConfigFromApi(apiValues) {
       apiValues[keys.publicFormEnabled],
       defaults.publicFormEnabled,
     ),
+    formTheme: normalizeTriageFormTheme(apiValues[keys.formTheme], defaults.formTheme),
+    formTitle: normalizeTriageText(apiValues[keys.formTitle], defaults.formTitle),
+    formSubtitle: normalizeTriageText(apiValues[keys.formSubtitle], defaults.formSubtitle),
+    successTitle: normalizeTriageText(apiValues[keys.successTitle], defaults.successTitle),
+    successSubtitle: normalizeTriageText(apiValues[keys.successSubtitle], defaults.successSubtitle),
   };
 }
 
@@ -400,11 +592,21 @@ export function getPublicConfig(env = import.meta.env) {
   return {
     apiUrl: env.VITE_API_URL || '/api/v1',
     appUrl: env.VITE_URL || 'http://localhost:4255',
-    associationName: env.VITE_ASSOCIATION_NAME || 'Kunk',
+    associationName: env.VITE_ASSOCIATION_NAME || ASSOCIATION_DATA_DEFAULTS.associationName || 'Kunk',
+    associationFullName: env.VITE_ASSOCIATION_FULL_NAME || ASSOCIATION_DATA_DEFAULTS.associationFullName,
+    associationEmail: env.VITE_ASSOCIATION_EMAIL || ASSOCIATION_DATA_DEFAULTS.associationEmail,
+    associationPhone: env.VITE_ASSOCIATION_PHONE || ASSOCIATION_DATA_DEFAULTS.associationPhone,
+    associationSite: env.VITE_ASSOCIATION_SITE || ASSOCIATION_DATA_DEFAULTS.associationSite,
+    associationCnpj: env.VITE_ASSOCIATION_CNPJ || ASSOCIATION_DATA_DEFAULTS.associationCnpj,
+    associationCity: env.VITE_ASSOCIATION_CITY || ASSOCIATION_DATA_DEFAULTS.associationCity,
+    associationState: env.VITE_ASSOCIATION_STATE || ASSOCIATION_DATA_DEFAULTS.associationState,
     associationLogo: env.VITE_ASSOCIATION_LOGO || '/logo.svg',
     associationLogoMenu: env.VITE_ASSOCIATION_LOGO_MENU || env.VITE_ASSOCIATION_LOGO || '/logo.svg',
     associationLogoSize: env.VITE_ASSOCIATION_LOGO_SIZE || '180px',
-    welcomeText: env.VITE_WELCOME_TEXT || 'Bem-vindo ao cadastro de associados.',
+    welcomeText: env.VITE_WELCOME_TEXT || REGISTRATION_SYSTEM_DEFAULTS.welcomeText,
+    completionText: env.VITE_COMPLETION_TEXT || REGISTRATION_SYSTEM_DEFAULTS.completionText,
+    showTriageButton: parseEnvBool(env.VITE_SHOW_TRIAGE_BUTTON, REGISTRATION_SYSTEM_DEFAULTS.showTriageButton),
+    triageFormUrl: env.VITE_TRIAGE_FORM_URL || REGISTRATION_SYSTEM_DEFAULTS.triageFormUrl,
     contactUrl: env.VITE_CONTACT_URL || '',
   };
 }
@@ -454,7 +656,11 @@ export function mergePublicConfigFromApi(base, apiValues) {
     if (!prop) continue;
     const raw = apiValues[envKey];
     if (raw === undefined || raw === null) continue;
-    next[prop] = String(raw);
+    if (prop === 'showTriageButton') {
+      next[prop] = parseEnvBool(raw, REGISTRATION_SYSTEM_DEFAULTS.showTriageButton);
+    } else {
+      next[prop] = String(raw);
+    }
   }
   if (!next.associationLogoMenu) {
     next.associationLogoMenu = next.associationLogo || '/logo.svg';

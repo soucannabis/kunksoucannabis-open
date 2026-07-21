@@ -1,5 +1,34 @@
 /** Mapa de status/fases OSS → labels da lista de associados */
 
+const PHASE = {
+  CADASTRO_CRIADO: 'cadastro_criado',
+  DADOS_PESSOAIS: 'dados_pessoais',
+  DOCUMENTOS: 'documentos',
+  ASSINATURA_TERMO: 'assinatura_termo',
+  CONCLUIDO: 'concluido',
+};
+
+const LEGACY_TO_PHASE = {
+  1: PHASE.CADASTRO_CRIADO,
+  2: PHASE.DADOS_PESSOAIS,
+  3: PHASE.DOCUMENTOS,
+  4: PHASE.ASSINATURA_TERMO,
+  5: PHASE.ASSINATURA_TERMO,
+};
+
+function normalizePhase(value) {
+  if (value == null || value === '') return PHASE.CADASTRO_CRIADO;
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return LEGACY_TO_PHASE[value] || PHASE.CADASTRO_CRIADO;
+  }
+  const raw = String(value).trim();
+  if (!raw) return PHASE.CADASTRO_CRIADO;
+  if (Object.values(PHASE).includes(raw)) return raw;
+  const asNum = Number(raw);
+  if (Number.isFinite(asNum) && LEGACY_TO_PHASE[asNum]) return LEGACY_TO_PHASE[asNum];
+  return PHASE.CADASTRO_CRIADO;
+}
+
 /** Centraliza Dialogs na área de conteúdo (respeita menu lateral aberto/fechado). */
 export const contentAreaDialogSx = {
   '& .MuiBackdrop-root': {
@@ -43,12 +72,18 @@ export function statusLabel(user) {
     return 'Erro no formulário';
   }
 
-  const phase = Number(user.associate_status) || 0;
-  if (phase <= 1 || String(user.status) === 'published') return 'Não preencheu os dados';
-  if (phase === 2 || String(user.status) === 'registered') return 'Apenas preencheu os dados';
-  if (phase === 3) return 'Documentos';
-  if (phase === 4 || String(user.status) === 'proofs') return 'Termo não assinado';
-  if (phase === 5) return 'Fase final';
+  const phase = normalizePhase(user.associate_status);
+  if (phase === PHASE.CADASTRO_CRIADO || String(user.status) === 'published' || String(user.status) === PHASE.CADASTRO_CRIADO) {
+    return 'Não preencheu os dados';
+  }
+  if (phase === PHASE.DADOS_PESSOAIS || String(user.status) === 'registered') {
+    return 'Apenas preencheu os dados';
+  }
+  if (phase === PHASE.DOCUMENTOS) return 'Documentos';
+  if (phase === PHASE.ASSINATURA_TERMO || String(user.status) === 'proofs') {
+    return 'Termo não assinado';
+  }
+  if (phase === PHASE.CONCLUIDO) return 'Cadastro concluído';
   return String(user.status || '—');
 }
 

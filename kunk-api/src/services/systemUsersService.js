@@ -74,9 +74,7 @@ async function getSystemUser(id) {
 async function createSystemUser(payload) {
   const body = { ...payload };
   if (body.password) {
-    if (String(body.password).length < 8) {
-      throw new AppError(400, 'VALIDATION_ERROR', 'Senha deve ter no mínimo 8 caracteres');
-    }
+    authRepository.assertOperatorPassword(body.password);
     body.password = await authRepository.hashPassword(body.password);
   }
   if (body.permissions !== undefined) {
@@ -96,9 +94,7 @@ async function updateSystemUser(id, payload) {
   delete body.is_session_active;
 
   if (body.password !== undefined && body.password !== null && body.password !== '') {
-    if (String(body.password).length < 8) {
-      throw new AppError(400, 'VALIDATION_ERROR', 'Senha deve ter no mínimo 8 caracteres');
-    }
+    authRepository.assertOperatorPassword(body.password);
     body.password = await authRepository.hashPassword(body.password);
   } else {
     delete body.password;

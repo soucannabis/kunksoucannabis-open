@@ -155,12 +155,67 @@ function hasScope(scopes, collection, action) {
   return false;
 }
 
+/** Collections grantable on API tokens (excludes users_api — tokens cannot manage tokens). */
+const API_TOKEN_COLLECTIONS = Object.keys(MATRIX.api).filter((c) => c !== 'users_api');
+
+const API_TOKEN_SCOPE_ACTIONS = new Set(['read', 'write', 'delete', '*']);
+
+/**
+ * Validate and normalize API token scopes.
+ * Accepts `*` or `items:<collection|*>:<read|write|delete|*>`.
+ */
+function normalizeApiTokenScopes(scopes) {
+  if (!Array.isArray(scopes) || scopes.length === 0) {
+    const err = new Error('scopes é obrigatório (array não vazio)');
+    err.code = 'VALIDATION_ERROR';
+    throw err;
+  }
+  if (scopes.includes('*')) {
+    if (scopes.length !== 1) {
+      const err = new Error('Scope * deve ser o único item da lista');
+      err.code = 'VALIDATION_ERROR';
+      throw err;
+    }
+    return ['*'];
+  }
+  const out = [];
+  for (const raw of scopes) {
+    const scope = String(raw || '').trim();
+    const match = /^items:([a-z0-9_*]+):(read|write|delete|\*)$/.exec(scope);
+    if (!match) {
+      const err = new Error(`Scope inválido: ${scope}`);
+      err.code = 'VALIDATION_ERROR';
+      throw err;
+    }
+    const [, collection, action] = match;
+    if (!API_TOKEN_SCOPE_ACTIONS.has(action)) {
+      const err = new Error(`Ação de scope inválida: ${action}`);
+      err.code = 'VALIDATION_ERROR';
+      throw err;
+    }
+    if (collection === 'users_api') {
+      const err = new Error('Não é permitido conceder acesso a users_api');
+      err.code = 'VALIDATION_ERROR';
+      throw err;
+    }
+    if (collection !== '*' && !API_TOKEN_COLLECTIONS.includes(collection)) {
+      const err = new Error(`Coleção de scope inválida: ${collection}`);
+      err.code = 'VALIDATION_ERROR';
+      throw err;
+    }
+    out.push(`items:${collection}:${action}`);
+  }
+  return [...new Set(out)];
+}
+
 module.exports = {
   ACTIONS,
   MATRIX,
   SCOPED_ROLES,
+  API_TOKEN_COLLECTIONS,
   parseRoles,
   can,
   scopeFilterFor,
   hasScope,
+  normalizeApiTokenScopes,
 };

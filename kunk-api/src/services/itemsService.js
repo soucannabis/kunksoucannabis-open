@@ -2,7 +2,7 @@
 
 const itemsRepository = require('../repositories/itemsRepository');
 const { scopeFilterFor } = require('../schema/rbac');
-const { assertUserDeletable, assertProfessionalDeletable } = require('./linkGuards');
+const { assertProfessionalDeletable } = require('./linkGuards');
 const { memoryCache, keys } = require('../cache');
 
 function getScope(req) {
@@ -54,8 +54,10 @@ async function remove(req) {
   const collection = req.params.collection;
   const id = req.params.id;
   if (collection === 'users') {
-    const user = await itemsRepository.getItem('users', id);
-    await assertUserDeletable(user);
+    const usersService = require('./usersService');
+    const data = await usersService.deleteUser(id);
+    invalidateCollectionCaches(collection);
+    return data;
   }
   if (collection === 'professionals') {
     const pro = await itemsRepository.getItem('professionals', id);

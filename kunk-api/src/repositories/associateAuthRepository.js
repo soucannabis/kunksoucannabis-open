@@ -7,6 +7,12 @@ const { query } = require('../db/pool');
 const { stripSensitive } = require('../schema/collections');
 const { AppError } = require('../utils/response');
 const { env } = require('../config/env');
+const {
+  PHASE,
+  normalizePhase,
+  isFunnelPhase,
+  isAssociateStatus,
+} = require('../constants/associatePhases');
 
 const SALT_ROUNDS = process.env.NODE_ENV === 'test' ? 4 : 10;
 const RESET_TTL_MS = 60 * 60 * 1000; // documented TTL; SQL uses interval '1 hour'
@@ -36,7 +42,9 @@ function publicAssociate(row) {
   return {
     ...clean,
     invalid_fields: parseInvalidFields(clean.invalid_fields),
-    associate_status: Number(clean.associate_status) || 1,
+    associate_status: clean.associate_status == null
+      ? null
+      : normalizePhase(clean.associate_status),
   };
 }
 
@@ -130,9 +138,9 @@ async function resolveSessionRow(sessionToken) {
 
 function accountState(user) {
   if (!user) return 'none';
-  if (String(user.status) === 'Associado') return 'associado';
-  const phase = Number(user.associate_status) || 0;
-  if (phase >= 1 && phase <= 5) return 'in_progress';
+  if (isAssociateStatus(user)) return 'associado';
+  if (user.associate_status != null && isFunnelPhase(user.associate_status)) return 'in_progress';
+  if (normalizePhase(user.associate_status) === PHASE.CONCLUIDO) return 'associado';
   return 'none';
 }
 
@@ -168,13 +176,15 @@ async function registerEmail(email, password) {
 
   const passwordHash = await hashPassword(String(password));
   const userCode = uuidv4();
+  // status + associate_status = cadastro_criado no registro (pt-BR).
+  // status vira Associado só ao concluir o funil; patient para pacientes.
   const result = await query(
     `INSERT INTO users (
       email_account, email, account_password, associate_status, status, user_code,
       date_created, created_date, invalid_fields
-    ) VALUES ($1, $1, $2, 1, NULL, $3, NOW(), NOW(), $4)
+    ) VALUES ($1, $1, $2, $3, $3, $4, NOW(), NOW(), $5)
     RETURNING *`,
-    [normalized, passwordHash, userCode, JSON.stringify([])]
+    [normalized, passwordHash, PHASE.CADASTRO_CRIADO, userCode, JSON.stringify([])]
   );
 
   const { sessionToken, expires } = await createSession(result.rows[0].id);

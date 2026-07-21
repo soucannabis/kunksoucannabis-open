@@ -1,164 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DRIVER_LABELS } from '../lib/storageConfig.js';
 import { AdminLoader } from '../components/AdminLoader.jsx';
+import { StorageCredentialsGuide } from '../components/StorageCredentialsGuide.jsx';
 
 const FIELD_LABELS = {
   access_key_id: 'Access Key ID',
   secret_access_key: 'Secret Access Key',
-};
-
-const CREDENTIAL_GUIDE_BOX_STYLE = {
-  marginTop: 0,
-  marginBottom: 16,
-  fontSize: '0.85rem',
-  padding: '0.85rem 1rem',
-  border: '1px solid #ddd',
-  borderRadius: 8,
-  background: '#f7f7f7',
-  color: '#111',
-};
-
-function StorageCredentialsGuide({ provider, title, steps, docs }) {
-  return (
-    <div
-      className="ext-credentials-guide"
-      data-testid={`storage-${provider}-setup-guide`}
-      style={CREDENTIAL_GUIDE_BOX_STYLE}
-    >
-      <p style={{ margin: '0 0 0.5rem', fontWeight: 600, color: '#111' }}>
-        {title || 'Como obter as credenciais'}
-      </p>
-      <ol style={{ margin: 0, paddingLeft: '1.25rem', color: '#111' }}>
-        {steps.map((step, i) => (
-          <li key={i} style={{ marginBottom: i === steps.length - 1 ? 0 : 6 }}>
-            {step}
-          </li>
-        ))}
-      </ol>
-      {docs?.length ? (
-        <p style={{ margin: '0.75rem 0 0', color: '#444' }}>
-          Docs:{' '}
-          {docs.map((d, i) => (
-            <span key={d.href}>
-              {i > 0 ? ' · ' : null}
-              <a href={d.href} target="_blank" rel="noreferrer" style={{ color: '#0b57d0' }}>
-                {d.label}
-              </a>
-            </span>
-          ))}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-const STORAGE_SETUP_GUIDES = {
-  s3: {
-    title: 'Como obter as credenciais (Amazon S3)',
-    steps: [
-      <>
-        No{' '}
-        <a
-          href="https://console.aws.amazon.com/s3/"
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: '#0b57d0' }}
-        >
-          Console AWS → S3
-        </a>
-        , crie um bucket <strong>privado</strong> (Block Public Access ativado). Anote o nome e a
-        região (ex.: <code>sa-east-1</code>).
-      </>,
-      <>
-        No{' '}
-        <a
-          href="https://console.aws.amazon.com/iam/"
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: '#0b57d0' }}
-        >
-          IAM
-        </a>
-        , crie um usuário (ou role) só para a API e anexe uma policy com{' '}
-        <code>s3:PutObject</code>, <code>GetObject</code>, <code>DeleteObject</code> no prefixo do
-        bucket (ex.: <code>kunk/*</code>) e <code>s3:ListBucket</code> / <code>HeadBucket</code> no
-        bucket — inclua também <code>_kunk_probe/*</code> para o teste de conexão.
-      </>,
-      <>
-        Em IAM → usuário → <strong>Security credentials</strong> →{' '}
-        <strong>Create access key</strong>. Guarde o <strong>Access Key ID</strong> e o{' '}
-        <strong>Secret Access Key</strong>.
-      </>,
-      <>
-        Nesta página, selecione <strong>Amazon S3</strong>, preencha bucket, região, Access Key e
-        Secret. Clique em <strong>Testar e salvar</strong> e depois em <strong>Ativar bucket</strong>.
-      </>,
-    ],
-    docs: [
-      {
-        label: 'AWS S3',
-        href: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/GetStartedWithS3.html',
-      },
-      {
-        label: 'IAM Access Keys',
-        href: 'https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html',
-      },
-    ],
-  },
-  gcs: {
-    title: 'Como obter as credenciais (Google Cloud Storage)',
-    steps: [
-      <>
-        No{' '}
-        <a
-          href="https://console.cloud.google.com/storage"
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: '#0b57d0' }}
-        >
-          Console GCP → Cloud Storage
-        </a>
-        , crie um bucket <strong>privado</strong> (Uniform access; Public access prevention
-        enforced).
-      </>,
-      <>
-        Em{' '}
-        <a
-          href="https://console.cloud.google.com/iam-admin/serviceaccounts"
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: '#0b57d0' }}
-        >
-          IAM → Contas de serviço
-        </a>
-        , crie uma service account (ex.: <code>kunk-files</code>). No bucket →{' '}
-        <strong>Permissões</strong>, conceda a essa conta os papéis{' '}
-        <strong>Administrador de objetos do Storage</strong> e{' '}
-        <strong>Administrador do Storage</strong> (o segundo é necessário para o teste de conexão).
-      </>,
-      <>
-        Na service account → <strong>Keys</strong> → <strong>Add key</strong> →{' '}
-        <strong>JSON</strong>. Baixe o arquivo (contém <code>client_email</code>,{' '}
-        <code>private_key</code> e <code>project_id</code>).
-      </>,
-      <>
-        Nesta página, selecione <strong>Google Cloud Storage</strong>, informe o nome do bucket e
-        clique em <strong>Enviar arquivo JSON</strong>. O Admin não grava o arquivo: extrai as
-        credenciais, testa (upload/download/delete de um probe) e, se OK, salva. Depois use{' '}
-        <strong>Ativar bucket</strong>.
-      </>,
-    ],
-    docs: [
-      {
-        label: 'Cloud Storage',
-        href: 'https://cloud.google.com/storage/docs/creating-buckets',
-      },
-      {
-        label: 'Service accounts',
-        href: 'https://cloud.google.com/iam/docs/service-account-overview',
-      },
-    ],
-  },
 };
 
 function emptyForm(status) {
@@ -586,8 +433,8 @@ export function StoragePage({ api }) {
           </select>
         </div>
 
-        {STORAGE_SETUP_GUIDES[form.driver] ? (
-          <StorageCredentialsGuide provider={form.driver} {...STORAGE_SETUP_GUIDES[form.driver]} />
+        {form.driver === 's3' || form.driver === 'gcs' ? (
+          <StorageCredentialsGuide provider={form.driver} />
         ) : null}
 
         <div className="field" style={{ marginBottom: '0.75rem' }}>

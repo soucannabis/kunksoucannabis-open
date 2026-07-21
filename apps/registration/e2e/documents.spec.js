@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { uniqueEmail } from './helpers/fixtures.js';
 import { seedAssociate } from './helpers/api.js';
-import { uploadTinyJpeg } from './helpers/forms.js';
+import { pickAndUploadJpeg, uploadTinyJpeg } from './helpers/forms.js';
 
 test.describe('Documentos — assistente RG/CNH e fase 4', () => {
   test('CNH upload completes and advances to terms signing CTA', async ({ page }) => {
@@ -10,9 +10,11 @@ test.describe('Documentos — assistente RG/CNH e fase 4', () => {
     await page.goto('/documentos');
     await expect(page.getByRole('heading', { name: /Documentos de identidade/i })).toBeVisible();
 
-    await page.getByRole('button', { name: /CNH \(frente\)/i }).click();
-    await uploadTinyJpeg(page, 'responsible-front');
-    await expect(page.getByText(/Documentos OK/i)).toBeVisible({ timeout: 20_000 });
+    await page.getByRole('radio', { name: /CNH \(frente\)/i }).click();
+    await pickAndUploadJpeg(page, 'responsible-front', 'Responsável');
+    await expect(page.getByRole('button', { name: /Avançar para assinatura/i })).toBeVisible({
+      timeout: 20_000,
+    });
     await page.getByRole('button', { name: /Avançar para assinatura/i }).click();
     await expect(page.getByRole('heading', { name: /Assinatura do termo/i })).toBeVisible({
       timeout: 20_000,
@@ -25,13 +27,16 @@ test.describe('Documentos — assistente RG/CNH e fase 4', () => {
     await seedAssociate(page, { email, phase: 3 });
     await page.goto('/documentos');
 
-    await page.getByRole('button', { name: /RG \(frente e verso\)/i }).click();
+    await page.getByRole('radio', { name: /RG \(frente e verso\)/i }).click();
     await uploadTinyJpeg(page, 'responsible-front');
+    await expect(page.getByRole('button', { name: /^Enviar documentos$/i })).toBeDisabled();
     await expect(page.getByRole('button', { name: /Avançar para assinatura/i })).toHaveCount(0);
 
     await uploadTinyJpeg(page, 'responsible-back');
-    await expect(page.getByText(/Documentos OK \(rg\)/i)).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByRole('button', { name: /Avançar para assinatura/i })).toBeVisible();
+    await page.getByRole('button', { name: /^Enviar documentos$/i }).click();
+    await expect(page.getByRole('button', { name: /Avançar para assinatura/i })).toBeVisible({
+      timeout: 20_000,
+    });
   });
 
   test('another requires patient docs too', async ({ page }) => {
@@ -39,14 +44,14 @@ test.describe('Documentos — assistente RG/CNH e fase 4', () => {
     await seedAssociate(page, { email, phase: 3, responsibleType: 'another' });
     await page.goto('/documentos');
 
-    await page.getByRole('button', { name: /CNH \(frente\)/i }).first().click();
-    await uploadTinyJpeg(page, 'responsible-front');
+    await page.getByRole('radio', { name: /CNH \(frente\)/i }).first().click();
+    await pickAndUploadJpeg(page, 'responsible-front', 'Responsável');
     await expect(page.getByRole('button', { name: /Avançar para assinatura/i })).toHaveCount(0);
 
     await page.locator('#patient-front').waitFor({ state: 'attached' });
-    const patientBlock = page.locator('h2', { hasText: 'Paciente' }).locator('xpath=ancestor::div[contains(@class,"mb-4")]');
-    await patientBlock.getByRole('button', { name: /CNH/i }).click();
-    await uploadTinyJpeg(page, 'patient-front');
+    const patientBlock = page.locator('section.docs-subject').filter({ hasText: 'Paciente' });
+    await patientBlock.getByRole('radio', { name: /CNH/i }).click();
+    await pickAndUploadJpeg(page, 'patient-front', 'Paciente');
     await expect(page.getByRole('button', { name: /Avançar para assinatura/i })).toBeVisible({
       timeout: 20_000,
     });

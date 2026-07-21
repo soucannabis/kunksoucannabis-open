@@ -13,13 +13,18 @@ import {
 } from '../lib/externalServiceStatus.js';
 import { ExternalServiceStatusIcon } from '../components/ExternalServiceStatus.jsx';
 import { AdminLoader } from '../components/AdminLoader.jsx';
+import { useInstallStatus } from '../lib/installStatus.jsx';
 
 export function RequireAdmin({ children }) {
   const { user, loading, hasRequiredRole } = useOperatorAuth();
+  const { needsInstall, canInstallSample, loading: installLoading } = useInstallStatus();
   const location = useLocation();
 
-  if (loading) {
+  if (loading || installLoading || needsInstall == null) {
     return <AdminLoader label="Carregando sessão…" className="admin-loader--viewport" />;
+  }
+  if (needsInstall || canInstallSample) {
+    return <Navigate to="/instalacao" replace />;
   }
   if (!user) {
     const next = encodeURIComponent(`${location.pathname}${location.search}`);
@@ -155,6 +160,28 @@ export function AdminShell({ api }) {
       <aside className="admin-nav">
         <div className="brand">Kunk Admin</div>
 
+        <NavLink to="/inicio" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Início
+        </NavLink>
+
+        <NavLink to="/dados-associacao" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Dados da associação
+        </NavLink>
+        <NavLink to="/sistema-cadastro" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Sistema de cadastro
+        </NavLink>
+
+        <div className="admin-nav-section">Triagem</div>
+        <NavLink to="/triagem/formulario" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Formulário
+        </NavLink>
+        <NavLink to="/triagem/status" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Status da fila
+        </NavLink>
+        <NavLink to="/triagem/modulos" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Módulos
+        </NavLink>
+
         <div className="admin-nav-section">Dados</div>
         <NavLink to="/dados" className={({ isActive }) => (isActive ? 'active' : '')}>Registros</NavLink>
         <NavLink to="/arquivos" className={({ isActive }) => (isActive ? 'active' : '')}>Arquivos</NavLink>
@@ -183,6 +210,9 @@ export function AdminShell({ api }) {
         <div className="admin-nav-section">Webmaster</div>
         <NavLink to="/usuarios" className={({ isActive }) => (isActive ? 'active' : '')}>
           Usuários
+        </NavLink>
+        <NavLink to="/acesso-api" className={({ isActive }) => (isActive ? 'active' : '')}>
+          API
         </NavLink>
         <NavLink to="/erros-sistema" className={({ isActive }) => (isActive ? 'active' : '')}>Erros do sistema</NavLink>
         <NavLink to="/web-vitals" className={({ isActive }) => (isActive ? 'active' : '')}>Web Vitals</NavLink>

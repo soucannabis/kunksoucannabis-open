@@ -25,6 +25,23 @@ import { useErrorModal } from '../errors/ErrorModalProvider.jsx';
 const GREEN = '#5a7a5b';
 const GREEN_HOVER = '#303B30';
 
+function labelForFile(file) {
+  const docKind = String(file?.doc_kind || '');
+  const subject = String(file?.subject || '');
+  const match = DOCUMENT_KIND_KEYS.map((key) => DOCUMENT_KINDS[key]).find((cfg) => {
+    if (cfg.doc_kind !== docKind) return false;
+    if (cfg.subject == null) return !subject;
+    return cfg.subject === subject;
+  });
+  if (match) return match.label;
+  if (docKind === 'identity' && subject === 'patient') return 'Documento do paciente';
+  if (docKind === 'identity') return 'Documento do Associado';
+  if (docKind === 'prescription') return 'Receita';
+  if (docKind === 'report') return 'Laudo';
+  if (docKind === 'exam') return 'Exame';
+  return docKind || 'Documento';
+}
+
 /**
  * Upload global de arquivos do associado.
  *
@@ -58,16 +75,22 @@ export default function FileUpload({
   const inputRef = useRef(null);
 
   const userId = user?.id;
-  const listDocKind = activeKind?.doc_kind || null;
+  // Com `kind` fixo (ex.: receita no prescritor), filtra por doc_kind.
+  // Na aba Documentos (sem kind), lista todos os arquivos do associado.
+  const listDocKind = fixedKind?.doc_kind || null;
 
   const loadFiles = useCallback(async () => {
-    if (!api || !userId || !listDocKind) {
+    if (!api || !userId) {
       setFiles([]);
       return;
     }
     setLoading(true);
     try {
-      const res = await api.listUserFiles({ userId, docKind: listDocKind, limit: 50 });
+      const res = await api.listUserFiles({
+        userId,
+        docKind: listDocKind || undefined,
+        limit: 50,
+      });
       setFiles(res.data || []);
     } catch (err) {
       showError(err.message || 'Falha ao listar arquivos');
@@ -224,7 +247,7 @@ export default function FileUpload({
         <Stack spacing={0.75}>
           {files.length === 0 && (
             <Typography variant="body2" color="text.secondary">
-              Nenhum arquivo {activeKind ? `de ${activeKind.label.toLowerCase()}` : ''} enviado.
+              Nenhum arquivo {fixedKind ? `de ${fixedKind.label.toLowerCase()} ` : ''}enviado.
             </Typography>
           )}
           {files.map((f) => {
@@ -244,15 +267,22 @@ export default function FileUpload({
                 data-testid={`file-row-${f.id}`}
               >
                 {isPdf ? <PictureAsPdfIcon fontSize="small" color="action" /> : <ImageIcon fontSize="small" color="action" />}
-                <Link
-                  component="button"
-                  type="button"
-                  underline="hover"
-                  onClick={() => openPreview(f)}
-                  sx={{ flex: 1, textAlign: 'left', fontSize: 13 }}
-                >
-                  {f.filename}
-                </Link>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  {!fixedKind ? (
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {labelForFile(f)}
+                    </Typography>
+                  ) : null}
+                  <Link
+                    component="button"
+                    type="button"
+                    underline="hover"
+                    onClick={() => openPreview(f)}
+                    sx={{ textAlign: 'left', fontSize: 13 }}
+                  >
+                    {f.filename}
+                  </Link>
+                </Box>
                 {!readOnly && (
                   <IconButton size="small" aria-label="Remover" onClick={() => handleDelete(f)}>
                     <DeleteForeverIcon fontSize="small" color="error" />

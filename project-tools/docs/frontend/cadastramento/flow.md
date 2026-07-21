@@ -1,47 +1,47 @@
 # Cadastramento — Fluxo e status
 
-> Funil de inscrição, **fases numéricas** (`associate_status`) e tipo de registro (`status`).
+> Funil de inscrição, fases em **`associate_status`** (strings pt-BR) e tipo/conclusão em **`status`**.
 > Todo cadastro é feito por um **responsável** (si mesmo, outra pessoa ou pet).
 
 ## Conceitos (dois campos distintos)
 
 | Campo | Papel |
 |---|---|
-| **`associate_status`** (inteiro **1–5**) | **Fase do funil** do responsável. Flag para router, guards (não voltar) e animação do menu/sidebar. |
-| **`status`** (string) | **Tipo / conclusão do registro.** `Associado` = responsável que concluiu o cadastro. `patient` = registro do paciente (quando há responsável por outra pessoa). |
-| **`invalid_fields`** (JSON/texto) | Lista dos campos que **não passaram** na validação no último submit (suporte / contato). **Não** é fase do funil. |
+| **`associate_status`** (VARCHAR pt-BR) | **Fase do funil** do responsável. Flag para router, guards e menu/sidebar. |
+| **`status`** (string) | **Tipo / conclusão.** `NULL` no funil → **`Associado`** ao assinar o termo. `patient` = registro do paciente. |
+| **`invalid_fields`** (JSON/texto) | Lista dos campos que **não passaram** na validação no último submit. **Não** é fase do funil. |
 
-Não usar mais strings de progresso (`email_created`, `form_error`, `associate_data`, …) como fonte de verdade.  
-Fase **4** (assinatura): nesta entrega o **módulo de termos está em desenvolvimento** — ver [gaps.md](./gaps.md).
+Não existe fase/status `consulta`. Após `status = Associado`, a tela `/consulta` permite agendar, enviar docs extras ou finalizar (`associate_status = concluido`).
 
 ---
 
 ## Fases (`associate_status`)
 
 | Fase | Significado | Rota | Menu (sidebar) |
-|---:|---|---|---|
-| **1** | Cadastro criado com e-mail | `/bem-vindo` → `/cadastro-associado` | Cadastro (atual) |
-| **2** | Preenchendo / preenchidos dados pessoais (+ paciente se `another`) | `/cadastro-associado` e, se preciso, `/cadastro-paciente` | Cadastro |
-| **3** | Envio de documentos de identidade (assistente) | `/documentos` | Documentos |
-| **4** | Assinatura do termo | `/documentos` — **módulo em desenvolvimento** | Documentos |
-| **5** | Docs extras (receita, laudos, exames) **e** escolha de finalização | `/consulta` → `/cadastro-concluido` | Consulta → Concluído |
+|---|---|---|---|
+| `cadastro_criado` | Cadastro criado com e-mail | `/bem-vindo` → `/cadastro-associado` | Cadastro (atual) |
+| `dados_pessoais` | Preenchendo / preenchidos dados pessoais (+ paciente se `another`) | `/cadastro-associado` e, se preciso, `/cadastro-paciente` | Cadastro |
+| `documentos` | Envio de documentos de identidade | `/documentos` | Documentos |
+| `assinatura_termo` | Assinatura do termo | `/documentos` | Documentos |
+| `concluido` | Cadastro finalizado na UI (após Associado) | `/cadastro-concluido` | Concluído |
 
-Ao **finalizar** na fase 5 (qualquer opção válida: com receita, sem receita, etc.):
+Ao **assinar o termo**:
 
-- responsável: `status = "Associado"` (permanece em fase 5 concluída ou marca-se como finalizado — ver guards)
+- responsável: `status = "Associado"` (permanece em `assinatura_termo` até finalizar)
 - se existir paciente vinculado: o registro filho continua `status = "patient"`
 
 ### Guards (não voltar)
 
 Quando o usuário **avança** de fase, o router **não** permite reabrir etapas anteriores:
 
-| `associate_status` | Pode acessar | Bloqueado (redirect) |
-|---:|---|---|
-| 1 | welcome, form associado | docs, consulta, concluído |
-| 2 | form associado / paciente (até completar) | docs, consulta… |
-| 3 | `/documentos` (uploads) | forms de dados, consulta |
-| 4 | assinatura do termo | uploads já concluídos / forms |
-| 5 | `/consulta` e, após fim, `/cadastro-concluido` | docs e forms anteriores |
+| Situação | Pode acessar | Bloqueado (redirect) |
+|---|---|---|
+| `cadastro_criado` | welcome, form associado | docs, consulta, concluído |
+| `dados_pessoais` | form associado / paciente | docs, consulta… |
+| `documentos` | `/documentos` (uploads) | forms de dados, consulta |
+| `assinatura_termo` | assinatura do termo | uploads já concluídos / forms |
+| `status=Associado` (não concluído) | `/consulta` | forms e docs anteriores |
+| `concluido` | `/cadastro-concluido` | demais etapas do funil |
 
 `/` (home) sempre redireciona para a rota da fase atual.
 
@@ -51,38 +51,35 @@ Quando o usuário **avança** de fase, o router **não** permite reabrir etapas 
 
 ```
 [/cadastro]  e-mail
-     │  associate_status = 1
+     │  associate_status = cadastro_criado
      ▼
 [/bem-vindo] → [/cadastro-associado]
      │  dados pessoais (+ senha + CIAP2)
      │  persistência parcial + invalid_fields
-     │  quando form completo e válido → associate_status = 2
+     │  quando form completo e válido → associate_status = dados_pessoais
      │
      ├── responsible_type = "another"
-     │         [/cadastro-paciente]  (ainda fase 2)
+     │         [/cadastro-paciente]  (ainda dados_pessoais)
      │         cria/atualiza registro filho status="patient"
      │         liga patient_user_code no responsável  ← ponteiro do FUNIL
      │         (responsible_code no filho = user_code do responsável)
-     │         form paciente completo → segue para fase 3
+     │         form paciente completo → segue para documentos
      │
-     └── himself | pet → fase 3
+     └── himself | pet → documentos
                                               ▼
-[/documentos]  associate_status = 3
-     │  assistente de documentos (RG ou CNH; ver § Documentos)
+[/documentos]  associate_status = documentos
+     │  assistente de documentos (RG ou CNH)
      │  se another: docs do responsável E do paciente
      │  quando TODOS os docs obrigatórios OK:
-     │       associate_status = 4
-     │       tela: módulo de assinatura de termos EM DESENVOLVIMENTO
-     │       (assinatura real = entrega futura do módulo termos)
-     │  quando módulo termos existir: assina → associate_status = 5
-     │       grava adhesion_term
+     │       associate_status = assinatura_termo
+     │  assina o termo → status = Associado (+ adhesion_term)
                                               ▼
-[/consulta]  associate_status = 5
-     │  receita / laudos / exames (opcional conforme opção)
-     │  escolher finalização
+[/consulta]  status = Associado
+     │  receita / laudos / exames / agendar (opcional)
+     │  finalizar → associate_status = concluido
                                               ▼
 [/cadastro-concluido]
-     status = "Associado"  (responsável)
+     status = Associado · associate_status = concluido
 ```
 
 ---
@@ -94,13 +91,13 @@ Quando o usuário **avança** de fase, o router **não** permite reabrir etapas 
 | `/cadastro` | E-mail inicial | pública |
 | `/login` | Login associado | pública |
 | `/bem-vindo` | Boas-vindas | sessão |
-| `/cadastro-associado` | Form responsável | sessão · fase 1–2 |
-| `/cadastro-paciente` | Form paciente | sessão · fase 2 · só `another` |
-| `/documentos` | Assistente de docs + termo | sessão · fase 3–4 |
-| `/consulta` | Extras + finalizar | sessão · fase 5 |
-| `/cadastro-concluido` | Encerramento | sessão · após Associado |
+| `/cadastro-associado` | Form responsável | sessão · cadastro_criado / dados_pessoais |
+| `/cadastro-paciente` | Form paciente | sessão · dados_pessoais · só `another` |
+| `/documentos` | Assistente de docs + termo | sessão · documentos / assinatura_termo |
+| `/consulta` | Extras + finalizar | sessão · Associado (não concluído) |
+| `/cadastro-concluido` | Encerramento | sessão · concluido |
 | `/nova-senha` | Redefinir senha | pública (token) |
-| `/` | Router por `associate_status` | sessão |
+| `/` | Router por fase / status | sessão |
 
 Não recriar: `/iniciar-cadastro`, `/loja`, `/seu-cadastro`, `/cadastro-aprovado`.
 
@@ -115,7 +112,7 @@ Não recriar: `/iniciar-cadastro`, `/loja`, `/seu-cadastro`, `/cadastro-aprovado
 | Cadastro para si (`himself`) ou pet | 1 usuário (o responsável) | ao fim: `Associado` |
 | Cadastro para outra pessoa (`another`) | 2 usuários: responsável + paciente | responsável → `Associado`; filho → `patient` |
 
-O progresso **`associate_status` 1–5** roda no **responsável** (quem tem login/senha e percorre o funil).
+O progresso **`associate_status`** (strings pt-BR) roda no **responsável** (quem tem login/senha e percorre o funil).
 
 O registro **paciente** não tem funil próprio: é criado/atualizado na **fase 2**, recebe docs na **fase 3**, e permanece `status = "patient"`.
 

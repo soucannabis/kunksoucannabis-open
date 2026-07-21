@@ -9,6 +9,11 @@ const { authenticate, extractBearer } = require('../middleware/authenticate');
 const { authorize } = require('../middleware/authorize');
 const { ok, AppError } = require('../utils/response');
 const { query } = require('../db/pool');
+const {
+  PHASE,
+  normalizePhase,
+  phaseEquals,
+} = require('../constants/associatePhases');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 const router = Router();
@@ -45,13 +50,10 @@ router.post('/', upload.single('file'), async (req, res, next) => {
 
     const associateRow = await resolveAssociateFromCookie(req);
     if (associateRow) {
-      const phase = Number(associateRow.associate_status) || 1;
+      const phase = normalizePhase(associateRow.associate_status);
       const docKind = req.body.doc_kind || 'identity';
-      if (docKind === 'identity' && phase !== 3) {
-        throw new AppError(403, 'PHASE_LOCKED', 'Upload de identidade só na fase 3');
-      }
-      if (docKind !== 'identity' && phase < 5) {
-        throw new AppError(403, 'PHASE_LOCKED', 'Upload de docs extras só na fase 5');
+      if (docKind === 'identity' && !phaseEquals(phase, PHASE.DOCUMENTOS)) {
+        throw new AppError(403, 'PHASE_LOCKED', 'Upload de identidade só na fase documentos');
       }
 
       const docType = req.body.doc_type || null;
@@ -223,9 +225,9 @@ router.delete('/:id', async (req, res, next) => {
   try {
     const associateRow = await resolveAssociateFromCookie(req);
     if (associateRow) {
-      const phase = Number(associateRow.associate_status) || 1;
-      if (phase !== 3) {
-        throw new AppError(403, 'PHASE_LOCKED', 'Remoção de docs só na fase 3');
+      const phase = normalizePhase(associateRow.associate_status);
+      if (!phaseEquals(phase, PHASE.DOCUMENTOS)) {
+        throw new AppError(403, 'PHASE_LOCKED', 'Remoção de docs só na fase documentos');
       }
       const owned = await query(
         `SELECT uf.id FROM users_files uf

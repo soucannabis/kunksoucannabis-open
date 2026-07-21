@@ -119,12 +119,37 @@ async function resolveSession(sessionToken) {
   return publicUser(user);
 }
 
-async function createApiToken({ email, scopes = ['*'] }) {
+function parseStoredTokenMeta(emailField) {
+  let label = emailField || 'api-token';
+  let scopes = ['*'];
+  try {
+    const parsed = JSON.parse(emailField);
+    label = parsed.label || emailField;
+    scopes = parsed.scopes || ['*'];
+  } catch {
+    /* plain label */
+  }
+  return { label, scopes };
+}
+
+function publicTokenRow(row) {
+  const { label, scopes } = parseStoredTokenMeta(row.email);
+  return { id: row.id, email: label, label, scopes };
+}
+
+async function createApiToken({ email, label: labelIn, scopes = ['*'] }) {
+  const { normalizeApiTokenScopes } = require('../schema/rbac');
+  let normalizedScopes;
+  try {
+    normalizedScopes = normalizeApiTokenScopes(scopes);
+  } catch (err) {
+    throw new AppError(400, err.code || 'VALIDATION_ERROR', err.message);
+  }
   const plaintext = `kunk_live_${crypto.randomBytes(24).toString('hex')}`;
   const hash = await bcrypt.hash(plaintext, SALT_ROUNDS);
-  const label = email || 'api-token';
+  const label = String(labelIn || email || 'api-token').trim() || 'api-token';
   // Store scopes in email field as JSON prefix for v1 schema (email + token only)
-  const storedEmail = JSON.stringify({ label, scopes });
+  const storedEmail = JSON.stringify({ label, scopes: normalizedScopes });
 
   const result = await query(
     `INSERT INTO users_api (email, token) VALUES ($1, $2) RETURNING id, email`,
@@ -134,25 +159,42 @@ async function createApiToken({ email, scopes = ['*'] }) {
   return {
     id: result.rows[0].id,
     email: label,
-    scopes,
+    label,
+    scopes: normalizedScopes,
     token: plaintext,
   };
 }
 
 async function listApiTokens() {
   const result = await query(`SELECT id, email FROM users_api ORDER BY id DESC`);
-  return result.rows.map((row) => {
-    let label = row.email;
-    let scopes = ['*'];
+  return result.rows.map(publicTokenRow);
+}
+
+async function updateApiToken(id, { email, label: labelIn, scopes } = {}) {
+  const { normalizeApiTokenScopes } = require('../schema/rbac');
+  const existing = await query(`SELECT id, email FROM users_api WHERE id = $1`, [id]);
+  if (!existing.rows[0]) {
+    throw new AppError(404, 'NOT_FOUND', 'Token não encontrado');
+  }
+  const current = parseStoredTokenMeta(existing.rows[0].email);
+  const label =
+    labelIn !== undefined || email !== undefined
+      ? String(labelIn || email || '').trim() || current.label
+      : current.label;
+  let nextScopes = current.scopes;
+  if (scopes !== undefined) {
     try {
-      const parsed = JSON.parse(row.email);
-      label = parsed.label || row.email;
-      scopes = parsed.scopes || ['*'];
-    } catch {
-      /* plain */
+      nextScopes = normalizeApiTokenScopes(scopes);
+    } catch (err) {
+      throw new AppError(400, err.code || 'VALIDATION_ERROR', err.message);
     }
-    return { id: row.id, email: label, scopes };
-  });
+  }
+  const storedEmail = JSON.stringify({ label, scopes: nextScopes });
+  const result = await query(
+    `UPDATE users_api SET email = $2 WHERE id = $1 RETURNING id, email`,
+    [id, storedEmail]
+  );
+  return publicTokenRow(result.rows[0]);
 }
 
 async function revokeApiToken(id) {
@@ -176,15 +218,7 @@ async function resolveBearer(token) {
       match = row.token === token;
     }
     if (match) {
-      let scopes = ['*'];
-      let label = row.email;
-      try {
-        const parsed = JSON.parse(row.email);
-        scopes = parsed.scopes || ['*'];
-        label = parsed.label || row.email;
-      } catch {
-        /* plain */
-      }
+      const { label, scopes } = parseStoredTokenMeta(row.email);
       return {
         id: row.id,
         email: label,
@@ -306,6 +340,7 @@ module.exports = {
   resolveSession,
   createApiToken,
   listApiTokens,
+  updateApiToken,
   revokeApiToken,
   resolveBearer,
   hashPassword,

@@ -3,13 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useAssociateAuth } from '@kunk/auth-session';
 import {
   Ciap2Select,
+  CepInput,
   CpfInput,
   GenderSelect,
   MARITAL_OPTIONS,
   PhoneInput,
   UF_OPTIONS,
+  validateAssociateForm,
 } from '@kunk/forms';
 import { AlertError } from '@kunk/ui';
+import { buildValidationAlert } from '../lib/fieldLabels.js';
 
 const EMPTY = {
   responsible_type: 'himself',
@@ -17,7 +20,7 @@ const EMPTY = {
   associate_last_name: '',
   associate_birth_date: '',
   gender: '',
-  nationality: 'Brasileira',
+  nationality: 'Brasileiro(a)',
   associate_cpf: '',
   associate_rg: '',
   associate_rg_issuer: '',
@@ -33,6 +36,15 @@ const EMPTY = {
   reason_treatment_text: '',
   ciap_codes: [],
 };
+
+function FieldLabel({ children, hint }) {
+  return (
+    <label className="form-label">
+      <span className="form-label-title">{children}</span>
+      {hint ? <span className="form-label-hint">{hint}</span> : null}
+    </label>
+  );
+}
 
 export function AssociateRegistrationPage({ api }) {
   const { user, refresh } = useAssociateAuth();
@@ -71,7 +83,7 @@ export function AssociateRegistrationPage({ api }) {
         ? String(user.associate_birth_date).slice(0, 10)
         : '',
       gender: user.gender || '',
-      nationality: user.nationality || 'Brasileira',
+      nationality: user.nationality || 'Brasileiro(a)',
       associate_cpf: user.associate_cpf || '',
       associate_rg: user.associate_rg || '',
       associate_rg_issuer: user.associate_rg_issuer || '',
@@ -94,20 +106,37 @@ export function AssociateRegistrationPage({ api }) {
 
   function setField(key, value) {
     setForm((f) => ({ ...f, [key]: value }));
+    setInvalid((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : prev));
   }
 
   async function onSubmit(e) {
     e.preventDefault();
     setBusy(true);
     setError(null);
+
+    // Senha já definida no cadastro de e-mail — não exige de novo neste formulário.
+    const localInvalid = validateAssociateForm(
+      { ...form, account_password: user?.account_password ? '********' : '' },
+      { ciap2Enabled },
+    ).filter((k) => k !== 'account_password');
+
+    if (localInvalid.length) {
+      setInvalid(localInvalid);
+      const alert = buildValidationAlert(localInvalid, form);
+      setError(alert.message || 'Preencha os campos obrigatórios destacados.');
+      setBusy(false);
+      return;
+    }
+
     const body = { ...form };
     try {
       const res = await api.patchMe(body);
       await refresh();
-      const inv = res.meta?.invalid_fields || [];
+      const inv = (res.meta?.invalid_fields || []).filter((k) => k !== 'account_password');
       setInvalid(inv);
       if (inv.length) {
-        setError('Alguns campos precisam de correção. Os válidos foram salvos.');
+        const alert = buildValidationAlert(inv, body);
+        setError(alert.message);
         return;
       }
       if (res.data.responsible_type === 'another') {
@@ -128,60 +157,100 @@ export function AssociateRegistrationPage({ api }) {
     `form-control${invalid.includes(name) ? ' is-invalid' : ''}`;
 
   return (
-    <form onSubmit={onSubmit}>
-      <h1 className="h3 mb-3">Dados do responsável</h1>
-      <AlertError message={error} emptyFields={invalid} />
+    <form onSubmit={onSubmit} noValidate>
+      <h1 className="form-page-title">Dados do responsável</h1>
+      <p className="form-page-hint">
+        Informe os dados pessoais e de contato da pessoa responsável pelo cadastro.
+        <br />
+        Todos os campos são obrigatórios para realizar o cadastro como associado.
+      </p>
 
-      <div className="mb-3">
-        <span className="form-label d-block">Tipo de cadastro</span>
-        {['himself', 'another', 'pet'].map((v) => (
-          <button
-            key={v}
-            type="button"
-            className={`btn btn-outline-primary me-2 mb-2 ${form.responsible_type === v ? 'active' : ''}`}
-            onClick={() => setField('responsible_type', v)}
-          >
-            {v === 'himself' ? 'Para mim' : v === 'another' ? 'Para outra pessoa' : 'Para pet'}
-          </button>
-        ))}
-      </div>
+      <fieldset className="responsible-type">
+        <legend className="responsible-type__legend">Tipo de cadastro</legend>
+        <p className="responsible-type__hint">
+          Escolha se o cadastro é para você, para outra pessoa ou para um pet.
+          Isso define quais dados serão solicitados nas próximas etapas.
+        </p>
+        <div className="responsible-type__options" role="radiogroup" aria-label="Tipo de cadastro">
+          {[
+            {
+              value: 'himself',
+              title: 'Para mim',
+              desc: 'O responsável é também o paciente.',
+            },
+            {
+              value: 'another',
+              title: 'Para outra pessoa',
+              desc: 'Cadastro em nome de um paciente.',
+            },
+            {
+              value: 'pet',
+              title: 'Para pet',
+              desc: 'Atendimento veterinário / animal.',
+            },
+          ].map((opt) => {
+            const selected = form.responsible_type === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                className={`responsible-type__option${selected ? ' is-selected' : ''}`}
+                onClick={() => setField('responsible_type', opt.value)}
+              >
+                <span className="responsible-type__radio" aria-hidden />
+                <span className="responsible-type__text">
+                  <span className="responsible-type__title">{opt.title}</span>
+                  <span className="responsible-type__desc">{opt.desc}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
 
-      <div className="row g-2">
+      <div className="row g-4 form-fields">
         <div className="col-md-6">
-          <label className="form-label">Nome</label>
-          <input className={fieldClass('associate_name')} value={form.associate_name} onChange={(e) => setField('associate_name', e.target.value)} />
+          <FieldLabel hint="como no documento">Nome</FieldLabel>
+          <input className={fieldClass('associate_name')} required value={form.associate_name} onChange={(e) => setField('associate_name', e.target.value)} />
         </div>
         <div className="col-md-6">
-          <label className="form-label">Sobrenome</label>
-          <input className={fieldClass('associate_last_name')} value={form.associate_last_name} onChange={(e) => setField('associate_last_name', e.target.value)} />
+          <FieldLabel hint="como no documento">Sobrenome</FieldLabel>
+          <input className={fieldClass('associate_last_name')} required value={form.associate_last_name} onChange={(e) => setField('associate_last_name', e.target.value)} />
         </div>
         <div className="col-md-4">
-          <label className="form-label">Nascimento</label>
-          <input type="date" className={fieldClass('associate_birth_date')} value={form.associate_birth_date} onChange={(e) => setField('associate_birth_date', e.target.value)} />
+          <FieldLabel hint="data de nascimento">Nascimento</FieldLabel>
+          <input type="date" className={fieldClass('associate_birth_date')} required value={form.associate_birth_date} onChange={(e) => setField('associate_birth_date', e.target.value)} />
         </div>
         <div className="col-md-4">
-          <label className="form-label">Gênero</label>
-          <GenderSelect value={form.gender} onChange={(v) => setField('gender', v)} />
+          <FieldLabel hint="identidade de gênero">Gênero</FieldLabel>
+          <GenderSelect
+            required
+            className={fieldClass('gender')}
+            value={form.gender}
+            onChange={(v) => setField('gender', v)}
+          />
         </div>
         <div className="col-md-4">
-          <label className="form-label">Nacionalidade</label>
-          <input className={fieldClass('nationality')} value={form.nationality} onChange={(e) => setField('nationality', e.target.value)} />
+          <FieldLabel hint="país de origem">Nacionalidade</FieldLabel>
+          <input className={fieldClass('nationality')} required value={form.nationality} onChange={(e) => setField('nationality', e.target.value)} />
         </div>
         <div className="col-md-4">
-          <label className="form-label">CPF</label>
-          <CpfInput className={fieldClass('associate_cpf')} value={form.associate_cpf} onChange={(v) => setField('associate_cpf', v)} />
+          <FieldLabel hint="apenas números">CPF</FieldLabel>
+          <CpfInput className={fieldClass('associate_cpf')} required value={form.associate_cpf} onChange={(v) => setField('associate_cpf', v)} />
         </div>
         <div className="col-md-4">
-          <label className="form-label">RG</label>
-          <input className={fieldClass('associate_rg')} value={form.associate_rg} onChange={(e) => setField('associate_rg', e.target.value)} />
+          <FieldLabel hint="documento de identidade">RG</FieldLabel>
+          <input className={fieldClass('associate_rg')} required value={form.associate_rg} onChange={(e) => setField('associate_rg', e.target.value)} />
         </div>
         <div className="col-md-4">
-          <label className="form-label">Órgão emissor</label>
-          <input className={fieldClass('associate_rg_issuer')} value={form.associate_rg_issuer} onChange={(e) => setField('associate_rg_issuer', e.target.value)} />
+          <FieldLabel hint="ex.: SSP/SP">Órgão emissor</FieldLabel>
+          <input className={fieldClass('associate_rg_issuer')} required value={form.associate_rg_issuer} onChange={(e) => setField('associate_rg_issuer', e.target.value)} />
         </div>
         <div className="col-md-4">
-          <label className="form-label">Estado civil</label>
-          <select className={fieldClass('marital_status')} value={form.marital_status} onChange={(e) => setField('marital_status', e.target.value)}>
+          <FieldLabel hint="situação conjugal">Estado civil</FieldLabel>
+          <select className={fieldClass('marital_status')} required value={form.marital_status} onChange={(e) => setField('marital_status', e.target.value)}>
             <option value="">Selecione</option>
             {MARITAL_OPTIONS.map((o) => (
               <option key={o} value={o}>{o}</option>
@@ -189,36 +258,37 @@ export function AssociateRegistrationPage({ api }) {
           </select>
         </div>
         <div className="col-md-8">
-          <label className="form-label">Celular</label>
+          <FieldLabel hint="com DDI do país">Celular</FieldLabel>
           <PhoneInput
             value={form.mobile_number}
             onChange={(v) => setField('mobile_number', v)}
             invalid={invalid.includes('mobile_number')}
+            inputProps={{ required: true }}
           />
         </div>
         <div className="col-md-8">
-          <label className="form-label">Rua</label>
-          <input className={fieldClass('street')} value={form.street} onChange={(e) => setField('street', e.target.value)} />
+          <FieldLabel hint="logradouro do endereço">Rua</FieldLabel>
+          <input className={fieldClass('street')} required value={form.street} onChange={(e) => setField('street', e.target.value)} />
         </div>
         <div className="col-md-4">
-          <label className="form-label">Número</label>
-          <input className={fieldClass('street_number')} value={form.street_number} onChange={(e) => setField('street_number', e.target.value)} />
+          <FieldLabel hint="número do imóvel">Número</FieldLabel>
+          <input className={fieldClass('street_number')} required value={form.street_number} onChange={(e) => setField('street_number', e.target.value)} />
         </div>
         <div className="col-md-4">
-          <label className="form-label">Complemento</label>
+          <FieldLabel hint="apto, bloco… (opcional)">Complemento</FieldLabel>
           <input className="form-control" value={form.complement} onChange={(e) => setField('complement', e.target.value)} />
         </div>
         <div className="col-md-4">
-          <label className="form-label">Bairro</label>
-          <input className={fieldClass('neighborhood')} value={form.neighborhood} onChange={(e) => setField('neighborhood', e.target.value)} />
+          <FieldLabel hint="bairro do endereço">Bairro</FieldLabel>
+          <input className={fieldClass('neighborhood')} required value={form.neighborhood} onChange={(e) => setField('neighborhood', e.target.value)} />
         </div>
         <div className="col-md-4">
-          <label className="form-label">Cidade</label>
-          <input className={fieldClass('city')} value={form.city} onChange={(e) => setField('city', e.target.value)} />
+          <FieldLabel hint="cidade de residência">Cidade</FieldLabel>
+          <input className={fieldClass('city')} required value={form.city} onChange={(e) => setField('city', e.target.value)} />
         </div>
         <div className="col-md-2">
-          <label className="form-label">UF</label>
-          <select className={fieldClass('state')} value={form.state} onChange={(e) => setField('state', e.target.value)}>
+          <FieldLabel hint="estado">UF</FieldLabel>
+          <select className={fieldClass('state')} required value={form.state} onChange={(e) => setField('state', e.target.value)}>
             <option value="">UF</option>
             {UF_OPTIONS.map((uf) => (
               <option key={uf} value={uf}>{uf}</option>
@@ -226,25 +296,57 @@ export function AssociateRegistrationPage({ api }) {
           </select>
         </div>
         <div className="col-md-4">
-          <label className="form-label">CEP</label>
-          <input className={fieldClass('cep')} value={form.cep} onChange={(e) => setField('cep', e.target.value)} />
+          <FieldLabel hint="o código CEP do seu endereço">CEP</FieldLabel>
+          <CepInput className={fieldClass('cep')} required value={form.cep} onChange={(v) => setField('cep', v)} />
         </div>
       </div>
 
-      <div className="mt-3">
-        {ciap2Enabled ? (
-          <>
-            <label className="form-label">Motivos de tratamento (CIAP-2)</label>
-            <Ciap2Select value={form.ciap_codes} onChange={(v) => setField('ciap_codes', v)} />
-          </>
-        ) : null}
-      </div>
-      <div className="mt-3">
-        <label className="form-label">Descreva o motivo</label>
-        <textarea className={fieldClass('reason_treatment_text')} rows={3} value={form.reason_treatment_text} onChange={(e) => setField('reason_treatment_text', e.target.value)} />
+      {ciap2Enabled ? (
+        <section className="ciap2-block">
+          <h2 className="ciap2-block-title">Motivo principal para o tratamento</h2>
+          <p className="ciap2-help">
+            Os dados deste campo são de acordo com o CIAP2 (Classificação
+            Internacional de Atenção Primária)
+            {' '}
+            <a
+              className="ciap2-help-link"
+              href="https://saude.campinas.sp.gov.br/sistemas/esus/guia_CIAP2.pdf"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Saiba Mais
+            </a>
+          </p>
+          <p className="ciap2-help">
+            No campo abaixo, pesquise pelo motivo do tratamento e selecione
+            uma ou mais opções.
+          </p>
+          <p className="ciap2-block-count">
+            {(form.ciap_codes || []).length}/10 motivos
+          </p>
+          <Ciap2Select
+            hideCount
+            invalid={invalid.includes('ciap_codes')}
+            value={form.ciap_codes}
+            onChange={(v) => setField('ciap_codes', v)}
+          />
+        </section>
+      ) : null}
+
+      <div className="form-section">
+        <FieldLabel hint="informe com suas palavras">
+          Descreva com suas palavras o motivo do seu tratamento
+        </FieldLabel>
+        <textarea className={fieldClass('reason_treatment_text')} required rows={3} value={form.reason_treatment_text} onChange={(e) => setField('reason_treatment_text', e.target.value)} />
       </div>
 
-      <button className="btn btn-success mt-4" type="submit" disabled={busy}>
+      <AlertError
+        className="mt-4"
+        message={error}
+        emptyFields={invalid.length ? buildValidationAlert(invalid, form).missingLabels : []}
+      />
+
+      <button className="btn btn-success mt-3" type="submit" disabled={busy}>
         Salvar e continuar
       </button>
     </form>

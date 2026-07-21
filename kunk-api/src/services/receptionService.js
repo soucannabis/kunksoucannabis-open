@@ -44,17 +44,43 @@ const DEFAULT_FORM_FIELDS = [
   { id: 'patient_name', enabled: false, required: true, label: 'Nome do paciente', order: 7 },
 ];
 
+function normalizeSelectOption(o) {
+  if (o && typeof o === 'object' && !Array.isArray(o)) {
+    return {
+      label: String(o.label ?? o.value ?? '').trim(),
+      enabled: o.enabled !== false,
+    };
+  }
+  return { label: String(o ?? '').trim(), enabled: true };
+}
+
+function publicSelectOptions(options) {
+  return (Array.isArray(options) ? options : [])
+    .map(normalizeSelectOption)
+    .filter((o) => o.enabled && o.label)
+    .map((o) => o.label);
+}
+
 function normalizeFormFields(fields) {
   const list = Array.isArray(fields) ? fields : [];
   return list
     .filter((f) => f && f.id !== 'is_associate' && f.id !== 'option2')
     .map((f) => {
       const field = f.id === 'option1' ? { ...f, id: 'help_topic' } : { ...f };
-      if (field.id !== 'help_topic') return field;
-      const options = Array.isArray(field.options) && field.options.length
-        ? field.options.map((o) => String(o).trim()).filter(Boolean)
-        : [...DEFAULT_HELP_TOPIC_OPTIONS];
-      return { ...field, type: 'select', options };
+      if (field.id !== 'help_topic' && field.type !== 'select') return field;
+      const raw = Array.isArray(field.options) && field.options.length
+        ? field.options
+        : (field.id === 'help_topic' ? DEFAULT_HELP_TOPIC_OPTIONS : []);
+      const options = raw.map(normalizeSelectOption).filter((o) => o.label);
+      return {
+        ...field,
+        type: 'select',
+        options: options.length
+          ? options
+          : (field.id === 'help_topic'
+            ? DEFAULT_HELP_TOPIC_OPTIONS.map((label) => ({ label, enabled: true }))
+            : options),
+      };
     });
 }
 
@@ -124,12 +150,25 @@ function displayName(user) {
 
 async function loadTriageConfig() {
   const { values } = await systemConfigService.resolveAll('triage');
+  const themeRaw = String(values['triage.form.theme'] || '').trim().toLowerCase();
+  const text = (key, fallback) => {
+    const raw = String(values[key] ?? '').trim();
+    return raw || fallback;
+  };
   return {
     formFields: normalizeFormFields(parseJson(values['triage.form.fields'], DEFAULT_FORM_FIELDS)),
     customFields: parseJson(values['triage.form.custom_fields'], []),
     statuses: parseJson(values['triage.statuses'], DEFAULT_STATUSES),
     associateDocs: parseBool(values['triage.module.associate_docs'], false),
     publicFormEnabled: parseBool(values['triage.public_form_enabled'], true),
+    formTheme: themeRaw === 'light' || themeRaw === 'claro' ? 'light' : 'dark',
+    formTitle: text('triage.form.title', 'Fila de acolhimento'),
+    formSubtitle: text('triage.form.subtitle', 'Preencha para entrar na fila de contato do acolhimento'),
+    successTitle: text('triage.form.success_title', 'Você entrou na fila'),
+    successSubtitle: text(
+      'triage.form.success_subtitle',
+      'Em breve a equipe de acolhimento entrará em contato.',
+    ),
   };
 }
 
@@ -163,7 +202,12 @@ function enabledFields(cfg) {
   const custom = (cfg.customFields || [])
     .filter((f) => f && f.enabled !== false)
     .map((f) => ({ ...f, source: 'custom' }));
-  return [...standard, ...custom].sort((a, b) => (a.order || 0) - (b.order || 0));
+  return [...standard, ...custom]
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .map((f) => {
+      if (f.type !== 'select' && f.id !== 'help_topic') return f;
+      return { ...f, type: 'select', options: publicSelectOptions(f.options) };
+    });
 }
 
 async function getFormSchema() {
@@ -175,6 +219,11 @@ async function getFormSchema() {
     custom_fields: cfg.customFields,
     statuses: cfg.statuses,
     associate_docs: cfg.associateDocs,
+    theme: cfg.formTheme,
+    title: cfg.formTitle,
+    subtitle: cfg.formSubtitle,
+    success_title: cfg.successTitle,
+    success_subtitle: cfg.successSubtitle,
   };
 }
 

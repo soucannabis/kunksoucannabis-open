@@ -1,19 +1,55 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useAssociateAuth } from '@kunk/auth-session';
+import { REGISTRATION_SYSTEM_DEFAULTS } from '@kunk/config';
 import { usePublicConfig } from '../config/PublicConfigProvider.jsx';
 
+/** Quebra o texto em parágrafos a cada ponto final. */
+function paragraphsFromWelcomeText(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return [];
+  return raw
+    .split(/(?<=\.)\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 export function WelcomePage() {
-  const { user } = useAssociateAuth();
   const { config: cfg } = usePublicConfig();
+  const welcomeText =
+    String(cfg.welcomeText || '').trim() || REGISTRATION_SYSTEM_DEFAULTS.welcomeText;
+  const associationFullName = String(
+    cfg.associationFullName || cfg.associationName || 'associação',
+  ).trim();
+  const paragraphs = useMemo(() => paragraphsFromWelcomeText(welcomeText), [welcomeText]);
+
   return (
-    <div>
-      <h1 className="h2 mb-3">Bem-vindo</h1>
-      <p className="text-white-50 mb-4">{cfg.welcomeText}</p>
-      <p className="text-white mb-4">Olá{user?.email_account ? `, ${user.email_account}` : ''}.</p>
-      <Link className="btn btn-success btn-lg" to="/cadastro-associado">
-        Iniciar cadastro
-      </Link>
+    <div className="welcome-page">
+      <div className="docs-page welcome-page-inner">
+        <h1 className="form-page-title welcome-page-title">
+          <span className="welcome-page-title-main">Bem-vindo</span>
+          <span className="welcome-page-title-sub">
+            Cadastro de Associados da {associationFullName}
+          </span>
+        </h1>
+
+        <div className="docs-assistant">
+          <section className="docs-subject welcome-card">
+            <header className="docs-subject-header">
+              <h2 className="docs-subject-title">Começar cadastro</h2>
+            </header>
+            <div className="welcome-card-text">
+              {paragraphs.map((paragraph) => (
+                <p key={paragraph} className="docs-advance-text welcome-card-paragraph">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+            <Link className="btn btn-success docs-primary-btn welcome-cta" to="/cadastro-associado">
+              Iniciar cadastro
+            </Link>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

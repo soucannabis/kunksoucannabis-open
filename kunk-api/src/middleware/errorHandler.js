@@ -31,8 +31,22 @@ function mapPgError(err) {
         `Campo obrigatório ausente${err.column ? `: ${err.column}` : ''}`,
         pgDetails(err)
       );
-    case '22P02': // invalid_text_representation (ex.: UUID malformado)
+    case '22P02': {
+      // invalid_text_representation (UUID malformado, ou string em coluna INTEGER)
+      const pgMsg = String(err.message || '');
+      if (
+        /integer|smallint|bigint|numeric/i.test(pgMsg) &&
+        /assinatura_termo|documentos|dados_pessoais|cadastro_criado|concluido/i.test(pgMsg)
+      ) {
+        return new AppError(
+          500,
+          'SCHEMA_MISMATCH',
+          'Banco desatualizado: users.associate_status ainda é numérico. Reinicie a API (migração automática) ou rode alter-associate-status-ptbr.sql',
+          pgDetails(err)
+        );
+      }
       return new AppError(400, 'VALIDATION_ERROR', 'Formato de valor inválido', pgDetails(err));
+    }
     default:
       return null;
   }

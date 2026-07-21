@@ -8,7 +8,7 @@
       "_id": "wrk_be0407cb8b4e1d12",
       "_type": "workspace",
       "name": "Kunk API",
-      "description": "Collection kunk-api (:4250). Auth padrão: Bearer demo (bearer_token). Login cookie opcional. Demo: admin@demo.kunk.local / DemoAdmin123!",
+      "description": "Collection kunk-api (:4250). Auth padrão: Bearer demo (bearer_token). Login cookie opcional — cadastre operador no Admin (não há seed de system_users).",
       "scope": "collection"
     },
     {
@@ -18,8 +18,8 @@
       "name": "Base Environment",
       "data": {
         "base_url": "http://localhost:4250/api/v1",
-        "email": "admin@demo.kunk.local",
-        "password": "DemoAdmin123!",
+        "email": "",
+        "password": "",
         "bearer_token": "kunk_live_demo_sample_token_do_not_use_prod",
         "user_id": "1",
         "user_code": "",

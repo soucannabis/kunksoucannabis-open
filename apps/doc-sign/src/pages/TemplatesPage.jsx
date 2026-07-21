@@ -148,7 +148,7 @@ export function TemplatesPage({ api }) {
         <div>
           <h1 style={{ marginBottom: '0.25rem' }}>Modelos de termo</h1>
           <p className="muted" style={{ margin: 0 }}>
-            Edite os modelos e publique uma versão com PDF.
+            Edite os modelos e publique para gerar termos.
           </p>
         </div>
         <button type="button" className="btn btn-primary btn-novo-termo" onClick={() => setModalOpen(true)}>
@@ -173,9 +173,7 @@ export function TemplatesPage({ api }) {
             </div>
             <div className="card-actions">
               <p className="template-card-status muted">
-                {t.current_version_id
-                  ? `Publicado — versão ${t.current_version_number}`
-                  : 'Ainda não publicado'}
+                {t.current_version_id ? 'Publicado' : 'Ainda não publicado'}
               </p>
               <Link className="btn btn-primary" to={`/modelos/${t.kind}`}>
                 Editar

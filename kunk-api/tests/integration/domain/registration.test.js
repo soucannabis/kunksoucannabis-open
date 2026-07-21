@@ -7,8 +7,13 @@ const { getApp } = require('../../helpers/app');
 const { closePool, query, cleanupTestLocalUsers } = require('../../helpers/db');
 const { loginAsAdmin, extractAssociateCookie, extractCookie } = require('../../helpers/auth');
 const { env } = require('../../../src/config/env');
+const { PHASE, phaseIndex } = require('../../../src/constants/associatePhases');
 
 const VALID_CPF = '52998224725';
+
+function belowDocumentos(status) {
+  return phaseIndex(status) < phaseIndex(PHASE.DOCUMENTOS);
+}
 
 function responsiblePayload(overrides = {}) {
   return {
@@ -60,7 +65,8 @@ describe('registration funnel', () => {
       .post('/api/v1/auth/associate/register-email')
       .send({ email, password: 'senha12345' });
     assert.equal(reg.status, 201, JSON.stringify(reg.body));
-    assert.equal(reg.body.data.user.associate_status, 1);
+    assert.equal(reg.body.data.user.associate_status, PHASE.CADASTRO_CRIADO);
+    assert.equal(reg.body.data.user.status, PHASE.CADASTRO_CRIADO);
     assert.ok(!reg.body.data.user.account_password);
     const cookie = extractAssociateCookie(reg.headers['set-cookie']);
     assert.ok(cookie.startsWith('associate_session='));
@@ -191,15 +197,15 @@ describe('registration funnel', () => {
       .set('Cookie', cookie)
       .send(responsiblePayload());
     await request(app).post('/api/v1/users/me/advance').set('Cookie', cookie);
-    // may already be phase 2 from patch; advance to 3
+    // may already be dados_pessoais from patch; advance to documentos
     let me = await request(app).get('/api/v1/auth/associate/me').set('Cookie', cookie);
-    while (me.body.data.user.associate_status < 3) {
+    while (belowDocumentos(me.body.data.user.associate_status)) {
       const adv = await request(app).post('/api/v1/users/me/advance').set('Cookie', cookie);
       assert.ok([200, 400].includes(adv.status));
       if (adv.status !== 200) break;
       me = await request(app).get('/api/v1/auth/associate/me').set('Cookie', cookie);
     }
-    assert.equal(me.body.data.user.associate_status, 3);
+    assert.equal(me.body.data.user.associate_status, PHASE.DOCUMENTOS);
 
     const incomplete = await request(app)
       .get('/api/v1/users/me/documents/status')
@@ -239,7 +245,7 @@ describe('registration funnel', () => {
     const c2 = extractAssociateCookie(reg2.headers['set-cookie']);
     await request(app).patch('/api/v1/users/me').set('Cookie', c2).send(responsiblePayload());
     let me2 = await request(app).get('/api/v1/auth/associate/me').set('Cookie', c2);
-    while (me2.body.data.user.associate_status < 3) {
+    while (belowDocumentos(me2.body.data.user.associate_status)) {
       await request(app).post('/api/v1/users/me/advance').set('Cookie', c2);
       me2 = await request(app).get('/api/v1/auth/associate/me').set('Cookie', c2);
     }
@@ -256,7 +262,7 @@ describe('registration funnel', () => {
     assert.equal(cnhStatus.body.data.responsible.mode, 'cnh');
   });
 
-  it('advance 3→4 with docs; block without; phase 4 no 5 without bypass; terms stub; complete with bypass', async () => {
+  it('advance documentos→assinatura_termo; block without docs; Associado via bypass; complete', async () => {
     const reg = await request(app)
       .post('/api/v1/auth/associate/register-email')
       .send({ email: `adv-${Date.now()}@test.local`, password: 'senha12345' });
@@ -264,7 +270,7 @@ describe('registration funnel', () => {
     await request(app).patch('/api/v1/users/me').set('Cookie', cookie).send(responsiblePayload());
 
     let me = await request(app).get('/api/v1/auth/associate/me').set('Cookie', cookie);
-    while (me.body.data.user.associate_status < 3) {
+    while (belowDocumentos(me.body.data.user.associate_status)) {
       const adv = await request(app).post('/api/v1/users/me/advance').set('Cookie', cookie);
       assert.equal(adv.status, 200);
       me = await request(app).get('/api/v1/auth/associate/me').set('Cookie', cookie);
@@ -282,9 +288,9 @@ describe('registration funnel', () => {
       .field('doc_kind', 'identity')
       .attach('file', Buffer.from('cnh'), 'cnh.jpg');
 
-    const to4 = await request(app).post('/api/v1/users/me/advance').set('Cookie', cookie);
-    assert.equal(to4.status, 200);
-    assert.equal(to4.body.data.associate_status, 4);
+    const toTerm = await request(app).post('/api/v1/users/me/advance').set('Cookie', cookie);
+    assert.equal(toTerm.status, 200);
+    assert.equal(toTerm.body.data.associate_status, PHASE.ASSINATURA_TERMO);
 
     const terms = await request(app).get('/api/v1/terms/status');
     assert.equal(terms.status, 200);
@@ -297,14 +303,15 @@ describe('registration funnel', () => {
     assert.equal(noBypass.status, 400);
     assert.equal(noBypass.body.errors[0].code, 'VALIDATION_ERROR');
 
-    // Force phase 5 for complete test (QA path)
+    // Force Associado for complete test (QA path)
     await query(
-      `UPDATE users SET associate_status = 5 WHERE email_account = $1`,
-      [reg.body.data.user.email_account]
+      `UPDATE users SET status = 'Associado', associate_status = $2 WHERE email_account = $1`,
+      [reg.body.data.user.email_account, PHASE.ASSINATURA_TERMO]
     );
     const done = await request(app).post('/api/v1/users/me/complete').set('Cookie', cookie);
     assert.equal(done.status, 200);
     assert.equal(done.body.data.status, 'Associado');
+    assert.equal(done.body.data.associate_status, PHASE.CONCLUIDO);
   });
 
   it('guards: operator cookie cannot use associate routes; associate cannot use operator users list', async () => {
@@ -325,7 +332,7 @@ describe('registration funnel', () => {
     assert.equal(exists.body.data.state, 'in_progress');
   });
 
-  it('TERMS_DEV_BYPASS allows 4→5 when enabled', async () => {
+  it('TERMS_DEV_BYPASS allows assinatura_termo → Associado when enabled', async () => {
     const prev = env.termsDevBypass;
     env.termsDevBypass = true;
     try {
@@ -335,7 +342,7 @@ describe('registration funnel', () => {
       const cookie = extractAssociateCookie(reg.headers['set-cookie']);
       await request(app).patch('/api/v1/users/me').set('Cookie', cookie).send(responsiblePayload());
       let me = await request(app).get('/api/v1/auth/associate/me').set('Cookie', cookie);
-      while (me.body.data.user.associate_status < 3) {
+      while (belowDocumentos(me.body.data.user.associate_status)) {
         await request(app).post('/api/v1/users/me/advance').set('Cookie', cookie);
         me = await request(app).get('/api/v1/auth/associate/me').set('Cookie', cookie);
       }
@@ -348,9 +355,10 @@ describe('registration funnel', () => {
         .field('doc_kind', 'identity')
         .attach('file', Buffer.from('cnh'), 'cnh.jpg');
       await request(app).post('/api/v1/users/me/advance').set('Cookie', cookie);
-      const to5 = await request(app).post('/api/v1/users/me/advance').set('Cookie', cookie);
-      assert.equal(to5.status, 200);
-      assert.equal(to5.body.data.associate_status, 5);
+      const toAssociado = await request(app).post('/api/v1/users/me/advance').set('Cookie', cookie);
+      assert.equal(toAssociado.status, 200);
+      assert.equal(toAssociado.body.data.status, 'Associado');
+      assert.equal(toAssociado.body.data.associate_status, PHASE.ASSINATURA_TERMO);
     } finally {
       env.termsDevBypass = prev;
     }

@@ -50,7 +50,7 @@ test.describe('armazenamento cloud — bucket ativo', () => {
     expect(bytes.equals(TINY_JPEG)).toBe(true);
 
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page).toHaveURL(/\/dados/);
+    await expect(page).toHaveURL(/\/inicio\/?$/);
     await page.goto(appUrl(`/arquivos/${up.data.id}`));
     await expect(page.getByRole('heading', { name: filename })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Download' })).toHaveAttribute(

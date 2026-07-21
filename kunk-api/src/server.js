@@ -40,6 +40,30 @@ async function main() {
     process.exit(1);
   }
 
+  try {
+    const { ensureAssociateStatusColumn } = require('./db/ensureAssociateStatusColumn');
+    const statusCol = await ensureAssociateStatusColumn();
+    if (statusCol.migratedType) {
+      console.log('Schema: users.associate_status migrado para VARCHAR (fases pt-BR)');
+    } else if (statusCol.numericNormalized || statusCol.legacy5Updated) {
+      console.log(
+        `Schema: associate_status normalizado (num=${statusCol.numericNormalized}, legacy5=${statusCol.legacy5Updated})`
+      );
+    }
+  } catch (err) {
+    console.warn('Schema: não foi possível garantir associate_status VARCHAR:', err.message);
+  }
+
+  try {
+    const docSignService = require('./services/docSignService');
+    const ensured = await docSignService.ensureDefaultTemplates();
+    if (ensured.created?.length) {
+      console.log(`Doc-sign: modelos padrão criados (${ensured.created.join(', ')})`);
+    }
+  } catch (err) {
+    console.warn('Doc-sign: não foi possível garantir modelos padrão:', err.message);
+  }
+
   installProcessErrorHooks();
 
   const app = createApp();

@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAssociateAuth } from '@kunk/auth-session';
 import { Ciap2Select, CpfInput, GenderSelect } from '@kunk/forms';
 import { AlertError } from '@kunk/ui';
+import { buildValidationAlert } from '../lib/fieldLabels.js';
 
 const EMPTY = {
   associate_name: '',
   associate_last_name: '',
   associate_birth_date: '',
   gender: '',
-  nationality: 'Brasileira',
+  nationality: 'Brasileiro(a)',
   associate_cpf: '',
   associate_rg: '',
   associate_rg_issuer: '',
@@ -59,7 +60,7 @@ export function PatientRegistrationPage({ api }) {
           associate_last_name: p.associate_last_name || '',
           associate_birth_date: p.associate_birth_date ? String(p.associate_birth_date).slice(0, 10) : '',
           gender: p.gender || '',
-          nationality: p.nationality || 'Brasileira',
+          nationality: p.nationality || 'Brasileiro(a)',
           associate_cpf: p.associate_cpf || '',
           associate_rg: p.associate_rg || '',
           associate_rg_issuer: p.associate_rg_issuer || '',
@@ -89,7 +90,8 @@ export function PatientRegistrationPage({ api }) {
       setInvalid(res.meta?.invalid_fields || []);
       await refresh();
       if ((res.meta?.invalid_fields || []).length) {
-        setError('Campos inválidos foram destacados; válidos foram salvos.');
+        const alert = buildValidationAlert(res.meta.invalid_fields, form);
+        setError(alert.message);
         return;
       }
       await api.advance();
@@ -107,7 +109,6 @@ export function PatientRegistrationPage({ api }) {
   return (
     <form onSubmit={onSubmit}>
       <h1 className="h3 mb-3">Dados do paciente</h1>
-      <AlertError message={error} emptyFields={invalid} />
       <div className="row g-2">
         <div className="col-md-6">
           <label className="form-label">Nome</label>
@@ -154,7 +155,12 @@ export function PatientRegistrationPage({ api }) {
         <label className="form-label">Motivo</label>
         <textarea className={fieldClass('reason_treatment_text')} rows={3} value={form.reason_treatment_text} onChange={(e) => setField('reason_treatment_text', e.target.value)} />
       </div>
-      <button className="btn btn-success mt-4" type="submit" disabled={busy}>
+      <AlertError
+        className="mt-4"
+        message={error}
+        emptyFields={invalid.length ? buildValidationAlert(invalid, form).missingLabels : []}
+      />
+      <button className="btn btn-success mt-3" type="submit" disabled={busy}>
         Salvar e continuar
       </button>
     </form>

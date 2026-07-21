@@ -97,24 +97,37 @@ async function listTemplateLogos() {
 }
 
 async function resetTemplatesToDefaults({ selfContent, withPatientContent, selfTitle, withPatientTitle }) {
-  await query(`UPDATE term_templates SET current_version_id = NULL`);
-  await query(`DELETE FROM term_template_versions`);
+  await query(`UPDATE term_templates SET current_version_id = NULL WHERE kind IN ('self', 'with_patient')`);
   await query(
-    `UPDATE term_templates
-     SET title = $1,
-         draft_content_json = $2::jsonb,
-         logo_file_id = NULL,
-         updated_at = NOW()
-     WHERE kind = 'self'`,
+    `DELETE FROM term_template_versions v
+     USING term_templates t
+     WHERE v.template_id = t.id AND t.kind IN ('self', 'with_patient')`
+  );
+
+  await query(
+    `INSERT INTO term_templates (kind, title, display_name, requires_patient, draft_content_json)
+     VALUES ('self', $1, 'Associado', false, $2::jsonb)
+     ON CONFLICT (kind) DO UPDATE SET
+       title = EXCLUDED.title,
+       display_name = EXCLUDED.display_name,
+       requires_patient = EXCLUDED.requires_patient,
+       draft_content_json = EXCLUDED.draft_content_json,
+       logo_file_id = NULL,
+       current_version_id = NULL,
+       updated_at = NOW()`,
     [selfTitle, JSON.stringify(selfContent)]
   );
   await query(
-    `UPDATE term_templates
-     SET title = $1,
-         draft_content_json = $2::jsonb,
-         logo_file_id = NULL,
-         updated_at = NOW()
-     WHERE kind = 'with_patient'`,
+    `INSERT INTO term_templates (kind, title, display_name, requires_patient, draft_content_json)
+     VALUES ('with_patient', $1, 'Associado com paciente', true, $2::jsonb)
+     ON CONFLICT (kind) DO UPDATE SET
+       title = EXCLUDED.title,
+       display_name = EXCLUDED.display_name,
+       requires_patient = EXCLUDED.requires_patient,
+       draft_content_json = EXCLUDED.draft_content_json,
+       logo_file_id = NULL,
+       current_version_id = NULL,
+       updated_at = NOW()`,
     [withPatientTitle, JSON.stringify(withPatientContent)]
   );
 }
@@ -134,6 +147,23 @@ async function resetTemplateKind(kind, { content, title }) {
      RETURNING *`,
     [kind, title, JSON.stringify(content)]
   );
+  return result.rows[0] || null;
+}
+
+async function countContractsByKind(kind) {
+  const result = await query(
+    `SELECT COUNT(*)::int AS n FROM term_contracts WHERE kind = $1`,
+    [kind]
+  );
+  return result.rows[0]?.n || 0;
+}
+
+async function deleteTemplateByKind(kind) {
+  const tpl = await getTemplateByKind(kind);
+  if (!tpl) return null;
+  await query(`UPDATE term_templates SET current_version_id = NULL WHERE id = $1`, [tpl.id]);
+  await query(`DELETE FROM term_template_versions WHERE template_id = $1`, [tpl.id]);
+  const result = await query(`DELETE FROM term_templates WHERE kind = $1 RETURNING id, kind`, [kind]);
   return result.rows[0] || null;
 }
 
@@ -195,6 +225,31 @@ async function insertVersion(row, clientQuery = query) {
     ]
   );
   return result.rows[0];
+}
+
+/** Atualiza a versão publicada existente (sem criar histórico). */
+async function updateVersion(row, clientQuery = query) {
+  const result = await clientQuery(
+    `UPDATE term_template_versions
+     SET content_json = $2::jsonb,
+         content_sha256 = $3,
+         pdf_file_id = $4,
+         pdf_sha256 = $5,
+         created_by = COALESCE($6, created_by),
+         notes = $7
+     WHERE id = $1
+     RETURNING *`,
+    [
+      row.id,
+      JSON.stringify(row.content_json),
+      row.content_sha256,
+      row.pdf_file_id || null,
+      row.pdf_sha256 || null,
+      row.created_by || null,
+      row.notes || null,
+    ]
+  );
+  return result.rows[0] || null;
 }
 
 async function setCurrentVersion(templateId, versionId, clientQuery = query) {
@@ -397,7 +452,7 @@ async function setUserAdhesionAndPhase(userCode, contractId, clientQuery = query
   const result = await clientQuery(
     `UPDATE users SET
        adhesion_term = $2,
-       associate_status = CASE WHEN associate_status = 4 THEN 5 ELSE associate_status END,
+       status = 'Associado',
        date_updated = NOW()
      WHERE user_code = $1
      RETURNING *`,
@@ -414,11 +469,14 @@ module.exports = {
   listTemplateLogos,
   resetTemplatesToDefaults,
   resetTemplateKind,
+  countContractsByKind,
+  deleteTemplateByKind,
   clearCompletedContractsForUser,
   listVersions,
   getVersionById,
   nextVersionNumber,
   insertVersion,
+  updateVersion,
   setCurrentVersion,
   findUserByCode,
   findCompletedContract,

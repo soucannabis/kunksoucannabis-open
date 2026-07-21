@@ -8,6 +8,7 @@ const { parseInclude, truthyParam, hydrateIncludes, hydratePatients } = require(
 const { assertUserDeletable } = require('./linkGuards');
 const associateAuthRepository = require('../repositories/associateAuthRepository');
 const { v4: uuidv4 } = require('uuid');
+const { PHASE } = require('../constants/associatePhases');
 
 async function list(queryParams = {}, { scopeFilter } = {}) {
   const includeKeys = parseInclude('users', queryParams.include);
@@ -106,8 +107,10 @@ async function createUserFromPanel(payload = {}) {
   return itemsRepository.createItem('users', {
     email_account: email,
     email,
-    associate_status: 1,
-    status: payload.status || 'published',
+    associate_status: PHASE.CADASTRO_CRIADO,
+    status: payload.status != null && payload.status !== '' && payload.status !== 'published'
+      ? payload.status
+      : PHASE.CADASTRO_CRIADO,
     user_code: payload.user_code || uuidv4(),
     date_created: now,
     created_date: now,
@@ -146,7 +149,7 @@ async function updateUser(id, payload = {}) {
 }
 
 async function makeAssociate(id) {
-  return updateUser(id, { status: 'Associado', associate_status: 5 });
+  return updateUser(id, { status: 'Associado', associate_status: PHASE.ASSINATURA_TERMO });
 }
 
 async function getPatients(id) {
@@ -205,6 +208,7 @@ async function deletePatient(responsibleId, patientId) {
     throw new AppError(404, 'NOT_FOUND', 'Paciente não pertence a este responsável');
   }
   await assertUserDeletable(patient);
+  await detachUserFiles(patientId);
   return itemsRepository.deleteItem('users', patientId);
 }
 
@@ -238,9 +242,36 @@ async function getHistory(id) {
   };
 }
 
+async function detachUserFiles(userId) {
+  const linked = await query(`SELECT file_id FROM users_files WHERE user_id = $1`, [userId]);
+  await query(`DELETE FROM users_files WHERE user_id = $1`, [userId]);
+
+  const filesRepository = require('../repositories/filesRepository');
+  for (const row of linked.rows) {
+    if (!row.file_id) continue;
+    try {
+      await filesRepository.deleteFile(row.file_id);
+    } catch {
+      /* arquivo ainda referenciado por pedidos/contratos/etc. */
+    }
+  }
+}
+
 async function deleteUser(id) {
   const user = await itemsRepository.getItem('users', id);
   await assertUserDeletable(user);
+
+  // adhesion_term aponta para contrato; limpa antes do CASCADE dos termos.
+  await query(
+    `UPDATE users SET adhesion_term = NULL, session_token = NULL, is_session_active = false,
+                        date_updated = NOW()
+     WHERE id = $1`,
+    [id]
+  );
+
+  // users_files não tem ON DELETE CASCADE — bloqueava a exclusão com 23503.
+  await detachUserFiles(id);
+
   return itemsRepository.deleteItem('users', id);
 }
 
