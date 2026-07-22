@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AdminLoader } from '../components/AdminLoader.jsx';
 
 function parsePerms(value) {
@@ -46,12 +46,14 @@ export function UsersPage({ api }) {
           <h1>Usuários</h1>
           <p className="muted">Operadores (`system_users`) — cadastro por convite por e-mail.</p>
         </div>
-        <Link className="btn btn-primary" to="/usuarios/novo">
-          Convidar operador
-        </Link>
-        <Link className="btn" to="/kunk/permissoes">
-          Permissões de acesso
-        </Link>
+        <div className="admin-top-actions">
+          <Link className="btn btn-primary" to="/usuarios/novo">
+            Convidar operador
+          </Link>
+          <Link className="btn" to="/kunk/permissoes">
+            Permissões de acesso
+          </Link>
+        </div>
       </div>
       {error ? <div className="alert alert-error">{error}</div> : null}
       <div className="card table-wrap">
@@ -85,6 +87,7 @@ export function UsersPage({ api }) {
 }
 
 export function UserFormPage({ api, isNew = false }) {
+  const navigate = useNavigate();
   const id = !isNew ? window.location.pathname.split('/').pop() : null;
   const [rolesCatalog, setRolesCatalog] = useState([]);
   const [form, setForm] = useState({
@@ -236,6 +239,26 @@ export function UserFormPage({ api, isNew = false }) {
     }
   }
 
+  async function onDelete() {
+    if (
+      !window.confirm(
+        'Excluir este operador permanentemente? Esta ação não pode ser desfeita.'
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      await api.deleteSystemUser(id);
+      navigate('/usuarios', { replace: true });
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
   async function copyInvite() {
     if (!inviteInfo?.invite_url) return;
     try {
@@ -383,8 +406,17 @@ export function UserFormPage({ api, isNew = false }) {
               >
                 Reenviar convite
               </button>
-              <button className="btn btn-danger" type="button" onClick={onDeactivate} disabled={busy}>
+              <button className="btn" type="button" onClick={onDeactivate} disabled={busy}>
                 Desativar
+              </button>
+              <button
+                className="btn btn-danger"
+                type="button"
+                onClick={onDelete}
+                disabled={busy}
+                data-testid="delete-operator"
+              >
+                Excluir
               </button>
             </>
           ) : null}

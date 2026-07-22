@@ -3,6 +3,9 @@ import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-route
 import { useOperatorAuth } from '@kunk/auth-session';
 import { rememberAdminRoute } from '../lib/lastRoute.js';
 import { dismissStoragePrompt, isStoragePromptDismissed } from '../lib/storageConfig.js';
+import {
+  EMAIL_CONFIG_PATH,
+} from '../lib/emailModuleConfig.js';
 import { loadExternalServices } from '../lib/externalServicesConfig.js';
 import {
   EXT_FREIGHT_SLUGS,
@@ -60,6 +63,38 @@ function StoragePromptModal({ open, onYes, onNo }) {
   );
 }
 
+function EmailPromptModal({ open, onConfigure }) {
+  if (!open) return null;
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Configurar módulo de e-mail">
+      <div className="modal-card" style={{ maxWidth: 480 }}>
+        <h2 style={{ marginTop: 0 }}>Módulo de e-mail necessário</h2>
+        <p>
+          O envio de e-mails está desativado. Esse módulo é essencial para o funcionamento dos
+          sistemas: convites de operadores, redefinição de senha, assinatura de documentos e
+          outras notificações.
+        </p>
+        <p className="muted">
+          Ative o módulo e configure o SMTP em Serviços externos → E-mail para continuar com os
+          fluxos que dependem de e-mail.
+        </p>
+        <div
+          style={{
+            display: 'flex',
+            gap: '0.5rem',
+            justifyContent: 'flex-end',
+            marginTop: '1rem',
+          }}
+        >
+          <button type="button" className="btn btn-primary" onClick={onConfigure}>
+            Configurar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ExtNavLink({ to, end, status, children }) {
   return (
     <NavLink
@@ -82,7 +117,11 @@ export function AdminShell({ api }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showStoragePrompt, setShowStoragePrompt] = React.useState(false);
+  const [emailModuleActive, setEmailModuleActive] = React.useState(null);
+  const [emailPromptOpen, setEmailPromptOpen] = React.useState(false);
   const [extStatuses, setExtStatuses] = React.useState({});
+
+  const onEmailConfigPage = location.pathname === EMAIL_CONFIG_PATH;
 
   React.useEffect(() => {
     rememberAdminRoute(location.pathname, location.search);
@@ -93,6 +132,42 @@ export function AdminShell({ api }) {
     const main = document.querySelector('.admin-main');
     if (main) main.scrollTop = 0;
   }, [location.pathname]);
+
+  const refreshExtStatuses = React.useCallback(async () => {
+    if (!api) return;
+    try {
+      const res = await loadExternalServices(api);
+      const next = {};
+      for (const s of res.services || []) {
+        next[s.service] = deriveExternalServiceStatus(s);
+      }
+      next.envio = deriveShippingStatus(res.store_incomplete);
+      setExtStatuses(next);
+
+      const emailService = (res.services || []).find((s) => s.service === 'email');
+      const active = emailService ? Boolean(emailService.enabled) : false;
+      setEmailModuleActive(active);
+      if (!active) {
+        setEmailPromptOpen(true);
+      } else {
+        setEmailPromptOpen(false);
+      }
+    } catch {
+      /* menu continua sem dots coloridos */
+    }
+  }, [api]);
+
+  React.useEffect(() => {
+    refreshExtStatuses();
+  }, [refreshExtStatuses, location.pathname]);
+
+  React.useEffect(() => {
+    function onChanged() {
+      refreshExtStatuses();
+    }
+    window.addEventListener('kunk:external-services-changed', onChanged);
+    return () => window.removeEventListener('kunk:external-services-changed', onChanged);
+  }, [refreshExtStatuses]);
 
   React.useEffect(() => {
     if (!api || isStoragePromptDismissed()) return undefined;
@@ -113,33 +188,6 @@ export function AdminShell({ api }) {
     };
   }, [api]);
 
-  const refreshExtStatuses = React.useCallback(async () => {
-    if (!api) return;
-    try {
-      const res = await loadExternalServices(api);
-      const next = {};
-      for (const s of res.services || []) {
-        next[s.service] = deriveExternalServiceStatus(s);
-      }
-      next.envio = deriveShippingStatus(res.store_incomplete);
-      setExtStatuses(next);
-    } catch {
-      /* menu continua sem dots coloridos */
-    }
-  }, [api]);
-
-  React.useEffect(() => {
-    refreshExtStatuses();
-  }, [refreshExtStatuses, location.pathname]);
-
-  React.useEffect(() => {
-    function onChanged() {
-      refreshExtStatuses();
-    }
-    window.addEventListener('kunk:external-services-changed', onChanged);
-    return () => window.removeEventListener('kunk:external-services-changed', onChanged);
-  }, [refreshExtStatuses]);
-
   async function onLogout() {
     await logout();
     navigate('/login');
@@ -154,6 +202,14 @@ export function AdminShell({ api }) {
     dismissStoragePrompt();
     setShowStoragePrompt(false);
   }
+
+  function onEmailConfigure() {
+    setEmailPromptOpen(false);
+    navigate(EMAIL_CONFIG_PATH);
+  }
+
+  const showEmailModal = emailPromptOpen && emailModuleActive === false && !onEmailConfigPage;
+  const showStorageModal = showStoragePrompt && !showEmailModal;
 
   return (
     <div className="admin-shell">
@@ -183,14 +239,26 @@ export function AdminShell({ api }) {
         </NavLink>
 
         <div className="admin-nav-section">Dados</div>
-        <NavLink to="/dados" className={({ isActive }) => (isActive ? 'active' : '')}>Registros</NavLink>
-        <NavLink to="/arquivos" className={({ isActive }) => (isActive ? 'active' : '')}>Arquivos</NavLink>
+        <NavLink to="/dados" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Registros
+        </NavLink>
+        <NavLink to="/arquivos" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Arquivos
+        </NavLink>
 
         <div className="admin-nav-section">Configurações do sistema</div>
-        <NavLink to="/configs" className={({ isActive }) => (isActive ? 'active' : '')}>Variáveis</NavLink>
-        <NavLink to="/armazenamento" className={({ isActive }) => (isActive ? 'active' : '')}>Armazenamento</NavLink>
-        <NavLink to="/cache" className={({ isActive }) => (isActive ? 'active' : '')}>Cache</NavLink>
-        <NavLink to="/aparencia" className={({ isActive }) => (isActive ? 'active' : '')}>Aparência</NavLink>
+        <NavLink to="/configs" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Variáveis
+        </NavLink>
+        <NavLink to="/armazenamento" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Armazenamento
+        </NavLink>
+        <NavLink to="/cache" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Cache
+        </NavLink>
+        <NavLink to="/aparencia" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Aparência
+        </NavLink>
 
         <div className="admin-nav-section">Kunk</div>
         <NavLink
@@ -202,10 +270,14 @@ export function AdminShell({ api }) {
         <NavLink to="/kunk/permissoes" className={({ isActive }) => (isActive ? 'active' : '')}>
           Permissões de acesso
         </NavLink>
-        <NavLink to="/kunk/ciap2" className={({ isActive }) => (isActive ? 'active' : '')}>CIAP-2</NavLink>
+        <NavLink to="/kunk/ciap2" className={({ isActive }) => (isActive ? 'active' : '')}>
+          CIAP-2
+        </NavLink>
 
         <div className="admin-nav-section">Loja</div>
-        <NavLink to="/loja/status-pedidos" className={({ isActive }) => (isActive ? 'active' : '')}>Status dos pedidos</NavLink>
+        <NavLink to="/loja/status-pedidos" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Status dos pedidos
+        </NavLink>
 
         <div className="admin-nav-section">Webmaster</div>
         <NavLink to="/usuarios" className={({ isActive }) => (isActive ? 'active' : '')}>
@@ -214,8 +286,12 @@ export function AdminShell({ api }) {
         <NavLink to="/acesso-api" className={({ isActive }) => (isActive ? 'active' : '')}>
           API
         </NavLink>
-        <NavLink to="/erros-sistema" className={({ isActive }) => (isActive ? 'active' : '')}>Erros do sistema</NavLink>
-        <NavLink to="/web-vitals" className={({ isActive }) => (isActive ? 'active' : '')}>Web Vitals</NavLink>
+        <NavLink to="/erros-sistema" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Erros do sistema
+        </NavLink>
+        <NavLink to="/web-vitals" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Web Vitals
+        </NavLink>
 
         <div className="admin-nav-section">Serviços externos</div>
         <NavLink to="/servicos-externos" end className={({ isActive }) => (isActive ? 'active' : '')}>
@@ -242,12 +318,15 @@ export function AdminShell({ api }) {
         <div className="muted" style={{ fontSize: '0.8rem', padding: '0.5rem' }}>
           {user?.email || user?.name}
         </div>
-        <button type="button" className="btn" onClick={onLogout}>Sair</button>
+        <button type="button" className="btn" onClick={onLogout}>
+          Sair
+        </button>
       </aside>
       <main className="admin-main">
         <Outlet />
       </main>
-      <StoragePromptModal open={showStoragePrompt} onYes={onStorageYes} onNo={onStorageNo} />
+      <EmailPromptModal open={showEmailModal} onConfigure={onEmailConfigure} />
+      <StoragePromptModal open={showStorageModal} onYes={onStorageYes} onNo={onStorageNo} />
     </div>
   );
 }

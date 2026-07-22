@@ -26,7 +26,7 @@ Para testes automatizados use `admin@kunk-api.test` / `TestAdmin123!` (`ensureAd
 
 ## Como rodar (demo)
 
-Com `DATABASE_URL` definido em `kunk-api/.env`:
+Com `PG_URL (ou PGHOST/PG*)` definido em `kunk-api/.env`:
 
 ```bash
 cd kunk-api

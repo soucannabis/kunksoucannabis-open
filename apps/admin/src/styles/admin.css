@@ -120,6 +120,13 @@ button, input, select, textarea {
   gap: 1rem;
 }
 
+.admin-top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 h1 { font-size: 1.5rem; margin: 0 0 0.35rem; }
 h2 { font-size: 1.15rem; margin: 1.5rem 0 0.75rem; }
 .muted { color: var(--admin-muted); font-size: 0.9rem; }
@@ -686,6 +693,37 @@ table.data th { color: var(--admin-muted); font-weight: 600; }
 .install-sample-actions .btn {
   min-width: 7rem;
   justify-content: center;
+}
+
+.install-schema-modal {
+  width: min(420px, 100%);
+}
+
+.install-schema-steps {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  text-align: left;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.install-schema-steps__item {
+  font-size: 0.85rem;
+  color: var(--admin-muted, #9aab9e);
+  opacity: 0.55;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.install-schema-steps__item.is-active {
+  opacity: 1;
+  color: var(--admin-text, #e8eee9);
+  font-weight: 600;
+}
+
+.install-schema-steps__item.is-done {
+  opacity: 0.85;
+  color: var(--admin-accent, #6fbf73);
 }
 
 .install-logo-field label.install-logo-btn {
@@ -2654,8 +2692,21 @@ div.triage-options-cell {
   border: 0;
 }
 
+.admin-main:has(> .admin-docs) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
 .admin-docs {
   max-width: 1100px;
+  width: 100%;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  /* padding do .admin-main: 1.5rem topo + 3rem base */
+  min-height: calc(100vh - 4.5rem);
 }
 
 .admin-docs-header {
@@ -2667,6 +2718,7 @@ div.triage-options-cell {
   margin-bottom: 1.5rem;
   padding-bottom: 1.25rem;
   border-bottom: 1px solid var(--admin-border);
+  flex-shrink: 0;
 }
 
 .admin-docs-header h1 {
@@ -2710,15 +2762,22 @@ div.triage-options-cell {
   display: grid;
   grid-template-columns: minmax(11rem, 15rem) minmax(0, 1fr);
   gap: 1.75rem;
-  align-items: start;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .admin-docs-nav {
   position: sticky;
   top: 1rem;
+  align-self: start;
   max-height: calc(100vh - 2rem);
   overflow: auto;
   padding-right: 0.35rem;
+}
+
+.admin-docs-article {
+  min-height: 100%;
 }
 
 .admin-docs-nav-section {

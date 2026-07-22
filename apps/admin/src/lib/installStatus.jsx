@@ -9,6 +9,7 @@ const InstallStatusContext = createContext(null);
  */
 export function InstallStatusProvider({ api, children }) {
   const [needsInstall, setNeedsInstall] = useState(null);
+  const [needsSchema, setNeedsSchema] = useState(false);
   const [canInstallSample, setCanInstallSample] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -19,15 +20,18 @@ export function InstallStatusProvider({ api, children }) {
     try {
       const res = await api.installStatus();
       const needs = Boolean(res.data?.needs_install);
+      const schema = Boolean(res.data?.needs_schema);
       const canSample = Boolean(res.data?.can_install_sample);
       setNeedsInstall(needs);
+      setNeedsSchema(schema);
       setCanInstallSample(canSample);
-      return { needsInstall: needs, canInstallSample: canSample };
+      return { needsInstall: needs, needsSchema: schema, canInstallSample: canSample };
     } catch (err) {
       setError(err.message || 'Falha ao verificar instalação');
       setNeedsInstall(false);
+      setNeedsSchema(false);
       setCanInstallSample(false);
-      return { needsInstall: false, canInstallSample: false };
+      return { needsInstall: false, needsSchema: false, canInstallSample: false };
     } finally {
       setLoading(false);
     }
@@ -47,17 +51,20 @@ export function InstallStatusProvider({ api, children }) {
   const value = useMemo(
     () => ({
       needsInstall,
+      needsSchema,
       canInstallSample,
       loading,
       error,
       refresh,
+      markSchemaReady: () => setNeedsSchema(false),
       markInstalled: ({ expectSample = false } = {}) => {
         setNeedsInstall(false);
+        setNeedsSchema(false);
         setCanInstallSample(Boolean(expectSample));
       },
       markSampleInstalled: () => setCanInstallSample(false),
     }),
-    [needsInstall, canInstallSample, loading, error, refresh]
+    [needsInstall, needsSchema, canInstallSample, loading, error, refresh]
   );
 
   return (

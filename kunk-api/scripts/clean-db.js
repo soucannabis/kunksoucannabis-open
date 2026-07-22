@@ -397,8 +397,8 @@ async function runClean(client, args, files, storageConfig) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
 
-  if (!process.env.DATABASE_URL) {
-    console.error('DATABASE_URL é obrigatória (kunk-api/.env)');
+  if (!env.pgUrl) {
+    console.error('PG_URL (ou PGHOST/PGUSER/PGPASSWORD/PGDATABASE) é obrigatória (kunk-api/.env)');
     process.exit(1);
   }
 

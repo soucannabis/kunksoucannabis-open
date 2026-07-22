@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { ASSOCIATION_DATA_DEFAULTS } from '@kunk/config';
 import {
@@ -9,6 +9,13 @@ import { useInstallStatus } from '../lib/installStatus.jsx';
 import { AdminLoader } from '../components/AdminLoader.jsx';
 
 const MIN_PASSWORD_LENGTH = 8;
+
+const SCHEMA_LOADER_STEPS = [
+  'Conectando ao banco de dados…',
+  'Criando tabelas do sistema…',
+  'Aplicando relações e restrições…',
+  'Finalizando estrutura…',
+];
 
 function validatePassword(password) {
   return (
@@ -38,8 +45,10 @@ function fileToBase64(file) {
 export function InstallPage({ api }) {
   const {
     needsInstall,
+    needsSchema,
     canInstallSample,
     loading: installLoading,
+    refresh,
     markInstalled,
     markSampleInstalled,
   } = useInstallStatus();
@@ -54,6 +63,8 @@ export function InstallPage({ api }) {
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
   const [busy, setBusy] = useState(false);
+  const [schemaCreating, setSchemaCreating] = useState(false);
+  const [schemaStepIndex, setSchemaStepIndex] = useState(0);
   const [samplePromptOpen, setSamplePromptOpen] = useState(false);
   const [sampleInstalling, setSampleInstalling] = useState(false);
   const [submittingDone, setSubmittingDone] = useState(false);
@@ -61,6 +72,17 @@ export function InstallPage({ api }) {
 
   const passwordOk = useMemo(() => validatePassword(password), [password]);
   const resumeSampleOnly = Boolean(canInstallSample && !needsInstall);
+
+  useEffect(() => {
+    if (!schemaCreating) {
+      setSchemaStepIndex(0);
+      return undefined;
+    }
+    const id = window.setInterval(() => {
+      setSchemaStepIndex((prev) => (prev + 1) % SCHEMA_LOADER_STEPS.length);
+    }, 1800);
+    return () => window.clearInterval(id);
+  }, [schemaCreating]);
 
   function setAssocField(key, value) {
     setAssociation((prev) => ({ ...prev, [key]: value }));
@@ -113,6 +135,21 @@ export function InstallPage({ api }) {
       setError(err.message || 'Falha ao carregar logo');
       setLogoFile(null);
       setLogoPreview('');
+    }
+  }
+
+  async function onCreateSchema() {
+    setError('');
+    setSchemaCreating(true);
+    setBusy(true);
+    try {
+      await api.installSchema();
+      await refresh();
+    } catch (err) {
+      setError(err.message || 'Falha ao criar o banco de dados');
+    } finally {
+      setSchemaCreating(false);
+      setBusy(false);
     }
   }
 
@@ -220,6 +257,68 @@ export function InstallPage({ api }) {
                 Dados de demonstração
               </h2>
               <AdminLoader label="Instalando dados de demonstração..." className="admin-loader--embedded" />
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (needsSchema) {
+    return (
+      <div className="login-page" style={{ alignItems: 'flex-start', paddingTop: '2rem', paddingBottom: '2rem' }}>
+        <div className="card login-card" style={{ maxWidth: 560, width: '100%' }}>
+          <h1>Instalação</h1>
+          <p className="muted">
+            O banco de dados está vazio. Crie a estrutura do sistema para seguir com a configuração inicial.
+          </p>
+          <button
+            className="btn btn-primary"
+            type="button"
+            disabled={busy || schemaCreating}
+            onClick={onCreateSchema}
+            style={{ marginTop: '0.5rem' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+              <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+            </svg>
+            {schemaCreating ? 'Criando banco…' : 'Criar banco de dados'}
+          </button>
+          {error ? (
+            <div className="alert alert-error" role="alert" style={{ marginTop: '0.85rem' }}>
+              {error}
+            </div>
+          ) : null}
+        </div>
+
+        {schemaCreating ? (
+          <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="install-schema-title">
+            <div className="modal-card install-demo-modal install-schema-modal">
+              <h2 id="install-schema-title" className="install-demo-modal-title">
+                Criando banco de dados
+              </h2>
+              <AdminLoader
+                label={SCHEMA_LOADER_STEPS[schemaStepIndex]}
+                className="admin-loader--embedded"
+              />
+              <ol className="install-schema-steps" aria-hidden="true">
+                {SCHEMA_LOADER_STEPS.map((step, index) => (
+                  <li
+                    key={step}
+                    className={
+                      index === schemaStepIndex
+                        ? 'install-schema-steps__item is-active'
+                        : index < schemaStepIndex
+                          ? 'install-schema-steps__item is-done'
+                          : 'install-schema-steps__item'
+                    }
+                  >
+                    {step}
+                  </li>
+                ))}
+              </ol>
             </div>
           </div>
         ) : null}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 
 export function KunkShell() {
   return (
@@ -28,6 +28,9 @@ export function KunkShell() {
         >
           Permissões de acesso
         </NavLink>
+        <Link className="btn" to="/usuarios/novo">
+          Convidar operador
+        </Link>
         <NavLink
           to="/kunk/ciap2"
           className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}

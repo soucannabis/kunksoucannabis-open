@@ -94,9 +94,10 @@ async function run(client, args) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const { resolvePgUrl } = require('../src/config/env');
 
-  if (!process.env.DATABASE_URL) {
-    console.error('DATABASE_URL é obrigatória (kunk-api/.env)');
+  if (!resolvePgUrl()) {
+    console.error('PG_URL (ou PGHOST/PGUSER/PGPASSWORD/PGDATABASE) é obrigatória (kunk-api/.env)');
     process.exit(1);
   }
 

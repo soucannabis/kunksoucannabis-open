@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
 import { ADMIN_EMAIL, ADMIN_PASSWORD, appUrl } from './helpers/fixtures.js';
-import { loginInBrowser } from './helpers/api.js';
+import { loginInBrowser, dismissAdminPrompts } from './helpers/api.js';
 
 test.describe('api access', () => {
   test.beforeAll(async () => {
@@ -11,10 +11,7 @@ test.describe('api access', () => {
   test('página API carrega desabilitada e permite gerar token após habilitar', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(page.locator('.brand')).toHaveText('Kunk Admin', { timeout: 30000 });
-
-    const storageDialog = page.getByRole('dialog', { name: 'Configurar armazenamento' });
-    await storageDialog.getByRole('button', { name: 'Não' }).click({ timeout: 10000 }).catch(() => {});
-
+    await dismissAdminPrompts(page);
     await page.goto(appUrl('/acesso-api'));
     await expect(page.getByRole('heading', { name: 'API', exact: true })).toBeVisible();
     await expect(page.getByTestId('api-enabled-toggle')).toBeVisible();

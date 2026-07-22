@@ -72,6 +72,11 @@ function isAuthenticated(data) {
   return false;
 }
 
+/** Público: módulo tem autenticação válida (OAuth/credenciais). */
+export function isExternalServiceAuthenticated(data) {
+  return isAuthenticated(data);
+}
+
 /**
  * @param {object|null} data - payload de GET /admin/external-services/:service ou item da lista
  * @param {{ storeIncomplete?: object }} [opts]

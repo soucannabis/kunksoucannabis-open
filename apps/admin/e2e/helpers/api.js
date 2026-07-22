@@ -27,3 +27,11 @@ export async function loginInBrowser(page, email = ADMIN_EMAIL, password = ADMIN
   await page.getByLabel('Senha').fill(password);
   await page.getByRole('button', { name: 'Entrar' }).click();
 }
+
+/** Fecha prompts de onboarding do Admin (armazenamento) se aparecerem. */
+export async function dismissAdminPrompts(page) {
+  // Modal de e-mail só tem "Configurar" — e2e que precisa passar deve ativar o módulo
+  // ou navegar direto para /servicos-externos/email.
+  const storageDialog = page.getByRole('dialog', { name: 'Configurar armazenamento' });
+  await storageDialog.getByRole('button', { name: 'Não' }).click({ timeout: 8000 }).catch(() => {});
+}

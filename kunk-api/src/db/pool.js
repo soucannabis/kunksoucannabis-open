@@ -7,10 +7,10 @@ let pool = null;
 
 function getPool() {
   if (!pool) {
-    if (!env.databaseUrl) {
-      throw new Error('DATABASE_URL is required');
+    if (!env.pgUrl) {
+      throw new Error('PG_URL (ou PGHOST/PGUSER/PGPASSWORD/PGDATABASE) is required');
     }
-    pool = new Pool({ connectionString: env.databaseUrl });
+    pool = new Pool({ connectionString: env.pgUrl });
   }
   return pool;
 }

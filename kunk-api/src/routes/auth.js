@@ -176,6 +176,15 @@ router.get('/install-status', async (req, res, next) => {
   }
 });
 
+router.post('/install-schema', async (req, res, next) => {
+  try {
+    const data = await installService.applySchema();
+    res.status(201).json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/install', async (req, res, next) => {
   try {
     const data = await installService.runInstall(req.body || {});

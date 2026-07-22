@@ -8,7 +8,7 @@ Documentação do contrato: [`../project-tools/docs/api/`](../project-tools/docs
 
 ```bash
 cp .env.example .env
-# Defina DATABASE_URL para o Postgres do schema alvo
+# Defina PG_URL (ou PGHOST/PG*) para o Postgres do schema alvo
 npm install
 npm run dev
 ```
@@ -22,7 +22,7 @@ Sobe a API na porta **4250** com volume do código local e reinício automático
 
 ```bash
 cp .env.example .env   # se ainda não tiver
-# DATABASE_URL no .env
+# PG_URL (ou PGHOST/PG*) no .env
 docker compose up --build -d
 curl http://localhost:4250/api/v1/health
 ```

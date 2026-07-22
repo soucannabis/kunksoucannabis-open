@@ -110,6 +110,7 @@ describe('domain/install', () => {
     const res = await request(app).get('/api/v1/auth/install-status');
     assert.equal(res.status, 200, JSON.stringify(res.body));
     assert.equal(res.body.data.needs_install, true);
+    assert.equal(res.body.data.needs_schema, false);
   });
 
   it('install creates admin, configs and allows login; second install is 409', async () => {

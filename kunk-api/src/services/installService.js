@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { withClient, query } = require('../db/pool');
 const { AppError } = require('../utils/response');
@@ -60,6 +62,38 @@ async function countSystemUsers(client = null) {
   return result.rows[0].c;
 }
 
+async function hasSystemUsersTable(client = null) {
+  const run = client ? client.query.bind(client) : query;
+  const result = await run(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM information_schema.tables
+       WHERE table_schema = 'public' AND table_name = 'system_users'
+     ) AS exists`
+  );
+  return Boolean(result.rows[0]?.exists);
+}
+
+function resolveSchemaSqlPath() {
+  const candidates = [
+    process.env.SCHEMA_SQL_PATH,
+    path.join(__dirname, '../../sql/target-schema.sql'),
+    path.join(__dirname, '../../../project-tools/sql/target-schema.sql'),
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  throw new AppError(
+    500,
+    'SCHEMA_FILE_MISSING',
+    'Arquivo target-schema.sql não encontrado. Inclua kunk-api/sql/target-schema.sql.'
+  );
+}
+
 async function getDemoSamplePending(client = null) {
   const run = client ? client.query.bind(client) : query;
   const result = await run(
@@ -79,6 +113,15 @@ async function setDemoSamplePending(client, pending) {
 }
 
 async function getInstallStatus() {
+  const schemaReady = await hasSystemUsersTable();
+  if (!schemaReady) {
+    return {
+      needs_install: true,
+      needs_schema: true,
+      can_install_sample: false,
+    };
+  }
+
   const count = await countSystemUsers();
   let hasSample = false;
   let demoPending = false;
@@ -91,8 +134,46 @@ async function getInstallStatus() {
   }
   return {
     needs_install: count === 0,
+    needs_schema: false,
     can_install_sample: count >= 1 && !hasSample && demoPending,
   };
+}
+
+/**
+ * Aplica o DDL inicial (target-schema.sql) em banco vazio.
+ * Idempotente se o schema já existir sem operadores.
+ */
+async function applySchema() {
+  const schemaReady = await hasSystemUsersTable();
+  if (schemaReady) {
+    const count = await countSystemUsers();
+    if (count > 0) {
+      throw new AppError(409, 'ALREADY_INSTALLED', 'Sistema já instalado');
+    }
+    return { schema_ready: true, applied: false };
+  }
+
+  const sqlPath = resolveSchemaSqlPath();
+  let sql;
+  try {
+    sql = fs.readFileSync(sqlPath, 'utf8');
+  } catch (err) {
+    throw new AppError(500, 'SCHEMA_FILE_MISSING', `Não foi possível ler o schema: ${err.message}`);
+  }
+
+  if (!String(sql).trim()) {
+    throw new AppError(500, 'SCHEMA_FILE_MISSING', 'Arquivo de schema está vazio');
+  }
+
+  await withClient(async (client) => {
+    await client.query(sql);
+  });
+
+  if (!(await hasSystemUsersTable())) {
+    throw new AppError(500, 'SCHEMA_APPLY_FAILED', 'Schema aplicado, mas system_users não foi criada');
+  }
+
+  return { schema_ready: true, applied: true };
 }
 
 function decodeLogo(logoBase64, logoMime) {
@@ -230,6 +311,14 @@ async function runInstall(payload = {}) {
   const association = validateAssociation(payload.association);
   const logo = decodeLogo(payload.logo_base64, payload.logo_mime);
   const demoPending = Boolean(payload.demo);
+
+  if (!(await hasSystemUsersTable())) {
+    throw new AppError(
+      409,
+      'SCHEMA_REQUIRED',
+      'Crie o banco de dados antes de configurar o administrador'
+    );
+  }
 
   const existingCount = await countSystemUsers();
   if (existingCount > 0) {
@@ -370,6 +459,7 @@ async function seedDemoSample() {
 
 module.exports = {
   getInstallStatus,
+  applySchema,
   runInstall,
   seedDemoSample,
   ASSOCIATION_FIELDS,

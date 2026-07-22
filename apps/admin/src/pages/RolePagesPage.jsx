@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AdminLoader } from '../components/AdminLoader.jsx';
 
 /** Page ids aligned with apps/kunk menuConfig (for role_pages). */
@@ -152,9 +153,14 @@ export function RolePagesPage({ api }) {
             Quais páginas cada role vê no Kunk. Default: todas as páginas para roles staff.
           </p>
         </div>
-        <button type="button" className="btn btn-primary" disabled={saving} onClick={onSave}>
-          {saving ? 'Salvando…' : 'Salvar'}
-        </button>
+        <div className="admin-top-actions">
+          <Link className="btn" to="/usuarios/novo">
+            Convidar operador
+          </Link>
+          <button type="button" className="btn btn-primary" disabled={saving} onClick={onSave}>
+            {saving ? 'Salvando…' : 'Salvar'}
+          </button>
+        </div>
       </div>
       {error ? <p className="alert alert-error">{error}</p> : null}
       {msg ? <p style={{ color: 'var(--admin-success, #2e7d32)', margin: '0 0 1rem' }}>{msg}</p> : null}

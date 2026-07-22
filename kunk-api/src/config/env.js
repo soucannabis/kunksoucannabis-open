@@ -20,9 +20,34 @@ function parseCorsOrigin(value) {
   return parts;
 }
 
+/**
+ * Preferência: PG_URL.
+ * Fallback: PGHOST + PGUSER + PGPASSWORD + PGDATABASE (+ PGPORT opcional).
+ */
+function resolvePgUrl() {
+  const pgUrl = String(process.env.PG_URL || '').trim();
+  if (pgUrl) return pgUrl;
+
+  const host = String(process.env.PGHOST || '').trim();
+  const user = String(process.env.PGUSER || '').trim();
+  const database = String(process.env.PGDATABASE || '').trim();
+  const password = process.env.PGPASSWORD;
+  const port = String(process.env.PGPORT || '5432').trim() || '5432';
+
+  if (host && user && database && password !== undefined && password !== null && String(password) !== '') {
+    return (
+      `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(String(password))}` +
+      `@${host}:${port}/${encodeURIComponent(database)}`
+    );
+  }
+
+  return '';
+}
+
 const env = {
   port: Number(process.env.PORT || 8056),
-  databaseUrl: process.env.DATABASE_URL || '',
+  /** Connection string resolvida (PG_URL ou montada a partir de PG*). */
+  pgUrl: resolvePgUrl(),
   cookieSecure: bool(process.env.COOKIE_SECURE, process.env.NODE_ENV === 'production'),
   corsOrigin: parseCorsOrigin(process.env.CORS_ORIGIN),
   sessionMaxHours: Number(process.env.SESSION_MAX_HOURS || 168),
@@ -69,4 +94,12 @@ const env = {
   },
 };
 
-module.exports = { env };
+/** Alias legado para callers internos que ainda leem env.databaseUrl */
+Object.defineProperty(env, 'databaseUrl', {
+  enumerable: true,
+  get() {
+    return env.pgUrl;
+  },
+});
+
+module.exports = { env, resolvePgUrl };

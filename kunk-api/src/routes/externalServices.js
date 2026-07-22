@@ -30,6 +30,17 @@ const utalkClient = require('../services/utalk/client');
 const utalkAttendants = require('../services/utalk/attendants');
 const { isModuleEnabled } = require('../services/moduleFlags');
 
+const AUTH_HINT_FIELDS = new Set([
+  'access_token',
+  'refresh_token',
+  'secret_key',
+  'api_key',
+  'api_token',
+  'client_secret',
+  'pass',
+  'client_id',
+]);
+
 const router = Router();
 
 function serviceOrThrow(service) {
@@ -37,6 +48,63 @@ function serviceOrThrow(service) {
     throw new AppError(404, 'NOT_FOUND', `Serviço ${service} desconhecido`);
   }
   return service;
+}
+
+/**
+ * Exige autenticação válida antes de habilitar o módulo (exceto regras especiais de pagarme/SC).
+ */
+async function assertAuthenticatedToEnable(service) {
+  if (service === 'pagarme') {
+    return; // regras próprias abaixo
+  }
+
+  const credentials = await credentialsService.listPublic(service);
+
+  if (service === 'melhorenvio') {
+    const access = credentials.find((c) => c.field_key === 'access_token');
+    if (!access?.has_value) {
+      throw new AppError(400, 'NOT_AUTHENTICATED', 'Autentique o Melhor Envio antes de ativar o módulo');
+    }
+    return;
+  }
+
+  if (service === 'google_calendar') {
+    const access = credentials.find((c) => c.field_key === 'access_token');
+    const refresh = credentials.find((c) => c.field_key === 'refresh_token');
+    if (!(access?.has_value || refresh?.has_value)) {
+      throw new AppError(
+        400,
+        'NOT_AUTHENTICATED',
+        'Autentique o Google Calendar antes de ativar o módulo'
+      );
+    }
+    return;
+  }
+
+  if (service === 'soucannabis_orders') {
+    // Dependências Pagar.me são validadas à parte; ainda exige credenciais SC quando existirem.
+    const authCreds = credentials.filter((c) => c.has_value && AUTH_HINT_FIELDS.has(c.field_key));
+    if (authCreds.length && authCreds.some((c) => c.last_test_ok === false)) {
+      throw new AppError(
+        400,
+        'NOT_AUTHENTICATED',
+        'A autenticação de Pedidos SouCannabis falhou. Corrija as credenciais antes de ativar.'
+      );
+    }
+    return;
+  }
+
+  const authCreds = credentials.filter((c) => c.has_value && AUTH_HINT_FIELDS.has(c.field_key));
+  if (!authCreds.length) {
+    throw new AppError(400, 'NOT_AUTHENTICATED', 'Autentique o módulo antes de ativá-lo');
+  }
+  if (authCreds.some((c) => c.last_test_ok === false)) {
+    throw new AppError(
+      400,
+      'NOT_AUTHENTICATED',
+      'A autenticação falhou. Corrija as credenciais antes de ativar o módulo.'
+    );
+  }
 }
 
 async function getModuleConfigFlags(service) {
@@ -562,6 +630,9 @@ router.patch('/:service', async (req, res, next) => {
     }
 
     if (body.enabled !== undefined) {
+      if (body.enabled === true) {
+        await assertAuthenticatedToEnable(service);
+      }
       if (service === 'pagarme' && body.enabled === true) {
         let pagarmeStatus;
         try {

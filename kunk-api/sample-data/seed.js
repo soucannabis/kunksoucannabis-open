@@ -560,8 +560,9 @@ async function insertObject(client, table, row, { returning = 'id' } = {}) {
 }
 
 async function seedDatabase(dataset, { truncate, writeFixtures: shouldWriteFixtures = true } = {}) {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) throw new Error('DATABASE_URL is required');
+  const { resolvePgUrl } = require('../src/config/env');
+  const databaseUrl = resolvePgUrl();
+  if (!databaseUrl) throw new Error('PG_URL (ou PGHOST/PGUSER/PGPASSWORD/PGDATABASE) is required');
 
   const counts = dataset._counts || manifest.counts;
   const pool = new Pool({ connectionString: databaseUrl });

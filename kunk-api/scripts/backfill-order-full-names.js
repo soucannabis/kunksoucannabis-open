@@ -1,9 +1,16 @@
 'use strict';
 
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const { Client } = require('pg');
+const { resolvePgUrl } = require('../src/config/env');
 
 async function main() {
-  const c = new Client({ connectionString: process.env.DATABASE_URL });
+  const connectionString = resolvePgUrl();
+  if (!connectionString) {
+    throw new Error('PG_URL (ou PGHOST/PGUSER/PGPASSWORD/PGDATABASE) is required');
+  }
+  const c = new Client({ connectionString });
   await c.connect();
   const r = await c.query(`
     UPDATE orders o

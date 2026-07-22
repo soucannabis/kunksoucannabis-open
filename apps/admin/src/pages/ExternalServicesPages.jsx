@@ -24,6 +24,7 @@ import {
   EXT_SERVICE_LABELS,
   deriveExternalServiceStatus,
   deriveShippingStatus,
+  isExternalServiceAuthenticated,
 } from '../lib/externalServiceStatus.js';
 import { CredentialsSetupGuide } from '../components/CredentialsSetupGuide.jsx';
 
@@ -688,6 +689,26 @@ export function ExternalServiceDetailPage({ api }) {
       );
       return;
     }
+    if (flag === 'enabled' && value === true) {
+      const authed = isExternalServiceAuthenticated(data);
+      const canTurnOn =
+        service === 'pagarme'
+          ? Boolean(
+              (data?.pagarme_status?.credentials_complete ||
+                (data?.credentials || []).some((c) => c.field_key === 'secret_key' && c.has_value)) &&
+                data?.pagarme_status?.webhooks?.ready
+            )
+          : authed;
+      if (!canTurnOn) {
+        reportError(
+          'flags',
+          service === 'pagarme'
+            ? 'Conclua a autenticação e a validação dos webhooks antes de ativar o módulo.'
+            : 'Autentique o módulo antes de ativá-lo.'
+        );
+        return;
+      }
+    }
     const prev = data;
     setData((d) => (d ? { ...d, [flag]: value } : d));
     try {
@@ -1064,6 +1085,8 @@ export function ExternalServiceDetailPage({ api }) {
     data.pagarme_status?.webhooks?.test_payment || data.pagarme_status?.webhooks?.test_order || null;
   const pagarmePaymentLinkReady = Boolean(pagarmeTestPayment?.order?.id);
   const pagarmeCanEnable = pagarmeAuthed && pagarmeWebhooksReady;
+  const moduleAuthenticated = isExternalServiceAuthenticated(data);
+  const canTurnModuleOn = service === 'pagarme' ? pagarmeCanEnable : moduleAuthenticated;
   const pagarmeSetupComplete =
     pagarmeAuthed && pagarmePaymentLinkReady && pagarmeWebhooksReady;
   const pagarmeShowSetup = !pagarmeSetupComplete || pagarmeForceEdit;
@@ -1110,9 +1133,9 @@ export function ExternalServiceDetailPage({ api }) {
             >
               <input
                 type="checkbox"
-                checked={Boolean(data.enabled) && (service !== 'pagarme' || pagarmeCanEnable)}
+                checked={Boolean(data.enabled)}
                 disabled={
-                  (service === 'pagarme' && !pagarmeCanEnable) ||
+                  (!data.enabled && !canTurnModuleOn) ||
                   (freightActivationBlocked && !data.enabled)
                 }
                 onChange={(e) => onToggle('enabled', e.target.checked)}
@@ -1123,19 +1146,21 @@ export function ExternalServiceDetailPage({ api }) {
                   {service === 'pagarme'
                     ? 'Só pode ativar com API autenticada, link de teste e webhooks validados.'
                     : FREIGHT_SERVICES.has(service)
-                      ? 'Requer Dados de envio completos. Autenticação funciona mesmo com dados incompletos.'
-                      : 'Quando desligado, o módulo fica inativo. Ative apenas pelo Admin.'}
+                      ? 'Requer autenticação e Dados de envio completos.'
+                      : 'Só pode ativar depois de autenticar o serviço. Desligar permanece permitido.'}
                 </span>
                 <span className="muted" data-testid="module-enabled-status">
                   Estado: {data.enabled ? 'habilitado' : 'desabilitado'}
                 </span>
-                {service === 'pagarme' && !pagarmeCanEnable ? (
-                  <span className="muted" style={{ color: 'var(--admin-danger)' }}>
-                    {!pagarmeAuthed
-                      ? 'Autentique a Secret key (passo 1).'
-                      : !pagarmePaymentLinkReady
-                        ? 'Crie um link de pagamento de teste (passo 2).'
-                        : 'Valide os webhooks (passo 3) antes de ativar.'}
+                {!data.enabled && !canTurnModuleOn ? (
+                  <span className="muted" style={{ color: 'var(--admin-danger)' }} data-testid="module-enable-auth-hint">
+                    {service === 'pagarme'
+                      ? !pagarmeAuthed
+                        ? 'Autentique a Secret key (passo 1).'
+                        : !pagarmePaymentLinkReady
+                          ? 'Crie um link de pagamento de teste (passo 2).'
+                          : 'Valide os webhooks (passo 3) antes de ativar.'
+                      : 'Autentique o serviço abaixo antes de ativar o módulo.'}
                   </span>
                 ) : null}
                 {freightActivationBlocked && !data.enabled ? (

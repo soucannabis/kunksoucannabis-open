@@ -197,8 +197,9 @@ async function insertBatches(client, table, columns, buildRow, total, batchSize,
 }
 
 async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHash }) {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) throw new Error('DATABASE_URL is required');
+  const { resolvePgUrl } = require('../src/config/env');
+  const databaseUrl = resolvePgUrl();
+  if (!databaseUrl) throw new Error('PG_URL (ou PGHOST/PGUSER/PGPASSWORD/PGDATABASE) is required');
 
   const pool = new Pool({ connectionString: databaseUrl });
   const client = await pool.connect();

@@ -75,6 +75,7 @@ const AUTH_ROUTES = [
   ['GET', '/auth/system-invite/preview'],
   ['POST', '/auth/system-invite/accept'],
   ['GET', '/auth/install-status'],
+  ['POST', '/auth/install-schema'],
   ['POST', '/auth/install'],
   ['POST', '/auth/install-sample'],
 ];

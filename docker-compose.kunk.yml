@@ -23,6 +23,7 @@ services:
       - ./kunk-api/src:/app/src
       - ./kunk-api/sample-data:/app/sample-data
       - ./kunk-api/storage:/app/storage
+      - ./kunk-api/sql:/app/sql:ro
       - kunk_api_node_modules:/app/node_modules
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4250/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]

@@ -27,8 +27,8 @@ function installProcessErrorHooks() {
 }
 
 async function main() {
-  if (!env.databaseUrl) {
-    console.error('DATABASE_URL is required');
+  if (!env.pgUrl) {
+    console.error('PG_URL (ou PGHOST/PGUSER/PGPASSWORD/PGDATABASE) is required');
     process.exit(1);
   }
 

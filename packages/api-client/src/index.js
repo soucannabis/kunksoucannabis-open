@@ -58,6 +58,7 @@ export function createApiClient({ baseUrl }) {
     logout: () => request('POST', '/auth/logout', {}),
     me: () => request('GET', '/auth/me'),
     installStatus: () => request('GET', '/auth/install-status'),
+    installSchema: () => request('POST', '/auth/install-schema'),
     install: (body) => request('POST', '/auth/install', body),
     installSample: () => request('POST', '/auth/install-sample'),
     listApiTokens: () => request('GET', '/auth/tokens'),
