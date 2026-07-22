@@ -209,7 +209,7 @@ export function AdminShell({ api }) {
   }
 
   const showEmailModal = emailPromptOpen && emailModuleActive === false && !onEmailConfigPage;
-  const showStorageModal = showStoragePrompt && !showEmailModal;
+  const showStorageModal = showStoragePrompt && emailModuleActive === true;
 
   return (
     <div className="admin-shell">
