@@ -38,7 +38,9 @@ import { SystemErrorsPage } from './pages/SystemErrorsPage.jsx';
 import { WebVitalsPage } from './pages/WebVitalsPage.jsx';
 import { CachePage } from './pages/CachePage.jsx';
 import { DocsHomePage } from './pages/DocsHomePage.jsx';
+import { HomePage } from './pages/HomePage.jsx';
 import { ApiAccessPage } from './pages/ApiAccessPage.jsx';
+import { SupportCredentialsPage } from './pages/SupportCredentialsPage.jsx';
 import { InstallStatusProvider } from './lib/installStatus.jsx';
 
 export default function App() {
@@ -62,7 +64,8 @@ export default function App() {
                   </RequireAdmin>
                 )}
               >
-                <Route path="/" element={<Navigate to="/inicio" replace />} />
+                <Route path="/" element={<Navigate to="/home" replace />} />
+                <Route path="/home" element={<HomePage api={api} />} />
                 <Route path="/inicio" element={<DocsHomePage />} />
                 <Route path="/inicio/:slug" element={<DocsHomePage />} />
                 <Route path="/dados-associacao" element={<AssociationDataPage api={api} />} />
@@ -115,8 +118,9 @@ export default function App() {
                 <Route path="/usuarios/novo" element={<UserFormPage api={api} isNew />} />
                 <Route path="/usuarios/:id" element={<UserFormPage api={api} />} />
                 <Route path="/acesso-api" element={<ApiAccessPage api={api} />} />
+                <Route path="/credenciais-suporte" element={<SupportCredentialsPage api={api} />} />
               </Route>
-              <Route path="*" element={<Navigate to="/inicio" replace />} />
+              <Route path="*" element={<Navigate to="/home" replace />} />
             </Routes>
           </BrowserRouter>
         </InstallStatusProvider>

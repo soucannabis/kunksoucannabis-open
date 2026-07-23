@@ -19,6 +19,8 @@ const sampleDataAdmin = require('./sampleDataAdmin');
 const systemErrorsAdmin = require('./systemErrorsAdmin');
 const webVitalsAdmin = require('./webVitalsAdmin');
 const cacheAdmin = require('./cacheAdmin');
+const supportCredentialsAdmin = require('./supportCredentialsAdmin');
+const systemHealthAdmin = require('./systemHealthAdmin');
 
 const router = Router();
 router.use(authenticate, requireRole('Administrador'));
@@ -29,6 +31,8 @@ router.use('/sample-data', sampleDataAdmin);
 router.use('/system-errors', systemErrorsAdmin);
 router.use('/web-vitals', webVitalsAdmin);
 router.use('/cache', cacheAdmin);
+router.use('/support-credentials', supportCredentialsAdmin);
+router.use('/system-health', systemHealthAdmin);
 
 const ROLE_DESCRIPTIONS = {
   Administrador: 'Acesso total + app admin',

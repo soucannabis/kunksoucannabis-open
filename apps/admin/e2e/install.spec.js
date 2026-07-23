@@ -67,7 +67,7 @@ test.describe('install', () => {
     await page.locator('#email').fill(INSTALL_E2E_EMAIL);
     await page.locator('#password').fill(INSTALL_E2E_PASSWORD);
     await page.getByRole('button', { name: 'Entrar' }).click();
-    await expect(page).toHaveURL(/\/inicio\/?$/);
+    await expect(page).toHaveURL(/\/home\/?$/);
     await expect(page.locator('.admin-nav .brand')).toHaveText('Kunk Admin');
   });
 

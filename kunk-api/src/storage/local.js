@@ -54,6 +54,35 @@ function createLocalDriver({ rootPath }) {
     async exists({ key }) {
       return fs.existsSync(resolveKey(key));
     },
+    async list({ prefix = '', maxKeys = 1000 } = {}) {
+      await ensureRoot();
+      const results = [];
+
+      async function walk(dir, relBase) {
+        if (results.length >= maxKeys) return;
+        let entries;
+        try {
+          entries = await fsp.readdir(dir, { withFileTypes: true });
+        } catch {
+          return;
+        }
+        for (const ent of entries) {
+          if (results.length >= maxKeys) return;
+          const rel = relBase ? `${relBase}/${ent.name}` : ent.name;
+          const abs = path.join(dir, ent.name);
+          if (ent.isDirectory()) {
+            await walk(abs, rel);
+          } else if (ent.isFile()) {
+            if (prefix && !rel.startsWith(prefix)) continue;
+            const st = await fsp.stat(abs);
+            results.push({ key: rel, size: st.size, lastModified: st.mtime });
+          }
+        }
+      }
+
+      await walk(root, '');
+      return results.slice(0, maxKeys);
+    },
     async test() {
       await ensureRoot();
       const probe = loadProbeFile();
@@ -65,7 +94,7 @@ function createLocalDriver({ rootPath }) {
       }
       return {
         ok: true,
-        message: `Disco local acessível (enviado ${probe.filename})`,
+        message: 'Disco local acessível',
         probe_key: probe.key,
       };
     },

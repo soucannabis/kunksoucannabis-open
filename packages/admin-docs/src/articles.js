@@ -18,6 +18,7 @@ import kunkPermissoes from '../content/kunk-permissoes.md?raw';
 import kunkCiap2 from '../content/kunk-ciap2.md?raw';
 import lojaStatus from '../content/loja-status.md?raw';
 import webmasterUsuarios from '../content/webmaster-usuarios.md?raw';
+import webmasterCredenciaisSuporte from '../content/webmaster-credenciais-suporte.md?raw';
 import webmasterErros from '../content/webmaster-erros.md?raw';
 import webmasterWebVitals from '../content/webmaster-web-vitals.md?raw';
 import servicosIndex from '../content/servicos-externos/_index.md?raw';
@@ -50,6 +51,7 @@ const SLUG_BY_ID = {
   'kunk-ciap2': 'kunk-ciap2',
   'loja-status': 'loja',
   'webmaster-usuarios': 'webmaster',
+  'webmaster-credenciais-suporte': 'webmaster-credenciais-suporte',
   'webmaster-erros': 'webmaster-erros',
   'webmaster-web-vitals': 'webmaster-web-vitals',
   'servicos-externos': 'servicos-externos',
@@ -82,6 +84,7 @@ const RAW_ARTICLES = [
   kunkCiap2,
   lojaStatus,
   webmasterUsuarios,
+  webmasterCredenciaisSuporte,
   webmasterErros,
   webmasterWebVitals,
   servicosIndex,

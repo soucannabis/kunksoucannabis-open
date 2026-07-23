@@ -6,7 +6,7 @@ import { safeInternalPath } from '../lib/lastRoute.js';
 import { useInstallStatus } from '../lib/installStatus.jsx';
 import { AdminLoader } from '../components/AdminLoader.jsx';
 
-const LOGIN_HOME = '/inicio';
+const LOGIN_HOME = '/home';
 
 /** Só exibe logo real da associação — ignora placeholder de bootstrap. */
 function resolveLoginLogo(href) {
@@ -29,7 +29,7 @@ export function LoginPage({ api }) {
   const [logoUrl, setLogoUrl] = useState('');
 
   const installedBanner = searchParams.get('installed') === '1';
-  // Pós-login sempre vai para a home de docs, salvo deep link explícito ?next=
+  // Pós-login vai para Home, salvo deep link explícito ?next=
   const nextPath = safeInternalPath(searchParams.get('next') || LOGIN_HOME, LOGIN_HOME);
 
   useEffect(() => {

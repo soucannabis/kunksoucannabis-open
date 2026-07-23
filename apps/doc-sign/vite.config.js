@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { viteHealthPlugin } from '../../packages/vite-health-plugin.js';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -7,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '../..');
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), viteHealthPlugin()],
   resolve: {
     dedupe: ['react', 'react-dom', 'react-router', 'react-router-dom'],
     alias: {

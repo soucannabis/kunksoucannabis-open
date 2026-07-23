@@ -19,4 +19,4 @@ order: 41
 
 ## Quando usar
 
-Para localizar um documento enviado por um associado ou pela equipe. O destino físico dos arquivos é configurado em [Armazenamento](/inicio/configuracoes-armazenamento).
+Para localizar um documento enviado por um associado ou pela equipe. O destino físico dos arquivos é configurado em [Armazenamento e Backup](/inicio/configuracoes-armazenamento).

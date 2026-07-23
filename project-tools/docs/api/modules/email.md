@@ -4,8 +4,9 @@ Envio de e-mails da instalação via SMTP (Nodemailer), configurável no Admin e
 
 ## Habilitação
 
-1. Admin → Serviços externos → E-mail → interruptor **Módulo ativo**
+1. Admin → Serviços externos → E-mail → **Autenticar** (VERIFY SMTP). Se o teste passar, `modules.email.enabled` é gravado como `true` automaticamente.
 2. Credenciais SMTP em `system_api_credentials` **ou** fallbacks `SMTP_*`
+3. O interruptor **Módulo ativo** continua disponível para ligar/desligar manualmente.
 
 Sem valor no Admin → módulo desligado. Credenciais ainda podem usar fallbacks de env.
 
@@ -25,9 +26,10 @@ Cascata: DB criptografado → `env_fallback` → ausente.
 
 ## Admin
 
-- `PUT /admin/external-services/email/credentials` — salva e testa conexão (VERIFY)
-- `POST /admin/external-services/email/test` — revalida conexão
+- `PUT /admin/external-services/email/credentials` — salva e testa conexão (VERIFY); se ok, ativa `modules.email.enabled`
+- `POST /admin/external-services/email/test` — revalida conexão; se ok, ativa o módulo
 - `POST /admin/external-services/email/test-email` — body `{ "to": "you@example.com" }` envia mensagem padrão de teste
+- `PATCH /admin/external-services/email` — liga/desliga o módulo manualmente (`enabled`)
 
 ## URLs públicas (links nos e-mails)
 

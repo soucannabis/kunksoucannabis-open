@@ -87,6 +87,16 @@ async function resolveStorageConfig() {
   const s3Creds = await credentialsService.resolveAll('storage_s3');
   const gcsCreds = await credentialsService.resolveAll('storage_gcs');
 
+  const backupEnabledPick = pick(rows['backup.enabled'], null, 'false');
+  const backupSchedulePick = pick(rows['backup.schedule_time'], null, '22:00');
+  const backupTimezonePick = pick(rows['backup.timezone'], null, 'America/Sao_Paulo');
+  const backupRetentionPick = pick(rows['backup.retention_count'], null, '10');
+  const retentionRaw = Number(backupRetentionPick.value);
+  const retentionCount = Number.isFinite(retentionRaw) && retentionRaw > 0 ? Math.floor(retentionRaw) : 10;
+
+  const isCloud = driver === 's3' || driver === 'gcs';
+  const backupEditable = isCloud && locked;
+
   return {
     driver,
     driverSource: driverPick.source,
@@ -107,6 +117,13 @@ async function resolveStorageConfig() {
       clientEmail: gcsCreds.client_email || env.gcs.clientEmail || '',
       privateKey: (gcsCreds.private_key || env.gcs.privateKey || '').replace(/\\n/g, '\n'),
       credentialsJson: gcsCreds.credentials_json || env.gcs.credentialsJson || '',
+    },
+    backup: {
+      enabled: asBool(backupEnabledPick.value, false),
+      scheduleTime: String(backupSchedulePick.value || '22:00'),
+      timezone: String(backupTimezonePick.value || 'America/Sao_Paulo'),
+      retentionCount,
+      editable: backupEditable,
     },
   };
 }
@@ -135,17 +152,35 @@ function assertCloudConfig(cfg, driver = cfg.driver) {
 }
 
 async function setStorageConfigValue(key, value) {
+  const normalized = value == null || value === '' ? null : String(value);
   const result = await query(
     `UPDATE system_configs
      SET value = $1, date_updated = NOW()
      WHERE system = 'storage' AND key = $2
      RETURNING id`,
-    [value == null || value === '' ? null : String(value), key]
+    [normalized, key]
   );
-  if (!result.rows[0]) {
-    throw new AppError(404, 'NOT_FOUND', `Config storage.${key} não encontrada — rode o seed SQL`);
+  if (result.rows[0]) return;
+
+  // Seed ausente: cria a row (idempotente com ON CONFLICT)
+  const inserted = await query(
+    `INSERT INTO system_configs (
+       system, key, value, value_type, is_sensitive, is_required,
+       allow_hardcoded, hardcoded_default, description, date_updated
+     ) VALUES (
+       'storage', $2, $1, 'string', false, false, true, NULL, NULL, NOW()
+     )
+     ON CONFLICT (system, key) DO UPDATE
+       SET value = EXCLUDED.value, date_updated = NOW()
+     RETURNING id`,
+    [normalized, key]
+  );
+  if (!inserted.rows[0]) {
+    throw new AppError(500, 'STORAGE_MISCONFIGURED', `Não foi possível gravar storage.${key}`);
   }
 }
+
+const BACKUP_FOLDER_KEY = 'backups/.keep';
 
 module.exports = {
   DRIVERS,
@@ -153,4 +188,5 @@ module.exports = {
   assertCloudConfig,
   setStorageConfigValue,
   asBool,
+  BACKUP_FOLDER_KEY,
 };

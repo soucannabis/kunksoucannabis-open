@@ -3,13 +3,15 @@ import { ensureAdminUser } from './helpers/db.js';
 import { ADMIN_EMAIL, ADMIN_PASSWORD, appUrl } from './helpers/fixtures.js';
 import { loginInBrowser } from './helpers/api.js';
 
-test.describe('central de ajuda (home)', () => {
+test.describe('central de ajuda (documentação)', () => {
   test.beforeAll(async () => {
     await ensureAdminUser();
   });
 
-  test('login entra na home de documentação', async ({ page }) => {
+  test('menu Documentação abre a central de ajuda', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
+    await expect(page).toHaveURL(/\/home\/?$/);
+    await page.locator('.admin-nav').getByRole('link', { name: 'Documentação', exact: true }).click();
     await expect(page).toHaveURL(/\/inicio\/?$/);
     await expect(page.getByTestId('admin-docs-home')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Central de ajuda', exact: true })).toBeVisible();
@@ -17,6 +19,7 @@ test.describe('central de ajuda (home)', () => {
 
   test('pesquisa encontra artigo e Abrir no Admin navega', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
+    await page.goto(appUrl('/inicio'));
     await expect(page.getByTestId('admin-docs-home')).toBeVisible();
 
     const storageNo = page.getByRole('button', { name: 'Não', exact: true });
@@ -34,12 +37,11 @@ test.describe('central de ajuda (home)', () => {
     await expect(page).toHaveURL(/\/servicos-externos\/loggi/);
   });
 
-  test('menu Início abre a documentação', async ({ page }) => {
+  test('menu Documentação a partir de outra página', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page.getByTestId('admin-docs-home')).toBeVisible();
     await page.locator('.admin-nav').getByRole('link', { name: 'Arquivos', exact: true }).click();
     await expect(page).toHaveURL(/\/arquivos/);
-    await page.locator('.admin-nav').getByRole('link', { name: 'Início', exact: true }).click();
+    await page.locator('.admin-nav').getByRole('link', { name: 'Documentação', exact: true }).click();
     await expect(page).toHaveURL(/\/inicio\/?$/);
     await expect(page.getByTestId('admin-docs-home')).toBeVisible();
   });

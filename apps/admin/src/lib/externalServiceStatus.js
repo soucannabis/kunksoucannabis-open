@@ -126,14 +126,22 @@ export function deriveExternalServiceStatus(data, opts = {}) {
   const enabled = Boolean(data.enabled);
   const authed = isAuthenticated(data);
 
+  if (authed && enabled) {
+    return {
+      kind: 'ok',
+      label: 'Ativo',
+      detail: 'Módulo habilitado e autenticado.',
+      enabled: true,
+      authenticated: true,
+    };
+  }
+
   if (authed) {
     return {
       kind: 'authenticated',
       label: 'Autenticado',
-      detail: enabled
-        ? 'Módulo habilitado e autenticado.'
-        : 'Credenciais autenticadas. Ative o módulo quando quiser usá-lo.',
-      enabled,
+      detail: 'Credenciais autenticadas. Ative o módulo quando quiser usá-lo.',
+      enabled: false,
       authenticated: true,
     };
   }

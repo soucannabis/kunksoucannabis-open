@@ -798,6 +798,14 @@ router.put('/:service/credentials', async (req, res, next) => {
     ) {
       await pagarmeService.clearWebhookValidation().catch(() => {});
     }
+    // E-mail: autenticação SMTP ok → ativa o módulo automaticamente.
+    if (service === 'email' && runTest) {
+      await upsertModuleFlag(
+        'modules.email.enabled',
+        true,
+        'Módulo email ativado após autenticação SMTP'
+      );
+    }
     res.json(ok({ service, credentials, persisted: true }));
   } catch (err) {
     next(err);
@@ -884,6 +892,14 @@ router.post('/:service/test', async (req, res, next) => {
       await meAuth.testConnection(creds);
     }
     await credentialsService.markTestResult(service, true);
+    // E-mail: revalidação SMTP ok → ativa o módulo automaticamente.
+    if (service === 'email') {
+      await upsertModuleFlag(
+        'modules.email.enabled',
+        true,
+        'Módulo email ativado após autenticação SMTP'
+      );
+    }
     res.json(ok({ ok: true, ...extra }));
   } catch (err) {
     await credentialsService.markTestResult(req.params.service, false).catch(() => {});

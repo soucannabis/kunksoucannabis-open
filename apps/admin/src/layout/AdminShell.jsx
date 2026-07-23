@@ -147,7 +147,17 @@ export function AdminShell({ api }) {
       const emailService = (res.services || []).find((s) => s.service === 'email');
       const active = emailService ? Boolean(emailService.enabled) : false;
       setEmailModuleActive(active);
-      if (!active) {
+
+      // Com sample data, o modal de SMTP atrapalha demos — não exibir.
+      let hasSampleData = false;
+      try {
+        const sampleRes = await api.getSampleDataSummary();
+        hasSampleData = Number(sampleRes.data?.total || 0) > 0;
+      } catch {
+        /* ignore — endpoint pode falhar sem schema/seed */
+      }
+
+      if (!active && !hasSampleData) {
         setEmailPromptOpen(true);
       } else {
         setEmailPromptOpen(false);
@@ -216,8 +226,11 @@ export function AdminShell({ api }) {
       <aside className="admin-nav">
         <div className="brand">Kunk Admin</div>
 
+        <NavLink to="/home" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Home
+        </NavLink>
         <NavLink to="/inicio" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Início
+          Documentação
         </NavLink>
 
         <NavLink to="/dados-associacao" className={({ isActive }) => (isActive ? 'active' : '')}>
@@ -251,7 +264,7 @@ export function AdminShell({ api }) {
           Variáveis
         </NavLink>
         <NavLink to="/armazenamento" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Armazenamento
+          Armazenamento e Backup
         </NavLink>
         <NavLink to="/cache" className={({ isActive }) => (isActive ? 'active' : '')}>
           Cache
@@ -282,6 +295,9 @@ export function AdminShell({ api }) {
         <div className="admin-nav-section">Webmaster</div>
         <NavLink to="/usuarios" className={({ isActive }) => (isActive ? 'active' : '')}>
           Usuários
+        </NavLink>
+        <NavLink to="/credenciais-suporte" className={({ isActive }) => (isActive ? 'active' : '')}>
+          Credenciais de suporte
         </NavLink>
         <NavLink to="/acesso-api" className={({ isActive }) => (isActive ? 'active' : '')}>
           API

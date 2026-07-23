@@ -55,6 +55,14 @@ async function main() {
   }
 
   try {
+    const { ensureSystemBackups } = require('./db/ensureSystemBackups');
+    await ensureSystemBackups();
+    console.log('Schema: system_backups / backup configs ok');
+  } catch (err) {
+    console.warn('Schema: não foi possível garantir system_backups:', err.message);
+  }
+
+  try {
     const docSignService = require('./services/docSignService');
     const ensured = await docSignService.ensureDefaultTemplates();
     if (ensured.created?.length) {
@@ -70,6 +78,9 @@ async function main() {
   const host = process.env.HOST || '0.0.0.0';
   app.listen(env.port, host, () => {
     console.log(`kunk-api listening on http://${host}:${env.port}/api/v1`);
+    void require('./services/backupCron')
+      .rescheduleBackupCron()
+      .catch((err) => console.warn('[backup-cron] init falhou:', err.message));
   });
 }
 

@@ -2,6 +2,7 @@
 
 const { AppError } = require('../utils/response');
 const { loadProbeFile } = require('./probe');
+const { formatGcsError } = require('./formatCloudError');
 
 function buildCredentials(cfg) {
   if (cfg.credentialsJson) {
@@ -42,7 +43,16 @@ function createGcsDriver(cfg) {
   if (credentials) storageOpts.credentials = credentials;
 
   const storage = new Storage(storageOpts);
-  const bucket = storage.bucket(cfg.bucket);
+  const bucketName = cfg.bucket;
+  const bucket = storage.bucket(bucketName);
+
+  function gcsFail(err, op) {
+    return new AppError(502, 'STORAGE_ERROR', formatGcsError(err, { bucket: bucketName, op }));
+  }
+
+  function gcsConfigFail(err, op) {
+    return new AppError(400, 'STORAGE_MISCONFIGURED', formatGcsError(err, { bucket: bucketName, op }));
+  }
 
   return {
     name: 'gcs',
@@ -55,7 +65,7 @@ function createGcsDriver(cfg) {
         });
         return { key };
       } catch (err) {
-        throw new AppError(502, 'STORAGE_ERROR', `GCS put falhou: ${err.message}`);
+        throw gcsFail(err, 'put');
       }
     },
     async get({ key }) {
@@ -68,7 +78,7 @@ function createGcsDriver(cfg) {
         return file.createReadStream();
       } catch (err) {
         if (err instanceof AppError) throw err;
-        throw new AppError(502, 'STORAGE_ERROR', `GCS get falhou: ${err.message}`);
+        throw gcsFail(err, 'get');
       }
     },
     async getBuffer({ key }) {
@@ -80,7 +90,7 @@ function createGcsDriver(cfg) {
         if (err.code === 404) {
           throw new AppError(404, 'NOT_FOUND', 'Arquivo físico não encontrado');
         }
-        throw new AppError(502, 'STORAGE_ERROR', `GCS get falhou: ${err.message}`);
+        throw gcsFail(err, 'get');
       }
     },
     async delete({ key }) {
@@ -94,33 +104,82 @@ function createGcsDriver(cfg) {
       const [exists] = await bucket.file(key).exists();
       return Boolean(exists);
     },
+    async list({ prefix = '', maxKeys = 1000 } = {}) {
+      try {
+        const [files] = await bucket.getFiles({
+          prefix: prefix || undefined,
+          maxResults: Math.max(1, maxKeys),
+          autoPaginate: false,
+        });
+        return (files || []).slice(0, maxKeys).map((f) => ({
+          key: f.name,
+          size: f.metadata?.size != null ? Number(f.metadata.size) : null,
+          lastModified: f.metadata?.updated ? new Date(f.metadata.updated) : null,
+        }));
+      } catch (err) {
+        throw gcsFail(err, 'list');
+      }
+    },
     async test() {
+      if (!bucketName || !String(bucketName).trim()) {
+        throw new AppError(400, 'STORAGE_MISCONFIGURED', 'Informe o nome do bucket GCS');
+      }
       try {
         const [exists] = await bucket.exists();
         if (!exists) {
-          throw new AppError(400, 'STORAGE_MISCONFIGURED', `Bucket GCS "${cfg.bucket}" não existe`);
+          throw new AppError(
+            400,
+            'STORAGE_MISCONFIGURED',
+            `Bucket GCS "${bucketName}" não encontrado. Confira o nome e o project_id da service account.`
+          );
         }
-        const probe = loadProbeFile();
-        await this.put({
-          key: probe.key,
-          buffer: probe.buffer,
-          mimeType: probe.mimeType,
-          filename: probe.filename,
-        });
-        const roundtrip = await this.getBuffer({ key: probe.key });
-        await this.delete({ key: probe.key });
-        if (!Buffer.isBuffer(roundtrip) || roundtrip.length === 0) {
-          throw new AppError(400, 'STORAGE_MISCONFIGURED', 'Probe GCS falhou: arquivo vazio após upload');
-        }
-        return {
-          ok: true,
-          message: `Bucket GCS "${cfg.bucket}" acessível — arquivo de teste ${probe.filename} enviado e removido`,
-          probe_key: probe.key,
-        };
       } catch (err) {
         if (err instanceof AppError) throw err;
-        throw new AppError(400, 'STORAGE_MISCONFIGURED', `Teste GCS falhou: ${err.message}`);
+        throw gcsConfigFail(err, 'test-head');
       }
+
+      const probe = loadProbeFile();
+      try {
+        await bucket.file(probe.key).save(probe.buffer, {
+          contentType: probe.mimeType || 'application/octet-stream',
+          resumable: false,
+        });
+      } catch (err) {
+        throw gcsConfigFail(err, 'test-put');
+      }
+
+      let roundtrip;
+      try {
+        const [buf] = await bucket.file(probe.key).download();
+        roundtrip = buf;
+      } catch (err) {
+        try {
+          await bucket.file(probe.key).delete({ ignoreNotFound: true });
+        } catch {
+          /* ignore */
+        }
+        throw gcsConfigFail(err, 'test-get');
+      }
+
+      try {
+        await bucket.file(probe.key).delete({ ignoreNotFound: true });
+      } catch (err) {
+        throw gcsConfigFail(err, 'test-delete');
+      }
+
+      if (!Buffer.isBuffer(roundtrip) || roundtrip.length === 0) {
+        throw new AppError(
+          400,
+          'STORAGE_MISCONFIGURED',
+          `Probe GCS falhou no bucket "${bucketName}": arquivo vazio após upload/leitura`
+        );
+      }
+
+      return {
+        ok: true,
+        message: `Bucket GCS "${bucketName}" acessível`,
+        probe_key: probe.key,
+      };
     },
   };
 }

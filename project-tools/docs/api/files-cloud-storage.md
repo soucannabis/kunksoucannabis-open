@@ -25,7 +25,8 @@ A API pública (`POST/GET/DELETE /files`, `attach`) permanece igual. Só muda a 
 4. **Segredos** — `system_api_credentials` (services `storage_s3` / `storage_gcs`) com cascade DB → env; nunca expostos na API admin além de “tem valor”.
 5. **Default = `local`** — cloud é opt-in (Admin ou ENV).
 6. **Lock** — após ativar cloud e migrar (ou sem pendências locais), não permite trocar provedor/bucket.
-7. **Admin** — menu **Armazenamento** (`/armazenamento`), fora de Serviços externos.
+7. **Admin** — menu **Armazenamento e Backup** (`/armazenamento`), fora de Serviços externos.
+8. **Backups** — ao ativar o bucket, cria `backups/`, liga cron diário (SQL + um JSON por tabela em `tables/`) e histórico em `system_backups`.
 
 ## Modelo de dados
 
@@ -37,6 +38,8 @@ A API pública (`POST/GET/DELETE /files`, `attach`) permanece igual. Só muda a 
 
 SQL: `project-tools/sql/alter-files-storage-driver.sql`.
 
+Tabela `system_backups` + keys `backup.*` em `system_configs` (seed `alter-system-configs-storage-backup.sql` / `ensureSystemBackups` no boot).
+
 ## Código
 
 ```
@@ -46,6 +49,9 @@ kunk-api/src/storage/
   local.js
   s3.js
   gcs.js
+kunk-api/src/services/
+  backupService.js  # dump SQL + JSON por tabela, restore, retenção
+  backupCron.js     # node-cron diário
 ```
 
 `filesRepository` e doc-sign usam o driver (não `fs` direto no path).
@@ -61,6 +67,10 @@ kunk-api/src/storage/
 | `locked` | Travamento após ativar bucket na nuvem |
 | `s3.bucket` / `s3.region` | Metadados S3 |
 | `gcs.bucket` / `gcs.project_id` | Metadados GCS |
+| `backup.enabled` | Liga backups diários |
+| `backup.schedule_time` | HH:MM (default `22:00`) |
+| `backup.timezone` | IANA (default `America/Sao_Paulo`) |
+| `backup.retention_count` | Quantos backups reter (default `10`) |
 
 ### Credenciais
 
@@ -73,10 +83,15 @@ kunk-api/src/storage/
 
 | Método | Path | Função |
 |---|---|---|
-| GET | `/admin/storage` | Status (sem secrets) |
+| GET | `/admin/storage` | Status (sem secrets) + bloco `backup` |
 | PUT | `/admin/storage` | Salvar config/credenciais |
 | POST | `/admin/storage/test` | Testar acesso |
-| POST | `/admin/storage/activate` | Ativar s3/gcs |
+| POST | `/admin/storage/activate` | Ativar s3/gcs + pasta `backups/` + defaults de backup |
+| GET | `/admin/storage/backups` | Status + últimos 5 backups |
+| PUT | `/admin/storage/backup-config` | Salvar enabled/horário/retenção |
+| POST | `/admin/storage/backups/run` | Backup manual |
+| DELETE | `/admin/storage/backups/:id` | Excluir backup |
+| POST | `/admin/storage/backups/:id/restore` | Restore SQL (`confirm: true`) |
 
 ## Fluxos
 
@@ -88,11 +103,16 @@ kunk-api/src/storage/
 
 Auth → `getDriverForFile(row).get` → stream na response (proxy).
 
+### Backup
+
+`pg_dump` / `psql` **17** (client deve ser ≥ major do servidor Postgres). Imagem Docker instala `postgresql-client-17` (PGDG); paths preferidos: `/usr/lib/postgresql/17/bin/{pg_dump,psql}` ou `PG_DUMP_PATH` / `PSQL_PATH`.
+
 ## UX Admin
 
-- Item de menu **Armazenamento**.
+- Item de menu **Armazenamento e Backup**.
 - Modal ao abrir o admin se `driver === local` (dismiss via `localStorage` key `kunk.admin.storage.prompt.dismissed`).
 - Se cloud ativo, modal não aparece.
+- Bloco Backup (horário, retenção, lista, restaurar/excluir) só editável com bucket ativo.
 
 ## Segurança
 

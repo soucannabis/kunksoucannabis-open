@@ -4,6 +4,9 @@ const credentialsService = require('../credentialsService');
 const { AppError } = require('../../utils/response');
 const templates = require('./templates');
 
+/** Tempo máximo para conectar / verificar / enviar via SMTP (ms). */
+const SMTP_TIMEOUT_MS = 15000;
+
 function getNodemailer() {
   try {
     // eslint-disable-next-line global-require
@@ -39,6 +42,59 @@ function assertMinimal(cfg) {
   if (!cfg.fromEmail) throw new Error('from_email é obrigatório');
 }
 
+/**
+ * Mensagens claras para falhas SMTP (auth, rede, timeout).
+ * @param {unknown} err
+ * @param {{ host?: string, port?: number, op?: string }} [ctx]
+ */
+function formatSmtpError(err, ctx = {}) {
+  const host = ctx.host || '';
+  const port = ctx.port != null ? String(ctx.port) : '';
+  const op = ctx.op || 'conexão SMTP';
+  const target = host ? `${host}${port ? `:${port}` : ''}` : 'servidor SMTP';
+  const code = String(err?.code || err?.responseCode || err?.name || '').trim();
+  const raw = String(err?.message || err || '').trim();
+  const lower = `${code} ${raw}`.toLowerCase();
+
+  if (
+    code === 'SMTP_TIMEOUT' ||
+    /timeout|timed out|etimedout|esockettimedout|greeting never received/i.test(lower)
+  ) {
+    return (
+      `Tempo esgotado na ${op} com ${target} (${Math.round(SMTP_TIMEOUT_MS / 1000)}s). ` +
+      'Confira host, porta, firewall e se a porta aceita SMTP (587 STARTTLS ou 465 SSL).'
+    );
+  }
+  if (/econnrefused|connection refused/i.test(lower)) {
+    return `Conexão recusada em ${target}. Confira host/porta e se o SMTP está no ar.`;
+  }
+  if (/enotfound|getaddrinfo|dns/i.test(lower)) {
+    return `Host SMTP "${host || 'informado'}" não encontrado (DNS). Confira o nome do servidor.`;
+  }
+  if (/econnreset|epipe|socket closed|connection closed/i.test(lower)) {
+    return `Conexão com ${target} foi interrompida. Tente outra porta (587 vs 465) ou ajuste "secure".`;
+  }
+  if (
+    /eprotocol|wrong version number|ssl|tls|certificate|self signed|unauthorized/i.test(lower)
+  ) {
+    return (
+      `Falha TLS/SSL com ${target}. Porta 465 exige secure=true; porta 587 costuma usar STARTTLS (secure=false).`
+    );
+  }
+  if (
+    /invalid login|authentication failed|auth|credentials|535|534|530|username and password/i.test(
+      lower
+    )
+  ) {
+    return 'Autenticação SMTP rejeitada. Confira usuário e senha (ou senha de app do provedor).';
+  }
+  if (/certificate|self.signed|unable to verify/i.test(lower)) {
+    return `Certificado TLS inválido em ${target}. Use o host oficial do provedor.`;
+  }
+  if (raw) return `Falha na ${op} com ${target}: ${raw}`;
+  return `Falha na ${op} com ${target}`;
+}
+
 function buildTransport(cfg) {
   assertMinimal(cfg);
   const nodemailer = getNodemailer();
@@ -46,6 +102,9 @@ function buildTransport(cfg) {
     host: cfg.host,
     port: cfg.port,
     secure: cfg.secure,
+    connectionTimeout: SMTP_TIMEOUT_MS,
+    greetingTimeout: SMTP_TIMEOUT_MS,
+    socketTimeout: SMTP_TIMEOUT_MS,
   };
   if (cfg.user) {
     transportOpts.auth = { user: cfg.user, pass: cfg.pass };
@@ -56,6 +115,31 @@ function buildTransport(cfg) {
 function fromHeader(cfg) {
   if (cfg.fromName) return `"${cfg.fromName.replace(/"/g, '')}" <${cfg.fromEmail}>`;
   return cfg.fromEmail;
+}
+
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const err = new Error(label);
+      err.code = 'SMTP_TIMEOUT';
+      reject(err);
+    }, ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+async function withTransport(cfg, fn) {
+  const transport = buildTransport(cfg);
+  try {
+    return await fn(transport);
+  } finally {
+    try {
+      transport.close();
+    } catch {
+      /* ignore */
+    }
+  }
 }
 
 async function resolveSmtpConfig(override = null) {
@@ -83,8 +167,17 @@ async function isConfigured() {
 async function testConnection(creds) {
   const cfg = normalizeConfig(creds);
   assertMinimal(cfg);
-  const transport = buildTransport(cfg);
-  await transport.verify();
+  try {
+    await withTransport(cfg, async (transport) => {
+      await withTimeout(
+        transport.verify(),
+        SMTP_TIMEOUT_MS,
+        `Timeout ao verificar SMTP ${cfg.host}:${cfg.port}`
+      );
+    });
+  } catch (err) {
+    throw new Error(formatSmtpError(err, { host: cfg.host, port: cfg.port, op: 'verificação SMTP' }));
+  }
   return { ok: true };
 }
 
@@ -97,20 +190,29 @@ async function sendMail({ to, subject, html, text, attachments } = {}, credsOver
     return { skipped: true, reason: 'smtp_not_configured' };
   }
 
-  const transport = buildTransport(cfg);
-  const info = await transport.sendMail({
-    from: fromHeader(cfg),
-    to,
-    subject,
-    html,
-    text,
-    attachments,
-  });
-  return {
-    skipped: false,
-    messageId: info.messageId || null,
-    accepted: info.accepted || [],
-  };
+  try {
+    const info = await withTransport(cfg, async (transport) =>
+      withTimeout(
+        transport.sendMail({
+          from: fromHeader(cfg),
+          to,
+          subject,
+          html,
+          text,
+          attachments,
+        }),
+        SMTP_TIMEOUT_MS,
+        `Timeout ao enviar e-mail via ${cfg.host}:${cfg.port}`
+      )
+    );
+    return {
+      skipped: false,
+      messageId: info.messageId || null,
+      accepted: info.accepted || [],
+    };
+  } catch (err) {
+    throw new Error(formatSmtpError(err, { host: cfg.host, port: cfg.port, op: 'envio SMTP' }));
+  }
 }
 
 async function sendTemplated(to, templateResult, options = {}) {
@@ -144,30 +246,52 @@ async function sendTestEmail({ to }, credsOverride = null) {
   if (credsOverride) {
     const cfg = normalizeConfig(credsOverride);
     assertMinimal(cfg);
-    const transport = buildTransport(cfg);
-    await transport.verify();
-    const info = await transport.sendMail({
-      from: fromHeader(cfg),
+    try {
+      const info = await withTransport(cfg, async (transport) => {
+        await withTimeout(
+          transport.verify(),
+          SMTP_TIMEOUT_MS,
+          `Timeout ao verificar SMTP ${cfg.host}:${cfg.port}`
+        );
+        return withTimeout(
+          transport.sendMail({
+            from: fromHeader(cfg),
+            to: dest,
+            subject: tpl.subject,
+            html: tpl.html,
+            text: tpl.text,
+          }),
+          SMTP_TIMEOUT_MS,
+          `Timeout ao enviar e-mail via ${cfg.host}:${cfg.port}`
+        );
+      });
+      return { ok: true, messageId: info.messageId || null };
+    } catch (err) {
+      throw new AppError(
+        400,
+        'CREDENTIAL_INVALID',
+        formatSmtpError(err, { host: cfg.host, port: cfg.port, op: 'teste SMTP' })
+      );
+    }
+  }
+  if (!(await isModuleEnabled())) {
+    throw new AppError(400, 'MODULE_DISABLED', 'Módulo de e-mail desabilitado no Admin');
+  }
+  try {
+    const result = await sendMail({
       to: dest,
       subject: tpl.subject,
       html: tpl.html,
       text: tpl.text,
     });
-    return { ok: true, messageId: info.messageId || null };
+    if (result.skipped) {
+      throw new AppError(400, 'SMTP_NOT_CONFIGURED', 'SMTP não configurado');
+    }
+    return { ok: true, messageId: result.messageId };
+  } catch (err) {
+    if (err instanceof AppError) throw err;
+    throw new AppError(400, 'CREDENTIAL_INVALID', err.message || 'Falha no envio de teste');
   }
-  if (!(await isModuleEnabled())) {
-    throw new AppError(400, 'MODULE_DISABLED', 'Módulo de e-mail desabilitado no Admin');
-  }
-  const result = await sendMail({
-    to: dest,
-    subject: tpl.subject,
-    html: tpl.html,
-    text: tpl.text,
-  });
-  if (result.skipped) {
-    throw new AppError(400, 'SMTP_NOT_CONFIGURED', 'SMTP não configurado');
-  }
-  return { ok: true, messageId: result.messageId };
 }
 
 function publicAppUrl(app) {
@@ -214,4 +338,6 @@ module.exports = {
   sendTestEmail,
   publicAppUrl,
   ensureCredentialRows,
+  formatSmtpError,
+  SMTP_TIMEOUT_MS,
 };

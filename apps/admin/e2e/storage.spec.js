@@ -11,7 +11,7 @@ test.describe('armazenamento', () => {
   test('abre página e mostra status do driver', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await page.goto(appUrl('/armazenamento'));
-    await expect(page.getByRole('heading', { name: 'Armazenamento' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Armazenamento e Backup' })).toBeVisible();
     await expect(page.getByText(/Driver ativo/i)).toBeVisible({ timeout: 20_000 });
   });
 });

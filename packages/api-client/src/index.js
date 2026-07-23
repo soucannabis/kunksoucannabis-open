@@ -125,8 +125,21 @@ export function createApiClient({ baseUrl }) {
     putStorageConfig: (body) => request('PUT', '/admin/storage', body),
     testStorage: (body) => request('POST', '/admin/storage/test', body || {}),
     activateStorage: (body) => request('POST', '/admin/storage/activate', body || {}),
+    getStorageBackups: () => request('GET', '/admin/storage/backups'),
+    putBackupConfig: (body) => request('PUT', '/admin/storage/backup-config', body || {}),
+    runStorageBackup: () => request('POST', '/admin/storage/backups/run', {}),
+    deleteStorageBackup: (id) => request('DELETE', `/admin/storage/backups/${encodeURIComponent(id)}`),
+    restoreStorageBackup: (id, body = { confirm: true }) =>
+      request('POST', `/admin/storage/backups/${encodeURIComponent(id)}/restore`, body),
     getSampleDataSummary: () => request('GET', '/admin/sample-data'),
     deleteSampleData: () => request('DELETE', '/admin/sample-data'),
+
+    // Support credentials (one-time password reveal)
+    getSupportCredentials: () => request('GET', '/admin/support-credentials'),
+    createSupportCredentials: (body = {}) =>
+      request('POST', '/admin/support-credentials', body),
+    deleteSupportCredentials: () => request('DELETE', '/admin/support-credentials'),
+    getSystemHealth: () => request('GET', '/admin/system-health'),
 
     // System errors (admin triage)
     getSystemErrorsSummary: () => request('GET', '/admin/system-errors/summary'),

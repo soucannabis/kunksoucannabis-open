@@ -5,11 +5,19 @@ const {
   assertCloudConfig,
   setStorageConfigValue,
   DRIVERS,
+  BACKUP_FOLDER_KEY,
 } = require('../storage/resolveConfig');
 const { buildDriver } = require('../storage');
 const credentialsService = require('./credentialsService');
 const filesRepository = require('../repositories/filesRepository');
 const { AppError } = require('../utils/response');
+
+const BACKUP_ACTIVATE_DEFAULTS = {
+  enabled: 'true',
+  schedule_time: '22:00',
+  timezone: 'America/Sao_Paulo',
+  retention_count: '10',
+};
 
 function publicStatusFromConfig(cfg, extras = {}) {
   const isCloud = cfg.driver === 's3' || cfg.driver === 'gcs';
@@ -33,6 +41,13 @@ function publicStatusFromConfig(cfg, extras = {}) {
     },
     local: {
       path: cfg.local.path,
+    },
+    backup: {
+      enabled: Boolean(cfg.backup?.enabled),
+      schedule_time: cfg.backup?.scheduleTime || '22:00',
+      timezone: cfg.backup?.timezone || 'America/Sao_Paulo',
+      retention_count: cfg.backup?.retentionCount ?? 10,
+      editable: Boolean(cfg.backup?.editable),
     },
     ...extras,
   };
@@ -139,6 +154,39 @@ async function saveConfig(body = {}) {
   return getStatus();
 }
 
+async function enableBackupDefaults() {
+  await setStorageConfigValue('backup.enabled', BACKUP_ACTIVATE_DEFAULTS.enabled);
+  await setStorageConfigValue('backup.schedule_time', BACKUP_ACTIVATE_DEFAULTS.schedule_time);
+  await setStorageConfigValue('backup.timezone', BACKUP_ACTIVATE_DEFAULTS.timezone);
+  await setStorageConfigValue('backup.retention_count', BACKUP_ACTIVATE_DEFAULTS.retention_count);
+}
+
+async function ensureBackupsFolder(driver, cfg) {
+  assertCloudConfig(cfg, driver);
+  const d = buildDriver(driver, cfg);
+  await d.put({
+    key: BACKUP_FOLDER_KEY,
+    buffer: Buffer.from(''),
+    mimeType: 'application/octet-stream',
+  });
+}
+
+async function finalizeCloudActivation(driver) {
+  await setStorageConfigValue('driver', driver);
+  await setStorageConfigValue('locked', 'true');
+
+  const activeCfg = await resolveStorageConfig();
+  await ensureBackupsFolder(driver, activeCfg);
+  await enableBackupDefaults();
+
+  try {
+    const { rescheduleBackupCron } = require('./backupCron');
+    await rescheduleBackupCron();
+  } catch (err) {
+    console.warn('[storage] não foi possível reagendar cron de backup:', err.message);
+  }
+}
+
 async function testConnection(body = {}) {
   // Optionally merge pending body into a temp config for test-before-save
   let cfg = await resolveStorageConfig();
@@ -178,11 +226,14 @@ async function testConnection(body = {}) {
     return local.test();
   }
 
+  const currentCfg = await resolveStorageConfig();
+  await assertCanChangeProvider(currentCfg, driver);
+
   assertCloudConfig(cfg, driver);
   const d = buildDriver(driver, cfg);
   const result = await d.test();
 
-  // Teste OK → persistir config pública + credenciais enviadas no formulário
+  // Teste OK → persistir config pública + credenciais e ativar o módulo
   await saveConfig({
     ...body,
     driver,
@@ -191,12 +242,14 @@ async function testConnection(body = {}) {
 
   const service = driver === 's3' ? 'storage_s3' : 'storage_gcs';
   await credentialsService.markTestResult(service, true);
+  await finalizeCloudActivation(driver);
 
   const status = await getStatus();
   return {
     ...result,
     saved: true,
-    message: `${result.message}. Credenciais salvas.`,
+    activated: true,
+    message: `${result.message}. Bucket ativado e módulo de backup habilitado.`,
     status,
   };
 }
@@ -207,24 +260,13 @@ async function activate(body = {}) {
     throw new AppError(400, 'VALIDATION_ERROR', 'driver deve ser s3 ou gcs');
   }
 
-  const cfg = await resolveStorageConfig();
-  await assertCanChangeProvider(cfg, driver);
-
-  await saveConfig({
-    ...body,
-    driver,
-    set_driver: false,
-  });
-
   const testResult = await testConnection({ ...body, driver });
-  await setStorageConfigValue('driver', driver);
-  await setStorageConfigValue('locked', 'true');
-
-  const status = await getStatus();
   return {
-    ...status,
+    ...testResult.status,
     test: testResult,
-    message: 'Bucket ativado. Novos uploads usarão este armazenamento.',
+    message:
+      testResult.message ||
+      'Bucket ativado. Pasta backups criada e módulo de backup habilitado com opções padrão.',
   };
 }
 
@@ -233,4 +275,7 @@ module.exports = {
   saveConfig,
   testConnection,
   activate,
+  enableBackupDefaults,
+  ensureBackupsFolder,
+  BACKUP_ACTIVATE_DEFAULTS,
 };

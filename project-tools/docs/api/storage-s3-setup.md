@@ -1,11 +1,11 @@
 # Configurar Amazon S3 (Armazenamento Kunk)
 
-> O Kunk acessa o bucket **com Access Key / Secret Key**. O bucket deve permanecer **privado** — não é necessário ACL pública, policy de site estático nem “Block Public Access” desligado.
+> O Kunk acessa o bucket **com Access Key / Secret Key**. Use um bucket **exclusivo do Kunk**, **privado** — não é necessário ACL pública, policy de site estático nem “Block Public Access” desligado.
 
 ## Visão geral
 
-1. Crie um bucket S3 privado.
-2. Crie um usuário IAM com permissão só de objetos no bucket (ou prefixo).
+1. Crie um bucket S3 **só para o Kunk** (privado).
+2. Crie um usuário IAM com **acesso total a esse bucket**.
 3. Gere Access Key + Secret Key.
 4. Informe no **Admin → Armazenamento** (ou nas variáveis de ambiente da API).
 
@@ -14,49 +14,35 @@ Downloads e uploads dos apps continuam em `/api/v1/files/:id/download` — a API
 ## 1. Criar o bucket
 
 1. Console AWS → **S3** → **Create bucket**.
-2. Nome único (ex.: `minha-instancia-kunk-files`).
+2. Nome único **exclusivo do Kunk** (ex.: `minha-instancia-kunk-files`). Não compartilhe com outros projetos.
 3. Região (anote — ex.: `sa-east-1`).
 4. **Block Public Access**: deixe **ativado** (recomendado).
 5. Não habilite website hosting nem ACL `public-read`.
 
+Arquivos dos apps, pasta `backups/` e o probe `_kunk_probe/` ficam neste bucket.
+
 ## 2. Política IAM (usuário da API)
 
-Crie um usuário IAM (ou role) só para a API. Anexe uma policy no estilo:
+Crie um usuário IAM só para a API. Como o bucket é exclusivo, anexe acesso total a ele:
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "KunkObjects",
+      "Sid": "KunkBucketFullAccess",
       "Effect": "Allow",
-      "Action": [
-        "s3:PutObject",
-        "s3:GetObject",
-        "s3:DeleteObject"
-      ],
-      "Resource": "arn:aws:s3:::SEU_BUCKET/kunk/*"
-    },
-    {
-      "Sid": "KunkListHead",
-      "Effect": "Allow",
-      "Action": [
-        "s3:ListBucket",
-        "s3:HeadBucket"
-      ],
-      "Resource": "arn:aws:s3:::SEU_BUCKET",
-      "Condition": {
-        "StringLike": {
-          "s3:prefix": ["kunk/*", "_kunk_probe/*"]
-        }
-      }
+      "Action": ["s3:*"],
+      "Resource": [
+        "arn:aws:s3:::SEU_BUCKET",
+        "arn:aws:s3:::SEU_BUCKET/*"
+      ]
     }
   ]
 }
 ```
 
-Ajuste `SEU_BUCKET` e o prefixo se mudar `FILES_KEY_PREFIX` (padrão `kunk/`).  
-O teste de conexão da API grava/apaga um objeto em `_kunk_probe/` — inclua esse prefixo ou conceda `PutObject`/`DeleteObject` nele.
+Substitua `SEU_BUCKET` pelo nome real. Isso cobre uploads, downloads, listagem, backups e o **Testar e ativar**.
 
 **Não** é necessário:
 
@@ -76,7 +62,7 @@ O teste de conexão da API grava/apaga um objeto em `_kunk_probe/` — inclua es
 1. Entre como Administrador → **Armazenamento**.
 2. Provedor: **Amazon S3**.
 3. Preencha bucket, região, Access Key e Secret.
-4. **Testar conexão** → **Ativar bucket**.
+4. **Testar e ativar** (valida o bucket, salva credenciais e liga o módulo).
 
 Após ativar, novos uploads vão para o bucket. Troca de provedor (S3↔GCS) só é permitida se ainda não houver arquivos na nuvem.
 

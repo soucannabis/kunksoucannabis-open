@@ -1,7 +1,7 @@
 [
   {
     "sort": 1,
-    "date_created": "2026-06-02T17:23:18.646Z",
+    "date_created": "2026-06-08T17:54:45.454Z",
     "name": "Lucas",
     "last_name": "Nogueira",
     "type": "medic",
@@ -15,7 +15,7 @@
     "active": 1,
     "is_prescriber": "true",
     "is_collaborator": "true",
-    "professional_code": "08dbb94f-c982-4b2b-8431-7be03e07d165",
+    "professional_code": "cba1e506-d21b-437e-8c32-7f20fc406d01",
     "fingerprint": "fp-demo-1",
     "contest_reports": {
       "demo": true,
@@ -29,7 +29,7 @@
   },
   {
     "sort": 2,
-    "date_created": "2026-06-03T17:23:18.646Z",
+    "date_created": "2026-06-09T17:54:45.454Z",
     "name": "Marina",
     "last_name": "Oliveira",
     "type": "therapist",
@@ -43,7 +43,7 @@
     "active": 1,
     "is_prescriber": "false",
     "is_collaborator": "true",
-    "professional_code": "a0baecaa-3605-495d-b695-738689b8edba",
+    "professional_code": "7e05101f-a974-4716-82c7-14873670bea4",
     "fingerprint": "fp-demo-2",
     "contest_reports": {
       "demo": true,
@@ -57,7 +57,7 @@
   },
   {
     "sort": 3,
-    "date_created": "2026-06-04T17:23:18.646Z",
+    "date_created": "2026-06-10T17:54:45.454Z",
     "name": "Nuno",
     "last_name": "Pereira",
     "type": "therapist",
@@ -71,7 +71,7 @@
     "active": 1,
     "is_prescriber": "true",
     "is_collaborator": "true",
-    "professional_code": "6cb37310-9ebd-46d5-a961-d87123f3588e",
+    "professional_code": "16eb82a4-57b2-409e-b439-ee6a7802982a",
     "fingerprint": "fp-demo-3",
     "contest_reports": {
       "demo": true,
@@ -85,7 +85,7 @@
   },
   {
     "sort": 4,
-    "date_created": "2026-06-05T17:23:18.646Z",
+    "date_created": "2026-06-11T17:54:45.454Z",
     "name": "Olívia",
     "last_name": "Queiroz",
     "type": "medic",
@@ -99,7 +99,7 @@
     "active": 1,
     "is_prescriber": "false",
     "is_collaborator": "true",
-    "professional_code": "fd155aa4-ecc8-4d82-ab46-e33d9961d5e6",
+    "professional_code": "7d03e555-17fd-42df-b29c-93fbf3b4fedf",
     "fingerprint": "fp-demo-4",
     "contest_reports": {
       "demo": true,
@@ -113,7 +113,7 @@
   },
   {
     "sort": 5,
-    "date_created": "2026-06-06T17:23:18.646Z",
+    "date_created": "2026-06-12T17:54:45.454Z",
     "name": "Paulo",
     "last_name": "Ramos",
     "type": "therapist",
@@ -127,7 +127,7 @@
     "active": 1,
     "is_prescriber": "true",
     "is_collaborator": "false",
-    "professional_code": "9472fdf3-30c2-4014-a312-5ed6d8ad7d1b",
+    "professional_code": "79ddd282-35d3-4e56-be1a-3637d08a4ff8",
     "fingerprint": "fp-demo-5",
     "contest_reports": {
       "demo": true,
@@ -141,7 +141,7 @@
   },
   {
     "sort": 6,
-    "date_created": "2026-06-07T17:23:18.646Z",
+    "date_created": "2026-06-13T17:54:45.454Z",
     "name": "Queila",
     "last_name": "Silva",
     "type": "therapist",
@@ -155,7 +155,7 @@
     "active": 1,
     "is_prescriber": "false",
     "is_collaborator": "false",
-    "professional_code": "0ff70bde-4b8f-4b5d-a62d-c1373ea2b92e",
+    "professional_code": "62027f7e-7e14-4b61-a3ea-cf1bc4b0df6a",
     "fingerprint": "fp-demo-6",
     "contest_reports": {
       "demo": true,
@@ -169,7 +169,7 @@
   },
   {
     "sort": 7,
-    "date_created": "2026-06-08T17:23:18.646Z",
+    "date_created": "2026-06-14T17:54:45.454Z",
     "name": "Rafael",
     "last_name": "Teixeira",
     "type": "medic",
@@ -183,7 +183,7 @@
     "active": 1,
     "is_prescriber": "true",
     "is_collaborator": "false",
-    "professional_code": "1369e8a9-9151-411e-ad0b-0ede62407f7b",
+    "professional_code": "e8a041ea-95d1-4444-b5c4-c6ba0dbb3a24",
     "fingerprint": "fp-demo-7",
     "contest_reports": {
       "demo": true,
@@ -197,7 +197,7 @@
   },
   {
     "sort": 8,
-    "date_created": "2026-06-09T17:23:18.646Z",
+    "date_created": "2026-06-15T17:54:45.454Z",
     "name": "Sofia",
     "last_name": "Uchoa",
     "type": "therapist",
@@ -211,7 +211,7 @@
     "active": 1,
     "is_prescriber": "false",
     "is_collaborator": "false",
-    "professional_code": "a8b3462d-ef98-4e40-ad20-ef42c8ca7d31",
+    "professional_code": "d8af4c4d-ae93-42b5-b1d5-d55d80415907",
     "fingerprint": "fp-demo-8",
     "contest_reports": {
       "demo": true,
@@ -225,7 +225,7 @@
   },
   {
     "sort": 9,
-    "date_created": "2026-06-10T17:23:18.646Z",
+    "date_created": "2026-06-16T17:54:45.454Z",
     "name": "Tiago",
     "last_name": "Vieira",
     "type": "therapist",
@@ -239,7 +239,7 @@
     "active": 1,
     "is_prescriber": "true",
     "is_collaborator": "false",
-    "professional_code": "cf655a47-6372-4ca0-81ed-adeff6ff479f",
+    "professional_code": "cdd067f8-a270-4298-96d9-ba08e949221c",
     "fingerprint": "fp-demo-9",
     "contest_reports": {
       "demo": true,
@@ -253,7 +253,7 @@
   },
   {
     "sort": 10,
-    "date_created": "2026-06-11T17:23:18.646Z",
+    "date_created": "2026-06-17T17:54:45.455Z",
     "name": "Úrsula",
     "last_name": "Wagner",
     "type": "medic",
@@ -267,7 +267,7 @@
     "active": 1,
     "is_prescriber": "false",
     "is_collaborator": "false",
-    "professional_code": "24611120-8ec2-4bc1-ba86-761fe2fd81f4",
+    "professional_code": "c5dd5274-30d2-4d45-bef4-2190be24836a",
     "fingerprint": "fp-demo-10",
     "contest_reports": {
       "demo": true,

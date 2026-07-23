@@ -994,6 +994,8 @@ export function ExternalServiceDetailPage({ api }) {
         await openMelhorEnvioOAuth();
       } else if (service === 'google_calendar') {
         await openGoogleCalendarOAuth();
+      } else if (service === 'email') {
+        reportMsg('auth', 'Credenciais autenticadas e módulo ativado');
       } else {
         reportMsg('auth', 'Credenciais autenticadas (teste ok)');
       }
@@ -1635,8 +1637,8 @@ export function ExternalServiceDetailPage({ api }) {
                 )}
                 {service === 'email' && (
                   <p className="muted" data-testid="email-smtp-hint">
-                    Autenticar valida a conexão SMTP (VERIFY). Depois use o campo abaixo para enviar um
-                    e-mail de teste. Ative o módulo no interruptor acima para liberar o envio nos sistemas.
+                    Autenticar valida a conexão SMTP (VERIFY) e ativa o módulo automaticamente. Depois
+                    use o campo abaixo para enviar um e-mail de teste.
                   </p>
                 )}
                 {service === 'soucannabis_orders' && (

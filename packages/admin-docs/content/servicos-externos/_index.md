@@ -55,7 +55,7 @@ Credenciais → Autenticar → Dados necessários → Módulo ativo → Usos
 | Pagar.me | [Pagar.me](/inicio/servicos-pagarme) |
 | Pedidos SouCannabis | [Pedidos SouCannabis](/inicio/servicos-soucannabis) |
 | Utalk (WhatsApp) | [Utalk](/inicio/servicos-utalk) |
-| Armazenamento em nuvem | [Armazenamento](/inicio/configuracoes-armazenamento) |
+| Armazenamento e Backup | [Armazenamento e Backup](/inicio/configuracoes-armazenamento) |
 
 ## Documentação técnica (desenvolvedores)
 

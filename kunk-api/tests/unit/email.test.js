@@ -3,7 +3,12 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const templates = require('../../src/services/email/templates');
-const { normalizeConfig } = require('../../src/services/email');
+const {
+  normalizeConfig,
+  formatSmtpError,
+  SMTP_TIMEOUT_MS,
+  testConnection,
+} = require('../../src/services/email');
 const { checkRateLimit, resetRateLimits } = require('../../src/utils/rateLimit');
 
 describe('email templates', () => {
@@ -46,6 +51,58 @@ describe('email normalizeConfig', () => {
     assert.equal(cfg.port, 465);
     assert.equal(cfg.secure, true);
     assert.equal(cfg.fromEmail, 'a@b.c');
+  });
+});
+
+describe('email formatSmtpError', () => {
+  it('maps timeout and network failures', () => {
+    assert.match(
+      formatSmtpError({ code: 'SMTP_TIMEOUT', message: 'Timeout' }, { host: 'smtp.x', port: 587 }),
+      /Tempo esgotado/
+    );
+    assert.match(
+      formatSmtpError(
+        { code: 'ECONNREFUSED', message: 'connect ECONNREFUSED' },
+        { host: 'smtp.x', port: 25 }
+      ),
+      /recusada/
+    );
+    assert.match(
+      formatSmtpError({ code: 'ENOTFOUND', message: 'getaddrinfo ENOTFOUND' }, { host: 'bad.host' }),
+      /não encontrado/
+    );
+    assert.match(
+      formatSmtpError({ responseCode: 535, message: 'Authentication failed' }, { host: 'smtp.x' }),
+      /Autenticação SMTP rejeitada/
+    );
+  });
+
+  it('exposes a finite SMTP timeout', () => {
+    assert.ok(SMTP_TIMEOUT_MS >= 5000 && SMTP_TIMEOUT_MS <= 60000);
+  });
+});
+
+describe('email testConnection timeout', () => {
+  it('fails within timeout against a blackhole host', async () => {
+    // 192.0.2.0/24 is TEST-NET-1 (RFC 5737) — should not route; verify would hang without timeout.
+    const started = Date.now();
+    await assert.rejects(
+      () =>
+        testConnection({
+          host: '192.0.2.1',
+          port: 465,
+          secure: true,
+          from_email: 'test@example.com',
+          user: 'u',
+          pass: 'p',
+        }),
+      /Tempo esgotado|recusada|interrompida|TLS|Falha/
+    );
+    const elapsed = Date.now() - started;
+    assert.ok(
+      elapsed < SMTP_TIMEOUT_MS + 5000,
+      `testConnection demorou demais (${elapsed}ms); esperado < ${SMTP_TIMEOUT_MS + 5000}`
+    );
   });
 });
 

@@ -1,10 +1,10 @@
 # Configurar Google Cloud Storage (Armazenamento Kunk)
 
-> O Kunk acessa o bucket **com uma service account** (arquivo JSON). O bucket deve permanecer **privado** — não é necessário tornar objetos públicos nem configurar “allUsers”.
+> O Kunk acessa o bucket **com uma service account** (arquivo JSON). Use um bucket **exclusivo do Kunk**, **privado** — não é necessário tornar objetos públicos nem configurar “allUsers”.
 
 ## Visão geral
 
-1. Crie um bucket GCS privado.
+1. Crie um bucket GCS **só para o Kunk** (privado).
 2. Crie uma service account e conceda no bucket os papéis **Administrador de objetos do Storage** + **Administrador do Storage**.
 3. Baixe a chave JSON.
 4. No **Admin → Armazenamento**, informe o bucket e faça upload do JSON.
@@ -16,7 +16,7 @@ Downloads e uploads dos apps continuam em `/api/v1/files/:id/download` — a API
 ## 1. Criar o bucket
 
 1. Console GCP → **Cloud Storage** → **Buckets** → **Create**.
-2. Nome único (ex.: `minha-instancia-kunk-files`).
+2. Nome único **exclusivo do Kunk** (ex.: `minha-instancia-kunk-files`). Não compartilhe com outros projetos.
 3. Localização (anote o projeto GCP).
 4. Controle de acesso: **Uniform** (recomendado).
 5. **Public access prevention**: mantenha **enforced** / sem acesso público.
