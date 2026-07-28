@@ -112,6 +112,163 @@ function ExtNavLink({ to, end, status, children }) {
   );
 }
 
+function NavIcon({ name, size = 15 }) {
+  const props = {
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    'aria-hidden': true,
+    className: 'admin-nav-icon',
+  };
+  switch (name) {
+    case 'home':
+      return (
+        <svg {...props}>
+          <path d="M3 10.5 12 3l9 7.5" />
+          <path d="M5 10v10h14V10" />
+        </svg>
+      );
+    case 'book':
+      return (
+        <svg {...props}>
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+      );
+    case 'building':
+      return (
+        <svg {...props}>
+          <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18" />
+          <path d="M6 12h12" />
+          <path d="M6 16h12" />
+          <path d="M10 6h.01" />
+          <path d="M14 6h.01" />
+          <path d="M10 10h.01" />
+          <path d="M14 10h.01" />
+          <path d="M2 22h20" />
+        </svg>
+      );
+    case 'database':
+      return (
+        <svg {...props}>
+          <ellipse cx="12" cy="5" rx="9" ry="3" />
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+          <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+        </svg>
+      );
+    case 'apps':
+      return (
+        <svg {...props}>
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+          <rect x="14" y="14" width="7" height="7" rx="1" />
+        </svg>
+      );
+    case 'settings':
+      return (
+        <svg {...props}>
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+      );
+    case 'plug':
+      return (
+        <svg {...props}>
+          <path d="M12 22v-5" />
+          <path d="M9 8V2" />
+          <path d="M15 8V2" />
+          <path d="M18 8v5a6 6 0 0 1-12 0V8z" />
+        </svg>
+      );
+    case 'wrench':
+      return (
+        <svg {...props}>
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+function TopNavLink({ to, end, icon, children }) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      className={({ isActive }) => `admin-nav-link-icon${isActive ? ' active' : ''}`}
+    >
+      <NavIcon name={icon} />
+      <span>{children}</span>
+    </NavLink>
+  );
+}
+
+function pathMatches(pathname, prefixes = []) {
+  return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+/** Seções / grupos / subgrupos — todos fechados por padrão. */
+function NavFold({
+  id,
+  label,
+  level = 'section',
+  icon,
+  openMap,
+  setOpenMap,
+  match = [],
+  /** Prefixos que forçam abertura (default = match). Separado do destaque is-active. */
+  openMatch,
+  children,
+}) {
+  const location = useLocation();
+  const open = Boolean(openMap[id]);
+  const active = pathMatches(location.pathname, match);
+  const shouldOpen = pathMatches(location.pathname, openMatch ?? match);
+
+  React.useEffect(() => {
+    if (!shouldOpen) return;
+    setOpenMap((prev) => (prev[id] ? prev : { ...prev, [id]: true }));
+  }, [shouldOpen, id, setOpenMap]);
+
+  function toggle() {
+    setOpenMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  const foldClass =
+    level === 'section'
+      ? 'admin-nav-section admin-nav-fold'
+      : level === 'group'
+        ? 'admin-nav-group admin-nav-fold'
+        : 'admin-nav-subgroup admin-nav-fold';
+
+  return (
+    <div className={`admin-nav-fold-block admin-nav-fold-block--${level}${open ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className={`${foldClass}${active ? ' is-active' : ''}`}
+        onClick={toggle}
+        aria-expanded={open}
+      >
+        <span className="admin-nav-fold-main">
+          {level === 'section' && icon ? <NavIcon name={icon} /> : null}
+          <span className="admin-nav-fold-label">{label}</span>
+        </span>
+        <span className="admin-nav-fold-chevron" aria-hidden="true">
+          {open ? '▾' : '▸'}
+        </span>
+      </button>
+      {open ? <div className="admin-nav-fold-body">{children}</div> : null}
+    </div>
+  );
+}
+
 export function AdminShell({ api }) {
   const { user, logout } = useOperatorAuth();
   const navigate = useNavigate();
@@ -120,6 +277,7 @@ export function AdminShell({ api }) {
   const [emailModuleActive, setEmailModuleActive] = React.useState(null);
   const [emailPromptOpen, setEmailPromptOpen] = React.useState(false);
   const [extStatuses, setExtStatuses] = React.useState({});
+  const [navOpen, setNavOpen] = React.useState({});
 
   const onEmailConfigPage = location.pathname === EMAIL_CONFIG_PATH;
 
@@ -226,109 +384,200 @@ export function AdminShell({ api }) {
       <aside className="admin-nav">
         <div className="brand">Kunk Admin</div>
 
-        <NavLink to="/home" className={({ isActive }) => (isActive ? 'active' : '')}>
+        <TopNavLink to="/home" icon="home">
           Home
-        </NavLink>
-        <NavLink to="/inicio" className={({ isActive }) => (isActive ? 'active' : '')}>
+        </TopNavLink>
+        <TopNavLink to="/inicio" icon="book">
           Documentação
-        </NavLink>
+        </TopNavLink>
 
-        <NavLink to="/dados-associacao" className={({ isActive }) => (isActive ? 'active' : '')}>
+        <TopNavLink to="/dados-associacao" icon="building">
           Dados da associação
-        </NavLink>
-        <NavLink to="/sistema-cadastro" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Sistema de cadastro
-        </NavLink>
+        </TopNavLink>
+        <TopNavLink to="/dados" icon="database">
+          Banco de dados
+        </TopNavLink>
 
-        <div className="admin-nav-section">Triagem</div>
-        <NavLink to="/triagem/formulario" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Formulário
-        </NavLink>
-        <NavLink to="/triagem/status" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Status da fila
-        </NavLink>
-        <NavLink to="/triagem/modulos" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Módulos
-        </NavLink>
-
-        <div className="admin-nav-section">Dados</div>
-        <NavLink to="/dados" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Registros
-        </NavLink>
-        <NavLink to="/arquivos" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Arquivos
-        </NavLink>
-
-        <div className="admin-nav-section">Configurações do sistema</div>
-        <NavLink to="/configs" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Variáveis
-        </NavLink>
-        <NavLink to="/armazenamento" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Armazenamento e Backup
-        </NavLink>
-        <NavLink to="/cache" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Cache
-        </NavLink>
-        <NavLink to="/aparencia" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Aparência
-        </NavLink>
-
-        <div className="admin-nav-section">Kunk</div>
-        <NavLink
-          to="/kunk/configuracao-profissionais"
-          className={({ isActive }) => (isActive ? 'active' : '')}
+        <NavFold
+          id="aplicativos"
+          label="Aplicativos"
+          level="section"
+          icon="apps"
+          openMap={navOpen}
+          setOpenMap={setNavOpen}
+          match={['/sistema-cadastro', '/kunk', '/triagem', '/loja', '/aparencia']}
         >
-          Configuração de profissionais
-        </NavLink>
-        <NavLink to="/kunk/permissoes" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Permissões de acesso
-        </NavLink>
-        <NavLink to="/kunk/ciap2" className={({ isActive }) => (isActive ? 'active' : '')}>
-          CIAP-2
-        </NavLink>
+          <NavFold
+            id="kunk"
+            label="Kunk"
+            level="group"
+            openMap={navOpen}
+            setOpenMap={setNavOpen}
+            match={['/kunk', '/triagem', '/loja', '/aparencia']}
+          >
+            <div className="admin-nav-nested">
+              <NavFold
+                id="triagem"
+                label="Triagem"
+                level="subgroup"
+                openMap={navOpen}
+                setOpenMap={setNavOpen}
+                match={['/triagem']}
+              >
+                <div className="admin-nav-nested">
+                  <NavLink to="/triagem/formulario" className={({ isActive }) => (isActive ? 'active' : '')}>
+                    Formulário
+                  </NavLink>
+                  <NavLink to="/triagem/status" className={({ isActive }) => (isActive ? 'active' : '')}>
+                    Status da fila
+                  </NavLink>
+                  <NavLink to="/triagem/modulos" className={({ isActive }) => (isActive ? 'active' : '')}>
+                    Módulos
+                  </NavLink>
+                </div>
+              </NavFold>
+              <NavFold
+                id="profissionais"
+                label="Profissionais"
+                level="subgroup"
+                openMap={navOpen}
+                setOpenMap={setNavOpen}
+                match={['/kunk/configuracao-profissionais']}
+              >
+                <div className="admin-nav-nested">
+                  <NavLink
+                    to="/kunk/configuracao-profissionais"
+                    className={({ isActive }) => (isActive ? 'active' : '')}
+                  >
+                    Configurações
+                  </NavLink>
+                </div>
+              </NavFold>
+              <NavFold
+                id="loja"
+                label="Loja"
+                level="subgroup"
+                openMap={navOpen}
+                setOpenMap={setNavOpen}
+                match={['/loja']}
+              >
+                <div className="admin-nav-nested">
+                  <NavLink to="/loja/status-pedidos" className={({ isActive }) => (isActive ? 'active' : '')}>
+                    Status dos pedidos
+                  </NavLink>
+                </div>
+              </NavFold>
+              <NavLink to="/kunk/permissoes" className={({ isActive }) => (isActive ? 'active' : '')}>
+                Permissões de acesso
+              </NavLink>
+              <NavLink to="/kunk/ciap2" className={({ isActive }) => (isActive ? 'active' : '')}>
+                CIAP-2
+              </NavLink>
+              <NavLink to="/kunk/aparencia" className={({ isActive }) => (isActive ? 'active' : '')}>
+                Aparência
+              </NavLink>
+            </div>
+          </NavFold>
+          <NavFold
+            id="cadastro"
+            label="Sistema de cadastro"
+            level="group"
+            openMap={navOpen}
+            setOpenMap={setNavOpen}
+            match={['/sistema-cadastro']}
+          >
+            <div className="admin-nav-nested">
+              <NavLink to="/sistema-cadastro" className={({ isActive }) => (isActive ? 'active' : '')}>
+                Configurações
+              </NavLink>
+            </div>
+          </NavFold>
+        </NavFold>
 
-        <div className="admin-nav-section">Loja</div>
-        <NavLink to="/loja/status-pedidos" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Status dos pedidos
-        </NavLink>
-
-        <div className="admin-nav-section">Webmaster</div>
-        <NavLink to="/usuarios" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Usuários
-        </NavLink>
-        <NavLink to="/credenciais-suporte" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Credenciais de suporte
-        </NavLink>
-        <NavLink to="/acesso-api" className={({ isActive }) => (isActive ? 'active' : '')}>
-          API
-        </NavLink>
-        <NavLink to="/erros-sistema" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Erros do sistema
-        </NavLink>
-        <NavLink to="/web-vitals" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Web Vitals
-        </NavLink>
-
-        <div className="admin-nav-section">Serviços externos</div>
-        <NavLink to="/servicos-externos" end className={({ isActive }) => (isActive ? 'active' : '')}>
-          Visão geral
-        </NavLink>
-        <div className="admin-nav-group">Transportadoras</div>
-        <div className="admin-nav-nested">
-          <ExtNavLink to="/servicos-externos/envio" status={extStatuses.envio}>
-            Dados de envio
-          </ExtNavLink>
-          {EXT_FREIGHT_SLUGS.map((slug) => (
+        <NavFold
+          id="externos"
+          label="Serviços externos"
+          level="section"
+          icon="plug"
+          openMap={navOpen}
+          setOpenMap={setNavOpen}
+          match={['/servicos-externos']}
+        >
+          <NavLink to="/servicos-externos" end className={({ isActive }) => (isActive ? 'active' : '')}>
+            Visão geral
+          </NavLink>
+          <NavFold
+            id="transportadoras"
+            label="Transportadoras"
+            level="group"
+            openMap={navOpen}
+            setOpenMap={setNavOpen}
+            match={[
+              '/servicos-externos/envio',
+              ...EXT_FREIGHT_SLUGS.map((s) => `/servicos-externos/${s}`),
+            ]}
+            openMatch={['/servicos-externos']}
+          >
+            <div className="admin-nav-nested">
+              <ExtNavLink to="/servicos-externos/envio" status={extStatuses.envio}>
+                Dados de envio
+              </ExtNavLink>
+              {EXT_FREIGHT_SLUGS.map((slug) => (
+                <ExtNavLink key={slug} to={`/servicos-externos/${slug}`} status={extStatuses[slug]}>
+                  {EXT_SERVICE_LABELS[slug] || slug}
+                </ExtNavLink>
+              ))}
+            </div>
+          </NavFold>
+          {EXT_OTHER_SLUGS.map((slug) => (
             <ExtNavLink key={slug} to={`/servicos-externos/${slug}`} status={extStatuses[slug]}>
               {EXT_SERVICE_LABELS[slug] || slug}
             </ExtNavLink>
           ))}
-        </div>
-        {EXT_OTHER_SLUGS.map((slug) => (
-          <ExtNavLink key={slug} to={`/servicos-externos/${slug}`} status={extStatuses[slug]}>
-            {EXT_SERVICE_LABELS[slug] || slug}
-          </ExtNavLink>
-        ))}
+        </NavFold>
+
+        <NavFold
+          id="configs"
+          label="Configurações do sistema"
+          level="section"
+          icon="settings"
+          openMap={navOpen}
+          setOpenMap={setNavOpen}
+          match={['/armazenamento', '/cache']}
+        >
+          <NavLink to="/armazenamento" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Armazenamento e Backup
+          </NavLink>
+          <NavLink to="/cache" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Cache
+          </NavLink>
+        </NavFold>
+
+        <NavFold
+          id="webmaster"
+          label="Webmaster"
+          level="section"
+          icon="wrench"
+          openMap={navOpen}
+          setOpenMap={setNavOpen}
+          match={['/usuarios', '/credenciais-suporte', '/acesso-api', '/erros-sistema', '/web-vitals']}
+        >
+          <NavLink to="/usuarios" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Usuários
+          </NavLink>
+          <NavLink to="/credenciais-suporte" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Credenciais de suporte
+          </NavLink>
+          <NavLink to="/acesso-api" className={({ isActive }) => (isActive ? 'active' : '')}>
+            API
+          </NavLink>
+          <NavLink to="/erros-sistema" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Erros do sistema
+          </NavLink>
+          <NavLink to="/web-vitals" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Web Vitals
+          </NavLink>
+        </NavFold>
 
         <div style={{ flex: 1 }} />
         <div className="muted" style={{ fontSize: '0.8rem', padding: '0.5rem' }}>

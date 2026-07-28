@@ -17,7 +17,7 @@ test.describe('central de ajuda (documentação)', () => {
     await expect(page.getByRole('heading', { name: 'Central de ajuda', exact: true })).toBeVisible();
   });
 
-  test('pesquisa encontra artigo e Abrir no Admin navega', async ({ page }) => {
+  test('pesquisa encontra artigo e Ir para a página navega', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await page.goto(appUrl('/inicio'));
     await expect(page.getByTestId('admin-docs-home')).toBeVisible();
@@ -39,8 +39,8 @@ test.describe('central de ajuda (documentação)', () => {
 
   test('menu Documentação a partir de outra página', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await page.locator('.admin-nav').getByRole('link', { name: 'Arquivos', exact: true }).click();
-    await expect(page).toHaveURL(/\/arquivos/);
+    await page.locator('.admin-nav').getByRole('link', { name: 'Banco de dados', exact: true }).click();
+    await expect(page).toHaveURL(/\/dados\/?$/);
     await page.locator('.admin-nav').getByRole('link', { name: 'Documentação', exact: true }).click();
     await expect(page).toHaveURL(/\/inicio\/?$/);
     await expect(page.getByTestId('admin-docs-home')).toBeVisible();

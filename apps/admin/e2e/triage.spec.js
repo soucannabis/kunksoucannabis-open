@@ -8,22 +8,24 @@ test.describe('triagem (config admin)', () => {
     await ensureAdminUser();
   });
 
-  test('índice e subpáginas carregam', async ({ page }) => {
+  test('formulário — campos padrão', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await page.goto(appUrl('/triagem'));
-    await expect(page.getByRole('heading', { name: 'Triagem' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Área Triagem' })).toBeVisible();
-
     await page.goto(appUrl('/triagem/formulario'));
     await expect(page.getByRole('heading', { name: 'Campos padrão' })).toBeVisible({
       timeout: 20_000,
     });
+  });
 
+  test('status da fila', async ({ page }) => {
+    await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await page.goto(appUrl('/triagem/status'));
     await expect(page.getByRole('heading', { name: 'Status da fila' })).toBeVisible({
       timeout: 20_000,
     });
+  });
 
+  test('módulos', async ({ page }) => {
+    await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await page.goto(appUrl('/triagem/modulos'));
     await expect(page.getByRole('heading', { name: 'Módulos' })).toBeVisible({
       timeout: 20_000,

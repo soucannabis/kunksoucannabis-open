@@ -86,12 +86,27 @@ export function KunkConfigProvider({ api, children }) {
     let cancelled = false;
     (async () => {
       try {
-        const json = await api.get('/config/public?system=kunk');
-        const data = json?.data || {};
+        const [kunkResult, regResult] = await Promise.allSettled([
+          api.get('/config/public?system=kunk'),
+          api.get('/config/public?system=registration'),
+        ]);
         if (cancelled) return;
-        const merged = mergeKunkPublicConfigFromApi(bootstrap, data.values);
+
+        let merged = bootstrap;
+        let errors = [];
+        if (kunkResult.status === 'fulfilled') {
+          const data = kunkResult.value?.data || {};
+          merged = mergeKunkPublicConfigFromApi(bootstrap, data.values);
+          errors = Array.isArray(data.errors) ? data.errors : [];
+        }
+
+        if (regResult.status === 'fulfilled') {
+          const name = String(regResult.value?.data?.values?.VITE_ASSOCIATION_NAME || '').trim();
+          if (name) merged = { ...merged, title: name };
+        }
+
         setConfig(merged);
-        setConfigErrors(Array.isArray(data.errors) ? data.errors : []);
+        setConfigErrors(errors);
         // Only apply admin default if user has no stored preference
         try {
           const saved = localStorage.getItem(STORAGE_KEY);

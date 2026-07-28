@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AdminLoader } from '../components/AdminLoader.jsx';
+import { RefreshIcon } from '../components/RefreshIcon.jsx';
 
 const METRIC_LABELS = {
   LCP: 'LCP',
@@ -120,6 +121,7 @@ export function WebVitalsPage({ api }) {
           </select>
         </label>
         <button type="button" className="btn" onClick={() => void load()} disabled={loading}>
+          <RefreshIcon />
           Atualizar
         </button>
       </div>

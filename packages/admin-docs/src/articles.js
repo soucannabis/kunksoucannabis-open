@@ -8,8 +8,6 @@ import triagemFormulario from '../content/triagem-formulario.md?raw';
 import triagemStatus from '../content/triagem-status.md?raw';
 import triagemModulos from '../content/triagem-modulos.md?raw';
 import dadosRegistros from '../content/dados-registros.md?raw';
-import dadosArquivos from '../content/dados-arquivos.md?raw';
-import configuracoesVariaveis from '../content/configuracoes-variaveis.md?raw';
 import configuracoesArmazenamento from '../content/configuracoes-armazenamento.md?raw';
 import configuracoesCache from '../content/configuracoes-cache.md?raw';
 import configuracoesAparencia from '../content/configuracoes-aparencia.md?raw';
@@ -41,9 +39,7 @@ const SLUG_BY_ID = {
   'triagem-status': 'triagem-status',
   'triagem-modulos': 'triagem-modulos',
   'dados-registros': 'dados',
-  'dados-arquivos': 'arquivos',
-  'configuracoes-variaveis': 'configuracoes',
-  'configuracoes-armazenamento': 'configuracoes-armazenamento',
+  'configuracoes-armazenamento': 'configuracoes',
   'configuracoes-cache': 'configuracoes-cache',
   'configuracoes-aparencia': 'configuracoes-aparencia',
   'kunk-profissionais': 'kunk',
@@ -74,8 +70,6 @@ const RAW_ARTICLES = [
   triagemStatus,
   triagemModulos,
   dadosRegistros,
-  dadosArquivos,
-  configuracoesVariaveis,
   configuracoesArmazenamento,
   configuracoesCache,
   configuracoesAparencia,

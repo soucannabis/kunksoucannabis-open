@@ -52,8 +52,8 @@ button, input, select, textarea {
 
 .admin-nav-section {
   color: #f5f8f5;
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 0.85rem 0.75rem 0.2rem;
@@ -72,17 +72,131 @@ button, input, select, textarea {
   padding: 0.55rem 0.75rem 0.15rem;
 }
 
+.admin-nav-subgroup {
+  color: var(--admin-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  padding: 0.45rem 0.75rem 0.1rem 0.85rem;
+}
+
+.admin-nav-fold {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  border-radius: 6px;
+}
+
+.admin-nav-fold:hover {
+  background: #243028;
+  color: var(--admin-text);
+}
+
+.admin-nav-fold-label {
+  min-width: 0;
+}
+
+.admin-nav-fold-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.admin-nav-icon {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.admin-nav-link-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--admin-muted);
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.92rem;
+}
+
+.admin-nav-link-icon.active,
+.admin-nav-link-icon:hover {
+  background: #243028;
+  color: var(--admin-text);
+  text-decoration: none;
+}
+
+.admin-nav-fold-chevron {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  opacity: 0.75;
+}
+
+.admin-nav-fold-block--section > .admin-nav-fold {
+  margin-top: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.admin-nav-fold-block--group > .admin-nav-fold {
+  padding: 0.35rem 0.55rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.admin-nav-fold-block--subgroup > .admin-nav-fold {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--admin-muted);
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.admin-nav-fold-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Recuo visual de parent → filho */
+.admin-nav-fold-block--section > .admin-nav-fold-body {
+  margin: 0.1rem 0 0.25rem 0.7rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--admin-border);
+}
+
+.admin-nav-fold-block--group > .admin-nav-fold-body,
+.admin-nav-fold-block--subgroup > .admin-nav-fold-body {
+  margin: 0.05rem 0 0.2rem 0.55rem;
+  padding-left: 0.4rem;
+  border-left: 1px solid var(--admin-border);
+}
+
 .admin-nav-nested {
   display: flex;
   flex-direction: column;
-  margin: 0 0 0.2rem 0.85rem;
-  padding-left: 0.45rem;
+  margin: 0 0 0.15rem 0;
+  padding-left: 0;
+  border-left: none;
+}
+
+.admin-nav-nested .admin-nav-nested {
+  margin: 0.05rem 0 0.15rem 0.55rem;
+  padding-left: 0.4rem;
   border-left: 1px solid var(--admin-border);
 }
 
 .admin-nav-nested a {
-  font-size: 0.88rem;
-  padding-left: 0.85rem;
+  font-size: 0.84rem;
+  padding-left: 0.65rem;
 }
 
 .admin-nav a {
@@ -600,6 +714,35 @@ table.data th { color: var(--admin-muted); font-weight: 600; }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
+}
+
+.association-data-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+  gap: 1.25rem;
+  align-items: start;
+  max-width: 960px;
+}
+
+.association-data-card-title {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+}
+
+.association-data-card--logo .logo-frame-preview {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.association-data-card--logo .appearance-upload-row {
+  justify-content: center;
+}
+
+@media (max-width: 800px) {
+  .association-data-layout {
+    grid-template-columns: 1fr;
+    max-width: 560px;
+  }
 }
 
 .association-fields-row--city-uf {
@@ -2333,7 +2476,8 @@ table.backup-list td {
 }
 
 .ext-status-dot--ok {
-  background: #5a8f5e;
+  background: #c6ff00;
+  box-shadow: 0 0 0 2px rgba(198, 255, 0, 0.35);
 }
 
 .ext-status-dot--authenticated {
@@ -2364,6 +2508,11 @@ table.backup-list td {
 
 .admin-nav-ext-link .ext-status-dot {
   margin-top: 0;
+}
+
+.admin-nav-ext-link .ext-status-dot--ok {
+  background: #c6ff00;
+  box-shadow: 0 0 6px 1px rgba(198, 255, 0, 0.55);
 }
 
 .ext-overview-grid {

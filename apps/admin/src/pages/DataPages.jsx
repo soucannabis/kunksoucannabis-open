@@ -163,7 +163,7 @@ export function DataIndexPage({ api }) {
 
   return (
     <div>
-      <h1>Registros</h1>
+      <h1>Banco de dados</h1>
       <p className="muted">Visualize e edite os registros cadastrados no sistema.</p>
       {error ? <div className="alert alert-error">{error}</div> : null}
       <div className="grid-2" style={{ marginTop: '1rem' }}>
@@ -662,7 +662,7 @@ export function DataCollectionPage({ api }) {
         <div>
           <h1>{label}</h1>
           <p className="muted">
-            <Link to="/dados">← Registros</Link>
+            <Link to="/dados">← Banco de dados</Link>
             {total != null ? ` · ${total} registro${total === 1 ? '' : 's'}` : null}
             {loading ? ' · atualizando…' : null}
           </p>

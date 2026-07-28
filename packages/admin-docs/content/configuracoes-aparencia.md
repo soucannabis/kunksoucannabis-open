@@ -2,20 +2,22 @@
 id: configuracoes-aparencia
 title: Aparência do Kunk
 section: configuracoes
-adminPath: /aparencia
-keywords: [aparência, logo, cores, branding, tema]
+adminPath: /kunk/aparencia
+keywords: [aparência, cores, branding, tema, fundo, menu]
 order: 53
 ---
 
 ## Para que serve
 
-Personaliza a **cara do app Kunk**: logo, título e cores da associação.
+Personaliza **fundo, menu e temas** do app Kunk.
+
+Logo e título (nome da associação) ficam em [Dados da associação](/inicio/dados-associacao).
 
 ## O que você configura
 
-- Logo (com recorte)
-- Título / nome exibido
-- Cores principais da interface
+- Fundo do sistema (cor ou imagem)
+- Cores do menu lateral
+- Tema padrão e paletas claro / escuro
 
 ## Quando usar
 

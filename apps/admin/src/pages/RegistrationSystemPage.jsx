@@ -3,9 +3,9 @@ import { REGISTRATION_SYSTEM_DEFAULTS } from '@kunk/config';
 import { loadRegistrationSystem, saveRegistrationSystem } from '../lib/registrationSystemConfig.js';
 import { AdminLoader } from '../components/AdminLoader.jsx';
 
-function Field({ label, hint, children }) {
+function Field({ label, hint, children, style }) {
   return (
-    <label className="field">
+    <label className="field" style={style}>
       <span>{label}</span>
       {hint ? <span className="muted" style={{ display: 'block', fontWeight: 400, marginBottom: '0.35rem' }}>{hint}</span> : null}
       {children}
@@ -72,7 +72,7 @@ export function RegistrationSystemPage({ api }) {
     <div>
       <h1 style={{ marginTop: 0 }}>Sistema de cadastro</h1>
       <p className="muted">
-        Textos e opções do funil público de cadastramento de associados.
+        Textos de boas-vindas e de cadastro concluído, e atalho para solicitação de contato (triagem).
       </p>
       {error ? <div className="alert alert-error">{error}</div> : null}
       {message ? <div className="alert alert-success">{message}</div> : null}
@@ -104,23 +104,28 @@ export function RegistrationSystemPage({ api }) {
           />
         </Field>
 
-        <Field
-          label="Exibir botão da triagem"
-          hint="Quando habilitado, mostra o botão “Abrir uma solicitação de contato” na tela de cadastro concluído."
+        <label
+          className={`ext-flag${form.showTriageButton ? ' ext-flag--active' : ''}`}
+          data-testid="show-triage-button-toggle"
         >
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.35rem' }}>
-            <input
-              type="checkbox"
-              checked={Boolean(form.showTriageButton)}
-              onChange={(e) => setField('showTriageButton', e.target.checked)}
-            />
-            <span>{form.showTriageButton ? 'Habilitado' : 'Desabilitado'}</span>
-          </label>
-        </Field>
+          <input
+            type="checkbox"
+            checked={Boolean(form.showTriageButton)}
+            onChange={(e) => setField('showTriageButton', e.target.checked)}
+          />
+          <span className="ext-flag-body">
+            <strong>Exibir botão da triagem</strong>
+            <span className="muted">
+              Quando habilitado, mostra o botão “Abrir uma solicitação de contato” na tela de
+              cadastro concluído.
+            </span>
+          </span>
+        </label>
 
         <Field
           label="URL do formulário de contato"
           hint="Caminho ou URL da página de contato no cadastramento (padrão /contato)."
+          style={{ marginTop: '1.25rem' }}
         >
           <input
             type="text"

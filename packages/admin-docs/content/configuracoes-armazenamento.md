@@ -4,7 +4,7 @@ title: Armazenamento e Backup
 section: configuracoes
 adminPath: /armazenamento
 keywords: [armazenamento, s3, gcs, bucket, storage, arquivos, backup, restore]
-order: 51
+order: 50
 ---
 
 ## Para que serve
@@ -56,4 +56,4 @@ Backups só ficam disponíveis com o bucket **autenticado e ativo**.
 
 ## Quando usar
 
-Em produção, recomenda-se nuvem para não perder arquivos se o servidor for recriado, e backups diários no mesmo bucket. Em desenvolvimento local, o driver local costuma bastar (sem módulo de backup).
+Em produção, recomenda-se nuvem para não perder arquivos se o servidor for recriado, e backups diários no mesmo bucket.

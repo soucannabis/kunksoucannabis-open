@@ -27,7 +27,8 @@
     "docker:admin": "docker compose -f apps/admin/docker-compose.yml up --build",
     "docker:kunk-app": "docker compose -f apps/kunk/docker-compose.yml up --build",
     "docker:doc-sign": "docker compose -f apps/doc-sign/docker-compose.yml up --build",
-    "docker:kunk": "docker compose -f docker-compose.kunk.yml up --build"
+    "docker:kunk": "docker compose -f docker-compose.kunk.yml up --build",
+    "checklist": "node project-tools/roadmap/server.mjs"
   },
   "engines": {
     "node": ">=18"

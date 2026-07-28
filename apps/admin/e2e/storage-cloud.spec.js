@@ -51,13 +51,7 @@ test.describe('armazenamento cloud — bucket ativo', () => {
 
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(page).toHaveURL(/\/home\/?$/);
-    await page.goto(appUrl(`/arquivos/${up.data.id}`));
-    await expect(page.getByRole('heading', { name: filename })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Download' })).toHaveAttribute(
-      'href',
-      expectedFileUrl(up.data.id)
-    );
-
+    // Página Arquivos removida do Admin — download via API já validado acima.
     await request.delete(`${API_URL}/files/${up.data.id}`, { failOnStatusCode: false });
   });
 });

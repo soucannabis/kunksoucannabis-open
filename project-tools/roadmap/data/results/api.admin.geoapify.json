@@ -1,0 +1,109 @@
+{
+  "testId": "api.admin.geoapify",
+  "featureId": "admin-ext-geoapify",
+  "kind": "api",
+  "label": "API · geoapify",
+  "descriptionPt": "Valida composição/validação de endereço Geoapify. Esta execução percorreu 10 caso(s) em tests/unit/geoapifyComposite.test.js, com explicação individual do cenário e do resultado em português.",
+  "cwd": "kunk-api",
+  "files": [
+    "tests/unit/geoapifyComposite.test.js"
+  ],
+  "command": "/home/felipe/.nvm/versions/node/v22.21.1/bin/node --test --test-concurrency=1 --test-reporter=spec tests/unit/geoapifyComposite.test.js",
+  "startedAt": "2026-07-23T21:10:07.905Z",
+  "finishedAt": "2026-07-23T21:10:08.192Z",
+  "exitCode": 0,
+  "timedOut": false,
+  "ok": true,
+  "summary": {
+    "tests": 9,
+    "pass": 9,
+    "fail": 0,
+    "skipped": 0,
+    "durationMs": 194.274778,
+    "summaryPt": "Suíte concluída com sucesso: 9 teste(s) passaram em ~194 ms. Objetivo: Valida composição/validação de endereço Geoapify. Exemplos de casos cobertos: “formatAddressText omits complement”; “crossCheck marks divergente street”; “buildViaCepReport handles cep not found”; …. Cada item abaixo explica o que foi verificado e por quê."
+  },
+  "cases": [
+    {
+      "title": "formatAddressText omits complement",
+      "status": "pass",
+      "durationMs": 1.591134,
+      "descriptionPt": "Contexto da suíte: Valida composição/validação de endereço Geoapify. Domínio: validação e composição de endereço (Geoapify / ViaCEP). Avalia a função/rotina “format Address Text” e confirma que ela omite complemento. O título original (“formatAddressText omits complement”) aponta a unidade sob teste (format Address Text) e a asserção principal (omite complemento). O objetivo é classificar o endereço como válido, revisar ou inválido, cruzando CEP, logradouro e consistência entre as fontes. Arquivos exercitados: tests/unit/geoapifyComposite.test.js.",
+      "resultPt": "Resultado: PASSOU. A asserção de “formatAddressText omits complement” foi atendida — avalia a função/rotina “format address text” e confirma que ela omite complemento. Isso reforça a confiança no domínio de validação e composição de endereço (Geoapify / ViaCEP). Duração observada: 2 ms.",
+      "error": ""
+    },
+    {
+      "title": "crossCheck marks divergente street",
+      "status": "pass",
+      "durationMs": 1.566205,
+      "descriptionPt": "Contexto da suíte: Valida composição/validação de endereço Geoapify. Domínio: validação e composição de endereço (Geoapify / ViaCEP). Avalia a função/rotina “cross Check” e confirma que ela marca divergente logradouro. O título original (“crossCheck marks divergente street”) aponta a unidade sob teste (cross Check) e a asserção principal (marca divergente logradouro). O objetivo é classificar o endereço como válido, revisar ou inválido, cruzando CEP, logradouro e consistência entre as fontes. Arquivos exercitados: tests/unit/geoapifyComposite.test.js.",
+      "resultPt": "Resultado: PASSOU. A asserção de “crossCheck marks divergente street” foi atendida — avalia a função/rotina “cross check” e confirma que ela marca divergente logradouro. Isso reforça a confiança no domínio de validação e composição de endereço (Geoapify / ViaCEP). Duração observada: 2 ms.",
+      "error": ""
+    },
+    {
+      "title": "buildViaCepReport handles cep not found",
+      "status": "pass",
+      "durationMs": 0.451288,
+      "descriptionPt": "Contexto da suíte: Valida composição/validação de endereço Geoapify. Domínio: validação e composição de endereço (Geoapify / ViaCEP). Avalia a função/rotina “build Via Cep Report” e confirma que ela trata CEP não encontrado nos Correios. O título original (“buildViaCepReport handles cep not found”) aponta a unidade sob teste (build Via Cep Report) e a asserção principal (trata CEP não encontrado nos Correios). O objetivo é classificar o endereço como válido, revisar ou inválido, cruzando CEP, logradouro e consistência entre as fontes. Arquivos exercitados: tests/unit/geoapifyComposite.test.js.",
+      "resultPt": "Resultado: PASSOU. A asserção de “buildViaCepReport handles cep not found” foi atendida — avalia a função/rotina “build via cep report” e confirma que ela trata CEP não encontrado nos Correios. Isso reforça a confiança no domínio de validação e composição de endereço (Geoapify / ViaCEP). Duração observada: 0 ms.",
+      "error": ""
+    },
+    {
+      "title": "válido when ViaCEP consistent and street confidence high",
+      "status": "pass",
+      "durationMs": 1.411067,
+      "descriptionPt": "Contexto da suíte: Valida composição/validação de endereço Geoapify. Domínio: validação e composição de endereço (Geoapify / ViaCEP). No cenário em que Via CEP consistente and confiança alta no logradouro o resultado esperado é “válido”. Cobre um ramo condicional (pré-condição → classificação/resultado), típico de regras de negócio. O objetivo é classificar o endereço como válido, revisar ou inválido, cruzando CEP, logradouro e consistência entre as fontes. Arquivos exercitados: tests/unit/geoapifyComposite.test.js.",
+      "resultPt": "Resultado: PASSOU. A asserção de “válido when ViaCEP consistent and street confidence high” foi atendida — no cenário em que via cep consistente and confiança alta no logradouro o resultado esperado é “válido”. Isso reforça a confiança no domínio de validação e composição de endereço (Geoapify / ViaCEP). Duração observada: 1 ms.",
+      "error": ""
+    },
+    {
+      "title": "válido with relaxed street when ViaCEP ok",
+      "status": "pass",
+      "durationMs": 1.330573,
+      "descriptionPt": "Contexto da suíte: Valida composição/validação de endereço Geoapify. Domínio: validação e composição de endereço (Geoapify / ViaCEP). No cenário em que Via CEP ok o resultado esperado é “válido with critério relaxado de logradouro”. Cobre um ramo condicional (pré-condição → classificação/resultado), típico de regras de negócio. O objetivo é classificar o endereço como válido, revisar ou inválido, cruzando CEP, logradouro e consistência entre as fontes. Arquivos exercitados: tests/unit/geoapifyComposite.test.js.",
+      "resultPt": "Resultado: PASSOU. A asserção de “válido with relaxed street when ViaCEP ok” foi atendida — no cenário em que via cep ok o resultado esperado é “válido with critério relaxado de logradouro”. Isso reforça a confiança no domínio de validação e composição de endereço (Geoapify / ViaCEP). Duração observada: 1 ms.",
+      "error": ""
+    },
+    {
+      "title": "revisar when Geoapify ok but ViaCEP inconsistent",
+      "status": "pass",
+      "durationMs": 0.491815,
+      "descriptionPt": "Contexto da suíte: Valida composição/validação de endereço Geoapify. Domínio: validação e composição de endereço (Geoapify / ViaCEP). No cenário em que Geoapify ok but Via CEP inconsistente o resultado esperado é “revisar”. Cobre um ramo condicional (pré-condição → classificação/resultado), típico de regras de negócio. O objetivo é classificar o endereço como válido, revisar ou inválido, cruzando CEP, logradouro e consistência entre as fontes. Arquivos exercitados: tests/unit/geoapifyComposite.test.js.",
+      "resultPt": "Resultado: PASSOU. A asserção de “revisar when Geoapify ok but ViaCEP inconsistent” foi atendida — no cenário em que geoapify ok but via cep inconsistente o resultado esperado é “revisar”. Isso reforça a confiança no domínio de validação e composição de endereço (Geoapify / ViaCEP). Duração observada: 0 ms.",
+      "error": ""
+    },
+    {
+      "title": "inválido when CEP not in Correios",
+      "status": "pass",
+      "durationMs": 0.60412,
+      "descriptionPt": "Contexto da suíte: Valida composição/validação de endereço Geoapify. Domínio: validação e composição de endereço (Geoapify / ViaCEP). No cenário em que CEP not in Correios o resultado esperado é “inválido”. Cobre um ramo condicional (pré-condição → classificação/resultado), típico de regras de negócio. O objetivo é classificar o endereço como válido, revisar ou inválido, cruzando CEP, logradouro e consistência entre as fontes. Arquivos exercitados: tests/unit/geoapifyComposite.test.js.",
+      "resultPt": "Resultado: PASSOU. A asserção de “inválido when CEP not in Correios” foi atendida — no cenário em que cep not in correios o resultado esperado é “inválido”. Isso reforça a confiança no domínio de validação e composição de endereço (Geoapify / ViaCEP). Duração observada: 1 ms.",
+      "error": ""
+    },
+    {
+      "title": "inválido when no features",
+      "status": "pass",
+      "durationMs": 0.887927,
+      "descriptionPt": "Contexto da suíte: Valida composição/validação de endereço Geoapify. Domínio: validação e composição de endereço (Geoapify / ViaCEP). No cenário em que sem resultados geográficos o resultado esperado é “inválido”. Cobre um ramo condicional (pré-condição → classificação/resultado), típico de regras de negócio. O objetivo é classificar o endereço como válido, revisar ou inválido, cruzando CEP, logradouro e consistência entre as fontes. Arquivos exercitados: tests/unit/geoapifyComposite.test.js.",
+      "resultPt": "Resultado: PASSOU. A asserção de “inválido when no features” foi atendida — no cenário em que sem resultados geográficos o resultado esperado é “inválido”. Isso reforça a confiança no domínio de validação e composição de endereço (Geoapify / ViaCEP). Duração observada: 1 ms.",
+      "error": ""
+    },
+    {
+      "title": "inválido when street below thresholds",
+      "status": "pass",
+      "durationMs": 1.342005,
+      "descriptionPt": "Contexto da suíte: Valida composição/validação de endereço Geoapify. Domínio: validação e composição de endereço (Geoapify / ViaCEP). No cenário em que logradouro abaixo dos limiares de confiança o resultado esperado é “inválido”. Cobre um ramo condicional (pré-condição → classificação/resultado), típico de regras de negócio. O objetivo é classificar o endereço como válido, revisar ou inválido, cruzando CEP, logradouro e consistência entre as fontes. Arquivos exercitados: tests/unit/geoapifyComposite.test.js.",
+      "resultPt": "Resultado: PASSOU. A asserção de “inválido when street below thresholds” foi atendida — no cenário em que logradouro abaixo dos limiares de confiança o resultado esperado é “inválido”. Isso reforça a confiança no domínio de validação e composição de endereço (Geoapify / ViaCEP). Duração observada: 1 ms.",
+      "error": ""
+    },
+    {
+      "title": "geoapify composite + viacep",
+      "status": "pass",
+      "durationMs": 13.309908,
+      "descriptionPt": "Contexto da suíte: Valida composição/validação de endereço Geoapify. Domínio: validação e composição de endereço (Geoapify / ViaCEP). Executa o cenário “geoapify composite + viacep” e verifica a asserção principal desse cenário. A narrativa foi montada a partir do nome do teste reportado pelo runner. O objetivo é classificar o endereço como válido, revisar ou inválido, cruzando CEP, logradouro e consistência entre as fontes. Arquivos exercitados: tests/unit/geoapifyComposite.test.js.",
+      "resultPt": "Resultado: PASSOU. A asserção de “geoapify composite + viacep” foi atendida — executa o cenário “geoapify composite + viacep” e verifica a asserção principal desse cenário. Isso reforça a confiança no domínio de validação e composição de endereço (Geoapify / ViaCEP). Duração observada: 13 ms.",
+      "error": ""
+    }
+  ],
+  "stdout": "▶ geoapify composite + viacep\n  ✔ formatAddressText omits complement (1.591134ms)\n  ✔ crossCheck marks divergente street (1.566205ms)\n  ✔ buildViaCepReport handles cep not found (0.451288ms)\n  ✔ válido when ViaCEP consistent and street confidence high (1.411067ms)\n  ✔ válido with relaxed street when ViaCEP ok (1.330573ms)\n  ✔ revisar when Geoapify ok but ViaCEP inconsistent (0.491815ms)\n  ✔ inválido when CEP not in Correios (0.60412ms)\n  ✔ inválido when no features (0.887927ms)\n  ✔ inválido when street below thresholds (1.342005ms)\n✔ geoapify composite + viacep (13.309908ms)\nℹ tests 9\nℹ suites 1\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 194.274778\n",
+  "stderr": ""
+}

@@ -10,7 +10,7 @@ test.describe('aparência', () => {
 
   test('abre configuração de aparência do Kunk', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await page.goto(appUrl('/aparencia'));
-    await expect(page.getByRole('heading', { name: /Aparência do Kunk/i })).toBeVisible();
+    await page.goto(appUrl('/kunk/aparencia'));
+    await expect(page.getByRole('heading', { name: /^Aparência$/i })).toBeVisible();
   });
 });

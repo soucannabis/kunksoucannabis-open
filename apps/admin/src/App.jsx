@@ -9,9 +9,7 @@ import { InstallPage } from './pages/InstallPage.jsx';
 import { NewPasswordPage } from './pages/NewPasswordPage.jsx';
 import { ForbiddenPage } from './pages/ForbiddenPage.jsx';
 import { DataIndexPage, DataCollectionPage, DataItemPage } from './pages/DataPages.jsx';
-import { FilesPage } from './pages/FilesPage.jsx';
 import { StoragePage } from './pages/StoragePage.jsx';
-import { ConfigsIndexPage, ConfigsSystemPage } from './pages/ConfigsPages.jsx';
 import { AppearancePage } from './pages/AppearancePage.jsx';
 import { AssociationDataPage } from './pages/AssociationDataPage.jsx';
 import { RegistrationSystemPage } from './pages/RegistrationSystemPage.jsx';
@@ -74,21 +72,21 @@ export default function App() {
                 <Route path="/dados/:collection" element={<DataCollectionPage api={api} />} />
                 <Route path="/dados/:collection/novo" element={<DataItemPage api={api} isNew />} />
                 <Route path="/dados/:collection/:id" element={<DataItemPage api={api} />} />
-                <Route path="/arquivos" element={<FilesPage api={api} />} />
-                <Route path="/arquivos/:id" element={<FilesPage api={api} />} />
+                <Route path="/arquivos" element={<Navigate to="/dados" replace />} />
+                <Route path="/arquivos/:id" element={<Navigate to="/dados" replace />} />
                 <Route path="/armazenamento" element={<StoragePage api={api} />} />
                 <Route path="/erros-sistema" element={<SystemErrorsPage api={api} />} />
                 <Route path="/web-vitals" element={<WebVitalsPage api={api} />} />
                 <Route path="/cache" element={<CachePage api={api} />} />
-                <Route path="/configs" element={<ConfigsIndexPage api={api} />} />
-                <Route path="/configs/cache" element={<CachePage api={api} />} />
+                <Route path="/configs" element={<Navigate to="/armazenamento" replace />} />
+                <Route path="/configs/cache" element={<Navigate to="/cache" replace />} />
                 <Route path="/configs/ciap2" element={<Navigate to="/kunk/ciap2" replace />} />
                 <Route
                   path="/configs/services-types"
                   element={<Navigate to="/kunk/configuracao-profissionais" replace />}
                 />
-                <Route path="/configs/:system" element={<ConfigsSystemPage api={api} />} />
-                <Route path="/aparencia" element={<AppearancePage api={api} />} />
+                <Route path="/configs/:system" element={<Navigate to="/armazenamento" replace />} />
+                <Route path="/aparencia" element={<Navigate to="/kunk/aparencia" replace />} />
                 <Route path="/kunk" element={<KunkShell />}>
                   <Route index element={<Navigate to="/kunk/configuracao-profissionais" replace />} />
                   <Route path="configuracao-profissionais" element={<ServicesTypesPage api={api} />} />
@@ -98,6 +96,7 @@ export default function App() {
                   />
                   <Route path="permissoes" element={<RolePagesPage api={api} />} />
                   <Route path="ciap2" element={<Ciap2ModulePage api={api} />} />
+                  <Route path="aparencia" element={<AppearancePage api={api} />} />
                 </Route>
                 <Route path="/triagem" element={<TriageShell />}>
                   <Route index element={<Navigate to="/triagem/formulario" replace />} />

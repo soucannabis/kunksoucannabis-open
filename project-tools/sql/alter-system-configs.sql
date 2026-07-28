@@ -161,7 +161,7 @@ INSERT INTO system_configs (
     false,
     false,
     true,
-    'Obrigado por concluir seu cadastro. Se precisar de atendimento, abra uma solicitação de contato pelo botão abaixo. A associação responderá pelo canal da triagem.',
+    'Obrigado por concluir seu cadastro. Abra uma solicitação de contato pelo botão abaixo. Em breve entraremos em contato com você.',
     'Texto da tela de cadastro concluído'
   ),
   (

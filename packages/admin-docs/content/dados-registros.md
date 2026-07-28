@@ -1,9 +1,9 @@
 ---
 id: dados-registros
-title: Registros (dados)
+title: Banco de dados
 section: dados
 adminPath: /dados
-keywords: [dados, registros, crud, collections, tabelas]
+keywords: [dados, registros, crud, collections, tabelas, banco]
 order: 40
 ---
 
@@ -19,4 +19,4 @@ order: 40
 
 ## Quando usar
 
-Para correções pontuais, consultas e manutenção de cadastros que a equipe operacional não cobre no app Kunk.
+Para auditoria pontual, correção de cadastro e edição de dados diretamente no banco de dados.

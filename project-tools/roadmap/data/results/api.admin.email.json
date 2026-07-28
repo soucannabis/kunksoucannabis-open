@@ -1,0 +1,125 @@
+{
+  "testId": "api.admin.email",
+  "featureId": "admin-ext-email",
+  "kind": "api",
+  "label": "API · email unit",
+  "descriptionPt": "Valida templates, normalização SMTP, erros e timeout do e-mail. Esta execução cobre 12 caso(s) definidos em tests/unit/email.test.js.",
+  "cwd": "kunk-api",
+  "files": [
+    "tests/unit/email.test.js"
+  ],
+  "command": "/home/felipe/.nvm/versions/node/v22.21.1/bin/node --test --test-concurrency=1 --test-reporter=spec tests/unit/email.test.js",
+  "startedAt": "2026-07-23T21:07:54.188Z",
+  "finishedAt": "2026-07-23T21:08:09.562Z",
+  "exitCode": 0,
+  "timedOut": false,
+  "ok": true,
+  "summary": {
+    "tests": 7,
+    "pass": 7,
+    "fail": 0,
+    "skipped": 0,
+    "durationMs": 15276.141423,
+    "summaryPt": "Suíte concluída com sucesso: 7 teste(s) passaram em ~15276 ms. Objetivo da suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Entre os casos: “builds password reset template” e “builds invite and contract templates”, entre outros."
+  },
+  "cases": [
+    {
+      "title": "builds password reset template",
+      "status": "pass",
+      "durationMs": 1.823504,
+      "descriptionPt": "Suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Área: envio de e-mail e templates. Monta redefinição de senha template conforme a regra de negócio do módulo sob teste. O título do caso (“builds password reset template”) descreve exatamente a asserção principal deste unitário/integração. Confirma que mensagens, SMTP e falhas de rede se comportam de forma previsível (incluindo timeout). Arquivo(s) da suíte: `tests/unit/email.test.js`.",
+      "resultPt": "Sucesso — a asserção do caso “builds password reset template” foi satisfeita. Isso indica que monta redefinição de senha template se comportou como esperado no domínio de envio de e-mail e templates. Tempo medido: 2 ms.",
+      "error": ""
+    },
+    {
+      "title": "builds invite and contract templates",
+      "status": "pass",
+      "durationMs": 0.665777,
+      "descriptionPt": "Suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Área: envio de e-mail e templates. Monta convite e contrato/termo templates conforme a regra de negócio do módulo sob teste. O título do caso (“builds invite and contract templates”) descreve exatamente a asserção principal deste unitário/integração. Confirma que mensagens, SMTP e falhas de rede se comportam de forma previsível (incluindo timeout). Arquivo(s) da suíte: `tests/unit/email.test.js`.",
+      "resultPt": "Sucesso — a asserção do caso “builds invite and contract templates” foi satisfeita. Isso indica que monta convite e contrato/termo templates se comportou como esperado no domínio de envio de e-mail e templates. Tempo medido: 1 ms.",
+      "error": ""
+    },
+    {
+      "title": "email templates",
+      "status": "pass",
+      "durationMs": 4.146574,
+      "descriptionPt": "Suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Área: envio de e-mail e templates. Executa o caso “email templates” e verifica a asserção principal desse cenário. Deriva a intenção a partir do nome do teste no runner. Confirma que mensagens, SMTP e falhas de rede se comportam de forma previsível (incluindo timeout). Arquivo(s) da suíte: `tests/unit/email.test.js`.",
+      "resultPt": "Sucesso — a asserção do caso “email templates” foi satisfeita. Isso indica que executa o caso “email templates” se comportou como esperado no domínio de envio de e-mail e templates. Tempo medido: 4 ms.",
+      "error": ""
+    },
+    {
+      "title": "parses port and secure",
+      "status": "pass",
+      "durationMs": 0.667245,
+      "descriptionPt": "Suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Área: envio de e-mail e templates. Interpreta porta e seguro (TLS) conforme a regra de negócio do módulo sob teste. O título do caso (“parses port and secure”) descreve exatamente a asserção principal deste unitário/integração. Confirma que mensagens, SMTP e falhas de rede se comportam de forma previsível (incluindo timeout). Arquivo(s) da suíte: `tests/unit/email.test.js`.",
+      "resultPt": "Sucesso — a asserção do caso “parses port and secure” foi satisfeita. Isso indica que interpreta porta e seguro (tls) se comportou como esperado no domínio de envio de e-mail e templates. Tempo medido: 1 ms.",
+      "error": ""
+    },
+    {
+      "title": "email normalizeConfig",
+      "status": "pass",
+      "durationMs": 0.923541,
+      "descriptionPt": "Suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Área: envio de e-mail e templates. Executa o caso “email normalizeConfig” e verifica a asserção principal desse cenário. Deriva a intenção a partir do nome do teste no runner. Confirma que mensagens, SMTP e falhas de rede se comportam de forma previsível (incluindo timeout). Arquivo(s) da suíte: `tests/unit/email.test.js`.",
+      "resultPt": "Sucesso — a asserção do caso “email normalizeConfig” foi satisfeita. Isso indica que executa o caso “email normalizeconfig” se comportou como esperado no domínio de envio de e-mail e templates. Tempo medido: 1 ms.",
+      "error": ""
+    },
+    {
+      "title": "maps timeout and network failures",
+      "status": "pass",
+      "durationMs": 2.439003,
+      "descriptionPt": "Suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Área: envio de e-mail e templates. Mapeia tempo limite e falhas de rede conforme a regra de negócio do módulo sob teste. O título do caso (“maps timeout and network failures”) descreve exatamente a asserção principal deste unitário/integração. Confirma que mensagens, SMTP e falhas de rede se comportam de forma previsível (incluindo timeout). Arquivo(s) da suíte: `tests/unit/email.test.js`.",
+      "resultPt": "Sucesso — a asserção do caso “maps timeout and network failures” foi satisfeita. Isso indica que mapeia tempo limite e falhas de rede se comportou como esperado no domínio de envio de e-mail e templates. Tempo medido: 2 ms.",
+      "error": ""
+    },
+    {
+      "title": "exposes a finite SMTP timeout",
+      "status": "pass",
+      "durationMs": 0.429401,
+      "descriptionPt": "Suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Área: envio de e-mail e templates. Expõe um(a) finito SMTP tempo limite conforme a regra de negócio do módulo sob teste. O título do caso (“exposes a finite SMTP timeout”) descreve exatamente a asserção principal deste unitário/integração. Confirma que mensagens, SMTP e falhas de rede se comportam de forma previsível (incluindo timeout). Arquivo(s) da suíte: `tests/unit/email.test.js`.",
+      "resultPt": "Sucesso — a asserção do caso “exposes a finite SMTP timeout” foi satisfeita. Isso indica que expõe um(a) finito smtp tempo limite se comportou como esperado no domínio de envio de e-mail e templates. Tempo medido: 0 ms.",
+      "error": ""
+    },
+    {
+      "title": "email formatSmtpError",
+      "status": "pass",
+      "durationMs": 3.293438,
+      "descriptionPt": "Suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Área: envio de e-mail e templates. Executa o caso “email formatSmtpError” e verifica a asserção principal desse cenário. Deriva a intenção a partir do nome do teste no runner. Confirma que mensagens, SMTP e falhas de rede se comportam de forma previsível (incluindo timeout). Arquivo(s) da suíte: `tests/unit/email.test.js`.",
+      "resultPt": "Sucesso — a asserção do caso “email formatSmtpError” foi satisfeita. Isso indica que executa o caso “email formatsmtperror” se comportou como esperado no domínio de envio de e-mail e templates. Tempo medido: 3 ms.",
+      "error": ""
+    },
+    {
+      "title": "fails within timeout against a blackhole host",
+      "status": "pass",
+      "durationMs": 15062.49865,
+      "descriptionPt": "Suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Área: envio de e-mail e templates. Falha ao processar dentro de tempo limite contra um(a) host inacessível (blackhole) host conforme a regra de negócio do módulo sob teste. O título do caso (“fails within timeout against a blackhole host”) descreve exatamente a asserção principal deste unitário/integração. Confirma que mensagens, SMTP e falhas de rede se comportam de forma previsível (incluindo timeout). Arquivo(s) da suíte: `tests/unit/email.test.js`.",
+      "resultPt": "Sucesso — a asserção do caso “fails within timeout against a blackhole host” foi satisfeita. Isso indica que falha ao processar dentro de tempo limite contra um(a) host inacessível (blackhole) host se comportou como esperado no domínio de envio de e-mail e templates. Tempo medido: 15062 ms.",
+      "error": ""
+    },
+    {
+      "title": "email testConnection timeout",
+      "status": "pass",
+      "durationMs": 15063.753611,
+      "descriptionPt": "Suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Área: envio de e-mail e templates. Executa o caso “email testConnection timeout” (em português: email testConnection tempo limite). Deriva a intenção a partir do nome do teste no runner. Confirma que mensagens, SMTP e falhas de rede se comportam de forma previsível (incluindo timeout). Arquivo(s) da suíte: `tests/unit/email.test.js`.",
+      "resultPt": "Sucesso — a asserção do caso “email testConnection timeout” foi satisfeita. Isso indica que executa o caso “email testconnection timeout” se comportou como esperado no domínio de envio de e-mail e templates. Tempo medido: 15064 ms.",
+      "error": ""
+    },
+    {
+      "title": "limits after N hits",
+      "status": "pass",
+      "durationMs": 1.770427,
+      "descriptionPt": "Suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Área: envio de e-mail e templates. Aplica limite em após N ocorrências conforme a regra de negócio do módulo sob teste. O título do caso (“limits after N hits”) descreve exatamente a asserção principal deste unitário/integração. Confirma que mensagens, SMTP e falhas de rede se comportam de forma previsível (incluindo timeout). Arquivo(s) da suíte: `tests/unit/email.test.js`.",
+      "resultPt": "Sucesso — a asserção do caso “limits after N hits” foi satisfeita. Isso indica que aplica limite em após n ocorrências se comportou como esperado no domínio de envio de e-mail e templates. Tempo medido: 2 ms.",
+      "error": ""
+    },
+    {
+      "title": "rateLimit",
+      "status": "pass",
+      "durationMs": 3.530773,
+      "descriptionPt": "Suíte: Valida templates, normalização SMTP, erros e timeout do e-mail. Área: envio de e-mail e templates. Executa o caso “rateLimit” (em português: limite de taxa). Deriva a intenção a partir do nome do teste no runner. Confirma que mensagens, SMTP e falhas de rede se comportam de forma previsível (incluindo timeout). Arquivo(s) da suíte: `tests/unit/email.test.js`.",
+      "resultPt": "Sucesso — a asserção do caso “rateLimit” foi satisfeita. Isso indica que executa o caso “ratelimit” se comportou como esperado no domínio de envio de e-mail e templates. Tempo medido: 4 ms.",
+      "error": ""
+    }
+  ],
+  "stdout": "▶ email templates\n  ✔ builds password reset template (1.823504ms)\n  ✔ builds invite and contract templates (0.665777ms)\n✔ email templates (4.146574ms)\n▶ email normalizeConfig\n  ✔ parses port and secure (0.667245ms)\n✔ email normalizeConfig (0.923541ms)\n▶ email formatSmtpError\n  ✔ maps timeout and network failures (2.439003ms)\n  ✔ exposes a finite SMTP timeout (0.429401ms)\n✔ email formatSmtpError (3.293438ms)\n▶ email testConnection timeout\n  ✔ fails within timeout against a blackhole host (15062.49865ms)\n✔ email testConnection timeout (15063.753611ms)\n▶ rateLimit\n  ✔ limits after N hits (1.770427ms)\n✔ rateLimit (3.530773ms)\nℹ tests 7\nℹ suites 5\nℹ pass 7\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 15276.141423\n",
+  "stderr": ""
+}

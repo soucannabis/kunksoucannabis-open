@@ -246,6 +246,16 @@ export function StoragePage({ api }) {
     };
   }, [reload]);
 
+  useEffect(() => {
+    if (!status || !form) return;
+    const hash = String(window.location.hash || '').replace(/^#/, '');
+    if (!hash) return;
+    const el = document.getElementById(hash);
+    if (el) {
+      requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  }, [status, form]);
+
   function updateForm(patch) {
     setForm((prev) => ({ ...prev, ...patch }));
   }
@@ -587,7 +597,7 @@ export function StoragePage({ api }) {
         — o bucket fica privado e a API acessa com as credenciais.
       </p>
 
-      <div className="card" style={{ marginBottom: '1rem' }}>
+      <div className="card" style={{ marginBottom: '1rem' }} data-testid="storage-status-card" id="storage-status">
         <h2>Status</h2>
         <p>
           <strong>Driver ativo:</strong>
@@ -602,7 +612,7 @@ export function StoragePage({ api }) {
         ) : null}
       </div>
 
-      <div className="card" style={{ marginBottom: '1rem' }}>
+      <div className="card" style={{ marginBottom: '1rem' }} data-testid="storage-config-card" id="storage-config">
         <h2>Configuração</h2>
         <div className="ext-form-grid">
           <div>
@@ -818,7 +828,12 @@ export function StoragePage({ api }) {
       </div>
 
       {showBackupCard ? (
-        <div className="card" style={{ marginBottom: '1rem' }} data-testid="storage-backup-card">
+        <div
+          className="card"
+          style={{ marginBottom: '1rem' }}
+          data-testid="storage-backup-card"
+          id="backup"
+        >
           <h2>Backup</h2>
           {!backupEditable ? (
             <p className="muted">

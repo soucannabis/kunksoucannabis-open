@@ -10,7 +10,8 @@ test.describe('dados', () => {
 
   test('CRUD leve em etiquetas', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page.getByRole('heading', { name: 'Dados' })).toBeVisible();
+    await page.locator('.admin-nav').getByRole('link', { name: 'Banco de dados', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Banco de dados' })).toBeVisible();
     await page.getByRole('link', { name: 'Etiquetas' }).click();
     await expect(page.getByRole('heading', { name: 'Etiquetas' })).toBeVisible();
 
@@ -33,10 +34,5 @@ test.describe('dados', () => {
     page.once('dialog', (d) => d.accept());
     await page.getByRole('button', { name: 'Excluir' }).click();
     await expect(page).toHaveURL(/\/dados\/tags$/);
-
-    await page.getByRole('link', { name: 'Configs' }).click();
-    await page.getByRole('link', { name: /Admin/i }).click();
-    await expect(page.getByRole('heading', { name: 'Campos visíveis em Dados' })).toBeVisible();
-    await expect(page.getByText('Etiquetas')).toBeVisible();
   });
 });

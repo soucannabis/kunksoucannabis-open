@@ -64,7 +64,7 @@ export const REGISTRATION_SYSTEM_DEFAULTS = {
   welcomeText:
     'Ao continuar, você preencherá seus dados pessoais, enviará documentos de identidade e assinará o termo de adesão. Depois poderá anexar receitas, exames ou laudos e agendar uma consulta com a associação. O processo é simples e leva poucos minutos — tenha em mãos RG ou CNH e, se tiver, receitas e laudos médicos.',
   completionText:
-    'Obrigado por concluir seu cadastro. Se precisar de atendimento, abra uma solicitação de contato pelo botão abaixo. A associação responderá pelo canal da triagem.',
+    'Obrigado por concluir seu cadastro. Abra uma solicitação de contato pelo botão abaixo. Em breve entraremos em contato com você.',
   showTriageButton: true,
   triageFormUrl: '/contato',
 };

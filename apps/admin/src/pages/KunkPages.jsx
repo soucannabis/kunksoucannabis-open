@@ -37,6 +37,12 @@ export function KunkShell() {
         >
           CIAP-2
         </NavLink>
+        <NavLink
+          to="/kunk/aparencia"
+          className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}
+        >
+          Aparência
+        </NavLink>
       </nav>
       <Outlet />
     </div>

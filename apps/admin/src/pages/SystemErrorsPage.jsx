@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AdminLoader } from '../components/AdminLoader.jsx';
+import { RefreshIcon } from '../components/RefreshIcon.jsx';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -122,6 +123,7 @@ export function SystemErrorsPage({ api }) {
           </select>
         </label>
         <button type="button" className="btn" onClick={() => void load()} disabled={loading}>
+          <RefreshIcon />
           Atualizar
         </button>
       </div>

@@ -866,7 +866,7 @@ export function TriageModulesPage({ api }) {
           <span className="ext-flag-body">
             <strong>Documentos / dados do associado</strong>
             <span className="muted">
-              Exibe documentos e dados do associado na triagem. Sem histórico de doações. Default desligado.
+              Exibe uma validação para verificar se algum documento obrigatório do associado está faltando
             </span>
           </span>
         </label>

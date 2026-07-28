@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { KUNK_APPEARANCE_DEFAULTS, KUNK_LOGO_FRAME_SIZE } from '@kunk/config';
-import { LogoCropModal } from '../components/LogoCropModal.jsx';
+import { KUNK_APPEARANCE_DEFAULTS } from '@kunk/config';
 import {
   loadKunkAppearance,
   saveKunkAppearance,
@@ -90,79 +89,6 @@ function ImageField({ label, value, onChange, onPersist, api, onError }) {
   );
 }
 
-function LogoField({ value, onChange, onPersist, api, onError }) {
-  const [busy, setBusy] = useState(false);
-  const [cropSrc, setCropSrc] = useState(null);
-
-  function onFile(e) {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    onError('');
-    const url = URL.createObjectURL(file);
-    setCropSrc(url);
-  }
-
-  function onCancelCrop() {
-    if (cropSrc) URL.revokeObjectURL(cropSrc);
-    setCropSrc(null);
-  }
-
-  async function onConfirmCrop(blob) {
-    setBusy(true);
-    onError('');
-    try {
-      const file = new File([blob], 'kunk-logo.png', { type: 'image/png' });
-      const uploaded = await uploadAppearanceAsset(api, file);
-      await onPersist(uploaded);
-      if (cropSrc) URL.revokeObjectURL(cropSrc);
-      setCropSrc(null);
-    } catch (err) {
-      onError(err.message || 'Falha no upload da logo');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="field">
-      <span>Logo</span>
-      <p className="muted" style={{ margin: 0 }}>
-        Espaço fixo {KUNK_LOGO_FRAME_SIZE}×{KUNK_LOGO_FRAME_SIZE}px no menu. No upload, enquadre a
-        imagem no quadrado — a logo é salva na hora.
-      </p>
-      <div className="logo-frame-preview" aria-label="Pré-visualização do enquadramento">
-        {value ? <img src={value} alt="" /> : <span className="muted">Sem logo</span>}
-      </div>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="/api/v1/files/…/download ou URL"
-      />
-      <div className="appearance-upload-row">
-        <label className="btn">
-          Upload e enquadrar
-          <input type="file" accept="image/*" hidden disabled={busy} onChange={onFile} />
-        </label>
-        {value ? (
-          <button type="button" className="btn" onClick={() => onPersist('')} disabled={busy}>
-            Limpar
-          </button>
-        ) : null}
-      </div>
-      {cropSrc ? (
-        <LogoCropModal
-          src={cropSrc}
-          busy={busy}
-          onConfirm={onConfirmCrop}
-          onCancel={onCancelCrop}
-        />
-      ) : null}
-    </div>
-  );
-}
-
 export function AppearancePage({ api }) {
   const [form, setForm] = useState({ ...KUNK_APPEARANCE_DEFAULTS });
   const [baseline, setBaseline] = useState({ ...KUNK_APPEARANCE_DEFAULTS });
@@ -199,7 +125,6 @@ export function AppearancePage({ api }) {
     setMessage('');
   }
 
-  /** Persist logo/bg immediately so Kunk picks it up and download becomes public. */
   async function persistAssetField(prop, url) {
     setBusy(true);
     setError('');
@@ -210,7 +135,7 @@ export function AppearancePage({ api }) {
       setForm(nextForm);
       setItemsByKey(nextItems);
       setBaseline((prev) => ({ ...prev, [prop]: url }));
-      setMessage(prop === 'logo' ? 'Logo salva.' : 'Imagem de fundo salva.');
+      setMessage('Imagem de fundo salva.');
     } catch (err) {
       setError(err.message || 'Falha ao salvar arquivo de aparência');
       throw err;
@@ -237,7 +162,11 @@ export function AppearancePage({ api }) {
   }
 
   function onResetDefaults() {
-    setForm({ ...KUNK_APPEARANCE_DEFAULTS });
+    setForm((prev) => ({
+      ...KUNK_APPEARANCE_DEFAULTS,
+      title: prev.title,
+      logo: prev.logo,
+    }));
     setMessage('');
   }
 
@@ -249,8 +178,11 @@ export function AppearancePage({ api }) {
     <div>
       <div className="admin-top">
         <div>
-          <h1>Aparência do Kunk</h1>
-          <p className="muted">Logo, título, fundo, menu e cores dos temas claro e escuro.</p>
+          <h1>Aparência</h1>
+          <p className="muted">
+            Fundo do sistema, menu e cores dos temas claro e escuro. Logo e título ficam em Dados da
+            associação.
+          </p>
         </div>
       </div>
 
@@ -258,26 +190,6 @@ export function AppearancePage({ api }) {
       {message ? <div className="alert alert-info">{message}</div> : null}
 
       <form className="card appearance-form" onSubmit={onSubmit}>
-        <h2>Identidade</h2>
-        <div className="grid-2">
-          <label className="field">
-            <span>Título</span>
-            <input
-              type="text"
-              value={form.title}
-              onChange={(e) => setField('title', e.target.value)}
-              required
-            />
-          </label>
-          <LogoField
-            value={form.logo}
-            onChange={(v) => setField('logo', v)}
-            onPersist={(v) => persistAssetField('logo', v)}
-            api={api}
-            onError={setError}
-          />
-        </div>
-
         <h2>Fundo do sistema</h2>
         <div className="field">
           <span>Modo</span>

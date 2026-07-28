@@ -13,7 +13,8 @@ Define a **identidade jurídica e institucional** da associação: nome, CNPJ, c
 
 ## O que você configura
 
-- Dados cadastrais (razão social, CNPJ, endereço, etc.)
+- Logo da associação (também usada no app Kunk)
+- Dados cadastrais (razão social, CNPJ, endereço, etc.) — o **nome da associação** é o título do Kunk
 - Informações exibidas publicamente no fluxo de cadastramento
 - Elementos usados em termos e documentos gerados pelo sistema
 

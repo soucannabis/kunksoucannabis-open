@@ -91,7 +91,7 @@ export function CachePage({ api }) {
     >
       <div>
         <p className="muted" style={{ margin: '0 0 0.5rem' }}>
-          <Link to="/configs">← Configs</Link>
+          <Link to="/armazenamento">← Configurações do sistema</Link>
         </p>
         <h2 style={{ marginTop: 0 }}>Cache operacional</h2>
         <p className="muted" style={{ margin: 0 }}>

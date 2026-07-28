@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AdminLoader } from '../components/AdminLoader.jsx';
+import { RefreshIcon } from '../components/RefreshIcon.jsx';
 
 function StatusDot({ online }) {
   return (
@@ -62,6 +63,7 @@ export function HomePage({ api }) {
           disabled={refreshing}
           data-testid="home-refresh"
         >
+          <RefreshIcon />
           {refreshing ? 'Atualizando…' : 'Atualizar'}
         </button>
       </div>
