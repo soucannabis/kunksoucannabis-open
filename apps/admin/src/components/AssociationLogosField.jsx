@@ -213,7 +213,7 @@ export function AssociationLogosField({
         ) : null}
         <LogoSlot
           label="Quadrada"
-          hint={`1:1 — menu do Kunk, favicon e blocos centrais (${KUNK_LOGO_FRAME_SIZE}px).`}
+          hint={`1:1 — login, menu do Kunk, favicon e blocos centrais (${KUNK_LOGO_FRAME_SIZE}px).`}
           format={LOGO_FORMAT_SQUARE}
           value={logoSquare}
           selected={format === LOGO_FORMAT_SQUARE}

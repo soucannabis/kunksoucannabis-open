@@ -1406,8 +1406,8 @@ table.data th { color: var(--admin-muted); font-weight: 600; }
 }
 
 .logo-frame-preview {
-  width: 120px;
-  height: 120px;
+  width: 162px;
+  height: 162px;
   margin: 0.5rem 0;
   padding: 8px;
   box-sizing: border-box;

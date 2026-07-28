@@ -219,7 +219,8 @@ const ENV_TO_KUNK_CONFIG = {
 };
 
 /** Fixed logo frames (CSS px). Crop export uses LOGO_EXPORT sizes. */
-export const KUNK_LOGO_FRAME_SIZE = 120;
+/** Primary square display (login / AuthLoginLayout). */
+export const KUNK_LOGO_FRAME_SIZE = 162;
 export const KUNK_LOGO_EXPORT_SIZE = 512;
 /** Rectangular brand logo (3:1), separate from doc-sign term logo. */
 export const KUNK_LOGO_RECT_ASPECT = 3;
@@ -251,13 +252,16 @@ export function getBrandLogoFrameStyle(format, variant = 'default') {
       height: Math.round(KUNK_LOGO_RECT_FRAME_H * scale),
     };
   }
-  const scale =
-    variant === 'login' ? 1.35
-      : variant === 'shell' ? 0.55
-        : variant === 'nav' ? 0.33
-          : variant === 'admin' ? 0.6
-            : 1;
-  const size = Math.round(KUNK_LOGO_FRAME_SIZE * scale);
+  // Absolute targets keep menu/shell/nav sizes stable while FRAME_SIZE = login.
+  const sizeByVariant = {
+    login: KUNK_LOGO_FRAME_SIZE,
+    default: KUNK_LOGO_FRAME_SIZE,
+    sidebar: 120,
+    shell: 66,
+    nav: 40,
+    admin: 72,
+  };
+  const size = sizeByVariant[variant] ?? KUNK_LOGO_FRAME_SIZE;
   return { format: fmt, width: size, height: size };
 }
 
