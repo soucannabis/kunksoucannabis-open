@@ -15,6 +15,7 @@ export async function requireActiveCloudBucket(playwright, apiUrl) {
   try {
     const login = await ctx.post(`${apiUrl}/auth/login`, {
       data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+      headers: { 'X-Kunk-App': 'admin' },
       failOnStatusCode: false,
     });
     if (login.status() !== 200) {

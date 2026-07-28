@@ -63,6 +63,14 @@ async function main() {
   }
 
   try {
+    const { ensureOperatorSessions } = require('./db/ensureOperatorSessions');
+    await ensureOperatorSessions();
+    console.log('Schema: operator_sessions ok');
+  } catch (err) {
+    console.warn('Schema: não foi possível garantir operator_sessions:', err.message);
+  }
+
+  try {
     const docSignService = require('./services/docSignService');
     const ensured = await docSignService.ensureDefaultTemplates();
     if (ensured.created?.length) {

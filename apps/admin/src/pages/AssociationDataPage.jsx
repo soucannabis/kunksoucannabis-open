@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { ASSOCIATION_DATA_DEFAULTS } from '@kunk/config';
+import { ASSOCIATION_DATA_DEFAULTS, LOGO_FORMAT_SQUARE } from '@kunk/config';
 import {
   loadAssociationData,
+  loadAssociationLogos,
   saveAssociationData,
   saveAssociationLogoAndTitle,
 } from '../lib/associationDataConfig.js';
-import { loadKunkAppearance } from '../lib/kunkAppearanceConfig.js';
 import {
   AssociationDataFields,
   validateAssociationForm,
 } from '../components/AssociationDataFields.jsx';
-import { LogoField } from '../components/LogoField.jsx';
+import { AssociationLogosField } from '../components/AssociationLogosField.jsx';
 import { AdminLoader } from '../components/AdminLoader.jsx';
 
 export function AssociationDataPage({ api }) {
   const [form, setForm] = useState({ ...ASSOCIATION_DATA_DEFAULTS });
   const [baseline, setBaseline] = useState({ ...ASSOCIATION_DATA_DEFAULTS });
   const [itemsByKey, setItemsByKey] = useState({});
-  const [logo, setLogo] = useState('');
+  const [logoSquare, setLogoSquare] = useState('');
+  const [logoRectangular, setLogoRectangular] = useState('');
+  const [logoFormat, setLogoFormat] = useState(LOGO_FORMAT_SQUARE);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -29,21 +31,17 @@ export function AssociationDataPage({ api }) {
       setLoading(true);
       setError('');
       try {
-        const [{ values, itemsByKey: items }, appearance] = await Promise.all([
+        const [{ values, itemsByKey: items }, logos] = await Promise.all([
           loadAssociationData(api),
-          loadKunkAppearance(api),
+          loadAssociationLogos(api),
         ]);
         if (cancelled) return;
         setForm(values);
         setBaseline(values);
         setItemsByKey(items);
-        const logoUrl = String(
-          appearance.values.logo ||
-            items.VITE_ASSOCIATION_LOGO?.value ||
-            items.VITE_ASSOCIATION_LOGO_MENU?.value ||
-            '',
-        ).trim();
-        setLogo(logoUrl);
+        setLogoSquare(logos.logoSquare);
+        setLogoRectangular(logos.logoRectangular);
+        setLogoFormat(logos.logoFormat);
       } catch (err) {
         if (!cancelled) setError(err.message || 'Falha ao carregar dados da associação');
       } finally {
@@ -60,17 +58,21 @@ export function AssociationDataPage({ api }) {
     setMessage('');
   }
 
-  async function persistLogo(url) {
+  async function persistLogos(next) {
     setBusy(true);
     setError('');
     setMessage('');
     try {
       const result = await saveAssociationLogoAndTitle(api, {
-        logo: url,
+        logoSquare: next.logoSquare,
+        logoRectangular: next.logoRectangular,
+        logoFormat: next.logoFormat,
         associationName: form.associationName,
       });
-      setLogo(result.logo);
-      setMessage(url ? 'Logo salva.' : 'Logo removida.');
+      setLogoSquare(result.logoSquare);
+      setLogoRectangular(result.logoRectangular);
+      setLogoFormat(result.logoFormat);
+      setMessage('Logos atualizadas.');
     } catch (err) {
       setError(err.message || 'Falha ao salvar logo');
       throw err;
@@ -94,10 +96,15 @@ export function AssociationDataPage({ api }) {
       const nextItems = await saveAssociationData(api, form, baseline, itemsByKey);
       setItemsByKey(nextItems);
       setBaseline({ ...form });
-      await saveAssociationLogoAndTitle(api, {
-        logo,
+      const logos = await saveAssociationLogoAndTitle(api, {
+        logoSquare,
+        logoRectangular,
+        logoFormat,
         associationName: form.associationName,
       });
+      setLogoSquare(logos.logoSquare);
+      setLogoRectangular(logos.logoRectangular);
+      setLogoFormat(logos.logoFormat);
       setMessage('Dados da associação salvos.');
     } catch (err) {
       setError(err.message || 'Falha ao salvar');
@@ -112,8 +119,9 @@ export function AssociationDataPage({ api }) {
     <div>
       <h1 style={{ marginTop: 0 }}>Dados da associação</h1>
       <p className="muted">
-        Identidade jurídica usada no cadastramento e na assinatura de termos. O nome da associação é
-        o título do app Kunk. Todos os campos de texto são obrigatórios.
+        Identidade jurídica usada no cadastramento, no Kunk e na assinatura de termos. O nome da
+        associação é o título do app Kunk. Escolha o formato de logo (quadrada ou retangular) que os
+        apps exibem. Todos os campos de texto são obrigatórios.
       </p>
       {error ? <div className="alert alert-error">{error}</div> : null}
       {message ? <div className="alert alert-success">{message}</div> : null}
@@ -130,8 +138,15 @@ export function AssociationDataPage({ api }) {
         </form>
 
         <div className="card association-data-card association-data-card--logo">
-          <h2 className="association-data-card-title">Logo</h2>
-          <LogoField value={logo} onPersist={persistLogo} api={api} onError={setError} />
+          <h2 className="association-data-card-title">Logos</h2>
+          <AssociationLogosField
+            logoSquare={logoSquare}
+            logoRectangular={logoRectangular}
+            logoFormat={logoFormat}
+            onPersist={persistLogos}
+            api={api}
+            onError={setError}
+          />
         </div>
       </div>
     </div>

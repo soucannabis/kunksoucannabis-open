@@ -55,7 +55,7 @@ function fetchForTab(api, tabId, qs) {
 export default function AnalyticsDashboardPage() {
   const { showError } = useErrorModal();
   const bootstrap = useMemo(() => getKunkPublicConfig(), []);
-  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' }), [bootstrap.apiUrl]);
   const [tab, setTab] = useState('associates');
   const [globalPeriod, setGlobalPeriod] = useState(() => defaultGlobalPeriod());
   const [draftPeriod, setDraftPeriod] = useState(() => defaultGlobalPeriod());

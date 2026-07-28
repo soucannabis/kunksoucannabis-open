@@ -14,6 +14,7 @@ const NON_ITEMS_TABLES = new Set([
   'system_error_resolutions',
   'web_vitals',
   'product_stock_movements',
+  'operator_sessions',
   'term_templates',
   'term_template_versions',
   'term_contracts',

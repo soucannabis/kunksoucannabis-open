@@ -55,7 +55,16 @@ describe('contract/api-structure', () => {
       'system_configs',
       'system_activity',
       'system_api_credentials',
+      'system_errors',
+      'system_error_resolutions',
+      'web_vitals',
       'product_stock_movements',
+      'operator_sessions',
+      'term_templates',
+      'term_template_versions',
+      'term_contracts',
+      'term_signatures',
+      'term_events',
     ]);
     const fromSqlItems = fromSql.filter((t) => !NON_ITEMS_TABLES.has(t));
     assert.deepEqual([...COLLECTIONS].sort(), [...fromSqlItems].sort());

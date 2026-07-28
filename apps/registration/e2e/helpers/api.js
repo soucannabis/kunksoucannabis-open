@@ -73,6 +73,7 @@ export function createApi(request) {
 export async function ensureDocSignTemplatesPublished(request) {
   const login = await request.post(`${API_URL}/auth/login`, {
     data: { email: 'admin@kunk-api.test', password: 'TestAdmin123!' },
+    headers: { 'X-Kunk-App': 'admin' },
     failOnStatusCode: false,
   });
   if (login.status() !== 200) {

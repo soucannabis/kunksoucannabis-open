@@ -57,7 +57,7 @@ export default function ActivityNotifications() {
   const code = useMemo(() => myCode(user), [user]);
   const api = useMemo(() => {
     const bootstrap = getKunkPublicConfig();
-    return createApiClient({ baseUrl: bootstrap.apiUrl });
+    return createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' });
   }, []);
 
   const [open, setOpen] = useState(false);

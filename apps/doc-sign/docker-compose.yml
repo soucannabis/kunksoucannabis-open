@@ -15,6 +15,7 @@ services:
       VITE_API_PROXY_TARGET: "http://host.docker.internal:4250"
     volumes:
       - ./src:/app/apps/doc-sign/src
+      - ./public:/app/apps/doc-sign/public
       - ./index.html:/app/apps/doc-sign/index.html
       - ./vite.config.js:/app/apps/doc-sign/vite.config.js
       - ./package.json:/app/apps/doc-sign/package.json

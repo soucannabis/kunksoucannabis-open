@@ -190,7 +190,7 @@ function statusPill(status) {
 
 export default function CartPage() {
   const bootstrap = getKunkPublicConfig();
-  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' }), [bootstrap.apiUrl]);
   const { enabled: cacheEnabled } = useCacheConfig();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

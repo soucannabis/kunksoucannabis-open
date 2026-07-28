@@ -80,7 +80,7 @@ function hasRealCalendarEvent(row) {
 
 export default function ServicesPage() {
   const bootstrap = getKunkPublicConfig();
-  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' }), [bootstrap.apiUrl]);
   const { showError } = useErrorModal();
   const { enabled: cacheEnabled } = useCacheConfig();
   const [searchParams] = useSearchParams();

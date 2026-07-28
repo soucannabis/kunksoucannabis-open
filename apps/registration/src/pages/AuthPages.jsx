@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAssociateAuth } from '@kunk/auth-session';
-import { AlertError, PasswordInput } from '@kunk/ui';
+import { AlertError, AuthLoginCard, PasswordInput } from '@kunk/ui';
 import { ApiError } from '@kunk/api-client';
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -42,45 +42,60 @@ export function SignupPage() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="text-start">
-      <h1 className="auth-page-title">Cadastro de associado</h1>
+    <AuthLoginCard onSubmit={onSubmit} heading="Cadastro de associado">
       <AlertError message={error} />
-      <label className="form-label text-white">E-mail</label>
-      <input
-        className="form-control mb-3"
-        type="email"
-        required
-        autoComplete="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <label className="form-label text-white">Senha</label>
-      <PasswordInput
-        className="form-control"
-        wrapperClassName="mb-2"
-        required
-        minLength={MIN_PASSWORD_LENGTH}
-        autoComplete="new-password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <label className="form-label text-white">Confirmar senha</label>
-      <PasswordInput
-        className="form-control"
-        wrapperClassName="mb-3"
-        required
-        minLength={MIN_PASSWORD_LENGTH}
-        autoComplete="new-password"
-        value={passwordConfirm}
-        onChange={(e) => setPasswordConfirm(e.target.value)}
-      />
-      <button className="btn btn-success w-100 mb-2" type="submit" disabled={busy}>
-        Se cadastrar como Associado
-      </button>
-      <Link className="btn btn-outline-light w-100" to="/login">
-        Já tenho conta — Login
-      </Link>
-    </form>
+      <div className="auth-login-field">
+        <label htmlFor="signup-email">E-mail</label>
+        <input
+          id="signup-email"
+          type="email"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+      <div className="auth-login-field">
+        <label htmlFor="signup-password">Senha</label>
+        <PasswordInput
+          id="signup-password"
+          className=""
+          wrapperClassName=""
+          required
+          minLength={MIN_PASSWORD_LENGTH}
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => {
+            const next = e.target.value;
+            setPassword(next);
+            if (!next) setPasswordConfirm('');
+          }}
+        />
+      </div>
+      {password.length > 0 ? (
+        <div className="auth-login-field">
+          <label htmlFor="signup-password-confirm">Confirmar senha</label>
+          <PasswordInput
+            id="signup-password-confirm"
+            className=""
+            wrapperClassName=""
+            required
+            minLength={MIN_PASSWORD_LENGTH}
+            autoComplete="new-password"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+          />
+        </div>
+      ) : null}
+      <div className="auth-login-actions">
+        <button className="auth-login-submit" type="submit" disabled={busy}>
+          Se cadastrar como Associado
+        </button>
+        <Link className="auth-login-secondary" to="/login">
+          Já tenho conta — Login
+        </Link>
+      </div>
+    </AuthLoginCard>
   );
 }
 
@@ -107,31 +122,44 @@ export function LoginPage() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="text-start">
-      <h1 className="auth-page-title">Login</h1>
+    <AuthLoginCard onSubmit={onSubmit}>
       <AlertError message={error} />
-      <label className="form-label text-white">E-mail</label>
-      <input className="form-control mb-2" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <label className="form-label text-white">Senha</label>
-      <PasswordInput
-        className="form-control"
-        wrapperClassName="mb-3"
-        required
-        minLength={MIN_PASSWORD_LENGTH}
-        autoComplete="current-password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button className="btn btn-success w-100 mb-2" type="submit" disabled={busy}>
-        Entrar
-      </button>
-      <Link className="btn btn-link text-white" to="/nova-senha">
-        Esqueci a senha
-      </Link>
-      <Link className="btn btn-outline-light w-100 mt-2" to="/cadastro">
-        Criar conta
-      </Link>
-    </form>
+      <div className="auth-login-field">
+        <label htmlFor="login-email">E-mail</label>
+        <input
+          id="login-email"
+          type="email"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+      <div className="auth-login-field">
+        <label htmlFor="login-password">Senha</label>
+        <PasswordInput
+          id="login-password"
+          className=""
+          wrapperClassName=""
+          required
+          minLength={MIN_PASSWORD_LENGTH}
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </div>
+      <div className="auth-login-actions">
+        <button className="auth-login-submit" type="submit" disabled={busy}>
+          Entrar
+        </button>
+        <Link className="auth-login-link" to="/nova-senha">
+          Esqueci a senha
+        </Link>
+        <Link className="auth-login-secondary" to="/cadastro">
+          Criar conta
+        </Link>
+      </div>
+    </AuthLoginCard>
   );
 }
 
@@ -178,44 +206,68 @@ export function NewPasswordPage({ api }) {
   }
 
   return (
-    <div className="text-start">
-      <h1 className="h3 mb-3">Nova senha</h1>
+    <AuthLoginCard as="div" heading="Nova senha">
       <AlertError message={error} />
-      {message && <div className="alert alert-success">{message}</div>}
+      {message ? <div className="alert alert-success">{message}</div> : null}
       {mode === 'forgot' ? (
         <form onSubmit={onForgot}>
-          <label className="form-label text-white">E-mail</label>
-          <input className="form-control mb-3" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-          <button className="btn btn-success w-100" type="submit">Enviar link</button>
-          <button type="button" className="btn btn-link text-white" onClick={() => setMode('reset')}>
-            Já tenho o token
-          </button>
+          <div className="auth-login-field">
+            <label htmlFor="forgot-email">E-mail</label>
+            <input
+              id="forgot-email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="auth-login-actions">
+            <button className="auth-login-submit" type="submit">Enviar link</button>
+            <button type="button" className="auth-login-link" onClick={() => setMode('reset')}>
+              Já tenho o token
+            </button>
+          </div>
         </form>
       ) : (
         <form onSubmit={onReset}>
-          <label className="form-label text-white">Token</label>
-          <input className="form-control mb-2" required value={token} onChange={(e) => setToken(e.target.value)} />
-          <label className="form-label text-white">Nova senha</label>
-          <PasswordInput
-            className="form-control"
-            wrapperClassName="mb-2"
-            required
-            minLength={MIN_PASSWORD_LENGTH}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <label className="form-label text-white">Confirmar senha</label>
-          <PasswordInput
-            className="form-control"
-            wrapperClassName="mb-3"
-            required
-            minLength={MIN_PASSWORD_LENGTH}
-            value={passwordConfirm}
-            onChange={(e) => setPasswordConfirm(e.target.value)}
-          />
-          <button className="btn btn-success w-100" type="submit">Redefinir</button>
+          <div className="auth-login-field">
+            <label htmlFor="reset-token">Token</label>
+            <input
+              id="reset-token"
+              required
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+            />
+          </div>
+          <div className="auth-login-field">
+            <label htmlFor="reset-password">Nova senha</label>
+            <PasswordInput
+              id="reset-password"
+              className=""
+              wrapperClassName=""
+              required
+              minLength={MIN_PASSWORD_LENGTH}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div className="auth-login-field">
+            <label htmlFor="reset-password-confirm">Confirmar senha</label>
+            <PasswordInput
+              id="reset-password-confirm"
+              className=""
+              wrapperClassName=""
+              required
+              minLength={MIN_PASSWORD_LENGTH}
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
+            />
+          </div>
+          <div className="auth-login-actions">
+            <button className="auth-login-submit" type="submit">Redefinir</button>
+          </div>
         </form>
       )}
-    </div>
+    </AuthLoginCard>
   );
 }

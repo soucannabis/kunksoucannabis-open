@@ -125,6 +125,7 @@ describe('domain/install', () => {
 
     const login = await request(app)
       .post('/api/v1/auth/login')
+      .set('X-Kunk-App', 'admin')
       .send({ email: INSTALL_EMAIL, password: INSTALL_PASSWORD });
     assert.equal(login.status, 200, JSON.stringify(login.body));
     assert.ok(String(login.body.data.user.permissions).includes('Administrador'));

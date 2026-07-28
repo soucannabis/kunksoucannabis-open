@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Container, TextField, Button, Box, Typography, Grid } from '@mui/material';
 import { useOperatorAuth } from '@kunk/auth-session';
+import { LOGO_FORMAT_SQUARE } from '@kunk/config';
+import { AuthLoginCard, AuthLoginLayout, PasswordInput } from '@kunk/ui';
 import { useKunkConfig } from '../config/KunkConfigProvider.jsx';
 import { KUNK_APP_ROLES } from '../app/menuConfig.js';
 import { hasAnyRole, roleHomePath } from '../auth/roleRedirect.js';
-
-/** Credenciais do sample seed (`kunk-api/sample-data`). */
-const TEST_CREDENTIALS = {
-  username: 'admin@demo.kunk.local',
-  password: 'DemoAdmin123!',
-};
+import loginBg from '../assets/kunk-login-bg.jpg';
 
 function parseRoles(permissions) {
   if (!permissions) return [];
@@ -37,16 +33,16 @@ function validatePassword(password) {
 
 export function LoginPage() {
   const { user, loading, hasRequiredRole, login, roles } = useOperatorAuth();
-  const { config } = useKunkConfig();
+  const { config, configReady } = useKunkConfig();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState(null);
   const [passwordError, setPasswordError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const primary = config.darkPrimary || '#5a7a5b';
   const logo = String(config.logo || '').trim();
-  const showTestLogin = import.meta.env.DEV;
+  const logoFormat = config.logoFormat || LOGO_FORMAT_SQUARE;
+  const title = String(config.title || '').trim() || 'Kunk';
 
   if (!loading && user && hasRequiredRole) {
     return <Navigate to={roleHomePath(roles)} replace />;
@@ -102,140 +98,60 @@ export function LoginPage() {
     await performLogin(formData.username, formData.password);
   }
 
-  async function handleTestLogin() {
-    setFormData({ ...TEST_CREDENTIALS });
-    await performLogin(TEST_CREDENTIALS.username, TEST_CREDENTIALS.password);
-  }
-
   return (
-    <Grid container style={{ height: '100vh' }}>
-      <Grid item xs={12} md={6}>
-        <Container
-          component="main"
-          maxWidth="xs"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-          }}
-        >
-          <Box
-            sx={{
-              marginTop: 8,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}
-          >
-            <Typography component="h1" sx={{ color: primary }} variant="h5">
-              Login
-            </Typography>
-            {error ? (
-              <Typography color="error" sx={{ mt: 2 }} role="alert">
-                {error}
-              </Typography>
-            ) : null}
-            {passwordError ? (
-              <Typography color="error" sx={{ mt: 2 }} role="alert">
-                {passwordError}
-              </Typography>
-            ) : null}
-            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                id="username"
-                label="E-mail"
-                name="username"
-                autoComplete="username"
-                autoFocus
-                value={formData.username}
-                onChange={handleChange}
-                sx={{ backgroundColor: '#fff' }}
-              />
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                name="password"
-                label="Senha"
-                type="password"
-                id="password"
-                autoComplete="current-password"
-                value={formData.password}
-                onChange={handleChange}
-                sx={{ backgroundColor: '#fff' }}
-              />
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                disabled={busy}
-                sx={{
-                  backgroundColor: primary,
-                  '&:hover': { bgcolor: 'var(--kunk-accent-hover, #303B30)' },
-                  mt: 3,
-                  mb: showTestLogin ? 1 : 2,
-                }}
-              >
-                {busy ? 'Entrando…' : 'Entrar'}
-              </Button>
-              {showTestLogin ? (
-                <Button
-                  type="button"
-                  fullWidth
-                  variant="outlined"
-                  disabled={busy}
-                  onClick={handleTestLogin}
-                  sx={{
-                    color: primary,
-                    borderColor: primary,
-                    '&:hover': { borderColor: primary, bgcolor: 'rgba(90, 122, 91, 0.08)' },
-                    mb: 1,
-                  }}
-                >
-                  Entrar como teste
-                </Button>
-              ) : null}
-              <Button
-                component={Link}
-                to="/nova-senha"
-                fullWidth
-                sx={{ color: primary, textTransform: 'none', mb: 2 }}
-              >
-                Esqueci a senha
-              </Button>
-            </Box>
-          </Box>
-        </Container>
-      </Grid>
-      <Grid
-        item
-        xs={false}
-        md={6}
-        style={{
-          position: 'relative',
-          backgroundImage: logo ? `url(${logo})` : 'none',
-          backgroundSize: '90%',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#183f19c4',
-          }}
-        />
-      </Grid>
-    </Grid>
+    <AuthLoginLayout
+      backgroundImage={loginBg}
+      logo={logo}
+      logoFormat={logoFormat}
+      title={title}
+      ready={configReady && !loading}
+    >
+      <AuthLoginCard onSubmit={handleSubmit}>
+        {error ? (
+          <div className="auth-login-alert" role="alert">
+            {error}
+          </div>
+        ) : null}
+        {passwordError ? (
+          <div className="auth-login-alert" role="alert">
+            {passwordError}
+          </div>
+        ) : null}
+        <div className="auth-login-field">
+          <label htmlFor="username">E-mail</label>
+          <input
+            id="username"
+            name="username"
+            type="email"
+            required
+            autoComplete="username"
+            autoFocus
+            value={formData.username}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="auth-login-field">
+          <label htmlFor="password">Senha</label>
+          <PasswordInput
+            id="password"
+            name="password"
+            className=""
+            wrapperClassName=""
+            required
+            autoComplete="current-password"
+            value={formData.password}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="auth-login-actions">
+          <button className="auth-login-submit" type="submit" disabled={busy}>
+            {busy ? 'Entrando…' : 'Entrar'}
+          </button>
+          <Link className="auth-login-link" to="/nova-senha">
+            Esqueci a senha
+          </Link>
+        </div>
+      </AuthLoginCard>
+    </AuthLoginLayout>
   );
 }

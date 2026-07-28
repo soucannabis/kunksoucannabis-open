@@ -41,6 +41,7 @@ describe('domain/auth operator password reset', () => {
 
     const login = await request(app)
       .post('/api/v1/auth/login')
+      .set('X-Kunk-App', 'admin')
       .send({ email, password: 'NewPass123!' });
     assert.equal(login.status, 200, JSON.stringify(login.body));
 

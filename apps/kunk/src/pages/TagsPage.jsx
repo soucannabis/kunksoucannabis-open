@@ -64,7 +64,7 @@ function contextsToString(list) {
 export default function TagsPage() {
   const api = useMemo(() => {
     const bootstrap = getKunkPublicConfig();
-    return createApiClient({ baseUrl: bootstrap.apiUrl });
+    return createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' });
   }, []);
   const { showError } = useErrorModal();
   const { enabled: cacheEnabled } = useCacheConfig();

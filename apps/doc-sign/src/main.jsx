@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { installGlobalErrorListeners } from '@kunk/api-client';
 import { getPublicConfig } from '@kunk/config';
+import '@kunk/theme/brand-fonts.css';
 import './index.css';
 import App from './App.jsx';
 

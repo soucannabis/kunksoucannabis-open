@@ -28,4 +28,33 @@ describe('admin/storage', () => {
     const res = await request(app).get('/api/v1/admin/storage');
     assert.ok(res.status === 401 || res.status === 403);
   });
+
+  it('GET /admin/storage/branding-migration returns migration status', async () => {
+    const res = await request(app)
+      .get('/api/v1/admin/storage/branding-migration')
+      .set('Cookie', cookie);
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.ok(res.body.data);
+    assert.equal(typeof res.body.data.pending_count, 'number');
+    assert.equal(typeof res.body.data.needs_assistant, 'boolean');
+    assert.ok(Array.isArray(res.body.data.assets));
+  });
+
+  it('POST /admin/storage/migrate-branding requires cloud or no-ops', async () => {
+    const statusRes = await request(app).get('/api/v1/admin/storage').set('Cookie', cookie);
+    assert.equal(statusRes.status, 200);
+    const isCloud = Boolean(statusRes.body.data?.is_cloud);
+
+    const res = await request(app)
+      .post('/api/v1/admin/storage/migrate-branding')
+      .set('Cookie', cookie)
+      .send({});
+
+    if (!isCloud) {
+      assert.equal(res.status, 400, JSON.stringify(res.body));
+      return;
+    }
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.ok(res.body.data?.branding_migration);
+  });
 });

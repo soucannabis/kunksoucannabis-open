@@ -20,6 +20,7 @@ export default defineConfig({
       '@kunk/api-client': path.resolve(root, 'packages/api-client/src/index.js'),
       '@kunk/auth-session': path.resolve(root, 'packages/auth-session/src/index.jsx'),
       '@kunk/theme/registration.css': path.resolve(root, 'packages/theme/src/registration.css'),
+      '@kunk/theme/brand-fonts.css': path.resolve(root, 'packages/theme/src/brand-fonts.css'),
       '@kunk/theme': path.resolve(root, 'packages/theme/src/index.js'),
       '@kunk/ui': path.resolve(root, 'packages/ui/src/index.jsx'),
       '@kunk/forms': path.resolve(root, 'packages/forms/src/index.jsx'),

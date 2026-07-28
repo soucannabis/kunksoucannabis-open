@@ -40,7 +40,7 @@ function AppRoutes() {
 
 export default function App() {
   const bootstrap = getKunkPublicConfig();
-  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' }), [bootstrap.apiUrl]);
 
   return (
     <OperatorAuthProvider api={api} allowedRoles={KUNK_APP_ROLES}>

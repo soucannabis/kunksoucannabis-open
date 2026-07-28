@@ -17,10 +17,11 @@
 #root,
 body,
 html {
+  margin: 0;
   background-color: var(--kunk-app-bg) !important;
 }
 
-/* Fixed logo slot in sidebar — no percentage sizing on the image */
+/* Fixed logo slot in sidebar — square or rectangular by format */
 .kunk-logo-frame {
   width: var(--kunk-logo-size);
   height: var(--kunk-logo-size);
@@ -30,6 +31,11 @@ html {
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
+}
+
+.kunk-logo-frame--rectangular {
+  width: 180px;
+  height: 60px;
 }
 
 .kunk-logo-frame img {

@@ -6,7 +6,7 @@
 |---|---|
 | Front | `http://localhost:4256` |
 | API | `http://localhost:4250/api/v1` (via proxy `/api/v1`) |
-| Cookie | `kunk_oss_session` |
+| Cookie | `kunk_oss_session_admin` |
 | Admin | `admin@kunk-api.test` / `TestAdmin123!` |
 | Não-admin | `acolhimento@kunk-api.test` / `TestAcol123!` |
 

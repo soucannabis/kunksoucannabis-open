@@ -269,7 +269,8 @@ router.get('/contracts/:id', async (req, res, next) => {
   try {
     const data = await docSignService.getContract(req.params.id);
 
-    if (req.cookies?.associate_session && !req.cookies?.kunk_oss_session && !req.headers.authorization) {
+    const { hasAnyOperatorCookie } = require('../constants/authCookies');
+    if (req.cookies?.associate_session && !hasAnyOperatorCookie(req) && !req.headers.authorization) {
       await new Promise((resolve, reject) => {
         requireAssociate(req, res, (err) => (err ? reject(err) : resolve()));
       });

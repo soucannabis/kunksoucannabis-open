@@ -39,16 +39,18 @@ import { DocsHomePage } from './pages/DocsHomePage.jsx';
 import { HomePage } from './pages/HomePage.jsx';
 import { ApiAccessPage } from './pages/ApiAccessPage.jsx';
 import { SupportCredentialsPage } from './pages/SupportCredentialsPage.jsx';
+import { AdminFavicon } from './components/AdminFavicon.jsx';
 import { InstallStatusProvider } from './lib/installStatus.jsx';
 
 export default function App() {
   const bootstrap = getPublicConfig();
-  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'admin' }), [bootstrap.apiUrl]);
 
   return (
     <SystemErrorBoundary app="admin" baseUrl={bootstrap.apiUrl}>
       <OperatorAuthProvider api={api} requiredRole="Administrador">
         <InstallStatusProvider api={api}>
+          <AdminFavicon api={api} />
           <BrowserRouter>
             <Routes>
               <Route path="/instalacao" element={<InstallPage api={api} />} />

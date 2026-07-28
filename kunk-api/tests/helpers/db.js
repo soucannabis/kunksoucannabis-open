@@ -12,6 +12,7 @@ async function ensureAdminUser() {
   const hash = await authRepository.hashPassword(password);
 
   if (existing) {
+    await query(`DELETE FROM operator_sessions WHERE user_id = $1`, [existing.id]).catch(() => {});
     await query(
       `UPDATE system_users SET
         password = $1,
@@ -47,6 +48,7 @@ async function ensureOperatorUser({
   const perms = JSON.stringify(permissions);
 
   if (existing) {
+    await query(`DELETE FROM operator_sessions WHERE user_id = $1`, [existing.id]).catch(() => {});
     await query(
       `UPDATE system_users SET
         password = $1,

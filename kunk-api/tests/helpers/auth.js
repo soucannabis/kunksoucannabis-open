@@ -3,8 +3,9 @@
 const request = require('supertest');
 const { getApp } = require('./app');
 const { ensureAdminUser, query } = require('./db');
+const { OPERATOR_COOKIE_BY_APP } = require('../../src/constants/authCookies');
 
-function extractCookie(setCookie, name = 'kunk_oss_session') {
+function extractCookie(setCookie, name = OPERATOR_COOKIE_BY_APP.admin) {
   if (!setCookie) return null;
   const list = Array.isArray(setCookie) ? setCookie : [setCookie];
   const raw = list.find((c) => String(c).startsWith(`${name}=`)) || list[0];
@@ -29,29 +30,36 @@ async function setApiAccessEnabled(enabled) {
   );
 }
 
-async function loginAsAdmin() {
+async function loginAsAdmin(appName = 'admin') {
   const app = getApp();
   const creds = await ensureAdminUser();
-  const res = await request(app).post('/api/v1/auth/login').send(creds);
+  const res = await request(app)
+    .post('/api/v1/auth/login')
+    .set('X-Kunk-App', appName)
+    .send(creds);
   if (res.status !== 200) {
     throw new Error(`login failed: ${res.status} ${JSON.stringify(res.body)}`);
   }
-  const cookie = extractCookie(res.headers['set-cookie']);
-  return { app, cookie, user: res.body.data.user, creds };
+  const cookieName = OPERATOR_COOKIE_BY_APP[appName] || OPERATOR_COOKIE_BY_APP.admin;
+  const cookie = extractCookie(res.headers['set-cookie'], cookieName);
+  return { app, cookie, user: res.body.data.user, creds, appName };
 }
 
 async function loginAsOperator(overrides = {}) {
   const { ensureOperatorUser } = require('./db');
   const app = getApp();
+  const appName = overrides.app || 'kunk';
   const creds = await ensureOperatorUser(overrides);
   const res = await request(app)
     .post('/api/v1/auth/login')
+    .set('X-Kunk-App', appName)
     .send({ email: creds.email, password: creds.password });
   if (res.status !== 200) {
     throw new Error(`operator login failed: ${res.status} ${JSON.stringify(res.body)}`);
   }
-  const cookie = extractCookie(res.headers['set-cookie']);
-  return { app, cookie, user: res.body.data.user, creds };
+  const cookieName = OPERATOR_COOKIE_BY_APP[appName] || OPERATOR_COOKIE_BY_APP.kunk;
+  const cookie = extractCookie(res.headers['set-cookie'], cookieName);
+  return { app, cookie, user: res.body.data.user, creds, appName };
 }
 
 async function createBearerToken(cookie, scopes = ['*']) {
@@ -60,6 +68,7 @@ async function createBearerToken(cookie, scopes = ['*']) {
   const res = await request(app)
     .post('/api/v1/auth/tokens')
     .set('Cookie', cookie)
+    .set('X-Kunk-App', 'admin')
     .send({ email: 'integration-token', scopes });
   if (res.status !== 201) {
     throw new Error(`token create failed: ${res.status} ${JSON.stringify(res.body)}`);

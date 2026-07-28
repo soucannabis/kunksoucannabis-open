@@ -185,7 +185,7 @@ export default function PublicQueuePage() {
   const [searchParams] = useSearchParams();
   const embed = searchParams.get('embed') === '1';
   const bootstrap = useMemo(() => getKunkPublicConfig(), []);
-  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' }), [bootstrap.apiUrl]);
 
   const [fields, setFields] = useState([]);
   const [enabled, setEnabled] = useState(true);
@@ -320,7 +320,7 @@ export default function PublicQueuePage() {
           min-height: 100vh;
           box-sizing: border-box;
           padding: 2rem 1rem;
-          font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+          font-family: var(--kunk-font-sans, "IBM Plex Sans", "Segoe UI", sans-serif);
         }
         .fila-theme-dark {
           background: linear-gradient(160deg, #1a2a1c 0%, #0f1410 55%, #1a1520 100%);

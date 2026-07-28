@@ -21,7 +21,7 @@ const router = Router();
 async function resolveAssociateFromCookie(req) {
   const token = req.cookies?.associate_session;
   if (!token) return null;
-  // Ignore operator kunk_oss_session on localhost (shared across ports).
+  // Ignore operator session cookies on localhost (shared across ports).
   if (extractBearer(req)) {
     throw new AppError(401, 'AUTH_CONFLICT', 'Use cookie ou Bearer, não ambos');
   }

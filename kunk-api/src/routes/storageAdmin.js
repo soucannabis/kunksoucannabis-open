@@ -42,6 +42,22 @@ router.post('/activate', async (req, res, next) => {
   }
 });
 
+router.get('/branding-migration', async (req, res, next) => {
+  try {
+    res.json(ok(await storageAdminService.listBrandingMigrationStatus()));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/migrate-branding', async (req, res, next) => {
+  try {
+    res.json(ok(await storageAdminService.migrateBrandingAssets()));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/backups', async (req, res, next) => {
   try {
     const status = await storageAdminService.getStatus();

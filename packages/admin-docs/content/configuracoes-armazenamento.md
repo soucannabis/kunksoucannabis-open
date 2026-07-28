@@ -16,6 +16,7 @@ Define **onde os arquivos ficam guardados**: no servidor (local) ou em nuvem (Am
 - Driver: local, S3 ou GCS
 - Credenciais e nome do bucket (nuvem)
 - Ativação do bucket após o teste de conexão
+- Migração da logo institucional (e fundo) do disco local para o bucket
 - Backup: horário diário e execução manual (mantém os 10 últimos backups)
 - Lista dos últimos backups (abrir no bucket, restaurar ou excluir)
 
@@ -32,6 +33,9 @@ Ao **testar e ativar** com sucesso, o sistema:
 - Cria a pasta `backups/` no bucket
 - Liga o módulo de backup com opções padrão (22:00 America/Sao_Paulo, retenção 10)
 - Libera a edição das configurações de backup
+- Abre o **assistente da logo**: se a logo (ou imagem de fundo) ainda estiver no disco local, oferece enviar o arquivo para o bucket. A URL pública continua `/api/v1/files/{id}/download` — o blob passa a ser lido da nuvem.
+
+Se você ativou o bucket antes e a logo ficou local, um aviso na própria página de armazenamento reabre o assistente.
 
 Documentação oficial:
 

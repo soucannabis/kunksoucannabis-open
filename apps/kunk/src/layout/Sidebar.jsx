@@ -23,6 +23,7 @@ import { allowedPagesForRoles, filterMenuSections } from '../lib/rolePages.js';
 import { useKunkConfig } from '../config/KunkConfigProvider.jsx';
 import { CacheClearButton } from '../components/CacheClearButton.jsx';
 import { closeSidebar } from './utils.js';
+import { getBrandLogoFrameStyle, LOGO_FORMAT_SQUARE } from '@kunk/config';
 
 const SECTION_ICONS = {
   acolhimento: GroupRoundedIcon,
@@ -159,9 +160,13 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
       />
 
       <Box
-        className="kunk-logo-frame"
+        className={`kunk-logo-frame kunk-logo-frame--${config.logoFormat || LOGO_FORMAT_SQUARE}`}
         hidden={collapsed}
-        sx={{ display: collapsed ? 'none' : 'flex' }}
+        sx={{
+          display: collapsed ? 'none' : 'flex',
+          width: getBrandLogoFrameStyle(config.logoFormat, 'sidebar').width,
+          height: getBrandLogoFrameStyle(config.logoFormat, 'sidebar').height,
+        }}
       >
         {config.logo ? (
           <CacheClearButton>

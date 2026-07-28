@@ -5,7 +5,11 @@
   "type": "module",
   "main": "./src/index.jsx",
   "exports": {
-    ".": "./src/index.jsx"
+    ".": "./src/index.jsx",
+    "./auth-login.css": "./src/auth-login.css"
+  },
+  "dependencies": {
+    "@kunk/config": "*"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"

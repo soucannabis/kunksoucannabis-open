@@ -6,7 +6,13 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { getKunkPublicConfig, mergeKunkPublicConfigFromApi } from '@kunk/config';
+import {
+  getKunkPublicConfig,
+  mergeKunkPublicConfigFromApi,
+  mergePublicConfigFromApi,
+  getPublicConfig,
+  applyAssociationLogoToKunkConfig,
+} from '@kunk/config';
 
 const STORAGE_KEY = 'selectedTheme';
 
@@ -101,12 +107,20 @@ export function KunkConfigProvider({ api, children }) {
         }
 
         if (regResult.status === 'fulfilled') {
-          const name = String(regResult.value?.data?.values?.VITE_ASSOCIATION_NAME || '').trim();
-          if (name) merged = { ...merged, title: name };
+          const regMerged = mergePublicConfigFromApi(
+            getPublicConfig(),
+            regResult.value?.data?.values,
+          );
+          const name = String(regMerged.associationName || '').trim();
+          if (name) merged = { ...merged, title: name, associationName: name };
+          else merged = { ...merged, associationName: '' };
+          merged = applyAssociationLogoToKunkConfig(merged, regMerged);
         }
 
+        // Uma única atualização: logo/título já presentes quando configReady vira true
         setConfig(merged);
         setConfigErrors(errors);
+        setConfigReady(true);
         // Only apply admin default if user has no stored preference
         try {
           const saved = localStorage.getItem(STORAGE_KEY);
@@ -120,8 +134,7 @@ export function KunkConfigProvider({ api, children }) {
         if (cancelled) return;
         setConfig(bootstrap);
         setConfigErrors([]);
-      } finally {
-        if (!cancelled) setConfigReady(true);
+        setConfigReady(true);
       }
     })();
     return () => {
@@ -134,10 +147,9 @@ export function KunkConfigProvider({ api, children }) {
   }, [config, themeMode]);
 
   useEffect(() => {
-    if (config.title) {
-      document.title = config.title;
-    }
-  }, [config.title]);
+    const name = String(config.associationName || '').trim();
+    document.title = name ? `Kunk - ${name}` : 'Kunk';
+  }, [config.associationName]);
 
   useEffect(() => {
     const href = String(config.logo || '').trim();

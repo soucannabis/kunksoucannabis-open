@@ -21,6 +21,7 @@ test.describe('armazenamento cloud — bucket ativo', () => {
 
     const login = await request.post(`${API_URL}/auth/login`, {
       data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+      headers: { 'X-Kunk-App': 'doc-sign' },
       failOnStatusCode: false,
     });
     expect(login.status()).toBe(200);

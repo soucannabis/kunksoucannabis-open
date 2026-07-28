@@ -13,6 +13,7 @@ export async function requireActiveCloudBucket(playwright, {
   try {
     const login = await ctx.post(`${apiUrl}/auth/login`, {
       data: { email, password },
+      headers: { 'X-Kunk-App': 'doc-sign' },
       failOnStatusCode: false,
     });
     if (login.status() !== 200) {

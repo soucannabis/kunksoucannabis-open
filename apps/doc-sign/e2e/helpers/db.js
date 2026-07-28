@@ -74,6 +74,7 @@ export async function ensureAdminUser() {
   const hash = await hashPassword(password);
   const existing = await p.query(`SELECT id FROM system_users WHERE email = $1`, [email]);
   if (existing.rows[0]) {
+    await p.query(`DELETE FROM operator_sessions WHERE user_id = $1`, [existing.rows[0].id]).catch(() => {});
     await p.query(
       `UPDATE system_users SET password = $1, permissions = $2, status = 'active',
         session_token = NULL, is_session_active = false WHERE id = $3`,

@@ -4,13 +4,31 @@ import {
   mergePublicConfigFromApi,
   getKunkPublicConfig,
   mergeKunkPublicConfigFromApi,
+  applyAssociationLogoToKunkConfig,
+  resolveActiveBrandingLogo,
+  resolveBrandingLogoUrl,
 } from '@kunk/config';
 
 function withAppearanceLogo(registrationConfig, kunkConfig) {
-  const appearanceLogo = String(kunkConfig?.logo || '').trim();
+  const withLogos = applyAssociationLogoToKunkConfig(kunkConfig || {}, registrationConfig || {});
+  const active = resolveActiveBrandingLogo({
+    format: withLogos.logoFormat || registrationConfig?.associationLogoFormat,
+    square: withLogos.logoSquare || registrationConfig?.associationLogoSquare,
+    rectangular: withLogos.logoRectangular || registrationConfig?.associationLogoRectangular,
+    legacy: resolveBrandingLogoUrl(
+      withLogos.logo,
+      registrationConfig?.associationLogo,
+      registrationConfig?.associationLogoMenu,
+    ),
+  });
   return {
     ...registrationConfig,
-    appearanceLogo,
+    associationLogoFormat: active.format,
+    associationLogoSquare: withLogos.logoSquare || registrationConfig?.associationLogoSquare || '',
+    associationLogoRectangular:
+      withLogos.logoRectangular || registrationConfig?.associationLogoRectangular || '',
+    appearanceLogo: active.url,
+    appearanceLogoFormat: active.format,
   };
 }
 
@@ -50,14 +68,16 @@ export function PublicConfigProvider({ api, children }) {
           mergedKunk = mergeKunkPublicConfigFromApi(kunkBootstrap, kunkResult.value?.data?.values);
         }
 
-        setConfig(withAppearanceLogo(mergedReg, mergedKunk));
+        // Uma única atualização: logo/título já presentes quando configReady vira true
+        const next = withAppearanceLogo(mergedReg, mergedKunk);
+        setConfig(next);
         setConfigErrors(errors);
+        setConfigReady(true);
       } catch {
         if (cancelled) return;
         setConfig(withAppearanceLogo(bootstrap, kunkBootstrap));
         setConfigErrors([]);
-      } finally {
-        if (!cancelled) setConfigReady(true);
+        setConfigReady(true);
       }
     })();
     return () => {
@@ -66,7 +86,7 @@ export function PublicConfigProvider({ api, children }) {
   }, [api, bootstrap, kunkBootstrap]);
 
   useEffect(() => {
-    const href = String(config.appearanceLogo || config.associationLogo || '').trim();
+    const href = resolveBrandingLogoUrl(config.appearanceLogo, config.associationLogo);
     let link = document.querySelector("link[rel='icon']");
     if (!href) {
       if (link) link.setAttribute('href', '/favicon.svg');
@@ -90,6 +110,11 @@ export function PublicConfigProvider({ api, children }) {
     link.setAttribute('type', type);
     link.setAttribute('href', href);
   }, [config.appearanceLogo, config.associationLogo]);
+
+  useEffect(() => {
+    const name = String(config.associationName || '').trim();
+    document.title = name ? `Cadastro - ${name}` : 'Cadastro';
+  }, [config.associationName]);
 
   const value = useMemo(
     () => ({ config, configErrors, configReady }),

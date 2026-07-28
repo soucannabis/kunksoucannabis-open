@@ -12,6 +12,7 @@ import { ContractPage } from './pages/ContractPage.jsx';
 import { ContractsPage } from './pages/ContractsPage.jsx';
 import { AuditPage } from './pages/AuditPage.jsx';
 import { SystemErrorBoundary } from './components/errors/SystemErrorBoundary.jsx';
+import { DocSignBrand, DocSignFavicon, useDocSignBranding } from './components/DocSignBrand.jsx';
 import { getMissingAssociationFields } from './lib/associationGate.js';
 
 function RedirectContratoToTermo() {
@@ -77,10 +78,12 @@ function RequireAdmin({ api, children }) {
 
 function OperatorShell({ api }) {
   const { user, logout } = useOperatorAuth();
+  const { logo, logoFormat } = useDocSignBranding(api);
+
   return (
     <div className="shell">
       <div className="topbar">
-        <div className="brand">ASSINATURA DE TERMOS</div>
+        <DocSignBrand logo={logo} logoFormat={logoFormat} variant="shell" />
         <div className="topbar-nav">
           <span className="muted">{user?.email}</span>
           <NavLink
@@ -107,11 +110,12 @@ function OperatorShell({ api }) {
 
 export default function App() {
   const bootstrap = getPublicConfig();
-  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'doc-sign' }), [bootstrap.apiUrl]);
 
   return (
     <SystemErrorBoundary app="doc-sign" baseUrl={bootstrap.apiUrl}>
       <OperatorAuthProvider api={api} requiredRole="Administrador">
+        <DocSignFavicon api={api} />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage api={api} />} />

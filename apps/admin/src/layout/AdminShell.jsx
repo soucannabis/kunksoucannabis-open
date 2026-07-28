@@ -214,6 +214,8 @@ function pathMatches(pathname, prefixes = []) {
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+const EXTERNOS_ALSO_OPEN = ['transportadoras'];
+
 /** Seções / grupos / subgrupos — todos fechados por padrão. */
 function NavFold({
   id,
@@ -225,6 +227,8 @@ function NavFold({
   match = [],
   /** Prefixos que forçam abertura (default = match). Separado do destaque is-active. */
   openMatch,
+  /** Ao abrir este fold, também abre estes ids (ex.: Transportadoras dentro de Serviços externos). */
+  alsoOpen = [],
   children,
 }) {
   const location = useLocation();
@@ -234,11 +238,34 @@ function NavFold({
 
   React.useEffect(() => {
     if (!shouldOpen) return;
-    setOpenMap((prev) => (prev[id] ? prev : { ...prev, [id]: true }));
-  }, [shouldOpen, id, setOpenMap]);
+    setOpenMap((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      if (!next[id]) {
+        next[id] = true;
+        changed = true;
+      }
+      for (const childId of alsoOpen) {
+        if (!next[childId]) {
+          next[childId] = true;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [shouldOpen, id, alsoOpen, setOpenMap]);
 
   function toggle() {
-    setOpenMap((prev) => ({ ...prev, [id]: !prev[id] }));
+    setOpenMap((prev) => {
+      const nextOpen = !prev[id];
+      const next = { ...prev, [id]: nextOpen };
+      if (nextOpen) {
+        for (const childId of alsoOpen) {
+          next[childId] = true;
+        }
+      }
+      return next;
+    });
   }
 
   const foldClass =
@@ -502,6 +529,7 @@ export function AdminShell({ api }) {
           openMap={navOpen}
           setOpenMap={setNavOpen}
           match={['/servicos-externos']}
+          alsoOpen={EXTERNOS_ALSO_OPEN}
         >
           <NavLink to="/servicos-externos" end className={({ isActive }) => (isActive ? 'active' : '')}>
             Visão geral

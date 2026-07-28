@@ -66,7 +66,7 @@ export default function SystemHistoryPage() {
   const navigate = useNavigate();
   const api = useMemo(() => {
     const bootstrap = getKunkPublicConfig();
-    return createApiClient({ baseUrl: bootstrap.apiUrl });
+    return createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' });
   }, []);
 
   const [rows, setRows] = useState([]);

@@ -4,6 +4,7 @@ import { installGlobalErrorListeners } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { installWebVitalsReporter } from './lib/installWebVitals.js';
 import App from './App.jsx';
+import '@kunk/theme/brand-fonts.css';
 import './styles/themeStyles.css';
 
 const bootstrap = getKunkPublicConfig();

@@ -20,6 +20,7 @@ export default defineConfig({
       '@kunk/config': path.resolve(root, 'packages/config/src/index.js'),
       '@kunk/api-client': path.resolve(root, 'packages/api-client/src/index.js'),
       '@kunk/auth-session': path.resolve(root, 'packages/auth-session/src/index.jsx'),
+      '@kunk/theme/brand-fonts.css': path.resolve(root, 'packages/theme/src/brand-fonts.css'),
       '@kunk/theme': path.resolve(root, 'packages/theme/src/index.js'),
       'react-markdown': path.resolve(root, 'node_modules/react-markdown'),
       'remark-gfm': path.resolve(root, 'node_modules/remark-gfm'),

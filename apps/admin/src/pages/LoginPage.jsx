@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { getPublicConfig, mergePublicConfigFromApi } from '@kunk/config';
+import { getPublicConfig, mergePublicConfigFromApi, isPlaceholderLogo, getBrandLogoFrameStyle } from '@kunk/config';
 import { useOperatorAuth } from '@kunk/auth-session';
 import { safeInternalPath } from '../lib/lastRoute.js';
 import { useInstallStatus } from '../lib/installStatus.jsx';
@@ -10,11 +10,22 @@ const LOGIN_HOME = '/home';
 
 /** Só exibe logo real da associação — ignora placeholder de bootstrap. */
 function resolveLoginLogo(href) {
-  const url = String(href || '').trim();
-  if (!url) return '';
-  const path = url.split('?')[0].toLowerCase();
-  if (path === '/logo.svg' || path.endsWith('/logo.svg')) return '';
-  return url;
+  if (isPlaceholderLogo(href)) return '';
+  return String(href || '').trim();
+}
+
+function preloadImage(src) {
+  return new Promise((resolve) => {
+    const url = String(src || '').trim();
+    if (!url) {
+      resolve();
+      return;
+    }
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => resolve();
+    img.src = url;
+  });
 }
 
 export function LoginPage({ api }) {
@@ -27,29 +38,41 @@ export function LoginPage({ api }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [logoUrl, setLogoUrl] = useState('');
+  const [logoFormat, setLogoFormat] = useState('square');
+  const [brandingReady, setBrandingReady] = useState(false);
+  const [logoPainted, setLogoPainted] = useState(false);
 
   const installedBanner = searchParams.get('installed') === '1';
   // Pós-login vai para Home, salvo deep link explícito ?next=
   const nextPath = safeInternalPath(searchParams.get('next') || LOGIN_HOME, LOGIN_HOME);
 
   useEffect(() => {
-    if (!api?.get) return undefined;
+    if (!api?.get) {
+      setBrandingReady(true);
+      setLogoPainted(true);
+      return undefined;
+    }
     let cancelled = false;
+    setBrandingReady(false);
+    setLogoPainted(false);
     (async () => {
+      let nextLogo = '';
+      let nextFormat = 'square';
       try {
         const res = await api.get('/config/public?system=registration');
         if (cancelled) return;
-        const values = res?.data?.values || {};
-        const fromApi = String(values.VITE_ASSOCIATION_LOGO || '').trim();
-        if (fromApi) {
-          setLogoUrl(resolveLoginLogo(fromApi));
-          return;
-        }
-        const merged = mergePublicConfigFromApi(getPublicConfig(), values);
-        setLogoUrl(resolveLoginLogo(merged.associationLogo));
+        const merged = mergePublicConfigFromApi(getPublicConfig(), res?.data?.values || {});
+        nextLogo = resolveLoginLogo(merged.associationLogo);
+        nextFormat = merged.associationLogoFormat || 'square';
       } catch {
-        setLogoUrl('');
+        nextLogo = '';
       }
+      await preloadImage(nextLogo);
+      if (cancelled) return;
+      setLogoUrl(nextLogo);
+      setLogoFormat(nextFormat);
+      setBrandingReady(true);
+      if (!nextLogo) setLogoPainted(true);
     })();
     return () => {
       cancelled = true;
@@ -68,6 +91,24 @@ export function LoginPage({ api }) {
   }
   if (!loading && user && !hasRequiredRole) {
     return <Navigate to="/sem-permissao" replace />;
+  }
+
+  if (loading || !brandingReady || !logoPainted) {
+    return (
+      <>
+        <AdminLoader label="Carregando…" className="admin-loader--viewport" />
+        {brandingReady && logoUrl ? (
+          <img
+            src={logoUrl}
+            alt=""
+            aria-hidden
+            style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+            onLoad={() => setLogoPainted(true)}
+            onError={() => setLogoPainted(true)}
+          />
+        ) : null}
+      </>
+    );
   }
 
   async function onSubmit(e) {
@@ -103,9 +144,14 @@ export function LoginPage({ api }) {
         <div className="login-brand">
           {logoUrl ? (
             <img
-              className="login-logo"
+              className={`login-logo login-logo--${logoFormat}`}
               src={logoUrl}
               alt="Logo da associação"
+              style={{
+                width: getBrandLogoFrameStyle(logoFormat, 'admin').width,
+                height: getBrandLogoFrameStyle(logoFormat, 'admin').height,
+                objectFit: 'contain',
+              }}
               onError={() => setLogoUrl('')}
             />
           ) : null}

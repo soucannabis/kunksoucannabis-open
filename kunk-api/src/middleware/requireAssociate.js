@@ -10,7 +10,7 @@ async function requireAssociate(req, res, next) {
     const associateCookie = req.cookies?.associate_session;
 
     // Bearer on associate routes is ambiguous; cookies from the operator panel
-    // (kunk_oss_session) share the localhost domain across ports and must be ignored.
+    // (kunk_oss_session_*) share the localhost domain across ports and must be ignored.
     if (bearer) {
       throw new AppError(401, 'AUTH_CONFLICT', 'Use apenas o cookie associate_session nesta rota');
     }

@@ -5,7 +5,7 @@ import { createApiClient } from '@kunk/api-client';
 import { useKunkConfig } from '../config/KunkConfigProvider.jsx';
 
 const MIN_PASSWORD_LENGTH = 8;
-const api = createApiClient({ baseUrl: import.meta.env.VITE_API_URL || '' });
+const api = createApiClient({ baseUrl: import.meta.env.VITE_API_URL || '', app: 'kunk' });
 
 function validatePassword(password) {
   return {

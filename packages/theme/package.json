@@ -6,6 +6,7 @@
   "main": "./src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./registration.css": "./src/registration.css"
+    "./registration.css": "./src/registration.css",
+    "./brand-fonts.css": "./src/brand-fonts.css"
   }
 }

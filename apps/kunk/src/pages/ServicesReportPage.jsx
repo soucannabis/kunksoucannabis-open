@@ -84,7 +84,7 @@ function professionalDisplayName(p) {
 export default function ServicesReportPage({ mode = 'staff', onLogout }) {
   const isPortal = mode === 'portal';
   const bootstrap = getKunkPublicConfig();
-  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' }), [bootstrap.apiUrl]);
   const { showError } = useErrorModal();
 
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthYear());

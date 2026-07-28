@@ -282,7 +282,8 @@ export function TemplateEditorPage({ api }) {
         <div className="field">
           <label>Logo do termo (obrigatória)</label>
           <p className="muted" style={{ marginTop: 0 }}>
-            Proporção horizontal 3:1 (referência 300×100).
+            Proporção horizontal 3:1 (referência 300×100). Se vazia, usa a logo de Dados da
+            associação.
           </p>
           <div className="term-logo-preview-wrap">
             {logoUrl ? (

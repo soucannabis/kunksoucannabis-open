@@ -22,11 +22,13 @@ export {
 
 export { reportWebVital, createWebVitalSender, isWebVitalsLocalHost } from './webVitals.js';
 
-export function createApiClient({ baseUrl }) {
+export function createApiClient({ baseUrl, app } = {}) {
   const root = String(baseUrl || '').replace(/\/$/, '');
+  const appKey = app ? String(app).trim().toLowerCase() : null;
 
   async function request(method, path, body, options = {}) {
     const headers = { ...(options.headers || {}) };
+    if (appKey) headers['X-Kunk-App'] = appKey;
     let payload = body;
     if (body && !(body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
@@ -125,6 +127,8 @@ export function createApiClient({ baseUrl }) {
     putStorageConfig: (body) => request('PUT', '/admin/storage', body),
     testStorage: (body) => request('POST', '/admin/storage/test', body || {}),
     activateStorage: (body) => request('POST', '/admin/storage/activate', body || {}),
+    getBrandingMigration: () => request('GET', '/admin/storage/branding-migration'),
+    migrateBrandingAssets: () => request('POST', '/admin/storage/migrate-branding', {}),
     getStorageBackups: () => request('GET', '/admin/storage/backups'),
     putBackupConfig: (body) => request('PUT', '/admin/storage/backup-config', body || {}),
     runStorageBackup: () => request('POST', '/admin/storage/backups/run', {}),

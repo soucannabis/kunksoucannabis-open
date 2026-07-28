@@ -124,6 +124,8 @@ const DOMAIN_ROUTES = [
   ['PUT', '/admin/storage'],
   ['POST', '/admin/storage/test'],
   ['POST', '/admin/storage/activate'],
+  ['GET', '/admin/storage/branding-migration'],
+  ['POST', '/admin/storage/migrate-branding'],
   ['GET', '/admin/sample-data'],
   ['DELETE', '/admin/sample-data'],
   ['GET', '/admin/system-errors/summary'],

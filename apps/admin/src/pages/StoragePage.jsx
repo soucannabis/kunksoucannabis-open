@@ -2,6 +2,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DRIVER_LABELS, AWS_S3_REGIONS, backupBucketConsoleUrl } from '../lib/storageConfig.js';
 import { AdminLoader } from '../components/AdminLoader.jsx';
 import { StorageCredentialsGuide } from '../components/StorageCredentialsGuide.jsx';
+import {
+  BrandingMigrationAssistant,
+  BrandingMigrationBanner,
+  useBrandingMigrationAssistant,
+} from '../components/BrandingMigrationAssistant.jsx';
 
 const FIELD_LABELS = {
   access_key_id: 'Access Key ID',
@@ -202,6 +207,7 @@ export function StoragePage({ api }) {
   const [restoreConfirmText, setRestoreConfirmText] = useState('');
   const [restoreBusy, setRestoreBusy] = useState(false);
   const gcsFileRef = useRef(null);
+  const brandingAssistant = useBrandingMigrationAssistant();
 
   const applyStatusPayload = useCallback((data) => {
     setStatus(data);
@@ -405,10 +411,12 @@ export function StoragePage({ api }) {
       const res = await api.testStorage(payload);
       if (res.data?.status) {
         applySavedStatus(res.data.status, keepDriver || payload.driver);
+        brandingAssistant.maybeOpenAfterActivate(res.data.status);
       } else {
-        await reload();
+        const data = await reload();
         setEditing({});
         setReplaceGcsFile(false);
+        brandingAssistant.maybeOpenAfterActivate(data);
       }
       setConfigMessage(res.data?.message || 'Teste OK — bucket ativado');
       try {
@@ -425,6 +433,27 @@ export function StoragePage({ api }) {
     } finally {
       setTestBusy(false);
       setBusy(false);
+    }
+  }
+
+  async function onMigrateBranding() {
+    brandingAssistant.setMigrateBusy(true);
+    brandingAssistant.setMigrateError('');
+    brandingAssistant.setMigrateMessage('');
+    try {
+      const res = await api.migrateBrandingAssets();
+      brandingAssistant.setMigrateMessage(res.data?.message || 'Logo enviada para o bucket');
+      const nextStatus = await reload();
+      if (res.data?.branding_migration) {
+        applyStatusPayload({
+          ...nextStatus,
+          branding_migration: res.data.branding_migration,
+        });
+      }
+    } catch (err) {
+      brandingAssistant.setMigrateError(err.message || 'Falha ao migrar logo');
+    } finally {
+      brandingAssistant.setMigrateBusy(false);
     }
   }
 
@@ -579,6 +608,13 @@ export function StoragePage({ api }) {
   const gcsHasCreds = Boolean(status.gcs?.has_credentials);
   const backupEditable = Boolean(status.backup?.editable);
   const showBackupCard = form.driver !== 'local' || status.is_cloud;
+  const driverLabel = DRIVER_LABELS[status.driver] || status.driver;
+  const brandingMigration = status.branding_migration;
+  const showBrandingBanner =
+    status.is_cloud &&
+    brandingMigration?.needs_assistant &&
+    !brandingAssistant.dismissed &&
+    !brandingAssistant.assistantOpen;
 
   const s3Fields = [
     { key: 'access_key_id' },
@@ -596,6 +632,27 @@ export function StoragePage({ api }) {
         {' '}
         — o bucket fica privado e a API acessa com as credenciais.
       </p>
+
+      {showBrandingBanner ? (
+        <BrandingMigrationBanner
+          brandingMigration={brandingMigration}
+          driverLabel={driverLabel}
+          busy={brandingAssistant.migrateBusy}
+          onOpen={brandingAssistant.openAssistant}
+        />
+      ) : null}
+
+      <BrandingMigrationAssistant
+        open={brandingAssistant.assistantOpen}
+        brandingMigration={brandingMigration}
+        driverLabel={driverLabel}
+        busy={brandingAssistant.migrateBusy}
+        error={brandingAssistant.migrateError}
+        message={brandingAssistant.migrateMessage}
+        onMigrate={onMigrateBranding}
+        onDismiss={brandingAssistant.dismissAssistant}
+        onClose={brandingAssistant.closeAssistant}
+      />
 
       <div className="card" style={{ marginBottom: '1rem' }} data-testid="storage-status-card" id="storage-status">
         <h2>Status</h2>

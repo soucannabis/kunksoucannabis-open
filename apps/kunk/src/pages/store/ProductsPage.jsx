@@ -118,7 +118,7 @@ function buildPayload(form) {
 export default function ProductsPage() {
   const api = useMemo(() => {
     const bootstrap = getKunkPublicConfig();
-    return createApiClient({ baseUrl: bootstrap.apiUrl });
+    return createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' });
   }, []);
   const { showError } = useErrorModal();
 

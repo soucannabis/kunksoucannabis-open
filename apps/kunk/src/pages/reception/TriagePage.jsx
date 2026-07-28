@@ -215,7 +215,7 @@ export default function TriagePage() {
 
   const api = useMemo(() => {
     const bootstrap = getKunkPublicConfig();
-    return createApiClient({ baseUrl: bootstrap.apiUrl });
+    return createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' });
   }, []);
 
   const [triageConfig, setTriageConfig] = useState(getTriageDefaults());

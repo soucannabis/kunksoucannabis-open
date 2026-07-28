@@ -33,22 +33,58 @@ async function findByEmail(email) {
   return result.rows[0] || null;
 }
 
+async function ensureSessionsTable() {
+  const { ensureOperatorSessions } = require('../db/ensureOperatorSessions');
+  await ensureOperatorSessions();
+}
+
+/**
+ * @returns {Promise<{ user: object, session: object }|null>}
+ */
 async function findBySessionToken(token) {
+  if (!token) return null;
+  await ensureSessionsTable();
   const result = await query(
-    `SELECT * FROM system_users
-     WHERE session_token = $1 AND is_session_active = true
+    `SELECT u.*,
+            s.id AS session_id,
+            s.app AS session_app,
+            s.session_token AS session_token_value,
+            s.session_expires AS session_expires_at,
+            s.last_activity AS session_last_activity,
+            s.is_active AS session_is_active
+     FROM operator_sessions s
+     INNER JOIN system_users u ON u.id = s.user_id
+     WHERE s.session_token = $1 AND s.is_active = true
      LIMIT 1`,
     [token]
   );
-  return result.rows[0] || null;
+  const row = result.rows[0];
+  if (!row) return null;
+  return {
+    user: row,
+    session: {
+      id: row.session_id,
+      app: row.session_app,
+      session_token: row.session_token_value,
+      session_expires: row.session_expires_at,
+      last_activity: row.session_last_activity,
+      is_active: row.session_is_active,
+    },
+  };
 }
 
-async function login(email, password) {
+async function login(email, password, app) {
   if (!email || !password) {
     throw new AppError(400, 'VALIDATION_ERROR', 'email e password são obrigatórios', {
       email: email ? undefined : ['obrigatório'],
       password: password ? undefined : ['obrigatório'],
     });
+  }
+
+  const { normalizeOperatorApp } = require('../constants/authCookies');
+  const appKey = normalizeOperatorApp(app);
+  if (!appKey) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'app inválido (kunk|admin|doc-sign)');
   }
 
   const user = await findByEmail(email);
@@ -71,51 +107,62 @@ async function login(email, password) {
     throw new AppError(401, 'INVALID_CREDENTIALS', 'Credenciais inválidas');
   }
 
+  await ensureSessionsTable();
+
   const sessionToken = crypto.randomBytes(32).toString('hex');
   const expires = new Date(Date.now() + env.sessionMaxHours * 3600 * 1000);
 
   await query(
-    `UPDATE system_users SET
-      session_token = $1,
-      session_expires = $2,
-      last_activity = NOW(),
-      is_session_active = true
-     WHERE id = $3`,
-    [sessionToken, expires, user.id]
+    `INSERT INTO operator_sessions (user_id, app, session_token, session_expires, last_activity, is_active)
+     VALUES ($1, $2, $3, $4, NOW(), true)
+     ON CONFLICT (user_id, app) DO UPDATE SET
+       session_token = EXCLUDED.session_token,
+       session_expires = EXCLUDED.session_expires,
+       last_activity = NOW(),
+       is_active = true`,
+    [user.id, appKey, sessionToken, expires]
   );
 
   const refreshed = await query(`SELECT * FROM system_users WHERE id = $1`, [user.id]);
-  return { user: publicUser(refreshed.rows[0]), sessionToken, expires };
+  return { user: publicUser(refreshed.rows[0]), sessionToken, expires, app: appKey };
 }
 
 async function logout(sessionToken) {
   if (!sessionToken) return;
+  await ensureSessionsTable();
   await query(
-    `UPDATE system_users SET
-      is_session_active = false,
-      session_token = NULL
-     WHERE session_token = $1`,
+    `UPDATE operator_sessions SET is_active = false WHERE session_token = $1`,
     [sessionToken]
   );
 }
 
-async function touchSession(userId) {
+async function logoutAllForUser(userId) {
+  if (!userId) return;
+  await ensureSessionsTable();
+  await query(
+    `UPDATE operator_sessions SET is_active = false WHERE user_id = $1`,
+    [userId]
+  );
+}
+
+async function touchSession(sessionId) {
   const expires = new Date(Date.now() + env.sessionMaxHours * 3600 * 1000);
   await query(
-    `UPDATE system_users SET last_activity = NOW(), session_expires = $1 WHERE id = $2`,
-    [expires, userId]
+    `UPDATE operator_sessions SET last_activity = NOW(), session_expires = $1 WHERE id = $2`,
+    [expires, sessionId]
   );
 }
 
 async function resolveSession(sessionToken) {
   if (!sessionToken) return null;
-  const user = await findBySessionToken(sessionToken);
-  if (!user) return null;
-  if (user.session_expires && new Date(user.session_expires) < new Date()) {
+  const found = await findBySessionToken(sessionToken);
+  if (!found) return null;
+  const { user, session } = found;
+  if (session.session_expires && new Date(session.session_expires) < new Date()) {
     await logout(sessionToken);
     return null;
   }
-  await touchSession(user.id);
+  await touchSession(session.id);
   return publicUser(user);
 }
 
@@ -328,6 +375,7 @@ async function resetPassword(token, password) {
      WHERE id = $2`,
     [hash, user.id]
   );
+  await logoutAllForUser(user.id);
 
   return { ok: true };
 }
@@ -337,6 +385,7 @@ module.exports = {
   findByEmail,
   login,
   logout,
+  logoutAllForUser,
   resolveSession,
   createApiToken,
   listApiTokens,

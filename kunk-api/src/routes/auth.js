@@ -7,24 +7,42 @@ const { authenticate } = require('../middleware/authenticate');
 const { authorizeAdmin } = require('../middleware/authorize');
 const { ok } = require('../utils/response');
 const { env } = require('../config/env');
-const { OPERATOR_SESSION_COOKIE } = require('../constants/authCookies');
+const {
+  LEGACY_OPERATOR_SESSION_COOKIE,
+  operatorCookieName,
+  resolveOperatorApp,
+  extractOperatorCookieToken,
+} = require('../constants/authCookies');
 
 const router = Router();
+
+function cookieOpts(extra = {}) {
+  return {
+    httpOnly: true,
+    secure: env.cookieSecure,
+    sameSite: 'lax',
+    path: '/',
+    ...extra,
+  };
+}
+
+function clearLegacyOperatorCookie(res) {
+  res.cookie(LEGACY_OPERATOR_SESSION_COOKIE, '', cookieOpts({ maxAge: 0 }));
+}
 
 router.use('/associate', authAssociate);
 
 router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body || {};
-    const { user, sessionToken, expires } = await authRepository.login(email, password);
-    res.cookie(OPERATOR_SESSION_COOKIE, sessionToken, {
-      httpOnly: true,
-      secure: env.cookieSecure,
-      sameSite: 'lax',
-      path: '/',
+    const app = resolveOperatorApp(req, { required: true });
+    const { user, sessionToken, expires } = await authRepository.login(email, password, app);
+    const cookieName = operatorCookieName(app);
+    res.cookie(cookieName, sessionToken, cookieOpts({
       maxAge: env.sessionMaxHours * 3600 * 1000,
       expires,
-    });
+    }));
+    clearLegacyOperatorCookie(res);
     res.json(ok({ user }));
   } catch (err) {
     next(err);
@@ -59,14 +77,26 @@ router.post('/reset-password', async (req, res, next) => {
 
 router.post('/logout', async (req, res, next) => {
   try {
-    await authRepository.logout(req.cookies?.[OPERATOR_SESSION_COOKIE]);
-    res.cookie(OPERATOR_SESSION_COOKIE, '', {
-      httpOnly: true,
-      secure: env.cookieSecure,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 0,
-    });
+    const app = resolveOperatorApp(req);
+    const token = extractOperatorCookieToken(req, app);
+    await authRepository.logout(token);
+    if (app) {
+      const cookieName = operatorCookieName(app);
+      if (cookieName) res.cookie(cookieName, '', cookieOpts({ maxAge: 0 }));
+    } else if (token) {
+      // Sem app: limpa o cookie cujo valor bateu no scan
+      const {
+        KNOWN_OPERATOR_APPS,
+        OPERATOR_COOKIE_BY_APP,
+      } = require('../constants/authCookies');
+      for (const known of KNOWN_OPERATOR_APPS) {
+        const name = OPERATOR_COOKIE_BY_APP[known];
+        if (req.cookies?.[name] === token) {
+          res.cookie(name, '', cookieOpts({ maxAge: 0 }));
+        }
+      }
+    }
+    clearLegacyOperatorCookie(res);
     res.json(ok({ ok: true }));
   } catch (err) {
     next(err);

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { CssVarsProvider } from '@mui/joy/styles';
+import { CssVarsProvider, extendTheme } from '@mui/joy/styles';
 import CssBaseline from '@mui/joy/CssBaseline';
 import Box from '@mui/joy/Box';
 import Button from '@mui/joy/Button';
 import Typography from '@mui/joy/Typography';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useOperatorAuth } from '@kunk/auth-session';
+import { KUNK_FONT_SANS } from '@kunk/theme';
 import Sidebar from './Sidebar.jsx';
 import Header from './Header.jsx';
 import QuickNavMenu from './QuickNavMenu.jsx';
@@ -14,6 +15,13 @@ import ActivityNotifications from '../components/ActivityNotifications.jsx';
 import GlobalAppSearch from '../components/search/GlobalAppSearch.jsx';
 import { pageTitleFromPath } from '../auth/roleRedirect.js';
 import '../styles/themeStyles.css';
+
+const joyTheme = extendTheme({
+  fontFamily: {
+    body: KUNK_FONT_SANS,
+    display: KUNK_FONT_SANS,
+  },
+});
 
 export default function Theme() {
   const { roles } = useOperatorAuth();
@@ -31,7 +39,7 @@ export default function Theme() {
   }, [sidebarOffset]);
 
   return (
-    <CssVarsProvider disableTransitionOnChange>
+    <CssVarsProvider theme={joyTheme} disableTransitionOnChange>
       <CssBaseline />
       <Box
         sx={{

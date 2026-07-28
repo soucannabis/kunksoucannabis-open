@@ -6,6 +6,7 @@ import { loginInBrowser } from '../helpers/api.js';
 async function loginApi(request) {
   const res = await request.post(`${API_URL}/auth/login`, {
     data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    headers: { 'X-Kunk-App': 'doc-sign' },
   });
   expect(res.ok(), await res.text()).toBeTruthy();
   const setCookie = res.headers()['set-cookie'];

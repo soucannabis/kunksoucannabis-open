@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createApiClient } from '@kunk/api-client';
-import { getPublicConfig, KUNK_LOGO_FRAME_SIZE } from '@kunk/config';
+import { getPublicConfig, getBrandLogoFrameStyle, LOGO_FORMAT_SQUARE } from '@kunk/config';
 import { Loader } from '@kunk/ui';
 import { usePublicConfig } from '../config/PublicConfigProvider.jsx';
 
@@ -22,6 +22,8 @@ export function ContactPage() {
   const [iframeReady, setIframeReady] = useState(false);
 
   const logo = String(cfg.appearanceLogo || '').trim();
+  const format = cfg.appearanceLogoFormat || cfg.associationLogoFormat || LOGO_FORMAT_SQUARE;
+  const frame = getBrandLogoFrameStyle(format, 'login');
   const fullName = String(cfg.associationFullName || cfg.associationName || '').trim();
 
   useEffect(() => {
@@ -79,13 +81,13 @@ export function ContactPage() {
     <div className={`contact-page${iframeTheme === 'light' ? ' contact-page--light' : ''}`}>
       <div className="contact-page-inner">
         {logo ? (
-          <div className="contact-page-logo auth-public-logo">
+          <div className={`contact-page-logo auth-public-logo auth-public-logo--${format}`}>
             <img
               src={logo}
               alt={fullName || 'Logo da associação'}
               style={{
-                width: KUNK_LOGO_FRAME_SIZE,
-                height: KUNK_LOGO_FRAME_SIZE,
+                width: frame.width,
+                height: frame.height,
                 objectFit: 'contain',
               }}
             />

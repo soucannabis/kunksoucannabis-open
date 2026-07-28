@@ -3,7 +3,11 @@
 const authRepository = require('../repositories/authRepository');
 const systemConfigService = require('../services/systemConfigService');
 const { AppError } = require('../utils/response');
-const { OPERATOR_SESSION_COOKIE } = require('../constants/authCookies');
+const {
+  extractOperatorCookieToken,
+  resolveOperatorApp,
+  OPERATOR_SESSION_COOKIE,
+} = require('../constants/authCookies');
 
 function extractBearer(req) {
   const header = req.headers.authorization || '';
@@ -14,9 +18,10 @@ function extractBearer(req) {
 async function authenticate(req, res, next) {
   try {
     const bearer = extractBearer(req);
-    const cookieToken = req.cookies?.[OPERATOR_SESSION_COOKIE];
+    const app = resolveOperatorApp(req);
+    const cookieToken = extractOperatorCookieToken(req, app);
     // associate_session may coexist on localhost (shared cookie jar across ports);
-    // operator routes prefer kunk_oss_session / Bearer and ignore associate cookies.
+    // operator routes prefer app-scoped cookies / Bearer and ignore associate cookies.
     const channels = [Boolean(bearer), Boolean(cookieToken)].filter(Boolean).length;
     if (channels > 1) {
       throw new AppError(401, 'AUTH_CONFLICT', 'Use cookie ou Bearer, não ambos');
@@ -52,7 +57,7 @@ async function authenticate(req, res, next) {
       if (!user) {
         throw new AppError(401, 'UNAUTHORIZED', 'Sessão inválida ou expirada');
       }
-      req.auth = { type: 'session', subject: 'operator' };
+      req.auth = { type: 'session', subject: 'operator', app: app || null };
       req.user = { ...user, roles: user.permissions };
       return next();
     }
@@ -65,7 +70,8 @@ async function authenticate(req, res, next) {
 
 function optionalAuthenticate(req, res, next) {
   const bearer = extractBearer(req);
-  const cookieToken = req.cookies?.[OPERATOR_SESSION_COOKIE];
+  const app = resolveOperatorApp(req);
+  const cookieToken = extractOperatorCookieToken(req, app);
   if (!bearer && !cookieToken) {
     return next();
   }

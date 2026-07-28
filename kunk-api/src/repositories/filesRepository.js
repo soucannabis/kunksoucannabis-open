@@ -232,6 +232,72 @@ async function countCloudFiles() {
   return result.rows[0].total;
 }
 
+/**
+ * Copy a local file blob into the active cloud driver and update the row in place.
+ * Keeps the same file id (config URLs `/files/:id/download` remain valid).
+ */
+async function migrateFileToCloud(fileOrId) {
+  const file = typeof fileOrId === 'object' ? fileOrId : await getFile(fileOrId);
+  const currentDriver = String(file.storage_driver || 'local').toLowerCase();
+  const { driver, config } = await getActiveStorageDriver();
+
+  if (driver.name === 'local') {
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'Ative um bucket (S3 ou GCS) antes de migrar arquivos locais'
+    );
+  }
+
+  if (currentDriver === 's3' || currentDriver === 'gcs') {
+    return {
+      migrated: false,
+      skipped: true,
+      reason: 'already_cloud',
+      file: withUrl(file),
+    };
+  }
+
+  const buffer = await readFileBuffer(file);
+  const oldKey = fileObjectKey(file);
+  const newKey = objectKeyForFile({
+    id: file.id,
+    filename: file.filename,
+    keyPrefix: config.keyPrefix,
+  });
+
+  await driver.put({
+    key: newKey,
+    buffer,
+    mimeType: file.mime_type || 'application/octet-stream',
+    filename: file.filename,
+  });
+
+  const result = await query(
+    `UPDATE files
+     SET storage_driver = $2,
+         storage_key = $3,
+         storage_path = $4
+     WHERE id = $1
+     RETURNING *`,
+    [file.id, driver.name, newKey, newKey]
+  );
+  const updated = result.rows[0];
+
+  try {
+    const localDriver = await getDriverForFile({ ...file, storage_driver: 'local' });
+    await localDriver.delete({ key: oldKey });
+  } catch {
+    /* ignore orphan local blob */
+  }
+
+  return {
+    migrated: true,
+    skipped: false,
+    file: withUrl(updated),
+  };
+}
+
 module.exports = {
   ATTACH_MAP,
   createFile,
@@ -244,5 +310,7 @@ module.exports = {
   detachFile,
   countLocalFiles,
   countCloudFiles,
+  migrateFileToCloud,
   fileObjectKey,
+  fileUrl,
 };

@@ -116,6 +116,18 @@ CREATE TABLE IF NOT EXISTS system_users (
   is_sample BOOLEAN NOT NULL DEFAULT false
 );
 
+-- Sessões de operador por app (admin | kunk | doc-sign)
+CREATE TABLE IF NOT EXISTS operator_sessions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES system_users(id) ON DELETE CASCADE,
+  app VARCHAR(32) NOT NULL,
+  session_token VARCHAR(255) NOT NULL UNIQUE,
+  session_expires TIMESTAMP NOT NULL,
+  last_activity TIMESTAMP,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  UNIQUE (user_id, app)
+);
+
 -- Institutional clients → institutional_clients
 CREATE TABLE IF NOT EXISTS institutional_clients (
   id SERIAL PRIMARY KEY,

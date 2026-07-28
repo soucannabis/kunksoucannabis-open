@@ -122,6 +122,82 @@ function logoUrl(fileId) {
   return fileId ? `/api/v1/files/${fileId}/download` : null;
 }
 
+function extractFileIdFromDownloadUrl(href) {
+  const match = String(href || '').match(/\/files\/([^/?#]+)\/download/i);
+  return match?.[1] || null;
+}
+
+function isPlaceholderLogo(href) {
+  const url = String(href || '').trim();
+  if (!url) return true;
+  const path = url.split('?')[0].toLowerCase();
+  return path === '/logo.svg' || path.endsWith('/logo.svg');
+}
+
+/**
+ * Logo institucional (Admin → Dados da associação), espelhada em kunk + registration.
+ * @returns {Promise<string|null>} file id
+ */
+async function resolveBrandingLogoFileId() {
+  try {
+    const result = await query(
+      `SELECT system, key, value FROM system_configs
+       WHERE value IS NOT NULL
+         AND TRIM(value) <> ''
+         AND (
+           (system = 'kunk' AND key = 'VITE_KUNK_LOGO')
+           OR (
+             system = 'registration'
+             AND key IN (
+               'VITE_ASSOCIATION_LOGO',
+               'VITE_ASSOCIATION_LOGO_MENU',
+               'VITE_ASSOCIATION_LOGO_SQUARE',
+               'VITE_ASSOCIATION_LOGO_RECTANGULAR',
+               'VITE_ASSOCIATION_LOGO_FORMAT'
+             )
+           )
+         )`
+    );
+    const byKey = Object.fromEntries(
+      result.rows.map((row) => [`${row.system}.${row.key}`, row.value])
+    );
+    const format = String(byKey['registration.VITE_ASSOCIATION_LOGO_FORMAT'] || 'square')
+      .trim()
+      .toLowerCase();
+    const square = byKey['registration.VITE_ASSOCIATION_LOGO_SQUARE'];
+    const rectangular = byKey['registration.VITE_ASSOCIATION_LOGO_RECTANGULAR'];
+    const candidates =
+      format === 'rectangular' || format === 'rect' || format === 'horizontal'
+        ? [
+            rectangular,
+            square,
+            byKey['kunk.VITE_KUNK_LOGO'],
+            byKey['registration.VITE_ASSOCIATION_LOGO'],
+            byKey['registration.VITE_ASSOCIATION_LOGO_MENU'],
+          ]
+        : [
+            square,
+            rectangular,
+            byKey['kunk.VITE_KUNK_LOGO'],
+            byKey['registration.VITE_ASSOCIATION_LOGO'],
+            byKey['registration.VITE_ASSOCIATION_LOGO_MENU'],
+          ];
+    for (const href of candidates) {
+      if (isPlaceholderLogo(href)) continue;
+      const id = extractFileIdFromDownloadUrl(href);
+      if (id) return id;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+async function resolveTemplateLogoFileId(templateLogoFileId) {
+  if (templateLogoFileId) return templateLogoFileId;
+  return resolveBrandingLogoFileId();
+}
+
 async function getAssociationProfile() {
   const defaults = {
     name: process.env.VITE_ASSOCIATION_NAME || 'SouCannabis',
@@ -323,6 +399,8 @@ async function getTemplate(kind) {
   const versions = await repo.listVersions(kind);
   const associationName = await getAssociationName();
   const requiresPatient = Boolean(row.requires_patient || row.kind === 'with_patient');
+  const brandingLogoId = row.logo_file_id ? null : await resolveBrandingLogoFileId();
+  const effectiveLogoId = row.logo_file_id || brandingLogoId || null;
   return {
     id: row.id,
     kind: row.kind,
@@ -331,8 +409,9 @@ async function getTemplate(kind) {
     requires_patient: requiresPatient,
     default_title: defaultTitle(await getAssociationTitleName()),
     association_name: associationName,
-    logo_file_id: row.logo_file_id || null,
-    logo_url: logoUrl(row.logo_file_id),
+    logo_file_id: effectiveLogoId,
+    logo_url: logoUrl(effectiveLogoId),
+    logo_from_association: Boolean(!row.logo_file_id && brandingLogoId),
     draft_content_json: row.draft_content_json,
     published_content_json: row.published_content_json || null,
     current_version_id: row.current_version_id,
@@ -502,7 +581,8 @@ async function previewPdf(kind, { contentJson = null, variables: overrides = {} 
   });
   Object.assign(variables, associationDefaults(association));
   const filled = applyVariablesToContent(doc, variables);
-  const logoDataUrl = await loadLogoDataUrl(template.logo_file_id);
+  const logoFileId = await resolveTemplateLogoFileId(template.logo_file_id);
+  const logoDataUrl = await loadLogoDataUrl(logoFileId);
   let pdf;
   try {
     pdf = await renderContentPdf(filled, { title: template.title, logoDataUrl });
@@ -528,15 +608,20 @@ async function publish(kind, { notes = null, createdBy = null } = {}) {
   if (!String(template.title || '').trim()) {
     throw new AppError(400, 'VALIDATION_ERROR', 'Título do termo é obrigatório para publicar');
   }
-  if (!template.logo_file_id) {
-    throw new AppError(400, 'VALIDATION_ERROR', 'Logo do termo é obrigatória para publicar');
+  const logoFileId = await resolveTemplateLogoFileId(template.logo_file_id);
+  if (!logoFileId) {
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'Logo do termo é obrigatória para publicar (defina no modelo ou em Dados da associação)',
+    );
   }
   const check = validateContentJson(contentJson);
   if (!check.ok) {
     throw new AppError(400, 'TEMPLATE_INVALID_VARIABLES', check.message, { unknown: check.unknown });
   }
 
-  const logoDataUrl = await loadLogoDataUrl(template.logo_file_id);
+  const logoDataUrl = await loadLogoDataUrl(logoFileId);
   if (!logoDataUrl) {
     throw new AppError(400, 'VALIDATION_ERROR', 'Arquivo de logo não encontrado');
   }
@@ -688,7 +773,8 @@ async function createContract({
     );
   }
   const filledContent = applyVariablesToContent(version.content_json, variables);
-  const logoDataUrl = await loadLogoDataUrl(template.logo_file_id);
+  const logoFileId = await resolveTemplateLogoFileId(template.logo_file_id);
+  const logoDataUrl = await loadLogoDataUrl(logoFileId);
 
   let pdf;
   try {
@@ -862,6 +948,7 @@ async function getSignPayload(token) {
   }
   const template = await repo.getTemplateByKind(row.kind);
   const contentJson = applyVariablesToContent(version.content_json, row.variables || {});
+  const logoFileId = await resolveTemplateLogoFileId(template?.logo_file_id);
 
   return {
     contract_id: row.id,
@@ -869,7 +956,7 @@ async function getSignPayload(token) {
     already_signed: false,
     kind: row.kind,
     title: template?.title || 'Termo de adesão',
-    logo_url: logoUrl(template?.logo_file_id),
+    logo_url: logoUrl(logoFileId),
     signer_email: row.signer_email,
     variables: row.variables,
     content_json: contentJson,
@@ -932,7 +1019,8 @@ async function completeSign(token, body, meta = {}) {
   }
   const template = await repo.getTemplateByKind(row.kind);
   const filledContent = applyVariablesToContent(version.content_json, row.variables || {});
-  const logoDataUrl = await loadLogoDataUrl(template?.logo_file_id);
+  const logoFileId = await resolveTemplateLogoFileId(template?.logo_file_id);
+  const logoDataUrl = await loadLogoDataUrl(logoFileId);
 
   const isEmptyPng =
     signatureBuffer &&

@@ -21,7 +21,7 @@ const GREEN = '#5a7a5b';
 
 export default function RegistrationPage() {
   const bootstrap = getKunkPublicConfig();
-  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' }), [bootstrap.apiUrl]);
   const { showError } = useErrorModal();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();

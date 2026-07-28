@@ -99,7 +99,7 @@ function associadoNomeCell(row) {
 
 export default function GlobalAppSearch() {
   const bootstrap = getKunkPublicConfig();
-  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' }), [bootstrap.apiUrl]);
 
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState('associados');

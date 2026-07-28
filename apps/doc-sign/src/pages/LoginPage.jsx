@@ -1,14 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useOperatorAuth } from '@kunk/auth-session';
-import { getKunkPublicConfig, mergeKunkPublicConfigFromApi, KUNK_LOGO_FRAME_SIZE } from '@kunk/config';
+import { AuthLoginCard, AuthLoginLayout, PasswordInput } from '@kunk/ui';
+import { DOCSIGN_PRODUCT_TITLE, useDocSignBranding } from '../components/DocSignBrand.jsx';
 import { getMissingAssociationFields } from '../lib/associationGate.js';
-
-/** Credenciais do sample seed (`kunk-api/sample-data`). */
-const TEST_CREDENTIALS = {
-  email: 'admin@demo.kunk.local',
-  password: 'DemoAdmin123!',
-};
+import loginBg from '../assets/doc-sign-login-bg.jpg';
 
 function AssociationIncompleteModal({ missing, onClose }) {
   return (
@@ -57,31 +53,11 @@ export function LoginPage({ api }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [logo, setLogo] = useState(() => String(getKunkPublicConfig().logo || '').trim());
-  const [associationTitle, setAssociationTitle] = useState(() => getKunkPublicConfig().title || '');
+  const { logo, logoFormat, brandingReady } = useDocSignBranding(api);
   const [missingFields, setMissingFields] = useState(() =>
     Array.isArray(location.state?.associationMissing) ? location.state.associationMissing : null
   );
   const gatingRef = useRef(false);
-  const showTestLogin = import.meta.env.DEV;
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const json = await api.get('/config/public?system=kunk');
-        if (cancelled) return;
-        const merged = mergeKunkPublicConfigFromApi(getKunkPublicConfig(), json?.data?.values);
-        setLogo(String(merged.logo || '').trim());
-        setAssociationTitle(merged.title || '');
-      } catch {
-        /* mantém bootstrap / vazio */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [api]);
 
   useEffect(() => {
     if (!user || gatingRef.current || missingFields?.length) return;
@@ -137,62 +113,57 @@ export function LoginPage({ api }) {
     await performLogin(email, password);
   }
 
-  async function handleTestLogin() {
-    setEmail(TEST_CREDENTIALS.email);
-    setPassword(TEST_CREDENTIALS.password);
-    await performLogin(TEST_CREDENTIALS.email, TEST_CREDENTIALS.password);
-  }
-
   return (
-    <div className="login-page">
-      <div className="shell login-page-panel">
-        {logo ? (
-          <div className="login-page-logo">
-            <img
-              src={logo}
-              alt={associationTitle || 'Logo da associação'}
-              style={{
-                width: KUNK_LOGO_FRAME_SIZE,
-                height: KUNK_LOGO_FRAME_SIZE,
-                objectFit: 'contain',
-              }}
-            />
-          </div>
-        ) : null}
-        <h1 className="brand login-page-title">ASSINATURA DE TERMOS</h1>
-        {error && <div className="alert alert-error">{error}</div>}
-        <form className="card" onSubmit={onSubmit}>
-          <div className="field">
+    <>
+      <AuthLoginLayout
+        backgroundImage={loginBg}
+        logo={logo}
+        logoFormat={logoFormat}
+        title={DOCSIGN_PRODUCT_TITLE}
+        ready={brandingReady}
+      >
+        <AuthLoginCard onSubmit={onSubmit}>
+          {error ? (
+            <div className="auth-login-alert" role="alert">
+              {error}
+            </div>
+          ) : null}
+          <div className="auth-login-field">
             <label htmlFor="email">E-mail</label>
-            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-          <div className="field">
-            <label htmlFor="password">Senha</label>
             <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <button className="btn btn-primary" type="submit" disabled={busy}>
+          <div className="auth-login-field">
+            <label htmlFor="password">Senha</label>
+            <PasswordInput
+              id="password"
+              className=""
+              wrapperClassName=""
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div className="auth-login-actions">
+            <button className="auth-login-submit" type="submit" disabled={busy}>
               {busy ? 'Entrando…' : 'Entrar'}
             </button>
-            {showTestLogin ? (
-              <button className="btn" type="button" disabled={busy} onClick={handleTestLogin}>
-                Entrar como teste
-              </button>
-            ) : null}
-            <Link to="/nova-senha">Esqueci a senha</Link>
+            <Link className="auth-login-link" to="/nova-senha">
+              Esqueci a senha
+            </Link>
           </div>
-        </form>
-      </div>
+        </AuthLoginCard>
+      </AuthLoginLayout>
 
       {missingFields?.length ? (
         <AssociationIncompleteModal missing={missingFields} onClose={() => setMissingFields(null)} />
       ) : null}
-    </div>
+    </>
   );
 }

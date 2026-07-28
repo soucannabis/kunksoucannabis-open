@@ -39,6 +39,11 @@ const KEY_DESCRIPTIONS = {
   VITE_ASSOCIATION_STATE: 'UF (estado) da associação',
   VITE_ASSOCIATION_LOGO: 'Logo principal da associação',
   VITE_ASSOCIATION_LOGO_MENU: 'Logo da associação no menu',
+  VITE_ASSOCIATION_LOGO_SQUARE: 'Logo quadrada (1:1) da associação',
+  VITE_ASSOCIATION_LOGO_RECTANGULAR: 'Logo retangular (3:1) da associação',
+  VITE_ASSOCIATION_LOGO_FORMAT: 'Formato de logo ativo: square | rectangular',
+  VITE_KUNK_LOGO: 'URL do logo (sidebar / login). Preferir /api/v1/files/{id}/download após upload.',
+  VITE_KUNK_TITLE: 'Título exibido na sidebar do Kunk',
 };
 
 const DEFAULT_ROLE_PAGES = {
@@ -382,6 +387,35 @@ async function runInstall(payload = {}) {
             key: 'VITE_ASSOCIATION_LOGO_MENU',
             value: logoUrl,
             description: KEY_DESCRIPTIONS.VITE_ASSOCIATION_LOGO_MENU,
+          });
+          await upsertConfig(client, {
+            system: 'registration',
+            key: 'VITE_ASSOCIATION_LOGO_SQUARE',
+            value: logoUrl,
+            description: KEY_DESCRIPTIONS.VITE_ASSOCIATION_LOGO_SQUARE,
+          });
+          await upsertConfig(client, {
+            system: 'registration',
+            key: 'VITE_ASSOCIATION_LOGO_FORMAT',
+            value: 'square',
+            description: KEY_DESCRIPTIONS.VITE_ASSOCIATION_LOGO_FORMAT,
+          });
+          // Mesma URL nos apps que leem system=kunk (Kunk, cadastro, doc-sign login).
+          await upsertConfig(client, {
+            system: 'kunk',
+            key: 'VITE_KUNK_LOGO',
+            value: logoUrl,
+            description: KEY_DESCRIPTIONS.VITE_KUNK_LOGO,
+          });
+        }
+
+        const associationTitle = String(association.associationName || '').trim();
+        if (associationTitle) {
+          await upsertConfig(client, {
+            system: 'kunk',
+            key: 'VITE_KUNK_TITLE',
+            value: associationTitle,
+            description: KEY_DESCRIPTIONS.VITE_KUNK_TITLE,
           });
         }
 

@@ -26,12 +26,32 @@ export const BRANDING_ENV_KEYS = [
   'VITE_ASSOCIATION_LOGO',
   'VITE_ASSOCIATION_LOGO_MENU',
   'VITE_ASSOCIATION_LOGO_SIZE',
+  'VITE_ASSOCIATION_LOGO_SQUARE',
+  'VITE_ASSOCIATION_LOGO_RECTANGULAR',
+  'VITE_ASSOCIATION_LOGO_FORMAT',
   'VITE_WELCOME_TEXT',
   'VITE_COMPLETION_TEXT',
   'VITE_SHOW_TRIAGE_BUTTON',
   'VITE_TRIAGE_FORM_URL',
   'VITE_CONTACT_URL',
 ];
+
+/** Active logo display format in apps. */
+export const LOGO_FORMAT_SQUARE = 'square';
+export const LOGO_FORMAT_RECTANGULAR = 'rectangular';
+export const LOGO_FORMATS = [LOGO_FORMAT_SQUARE, LOGO_FORMAT_RECTANGULAR];
+
+/**
+ * @param {unknown} value
+ * @returns {'square'|'rectangular'}
+ */
+export function normalizeLogoFormat(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (raw === LOGO_FORMAT_RECTANGULAR || raw === 'rect' || raw === 'horizontal') {
+    return LOGO_FORMAT_RECTANGULAR;
+  }
+  return LOGO_FORMAT_SQUARE;
+}
 
 /** Defaults for association identity (Admin → Dados da associação). */
 export const ASSOCIATION_DATA_DEFAULTS = {
@@ -167,6 +187,9 @@ const ENV_TO_CONFIG = {
   VITE_ASSOCIATION_LOGO: 'associationLogo',
   VITE_ASSOCIATION_LOGO_MENU: 'associationLogoMenu',
   VITE_ASSOCIATION_LOGO_SIZE: 'associationLogoSize',
+  VITE_ASSOCIATION_LOGO_SQUARE: 'associationLogoSquare',
+  VITE_ASSOCIATION_LOGO_RECTANGULAR: 'associationLogoRectangular',
+  VITE_ASSOCIATION_LOGO_FORMAT: 'associationLogoFormat',
   VITE_WELCOME_TEXT: 'welcomeText',
   VITE_COMPLETION_TEXT: 'completionText',
   VITE_SHOW_TRIAGE_BUTTON: 'showTriageButton',
@@ -195,14 +218,80 @@ const ENV_TO_KUNK_CONFIG = {
   VITE_KUNK_LIGHT_ACCENT_HOVER: 'lightAccentHover',
 };
 
-/** Fixed logo frame in the Kunk sidebar (CSS px). Crop export uses LOGO_EXPORT_SIZE. */
+/** Fixed logo frames (CSS px). Crop export uses LOGO_EXPORT sizes. */
 export const KUNK_LOGO_FRAME_SIZE = 120;
 export const KUNK_LOGO_EXPORT_SIZE = 512;
+/** Rectangular brand logo (3:1), separate from doc-sign term logo. */
+export const KUNK_LOGO_RECT_ASPECT = 3;
+/** Display size used on login / horizontal bars (matches AuthLoginLayout). */
+export const KUNK_LOGO_RECT_FRAME_W = 500;
+export const KUNK_LOGO_RECT_FRAME_H = Math.round(500 / KUNK_LOGO_RECT_ASPECT);
+export const KUNK_LOGO_RECT_EXPORT_W = 900;
+export const KUNK_LOGO_RECT_EXPORT_H = 300;
+
+/**
+ * Frame dimensions for a logo format + UI variant.
+ * @param {unknown} format
+ * @param {'default'|'sidebar'|'login'|'shell'|'nav'|'admin'} [variant]
+ * @returns {{ format: 'square'|'rectangular', width: number, height: number }}
+ */
+export function getBrandLogoFrameStyle(format, variant = 'default') {
+  const fmt = normalizeLogoFormat(format);
+  if (fmt === LOGO_FORMAT_RECTANGULAR) {
+    const scale =
+      variant === 'login' || variant === 'default' ? 1
+        : variant === 'shell' ? 0.75
+          : variant === 'nav' ? 0.55
+            : variant === 'admin' ? 1.1
+              : variant === 'sidebar' ? 1
+                : 1;
+    return {
+      format: fmt,
+      width: Math.round(KUNK_LOGO_RECT_FRAME_W * scale),
+      height: Math.round(KUNK_LOGO_RECT_FRAME_H * scale),
+    };
+  }
+  const scale =
+    variant === 'login' ? 1.35
+      : variant === 'shell' ? 0.55
+        : variant === 'nav' ? 0.33
+          : variant === 'admin' ? 0.6
+            : 1;
+  const size = Math.round(KUNK_LOGO_FRAME_SIZE * scale);
+  return { format: fmt, width: size, height: size };
+}
+
+/**
+ * Resolve which logo URL/format to show in apps.
+ * @param {{
+ *   format?: unknown,
+ *   square?: unknown,
+ *   rectangular?: unknown,
+ *   legacy?: unknown,
+ * }} [opts]
+ * @returns {{ url: string, format: 'square'|'rectangular' }}
+ */
+export function resolveActiveBrandingLogo(opts = {}) {
+  const format = normalizeLogoFormat(opts.format);
+  const square = resolveBrandingLogoUrl(opts.square, opts.legacy);
+  const rectangular = resolveBrandingLogoUrl(opts.rectangular);
+  if (format === LOGO_FORMAT_RECTANGULAR) {
+    if (rectangular) return { url: rectangular, format: LOGO_FORMAT_RECTANGULAR };
+    if (square) return { url: square, format: LOGO_FORMAT_SQUARE };
+    return { url: '', format: LOGO_FORMAT_RECTANGULAR };
+  }
+  if (square) return { url: square, format: LOGO_FORMAT_SQUARE };
+  if (rectangular) return { url: rectangular, format: LOGO_FORMAT_RECTANGULAR };
+  return { url: '', format: LOGO_FORMAT_SQUARE };
+}
 
 /** Hardcoded defaults for Kunk appearance (mirrors SQL seed). */
 export const KUNK_APPEARANCE_DEFAULTS = {
   title: 'Kunk SouCannabis',
   logo: '',
+  logoFormat: LOGO_FORMAT_SQUARE,
+  logoSquare: '',
+  logoRectangular: '',
   bgMode: 'color',
   bgColor: '#2a3b2b',
   bgImage: '',
@@ -603,6 +692,9 @@ export function getPublicConfig(env = import.meta.env) {
     associationLogo: env.VITE_ASSOCIATION_LOGO || '/logo.svg',
     associationLogoMenu: env.VITE_ASSOCIATION_LOGO_MENU || env.VITE_ASSOCIATION_LOGO || '/logo.svg',
     associationLogoSize: env.VITE_ASSOCIATION_LOGO_SIZE || '180px',
+    associationLogoSquare: env.VITE_ASSOCIATION_LOGO_SQUARE || '',
+    associationLogoRectangular: env.VITE_ASSOCIATION_LOGO_RECTANGULAR || '',
+    associationLogoFormat: normalizeLogoFormat(env.VITE_ASSOCIATION_LOGO_FORMAT),
     welcomeText: env.VITE_WELCOME_TEXT || REGISTRATION_SYSTEM_DEFAULTS.welcomeText,
     completionText: env.VITE_COMPLETION_TEXT || REGISTRATION_SYSTEM_DEFAULTS.completionText,
     showTriageButton: parseEnvBool(env.VITE_SHOW_TRIAGE_BUTTON, REGISTRATION_SYSTEM_DEFAULTS.showTriageButton),
@@ -622,6 +714,9 @@ export function getKunkPublicConfig(env = import.meta.env) {
     appUrl: env.VITE_URL || 'http://localhost:4257',
     title: env.VITE_KUNK_TITLE || d.title,
     logo: env.VITE_KUNK_LOGO || d.logo,
+    logoFormat: d.logoFormat,
+    logoSquare: d.logoSquare,
+    logoRectangular: d.logoRectangular,
     bgMode: env.VITE_KUNK_BG_MODE || d.bgMode,
     bgColor: env.VITE_KUNK_BG_COLOR || d.bgColor,
     bgImage: env.VITE_KUNK_BG_IMAGE || d.bgImage,
@@ -658,6 +753,8 @@ export function mergePublicConfigFromApi(base, apiValues) {
     if (raw === undefined || raw === null) continue;
     if (prop === 'showTriageButton') {
       next[prop] = parseEnvBool(raw, REGISTRATION_SYSTEM_DEFAULTS.showTriageButton);
+    } else if (prop === 'associationLogoFormat') {
+      next[prop] = normalizeLogoFormat(raw);
     } else {
       next[prop] = String(raw);
     }
@@ -665,7 +762,53 @@ export function mergePublicConfigFromApi(base, apiValues) {
   if (!next.associationLogoMenu) {
     next.associationLogoMenu = next.associationLogo || '/logo.svg';
   }
+  // Migração: logo legada vira square se square ainda vazio.
+  if (!resolveBrandingLogoUrl(next.associationLogoSquare) && resolveBrandingLogoUrl(next.associationLogo)) {
+    next.associationLogoSquare = next.associationLogo;
+  }
+  const active = resolveActiveBrandingLogo({
+    format: next.associationLogoFormat,
+    square: next.associationLogoSquare,
+    rectangular: next.associationLogoRectangular,
+    legacy: next.associationLogo,
+  });
+  next.associationLogoFormat = active.format;
+  if (active.url) {
+    next.associationLogo = active.url;
+    next.associationLogoMenu = active.url;
+  }
   return next;
+}
+
+/** Placeholder bootstrap logo — never treat as association branding. */
+export function isPlaceholderLogo(href) {
+  const url = String(href || '').trim();
+  if (!url) return true;
+  const path = url.split('?')[0].toLowerCase();
+  return path === '/logo.svg' || path.endsWith('/logo.svg');
+}
+
+/**
+ * First usable branding logo URL from candidates (skips empty / placeholder).
+ * @param {...unknown} candidates
+ * @returns {string}
+ */
+export function resolveBrandingLogoUrl(...candidates) {
+  for (const candidate of candidates) {
+    const url = String(candidate || '').trim();
+    if (url && !isPlaceholderLogo(url)) return url;
+  }
+  return '';
+}
+
+/**
+ * Extract file id from `/api/v1/files/{id}/download` (or similar) URLs.
+ * @param {unknown} href
+ * @returns {string|null}
+ */
+export function extractFileIdFromDownloadUrl(href) {
+  const match = String(href || '').match(/\/files\/([^/?#]+)\/download/i);
+  return match?.[1] || null;
 }
 
 /**
@@ -691,4 +834,38 @@ export function mergeKunkPublicConfigFromApi(base, apiValues) {
     next.defaultTheme = KUNK_APPEARANCE_DEFAULTS.defaultTheme;
   }
   return next;
+}
+
+/**
+ * Apply association branding (square/rect/format) onto a Kunk config object.
+ * @param {ReturnType<typeof getKunkPublicConfig>} kunkConfig
+ * @param {ReturnType<typeof getPublicConfig>|Record<string, unknown>} regConfig
+ */
+export function applyAssociationLogoToKunkConfig(kunkConfig, regConfig = {}) {
+  const format = normalizeLogoFormat(
+    regConfig.associationLogoFormat || kunkConfig.logoFormat,
+  );
+  const square = resolveBrandingLogoUrl(
+    regConfig.associationLogoSquare,
+    kunkConfig.logoSquare,
+    kunkConfig.logo,
+    regConfig.associationLogo,
+  );
+  const rectangular = resolveBrandingLogoUrl(
+    regConfig.associationLogoRectangular,
+    kunkConfig.logoRectangular,
+  );
+  const active = resolveActiveBrandingLogo({
+    format,
+    square,
+    rectangular,
+    legacy: kunkConfig.logo,
+  });
+  return {
+    ...kunkConfig,
+    logoFormat: active.format,
+    logoSquare: square,
+    logoRectangular: rectangular,
+    logo: active.url || resolveBrandingLogoUrl(kunkConfig.logo) || '',
+  };
 }

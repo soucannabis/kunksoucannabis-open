@@ -57,7 +57,8 @@ export async function cleanupInstallE2e() {
 
   const logoRows = await pool.query(
     `SELECT value FROM system_configs
-     WHERE system = 'registration' AND key IN ('VITE_ASSOCIATION_LOGO', 'VITE_ASSOCIATION_LOGO_MENU')`
+     WHERE (system = 'registration' AND key IN ('VITE_ASSOCIATION_LOGO', 'VITE_ASSOCIATION_LOGO_MENU'))
+        OR (system = 'kunk' AND key = 'VITE_KUNK_LOGO')`
   );
   const fileIds = new Set();
   for (const row of logoRows.rows) {
@@ -83,6 +84,21 @@ export async function cleanupInstallE2e() {
        )`,
     [ASSOCIATION_KEYS]
   );
+  // Limpa logo/título Kunk gravados na instalação E2E (mesmo file id da associação).
+  await pool.query(
+    `UPDATE system_configs
+     SET value = NULL, date_updated = NOW()
+     WHERE system = 'kunk' AND key = 'VITE_KUNK_TITLE' AND value = $1`,
+    [INSTALL_ASSOCIATION.associationName]
+  );
+  for (const id of fileIds) {
+    await pool.query(
+      `UPDATE system_configs
+       SET value = NULL, date_updated = NOW()
+       WHERE system = 'kunk' AND key = 'VITE_KUNK_LOGO' AND value LIKE $1`,
+      [`%/files/${id}/%`]
+    );
+  }
 
   for (const id of fileIds) {
     await pool.query(`DELETE FROM files WHERE id = $1`, [id]);

@@ -7,7 +7,7 @@ import { PATHS } from '../app/menuConfig.js';
 
 export default function SystemUserInvitePage() {
   const bootstrap = getKunkPublicConfig();
-  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl }), [bootstrap.apiUrl]);
+  const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' }), [bootstrap.apiUrl]);
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const token = params.get('token') || '';

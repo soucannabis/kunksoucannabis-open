@@ -1,14 +1,49 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { KUNK_LOGO_EXPORT_SIZE, KUNK_LOGO_FRAME_SIZE } from '@kunk/config';
+import {
+  KUNK_LOGO_EXPORT_SIZE,
+  KUNK_LOGO_FRAME_SIZE,
+  KUNK_LOGO_RECT_ASPECT,
+  KUNK_LOGO_RECT_EXPORT_H,
+  KUNK_LOGO_RECT_EXPORT_W,
+  KUNK_LOGO_RECT_FRAME_H,
+  KUNK_LOGO_RECT_FRAME_W,
+  LOGO_FORMAT_RECTANGULAR,
+  LOGO_FORMAT_SQUARE,
+  normalizeLogoFormat,
+} from '@kunk/config';
 
-const STAGE = 280;
+const SQUARE_STAGE = 280;
+const RECT_STAGE_W = 360;
+const RECT_STAGE_H = Math.round(RECT_STAGE_W / KUNK_LOGO_RECT_ASPECT);
 const SAFE_INSET = 28;
 
+function stageForFormat(format) {
+  if (normalizeLogoFormat(format) === LOGO_FORMAT_RECTANGULAR) {
+    return { w: RECT_STAGE_W, h: RECT_STAGE_H };
+  }
+  return { w: SQUARE_STAGE, h: SQUARE_STAGE };
+}
+
+function exportForFormat(format) {
+  if (normalizeLogoFormat(format) === LOGO_FORMAT_RECTANGULAR) {
+    return { w: KUNK_LOGO_RECT_EXPORT_W, h: KUNK_LOGO_RECT_EXPORT_H };
+  }
+  return { w: KUNK_LOGO_EXPORT_SIZE, h: KUNK_LOGO_EXPORT_SIZE };
+}
+
 /**
- * Assistente de enquadramento: arrasta/zoom para caber a logo no quadrado fixo.
- * @param {{ src: string, onConfirm: (blob: Blob) => void|Promise<void>, onCancel: () => void, busy?: boolean }} props
+ * Assistente de enquadramento (quadrado 1:1 ou retangular 3:1).
  */
-export function LogoCropModal({ src, onConfirm, onCancel, busy = false }) {
+export function LogoCropModal({
+  src,
+  onConfirm,
+  onCancel,
+  busy = false,
+  format = LOGO_FORMAT_SQUARE,
+}) {
+  const fmt = normalizeLogoFormat(format);
+  const stage = stageForFormat(fmt);
+  const isRect = fmt === LOGO_FORMAT_RECTANGULAR;
   const imgRef = useRef(null);
   const dragRef = useRef(null);
   const [ready, setReady] = useState(false);
@@ -18,43 +53,42 @@ export function LogoCropModal({ src, onConfirm, onCancel, busy = false }) {
   const [minZoom, setMinZoom] = useState(1);
 
   useEffect(() => {
+    setReady(false);
     const img = new Image();
     img.onload = () => {
       const w = img.naturalWidth;
       const h = img.naturalHeight;
       setNatural({ w, h });
-      // Cover the stage so there are no empty corners by default
-      const cover = Math.max(STAGE / w, STAGE / h);
+      const cover = Math.max(stage.w / w, stage.h / h);
       setMinZoom(cover);
       setZoom(cover);
-      setOffset({ x: (STAGE - w * cover) / 2, y: (STAGE - h * cover) / 2 });
+      setOffset({
+        x: (stage.w - w * cover) / 2,
+        y: (stage.h - h * cover) / 2,
+      });
       imgRef.current = img;
       setReady(true);
     };
     img.onerror = () => setReady(false);
     img.src = src;
-  }, [src]);
+  }, [src, stage.w, stage.h]);
 
   const clampOffset = useCallback((x, y, z, nw, nh) => {
     const iw = nw * z;
     const ih = nh * z;
     let nx = x;
     let ny = y;
-    if (iw <= STAGE) nx = (STAGE - iw) / 2;
-    else {
-      nx = Math.min(0, Math.max(STAGE - iw, x));
-    }
-    if (ih <= STAGE) ny = (STAGE - ih) / 2;
-    else {
-      ny = Math.min(0, Math.max(STAGE - ih, y));
-    }
+    if (iw <= stage.w) nx = (stage.w - iw) / 2;
+    else nx = Math.min(0, Math.max(stage.w - iw, x));
+    if (ih <= stage.h) ny = (stage.h - ih) / 2;
+    else ny = Math.min(0, Math.max(stage.h - ih, y));
     return { x: nx, y: ny };
-  }, []);
+  }, [stage.w, stage.h]);
 
   function onZoomChange(nextZoom) {
     const z = Math.max(minZoom, Math.min(minZoom * 4, Number(nextZoom)));
-    const cx = STAGE / 2;
-    const cy = STAGE / 2;
+    const cx = stage.w / 2;
+    const cy = stage.h / 2;
     const scale = z / zoom;
     const nx = cx - (cx - offset.x) * scale;
     const ny = cy - (cy - offset.y) * scale;
@@ -90,18 +124,20 @@ export function LogoCropModal({ src, onConfirm, onCancel, busy = false }) {
   async function handleConfirm() {
     const img = imgRef.current;
     if (!img) return;
+    const exp = exportForFormat(fmt);
     const canvas = document.createElement('canvas');
-    canvas.width = KUNK_LOGO_EXPORT_SIZE;
-    canvas.height = KUNK_LOGO_EXPORT_SIZE;
+    canvas.width = exp.w;
+    canvas.height = exp.h;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const scale = KUNK_LOGO_EXPORT_SIZE / STAGE;
+    const scaleX = exp.w / stage.w;
+    const scaleY = exp.h / stage.h;
     ctx.drawImage(
       img,
-      offset.x * scale,
-      offset.y * scale,
-      natural.w * zoom * scale,
-      natural.h * zoom * scale,
+      offset.x * scaleX,
+      offset.y * scaleY,
+      natural.w * zoom * scaleX,
+      natural.h * zoom * scaleY,
     );
     const blob = await new Promise((resolve, reject) => {
       canvas.toBlob(
@@ -112,19 +148,25 @@ export function LogoCropModal({ src, onConfirm, onCancel, busy = false }) {
     await onConfirm(blob);
   }
 
+  const frameHint = isRect
+    ? `${KUNK_LOGO_RECT_FRAME_W}×${KUNK_LOGO_RECT_FRAME_H}px (3:1)`
+    : `${KUNK_LOGO_FRAME_SIZE}×${KUNK_LOGO_FRAME_SIZE}px`;
+
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Enquadrar logo">
-      <div className="modal-card logo-crop-modal">
-        <h2 style={{ marginTop: 0 }}>Enquadrar logo</h2>
+      <div className={`modal-card logo-crop-modal${isRect ? ' logo-crop-modal--rect' : ''}`}>
+        <h2 style={{ marginTop: 0 }}>
+          {isRect ? 'Enquadrar logo retangular' : 'Enquadrar logo quadrada'}
+        </h2>
         <p className="muted">
-          Arraste e ajuste o zoom para encaixar a logo no quadrado (
-          {KUNK_LOGO_FRAME_SIZE}×{KUNK_LOGO_FRAME_SIZE}px no menu). A área tracejada é a margem
-          recomendada.
+          Arraste e ajuste o zoom para encaixar a logo no quadro (
+          {frameHint}
+          ). A área tracejada é a margem recomendada.
         </p>
 
         <div
-          className="logo-crop-stage"
-          style={{ width: STAGE, height: STAGE }}
+          className={`logo-crop-stage${isRect ? ' logo-crop-stage--rect' : ''}`}
+          style={{ width: stage.w, height: stage.h }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -149,7 +191,7 @@ export function LogoCropModal({ src, onConfirm, onCancel, busy = false }) {
           <div
             className="logo-crop-safe"
             style={{
-              inset: SAFE_INSET,
+              inset: isRect ? Math.round(SAFE_INSET / 2) : SAFE_INSET,
             }}
             aria-hidden
           />

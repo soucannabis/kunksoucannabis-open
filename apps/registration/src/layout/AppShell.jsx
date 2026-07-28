@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAssociateAuth } from '@kunk/auth-session';
-import { KUNK_LOGO_FRAME_SIZE } from '@kunk/config';
-import { Loader, ProgressSidebar } from '@kunk/ui';
+import { LOGO_FORMAT_SQUARE } from '@kunk/config';
+import { AuthLoginLayout, Loader, ProgressSidebar } from '@kunk/ui';
 import { usePublicConfig } from '../config/PublicConfigProvider.jsx';
 import {
   PHASE,
@@ -11,6 +11,7 @@ import {
   isAssociado,
   isConcluido,
 } from '../lib/associatePhases.js';
+import authPublicBg from '../assets/registration-login-bg.jpg';
 
 const STEPS = [
   { id: 1, label: 'Cadastro', phases: [PHASE.CADASTRO_CRIADO, PHASE.DADOS_PESSOAIS] },
@@ -42,30 +43,21 @@ function stepState(step, phase, user) {
 }
 
 export function PublicLayout() {
-  const { config: cfg } = usePublicConfig();
+  const { config: cfg, configReady } = usePublicConfig();
   const logo = String(cfg.appearanceLogo || '').trim();
+  const format = cfg.appearanceLogoFormat || cfg.associationLogoFormat || LOGO_FORMAT_SQUARE;
   const fullName = String(cfg.associationFullName || cfg.associationName || '').trim();
 
   return (
-    <div className="container vertical-center">
-      <div className="col-md-6 col-12 text-center auth-public-panel">
-        {logo ? (
-          <div className="auth-public-logo">
-            <img
-              src={logo}
-              alt={fullName || 'Logo da associação'}
-              style={{
-                width: KUNK_LOGO_FRAME_SIZE,
-                height: KUNK_LOGO_FRAME_SIZE,
-                objectFit: 'contain',
-              }}
-            />
-          </div>
-        ) : null}
-        {fullName ? <p className="auth-association-name">{fullName}</p> : null}
-        <Outlet />
-      </div>
-    </div>
+    <AuthLoginLayout
+      backgroundImage={authPublicBg}
+      logo={logo}
+      logoFormat={format}
+      title={fullName}
+      ready={configReady}
+    >
+      <Outlet />
+    </AuthLoginLayout>
   );
 }
 
@@ -86,6 +78,8 @@ export function AppShell() {
   if (!user) return <Navigate to={PUBLIC_AUTH_PATH} replace state={{ from: location }} />;
 
   const navLogo = String(cfg.appearanceLogo || '').trim();
+  const format = cfg.appearanceLogoFormat || cfg.associationLogoFormat || LOGO_FORMAT_SQUARE;
+  const navFrame = getBrandLogoFrameStyle(format, 'nav');
   const navAlt = String(cfg.associationFullName || cfg.associationName || 'Logo').trim();
   const fullName = String(cfg.associationFullName || cfg.associationName || '').trim();
 
@@ -95,10 +89,12 @@ export function AppShell() {
         <div className="app-navbar-brand">
           {navLogo ? (
             <img
-              className="app-navbar-logo"
+              className={`app-navbar-logo app-navbar-logo--${format}`}
               src={navLogo}
               alt={navAlt}
-              height={40}
+              width={navFrame.width}
+              height={navFrame.height}
+              style={{ objectFit: 'contain' }}
             />
           ) : null}
           {fullName ? <span className="app-navbar-title">{fullName}</span> : null}
