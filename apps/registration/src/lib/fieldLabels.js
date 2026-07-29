@@ -23,7 +23,7 @@ export const FIELD_LABELS_PT = {
   cep: 'CEP',
   reason_treatment_text: 'Descreva o motivo',
   ciap_codes: 'Motivo principal para o tratamento',
-  email: 'E-mail',
+  email_account: 'E-mail',
 };
 
 export function labelForField(key) {

@@ -111,7 +111,7 @@ async function loadUserForOrder(payload) {
   if (payload?.user) {
     const byId = await query(
       `SELECT id, user_code, associate_name, associate_last_name, associate_cpf, mobile_number,
-              email, email_account, delivery_address, street, street_number, complement,
+              email_account, delivery_address, street, street_number, complement,
               neighborhood, city, state, cep
        FROM users WHERE id = $1 LIMIT 1`,
       [payload.user]
@@ -121,7 +121,7 @@ async function loadUserForOrder(payload) {
   if (payload?.user_code) {
     const byCode = await query(
       `SELECT id, user_code, associate_name, associate_last_name, associate_cpf, mobile_number,
-              email, email_account, delivery_address, street, street_number, complement,
+              email_account, delivery_address, street, street_number, complement,
               neighborhood, city, state, cep
        FROM users WHERE user_code = $1 LIMIT 1`,
       [payload.user_code]
@@ -383,7 +383,7 @@ async function getOrderDetails(id) {
           name: associateDisplayName(user),
           phone: user.mobile_number || null,
           cpf: user.associate_cpf || null,
-          email: user.email_account || user.email || null,
+          email: user.email_account || null,
         }
       : null,
     institutional_client: client

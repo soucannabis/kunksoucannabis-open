@@ -246,7 +246,7 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
     // users
     const userCols = [
       'status', 'sort', 'date_created', 'date_updated', 'associate_name', 'associate_last_name',
-      'gender', 'nationality', 'associate_rg_issuer', 'marital_status', 'email', 'street',
+      'gender', 'nationality', 'associate_rg_issuer', 'marital_status', 'street',
       'street_number', 'complement', 'neighborhood', 'proof_of_address', 'reason_treatment_text',
       'responsible_type', 'city', 'state', 'cep', 'email_account', 'account_password', 'user_code',
       'rg_proof', 'associate_cpf', 'associate_rg', 'mobile_number', 'associate_status', 'prescription',
@@ -281,7 +281,6 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
           nationality: 'Brasileira',
           associate_rg_issuer: pick(['SSP/SP', 'SSP/PR', 'SSP/MG', 'SSP/RS'], i),
           marital_status: pick(['solteiro', 'casado', 'união estável', 'divorciado'], i),
-          email: `load${String(i + 1).padStart(6, '0')}@load.kunk.local`,
           street: `Rua Load ${100 + (i % 9000)}`,
           street_number: String(10 + (i % 990)),
           complement: i % 3 === 0 ? `Apto ${i % 200}` : 'Casa',

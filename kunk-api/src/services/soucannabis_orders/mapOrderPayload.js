@@ -58,7 +58,7 @@ async function toRemoteCreatePayload(order, { userRow = null, externalPaymentInf
     // A SC resolve o associado via `user_code` (outbound users desta instalação).
     user_code: order.user_code || null,
     name_associate: fullName,
-    email: userRow?.email_account || userRow?.email || null,
+    email: userRow?.email_account || null,
     address: mapAddress(order.address),
     delivery_price: Number(order.delivery_price || 0),
     discount: order.discount != null ? Number(order.discount) : undefined,

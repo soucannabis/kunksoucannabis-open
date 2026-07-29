@@ -53,7 +53,7 @@ export function LoginPage({ api }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
-  const { logo, logoFormat, brandingReady } = useDocSignBranding(api);
+  const { logo, logoFormat, logoWidth, brandingReady } = useDocSignBranding(api);
   const [missingFields, setMissingFields] = useState(() =>
     Array.isArray(location.state?.associationMissing) ? location.state.associationMissing : null
   );
@@ -119,6 +119,7 @@ export function LoginPage({ api }) {
         backgroundImage={loginBg}
         logo={logo}
         logoFormat={logoFormat}
+        logoWidth={logoWidth}
         title={DOCSIGN_PRODUCT_TITLE}
         ready={brandingReady}
       >

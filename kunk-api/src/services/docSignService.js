@@ -153,7 +153,8 @@ async function resolveBrandingLogoFileId() {
                'VITE_ASSOCIATION_LOGO_MENU',
                'VITE_ASSOCIATION_LOGO_SQUARE',
                'VITE_ASSOCIATION_LOGO_RECTANGULAR',
-               'VITE_ASSOCIATION_LOGO_FORMAT'
+               'VITE_ASSOCIATION_LOGO_FORMAT',
+               'VITE_ASSOCIATION_LOGO_PLACEMENTS'
              )
            )
          )`
@@ -161,27 +162,38 @@ async function resolveBrandingLogoFileId() {
     const byKey = Object.fromEntries(
       result.rows.map((row) => [`${row.system}.${row.key}`, row.value])
     );
-    const format = String(byKey['registration.VITE_ASSOCIATION_LOGO_FORMAT'] || 'square')
-      .trim()
-      .toLowerCase();
     const square = byKey['registration.VITE_ASSOCIATION_LOGO_SQUARE'];
     const rectangular = byKey['registration.VITE_ASSOCIATION_LOGO_RECTANGULAR'];
-    const candidates =
-      format === 'rectangular' || format === 'rect' || format === 'horizontal'
-        ? [
-            rectangular,
-            square,
-            byKey['kunk.VITE_KUNK_LOGO'],
-            byKey['registration.VITE_ASSOCIATION_LOGO'],
-            byKey['registration.VITE_ASSOCIATION_LOGO_MENU'],
-          ]
-        : [
-            square,
-            rectangular,
-            byKey['kunk.VITE_KUNK_LOGO'],
-            byKey['registration.VITE_ASSOCIATION_LOGO'],
-            byKey['registration.VITE_ASSOCIATION_LOGO_MENU'],
-          ];
+    let preferredFormat = String(byKey['registration.VITE_ASSOCIATION_LOGO_FORMAT'] || 'square')
+      .trim()
+      .toLowerCase();
+    try {
+      const raw = byKey['registration.VITE_ASSOCIATION_LOGO_PLACEMENTS'];
+      if (raw) {
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        const slot = parsed?.docsign?.login || parsed?.kunk?.login;
+        if (slot?.format) preferredFormat = String(slot.format).trim().toLowerCase();
+      }
+    } catch {
+      /* ignore invalid JSON */
+    }
+    const preferRect =
+      preferredFormat === 'rectangular' || preferredFormat === 'rect' || preferredFormat === 'horizontal';
+    const candidates = preferRect
+      ? [
+          rectangular,
+          square,
+          byKey['kunk.VITE_KUNK_LOGO'],
+          byKey['registration.VITE_ASSOCIATION_LOGO'],
+          byKey['registration.VITE_ASSOCIATION_LOGO_MENU'],
+        ]
+      : [
+          square,
+          rectangular,
+          byKey['kunk.VITE_KUNK_LOGO'],
+          byKey['registration.VITE_ASSOCIATION_LOGO'],
+          byKey['registration.VITE_ASSOCIATION_LOGO_MENU'],
+        ];
     for (const href of candidates) {
       if (isPlaceholderLogo(href)) continue;
       const id = extractFileIdFromDownloadUrl(href);
@@ -713,7 +725,7 @@ async function createContract({
   const user = await repo.findUserByCode(userCode);
   if (!user) throw new AppError(404, 'NOT_FOUND', 'Usuário não encontrado');
 
-  const email = user.email_account || user.email;
+  const email = user.email_account;
   if (!email) throw new AppError(400, 'VALIDATION_ERROR', 'Usuário sem e-mail');
 
   const completed = await repo.findCompletedContract({ userCode: user.user_code, email });
@@ -890,7 +902,7 @@ async function getMyContract(associateUser) {
   if (pending) return publicContract(pending);
   const completed = await repo.findCompletedContract({
     userCode: associateUser.user_code,
-    email: associateUser.email_account || associateUser.email,
+    email: associateUser.email_account,
   });
   if (completed) return publicContract(completed);
   return null;

@@ -145,7 +145,7 @@ function displayName(user) {
     user.associate_last_name || user.last_name,
   ].filter(Boolean);
   if (parts.length) return parts.join(' ').trim();
-  return user.fullname || user.email || user.email_account || null;
+  return user.fullname || user.email_account || null;
 }
 
 async function loadTriageConfig() {
@@ -231,9 +231,9 @@ async function findAssociateByEmail(email) {
   const normalized = normalizeEmail(email);
   if (!normalized) return null;
   const result = await query(
-    `SELECT id, user_code, associate_name, associate_last_name, fullname, email, email_account, avatar_url
+    `SELECT id, user_code, associate_name, associate_last_name, fullname, email_account, avatar_url
      FROM users
-     WHERE (lower(email) = $1 OR lower(email_account) = $1)
+     WHERE lower(email_account) = $1
        AND (status IS NULL OR status <> 'patient')
      ORDER BY id DESC
      LIMIT 1`,
@@ -246,7 +246,7 @@ async function findAssociateByCode(associateCode) {
   const code = String(associateCode || '').trim();
   if (!code) return null;
   const result = await query(
-    `SELECT id, user_code, associate_name, associate_last_name, fullname, email, email_account, avatar_url
+    `SELECT id, user_code, associate_name, associate_last_name, fullname, email_account, avatar_url
      FROM users
      WHERE user_code::text = $1
      LIMIT 1`,

@@ -22,7 +22,7 @@ describe('domain/users', () => {
     const res = await request(app)
       .post('/api/v1/users')
       .set('Cookie', cookie)
-      .send({ associate_name: 'Dom', associate_last_name: 'User', email: `dom${Date.now()}@t.com` });
+      .send({ associate_name: 'Dom', associate_last_name: 'User', email_account: `dom${Date.now()}@t.com` });
     assert.equal(res.status, 201);
     userId = res.body.data.id;
     userCode = res.body.data.user_code;
@@ -54,7 +54,7 @@ describe('domain/users', () => {
       .send({
         associate_name: 'Pac',
         associate_last_name: 'Link',
-        email: `pac${Date.now()}@t.com`,
+        email_account: `pac${Date.now()}@t.com`,
         responsible_code: userCode,
       });
     assert.equal(patient.status, 201, JSON.stringify(patient.body));

@@ -18,6 +18,7 @@ export function TermLogoCropModal({ src, onConfirm, onCancel, busy = false }) {
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [minZoom, setMinZoom] = useState(1);
+  const [maxZoom, setMaxZoom] = useState(4);
 
   useEffect(() => {
     const img = new Image();
@@ -27,11 +28,16 @@ export function TermLogoCropModal({ src, onConfirm, onCancel, busy = false }) {
       const h = img.naturalHeight;
       setNatural({ w, h });
       const cover = Math.max(TERM_LOGO_STAGE_W / w, TERM_LOGO_STAGE_H / h);
-      setMinZoom(cover);
-      setZoom(cover);
+      const contain = Math.min(TERM_LOGO_STAGE_W / w, TERM_LOGO_STAGE_H / h);
+      // Permite afastar além do “contain” para deixar margem no quadro.
+      const minZ = contain * 0.5;
+      const maxZ = Math.max(cover * 4, minZ * 4);
+      setMinZoom(minZ);
+      setMaxZoom(maxZ);
+      setZoom(contain);
       setOffset({
-        x: (TERM_LOGO_STAGE_W - w * cover) / 2,
-        y: (TERM_LOGO_STAGE_H - h * cover) / 2,
+        x: (TERM_LOGO_STAGE_W - w * contain) / 2,
+        y: (TERM_LOGO_STAGE_H - h * contain) / 2,
       });
       imgRef.current = img;
       setReady(true);
@@ -53,7 +59,7 @@ export function TermLogoCropModal({ src, onConfirm, onCancel, busy = false }) {
   }, []);
 
   function onZoomChange(nextZoom) {
-    const z = Math.max(minZoom, Math.min(minZoom * 4, Number(nextZoom)));
+    const z = Math.max(minZoom, Math.min(maxZoom, Number(nextZoom)));
     const cx = TERM_LOGO_STAGE_W / 2;
     const cy = TERM_LOGO_STAGE_H / 2;
     const scale = z / zoom;
@@ -110,7 +116,8 @@ export function TermLogoCropModal({ src, onConfirm, onCancel, busy = false }) {
       <div className="modal-panel" style={{ width: 'min(480px, 100%)' }}>
         <h2 style={{ marginTop: 0 }}>Enquadrar logo do termo</h2>
         <p className="muted">
-          Arraste e ajuste o zoom para caber na proporção horizontal 3:1 (caixa 300×100).
+          Arraste e use o zoom para caber na proporção horizontal 3:1 (caixa 300×100).
+          Afaste para ver a logo inteira ou aproxime para preencher.
         </p>
         <div
           className="term-logo-crop-stage"
@@ -145,7 +152,7 @@ export function TermLogoCropModal({ src, onConfirm, onCancel, busy = false }) {
             id="term-logo-zoom"
             type="range"
             min={minZoom}
-            max={minZoom * 4}
+            max={maxZoom}
             step={0.01}
             value={zoom}
             disabled={!ready || busy}

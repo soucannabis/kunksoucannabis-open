@@ -5,6 +5,8 @@ import { rememberAdminRoute } from '../lib/lastRoute.js';
 import { dismissStoragePrompt, isStoragePromptDismissed } from '../lib/storageConfig.js';
 import {
   EMAIL_CONFIG_PATH,
+  dismissEmailPrompt,
+  isEmailPromptDismissed,
 } from '../lib/emailModuleConfig.js';
 import { loadExternalServices } from '../lib/externalServicesConfig.js';
 import {
@@ -17,6 +19,12 @@ import {
 import { ExternalServiceStatusIcon } from '../components/ExternalServiceStatus.jsx';
 import { AdminLoader } from '../components/AdminLoader.jsx';
 import { useInstallStatus } from '../lib/installStatus.jsx';
+import {
+  getPublicConfig,
+  mergePublicConfigFromApi,
+  resolvePlacementLogo,
+  isPlaceholderLogo,
+} from '@kunk/config';
 
 export function RequireAdmin({ children }) {
   const { user, loading, hasRequiredRole } = useOperatorAuth();
@@ -63,19 +71,18 @@ function StoragePromptModal({ open, onYes, onNo }) {
   );
 }
 
-function EmailPromptModal({ open, onConfigure }) {
+function EmailPromptModal({ open, onLater, onConfigure }) {
   if (!open) return null;
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Configurar módulo de e-mail">
       <div className="modal-card" style={{ maxWidth: 480 }}>
-        <h2 style={{ marginTop: 0 }}>Módulo de e-mail necessário</h2>
+        <h2 style={{ marginTop: 0 }}>Módulo de e-mail</h2>
         <p>
-          O envio de e-mails está desativado. Esse módulo é essencial para o funcionamento dos
-          sistemas: convites de operadores, redefinição de senha, assinatura de documentos e
-          outras notificações.
+          O envio de e-mails está desativado. Recomendamos ativar esse módulo para convites de
+          operadores, redefinição de senha, assinatura de documentos e outras notificações.
         </p>
         <p className="muted">
-          Ative o módulo e configure o SMTP em Serviços externos → E-mail para continuar com os
+          Ative o módulo e configure o SMTP em Serviços externos → E-mail quando quiser usar os
           fluxos que dependem de e-mail.
         </p>
         <div
@@ -86,6 +93,9 @@ function EmailPromptModal({ open, onConfigure }) {
             marginTop: '1rem',
           }}
         >
+          <button type="button" className="btn" onClick={onLater}>
+            Configurar depois
+          </button>
           <button type="button" className="btn btn-primary" onClick={onConfigure}>
             Configurar
           </button>
@@ -305,8 +315,43 @@ export function AdminShell({ api }) {
   const [emailPromptOpen, setEmailPromptOpen] = React.useState(false);
   const [extStatuses, setExtStatuses] = React.useState({});
   const [navOpen, setNavOpen] = React.useState({});
+  const [menuLogo, setMenuLogo] = React.useState({ url: '', format: 'square', width: 40, height: 40 });
 
   const onEmailConfigPage = location.pathname === EMAIL_CONFIG_PATH;
+
+  React.useEffect(() => {
+    if (!api?.get) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get('/config/public?system=registration');
+        if (cancelled) return;
+        const merged = mergePublicConfigFromApi(getPublicConfig(), res?.data?.values || {});
+        const placement = resolvePlacementLogo({
+          placements: merged.associationLogoPlacements,
+          app: 'admin',
+          surface: 'menu',
+          square: merged.associationLogoSquare,
+          rectangular: merged.associationLogoRectangular,
+          legacy: merged.associationLogo,
+        });
+        const url = isPlaceholderLogo(placement.url) ? '' : placement.url;
+        if (!cancelled) {
+          setMenuLogo({
+            url,
+            format: placement.format,
+            width: placement.width,
+            height: placement.height,
+          });
+        }
+      } catch {
+        /* keep empty */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
 
   React.useEffect(() => {
     rememberAdminRoute(location.pathname, location.search);
@@ -342,7 +387,7 @@ export function AdminShell({ api }) {
         /* ignore — endpoint pode falhar sem schema/seed */
       }
 
-      if (!active && !hasSampleData) {
+      if (!active && !hasSampleData && !isEmailPromptDismissed()) {
         setEmailPromptOpen(true);
       } else {
         setEmailPromptOpen(false);
@@ -398,18 +443,37 @@ export function AdminShell({ api }) {
     setShowStoragePrompt(false);
   }
 
+  function onEmailLater() {
+    dismissEmailPrompt();
+    setEmailPromptOpen(false);
+  }
+
   function onEmailConfigure() {
     setEmailPromptOpen(false);
     navigate(EMAIL_CONFIG_PATH);
   }
 
+  const emailPromptDismissed = isEmailPromptDismissed();
   const showEmailModal = emailPromptOpen && emailModuleActive === false && !onEmailConfigPage;
-  const showStorageModal = showStoragePrompt && emailModuleActive === true;
+  const showStorageModal =
+    showStoragePrompt && (emailModuleActive === true || emailPromptDismissed);
 
   return (
     <div className="admin-shell">
       <aside className="admin-nav">
-        <div className="brand">Kunk Admin</div>
+        <div className="brand">
+          {menuLogo.url ? (
+            <div className="brand-logo-wrap">
+              <img
+                className={`brand-logo brand-logo--${menuLogo.format}`}
+                src={menuLogo.url}
+                alt=""
+                style={{ width: menuLogo.width, height: 'auto' }}
+              />
+            </div>
+          ) : null}
+          <span className="brand-text">Kunk Admin</span>
+        </div>
 
         <TopNavLink to="/home" icon="home">
           Home
@@ -502,6 +566,9 @@ export function AdminShell({ api }) {
               </NavLink>
               <NavLink to="/kunk/aparencia" className={({ isActive }) => (isActive ? 'active' : '')}>
                 Aparência
+              </NavLink>
+              <NavLink to="/kunk/importacao" className={({ isActive }) => (isActive ? 'active' : '')}>
+                Importação de dados
               </NavLink>
             </div>
           </NavFold>
@@ -618,7 +685,11 @@ export function AdminShell({ api }) {
       <main className="admin-main">
         <Outlet />
       </main>
-      <EmailPromptModal open={showEmailModal} onConfigure={onEmailConfigure} />
+      <EmailPromptModal
+        open={showEmailModal}
+        onLater={onEmailLater}
+        onConfigure={onEmailConfigure}
+      />
       <StoragePromptModal open={showStorageModal} onYes={onStorageYes} onNo={onStorageNo} />
     </div>
   );

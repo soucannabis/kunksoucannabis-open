@@ -126,7 +126,7 @@ Se `page` e `offset` forem enviados juntos: `page` vence, ou retornar 400.
 GET /items/users?search=maria
 ```
 
-Aplica `_icontains` em um conjunto fixo de colunas por collection (ex.: `users` → `associate_name`, `fullname`, `email`, `associate_cpf`).
+Aplica `_icontains` em um conjunto fixo de colunas por collection (ex.: `users` → `associate_name`, `fullname`, `email_account`, `associate_cpf`).
 
 ## Limites e erros
 

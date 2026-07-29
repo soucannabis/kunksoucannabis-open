@@ -14,7 +14,6 @@ const SORT_WHITELIST = {
     'associate_name',
     'associate_last_name',
     'email_account',
-    'email',
     'mobile_number',
     'status',
   ],
@@ -94,7 +93,7 @@ async function enrichUsersGsMeta(rows) {
     clean.gs_meta = {
       open_user_code: openUser.user_code,
       display_status: openUser.status,
-      display_email: openUser.email_account || openUser.email || '',
+      display_email: openUser.email_account || '',
       display_phone: openUser.mobile_number || '',
       display_created: openUser.created_date || openUser.date_created,
       display_name_blocks: blocks,
@@ -113,7 +112,7 @@ async function searchUsers(q, { page, limit, sortField, sortDir }) {
 
   if (t.includes('@')) {
     params.push(`%${t}%`);
-    where = `(email_account ILIKE $1 OR email ILIKE $1)`;
+    where = `email_account ILIKE $1`;
   } else if (digitsOnly(t).length >= 8 && !/[a-zA-Z\u00C0-\u024F]/.test(t)) {
     params.push(`%${digitsOnly(t)}%`);
     where = `mobile_number ILIKE $1`;

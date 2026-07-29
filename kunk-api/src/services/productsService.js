@@ -5,6 +5,7 @@ const { AppError } = require('../utils/response');
 const { query } = require('../db/pool');
 const stockService = require('./stockService');
 const { getOrSet, memoryCache, cacheTtl, keys } = require('../cache');
+const { parseCsvText, escapeCsvCell } = require('../utils/csv');
 
 function invalidateProductsCatalogCache() {
   memoryCache.invalidate(keys.PRODUCTS_CATALOG);
@@ -52,13 +53,6 @@ async function listProducts() {
   });
 }
 
-function escapeCsvCell(value) {
-  if (value == null) return '';
-  const s = String(value);
-  if (/[",\n\r;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
-
 function rowsToCsv(rows) {
   const lines = [CSV_HEADERS.join(',')];
   for (const row of rows) {
@@ -74,62 +68,6 @@ async function exportCsv() {
      ORDER BY id ASC`
   );
   return rowsToCsv(result.rows);
-}
-
-function detectDelimiter(headerLine) {
-  const commas = (headerLine.match(/,/g) || []).length;
-  const semis = (headerLine.match(/;/g) || []).length;
-  return semis > commas ? ';' : ',';
-}
-
-function parseCsvLine(line, delimiter) {
-  const cells = [];
-  let cur = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i += 1) {
-    const ch = line[i];
-    if (inQuotes) {
-      if (ch === '"') {
-        if (line[i + 1] === '"') {
-          cur += '"';
-          i += 1;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        cur += ch;
-      }
-    } else if (ch === '"') {
-      inQuotes = true;
-    } else if (ch === delimiter) {
-      cells.push(cur);
-      cur = '';
-    } else {
-      cur += ch;
-    }
-  }
-  cells.push(cur);
-  return cells.map((c) => c.trim());
-}
-
-function parseCsvText(text) {
-  const raw = String(text || '').replace(/^\uFEFF/, '');
-  const lines = raw.split(/\r?\n/).filter((l) => l.trim() !== '');
-  if (!lines.length) return [];
-
-  const delimiter = detectDelimiter(lines[0]);
-  const headers = parseCsvLine(lines[0], delimiter).map((h) => h.trim().toLowerCase());
-  const rows = [];
-  for (let i = 1; i < lines.length; i += 1) {
-    const cells = parseCsvLine(lines[i], delimiter);
-    const obj = {};
-    headers.forEach((h, idx) => {
-      obj[h] = cells[idx] != null ? cells[idx] : '';
-    });
-    obj.__line = i + 1;
-    rows.push(obj);
-  }
-  return rows;
 }
 
 function normalizeImportRow(raw) {

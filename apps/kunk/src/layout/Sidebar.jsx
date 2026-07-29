@@ -23,7 +23,7 @@ import { allowedPagesForRoles, filterMenuSections } from '../lib/rolePages.js';
 import { useKunkConfig } from '../config/KunkConfigProvider.jsx';
 import { CacheClearButton } from '../components/CacheClearButton.jsx';
 import { closeSidebar } from './utils.js';
-import { getBrandLogoFrameStyle, LOGO_FORMAT_SQUARE } from '@kunk/config';
+import { resolvePlacementLogo } from '@kunk/config';
 
 const SECTION_ICONS = {
   acolhimento: GroupRoundedIcon,
@@ -67,6 +67,14 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
   const menuBg = config.menuBg || 'var(--kunk-menu-bg)';
   const menuHoverBg = config.menuHoverBg || '#fff';
   const menuHoverText = config.menuHoverText || '#000';
+  const menuPlacement = resolvePlacementLogo({
+    placements: config.logoPlacements,
+    app: 'kunk',
+    surface: 'menu',
+    square: config.logoSquare,
+    rectangular: config.logoRectangular,
+    legacy: config.logo,
+  });
 
   const handleToggleMenu = (menuId) => {
     setOpenMenu((prev) => {
@@ -160,17 +168,25 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
       />
 
       <Box
-        className={`kunk-logo-frame kunk-logo-frame--${config.logoFormat || LOGO_FORMAT_SQUARE}`}
+        className={`kunk-logo-frame kunk-logo-frame--${menuPlacement.format}`}
         hidden={collapsed}
         sx={{
           display: collapsed ? 'none' : 'flex',
-          width: getBrandLogoFrameStyle(config.logoFormat, 'sidebar').width,
-          height: getBrandLogoFrameStyle(config.logoFormat, 'sidebar').height,
+          width: menuPlacement.width,
+          height: 'auto',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
-        {config.logo ? (
+        {menuPlacement.url ? (
           <CacheClearButton>
-            <img src={config.logo} alt={config.title || 'Logo'} />
+            <img
+              src={menuPlacement.url}
+              alt={config.title || 'Logo'}
+              style={{ width: menuPlacement.width, height: 'auto', display: 'block' }}
+            />
           </CacheClearButton>
         ) : null}
       </Box>

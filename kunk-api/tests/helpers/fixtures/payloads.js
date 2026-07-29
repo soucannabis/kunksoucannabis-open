@@ -10,7 +10,7 @@ function createPayload(collection) {
     case 'files':
       return { filename: 'a.txt', mime_type: 'text/plain', storage_path: '/tmp/a.txt' };
     case 'users':
-      return { associate_name: 'Test', email: `u${Date.now()}@t.com`, user_code: uuidv4(), status: 'active' };
+      return { associate_name: 'Test', email_account: `u${Date.now()}@t.com`, user_code: uuidv4(), status: 'active' };
     case 'system_users':
       return {
         name: 'Op',

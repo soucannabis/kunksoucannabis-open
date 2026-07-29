@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAssociateAuth } from '@kunk/auth-session';
-import { LOGO_FORMAT_SQUARE } from '@kunk/config';
 import { AuthLoginLayout, Loader, ProgressSidebar } from '@kunk/ui';
 import { usePublicConfig } from '../config/PublicConfigProvider.jsx';
 import {
@@ -45,7 +44,7 @@ function stepState(step, phase, user) {
 export function PublicLayout() {
   const { config: cfg, configReady } = usePublicConfig();
   const logo = String(cfg.appearanceLogo || '').trim();
-  const format = cfg.appearanceLogoFormat || cfg.associationLogoFormat || LOGO_FORMAT_SQUARE;
+  const format = cfg.appearanceLogoFormat || 'square';
   const fullName = String(cfg.associationFullName || cfg.associationName || '').trim();
 
   return (
@@ -53,6 +52,7 @@ export function PublicLayout() {
       backgroundImage={authPublicBg}
       logo={logo}
       logoFormat={format}
+      logoWidth={cfg.appearanceLogoWidth}
       title={fullName}
       ready={configReady}
     >
@@ -77,9 +77,9 @@ export function AppShell() {
   if (loading) return <Loader />;
   if (!user) return <Navigate to={PUBLIC_AUTH_PATH} replace state={{ from: location }} />;
 
-  const navLogo = String(cfg.appearanceLogo || '').trim();
-  const format = cfg.appearanceLogoFormat || cfg.associationLogoFormat || LOGO_FORMAT_SQUARE;
-  const navFrame = getBrandLogoFrameStyle(format, 'nav');
+  const navLogo = String(cfg.appearanceMenuLogo || cfg.appearanceLogo || '').trim();
+  const format = cfg.appearanceMenuLogoFormat || cfg.appearanceLogoFormat || 'square';
+  const navW = cfg.appearanceMenuLogoWidth || 40;
   const navAlt = String(cfg.associationFullName || cfg.associationName || 'Logo').trim();
   const fullName = String(cfg.associationFullName || cfg.associationName || '').trim();
 
@@ -88,14 +88,14 @@ export function AppShell() {
       <nav className="navbar navbar-dark px-3 w-100 app-navbar">
         <div className="app-navbar-brand">
           {navLogo ? (
-            <img
-              className={`app-navbar-logo app-navbar-logo--${format}`}
-              src={navLogo}
-              alt={navAlt}
-              width={navFrame.width}
-              height={navFrame.height}
-              style={{ objectFit: 'contain' }}
-            />
+            <div className="app-navbar-logo-wrap">
+              <img
+                className={`app-navbar-logo app-navbar-logo--${format}`}
+                src={navLogo}
+                alt={navAlt}
+                style={{ width: navW, height: 'auto' }}
+              />
+            </div>
           ) : null}
           {fullName ? <span className="app-navbar-title">{fullName}</span> : null}
         </div>

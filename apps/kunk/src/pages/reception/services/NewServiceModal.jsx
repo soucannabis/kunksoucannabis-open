@@ -183,8 +183,8 @@ export default function NewServiceModal({
           : null;
       const body = {
         associate_user_code: associate.user_code,
-        associate_name: associateDisplayName(associate) || associate.email,
-        associate_email: associate.email_account || associate.email || null,
+        associate_name: associateDisplayName(associate) || associate.email_account,
+        associate_email: associate.email_account || null,
         patient_user_code: patient?.user_code || null,
         patient_name: patient ? patientLabel(patient) : null,
         observations,

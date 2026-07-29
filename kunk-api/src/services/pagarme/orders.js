@@ -172,7 +172,7 @@ async function createCheckout(body = {}) {
   const phone = separatePhone(user.mobile_number || user.phone);
   const billing = billingAddressFromUser(user);
   const fullName = associateFullName(user);
-  const email = user.email_account || user.email || 'noreply@example.com';
+  const email = user.email_account || 'noreply@example.com';
 
   const installments =
     amountReais > 600

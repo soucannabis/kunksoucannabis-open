@@ -300,7 +300,7 @@ scOutboundPublic.get('/users/:user_code', async (req, res, next) => {
     const { query } = require('../../db/pool');
     const code = String(req.params.user_code || '').trim();
     const result = await query(
-      `SELECT id, user_code, associate_name, associate_last_name, email_account, email,
+      `SELECT id, user_code, associate_name, associate_last_name, email_account,
               mobile_number, street, street_number, neighborhood, complement, city, state, cep, associate_cpf
        FROM users WHERE user_code::text = $1 LIMIT 1`,
       [code]
@@ -312,7 +312,7 @@ scOutboundPublic.get('/users/:user_code', async (req, res, next) => {
         id: user.id,
         user_code: user.user_code,
         name: [user.associate_name, user.associate_last_name].filter(Boolean).join(' ').trim(),
-        email: user.email_account || user.email,
+        email: user.email_account,
         mobile_number: user.mobile_number,
         cpf: user.associate_cpf,
         address: {

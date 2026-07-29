@@ -10,7 +10,7 @@ function onlyDigits(v) {
 function pickUserContact(u) {
   return {
     phone: onlyDigits(u.mobile_number),
-    email: u.email_account || u.email || '',
+    email: u.email_account || '',
     document: onlyDigits(u.associate_cpf || u.cpf),
     name: `${u.associate_name || ''} ${u.associate_last_name || ''}`.trim(),
   };
@@ -36,7 +36,7 @@ async function loadRecipientContact(order) {
 
   if (order.user) {
     const byId = await query(
-      `SELECT mobile_number, email, email_account, associate_name, associate_last_name, associate_cpf
+      `SELECT mobile_number, email_account, associate_name, associate_last_name, associate_cpf
        FROM users WHERE id = $1 LIMIT 1`,
       [order.user]
     );
@@ -44,7 +44,7 @@ async function loadRecipientContact(order) {
   }
   if (order.user_code) {
     const byCode = await query(
-      `SELECT mobile_number, email, email_account, associate_name, associate_last_name, associate_cpf
+      `SELECT mobile_number, email_account, associate_name, associate_last_name, associate_cpf
        FROM users WHERE user_code = $1 LIMIT 1`,
       [order.user_code]
     );

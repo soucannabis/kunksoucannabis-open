@@ -100,7 +100,7 @@ Registro **filho** em `users`. O progresso 1–5 continua no **responsável**.
 |---|---|---|
 | `status` | `"patient"` | fixo |
 | `responsible_type` | `"patient"` | fixo |
-| `email_account` ou `email` | e-mail do responsável | alinhar na implementação ao schema (`email_account` preferível) |
+| `email_account` | e-mail do responsável | |
 | `mobile_number` | herdado | responsável |
 | `responsible_code` | `user_code` do responsável | FK |
 | demográficos + CIAP2 | formulário | iguais ao responsável (sem senha) |

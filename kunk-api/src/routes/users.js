@@ -2,6 +2,7 @@
 
 const { Router } = require('express');
 const usersService = require('../services/usersService');
+const usersImportService = require('../services/usersImportService');
 const registrationService = require('../services/registrationService');
 const { authenticate } = require('../middleware/authenticate');
 const { requireAssociate } = require('../middleware/requireAssociate');
@@ -97,6 +98,33 @@ router.post('/me/complete', requireAssociate, async (req, res, next) => {
 });
 
 router.use(authenticate);
+
+router.get('/import/fields', authorize('users', 'create'), async (req, res, next) => {
+  try {
+    const data = usersImportService.listImportFields();
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/import/validate', authorize('users', 'create'), async (req, res, next) => {
+  try {
+    const data = await usersImportService.validateImport(req.body || {});
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/import', authorize('users', 'create'), async (req, res, next) => {
+  try {
+    const data = await usersImportService.importUsers(req.body || {});
+    res.json(ok(data));
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.get('/', authorize('users', 'read'), async (req, res, next) => {
   try {

@@ -29,13 +29,12 @@ async function searchUsers(q) {
   }
   const term = `%${q}%`;
   const result = await query(
-    `SELECT id, user_code, associate_name, associate_last_name, email, email_account, associate_cpf,
+    `SELECT id, user_code, associate_name, associate_last_name, email_account, associate_cpf,
             mobile_number, status, associate_status, patient_user_code, fullname, adhesion_term,
             TRIM(CONCAT(COALESCE(associate_name, ''), ' ', COALESCE(associate_last_name, ''))) AS full_name
      FROM users
      WHERE associate_name ILIKE $1
         OR associate_last_name ILIKE $1
-        OR email ILIKE $1
         OR email_account ILIKE $1
         OR associate_cpf ILIKE $1
         OR mobile_number ILIKE $1
@@ -106,7 +105,6 @@ async function createUserFromPanel(payload = {}) {
   const now = new Date().toISOString();
   return itemsRepository.createItem('users', {
     email_account: email,
-    email,
     associate_status: PHASE.CADASTRO_CRIADO,
     status: payload.status != null && payload.status !== '' && payload.status !== 'published'
       ? payload.status
@@ -131,7 +129,11 @@ async function createUser(payload) {
     user_code: payload.user_code || uuidv4(),
     date_created: payload.date_created || new Date().toISOString(),
   };
+  if (body.email && !body.email_account) {
+    body.email_account = String(body.email).trim().toLowerCase();
+  }
   delete body.panel;
+  delete body.email;
   return itemsRepository.createItem('users', body);
 }
 
@@ -140,6 +142,10 @@ async function updateUser(id, payload = {}) {
   delete body.account_password;
   delete body.session_token;
   delete body.password_reset_token;
+  if (body.email && !body.email_account) {
+    body.email_account = String(body.email).trim().toLowerCase();
+  }
+  delete body.email;
 
   if (body.annotations != null && typeof body.annotations !== 'string') {
     body.annotations = JSON.stringify(body.annotations);
@@ -176,11 +182,11 @@ async function createPatient(responsibleId, payload = {}) {
     user_code: payload.user_code || uuidv4(),
     date_created: now,
     created_date: now,
-    email_account: payload.email_account || responsible.email_account || responsible.email || null,
-    email: payload.email || responsible.email || responsible.email_account || null,
+    email_account: payload.email_account || responsible.email_account || null,
   };
   delete body.id;
   delete body.account_password;
+  delete body.email;
   return itemsRepository.createItem('users', body);
 }
 
@@ -195,6 +201,10 @@ async function updatePatient(responsibleId, patientId, payload = {}) {
   delete body.user_code;
   delete body.account_password;
   delete body.status;
+  if (body.email && !body.email_account) {
+    body.email_account = String(body.email).trim().toLowerCase();
+  }
+  delete body.email;
   if (body.annotations != null && typeof body.annotations !== 'string') {
     body.annotations = JSON.stringify(body.annotations);
   }

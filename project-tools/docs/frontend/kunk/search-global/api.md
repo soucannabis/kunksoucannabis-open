@@ -20,7 +20,7 @@ Auth: operador. Rate-limit recomendado.
 
 | entity | campos |
 |---|---|
-| `users` | `created_date`, `fullname`, `associate_name`, `associate_last_name`, `email_account`, `email`, `mobile_number`, `status` |
+| `users` | `created_date`, `fullname`, `associate_name`, `associate_last_name`, `email_account`, `mobile_number`, `status` |
 | `orders` | `created_date`, `associate_name`, `tracking_code`, `status`, `order_code`, `total` |
 | `services` | `consultation_date`, `date_created`, `associate_name`, `professional_name` |
 | `reception` | `date_created`, `name`, `last_name`, `email`, `phone`, `status`, `associate_name` |

@@ -1292,7 +1292,7 @@ export default function TriagePage() {
               const name = [u.associate_name, u.associate_last_name].filter(Boolean).join(' ')
                 || u.fullname
                 || 'Sem nome';
-              const email = u.email || u.email_account || '—';
+              const email = u.email_account || '—';
               return (
                 <Button
                   key={u.id}
@@ -1346,7 +1346,7 @@ export default function TriagePage() {
                 {[docsUser.associate_name, docsUser.associate_last_name].filter(Boolean).join(' ') || '—'}
               </Typography>
               <Typography variant="body2">
-                <strong>E-mail:</strong> {docsUser.email || docsUser.email_account || '—'}
+                <strong>E-mail:</strong> {docsUser.email_account || '—'}
               </Typography>
               <Typography variant="body2">
                 <strong>Telefone:</strong> {docsUser.mobile_number || '—'}

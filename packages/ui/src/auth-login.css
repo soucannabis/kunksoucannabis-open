@@ -67,6 +67,26 @@
   }
 }
 
+.auth-login-stack {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0;
+}
+
+/* Mounted while assets paint — keeps <img> loading without flashing the form */
+.auth-login-stack--pending {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .auth-login-panel {
   width: 100%;
   max-width: 350px;
@@ -77,26 +97,22 @@
   text-align: center;
 }
 
-/* Mounted while assets paint — keeps <img> loading without flashing the form */
-.auth-login-panel--pending {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
 .auth-login-logo {
   display: flex;
   justify-content: center;
-  margin-bottom: 0.75rem;
+  align-items: center;
+  width: auto;
+  max-width: none;
+  margin: 0 auto 0.75rem;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
 }
 
 .auth-login-logo img {
   display: block;
-  max-width: 100%;
-  object-fit: contain;
+  width: auto;
+  height: auto;
+  max-width: none;
+  margin-inline: auto;
 }
 
 .auth-login-title {

@@ -36,6 +36,7 @@ function resolveBgSrc(backgroundImage) {
  *   backgroundImage?: string,
  *   logo?: string,
  *   logoFormat?: string,
+ *   logoWidth?: number,
  *   title?: string,
  *   accent?: string,
  *   ready?: boolean,
@@ -48,6 +49,7 @@ export function AuthLoginLayout({
   backgroundImage = '',
   logo = '',
   logoFormat = LOGO_FORMAT_SQUARE,
+  logoWidth,
   title = '',
   accent = '',
   ready = true,
@@ -55,7 +57,8 @@ export function AuthLoginLayout({
   className = '',
   children,
 }) {
-  const frame = getBrandLogoFrameStyle(logoFormat, 'login');
+  const frame = getBrandLogoFrameStyle(logoFormat, 'login', logoWidth);
+  const width = frame.width;
   const bg = String(backgroundImage || '').trim();
   const logoUrl = String(logo || '').trim();
   const heading = String(title || '').trim();
@@ -120,7 +123,7 @@ export function AuthLoginLayout({
 
       {ready ? (
         <div
-          className={`auth-login-panel${showContent ? '' : ' auth-login-panel--pending'}`}
+          className={`auth-login-stack${showContent ? '' : ' auth-login-stack--pending'}`}
           aria-hidden={!showContent}
         >
           {logoUrl ? (
@@ -130,15 +133,16 @@ export function AuthLoginLayout({
                 ref={logoRef}
                 src={logoUrl}
                 alt={heading || 'Logo'}
-                width={frame.width}
-                height={frame.height}
+                style={{ width, height: 'auto' }}
                 onLoad={() => setPaintedLogoUrl(logoUrl)}
                 onError={() => setPaintedLogoUrl(logoUrl)}
               />
             </div>
           ) : null}
-          {heading ? <h1 className="auth-login-title">{heading}</h1> : null}
-          {children}
+          <div className="auth-login-panel">
+            {heading ? <h1 className="auth-login-title">{heading}</h1> : null}
+            {children}
+          </div>
         </div>
       ) : null}
     </div>

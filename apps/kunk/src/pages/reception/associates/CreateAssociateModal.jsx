@@ -21,7 +21,7 @@ export default function CreateAssociateModal({ open, onClose, onCreated, api }) 
     setBusy(true);
     setError('');
     try {
-      const res = await api.createUser({ email_account: email.trim(), email: email.trim() });
+      const res = await api.createUser({ email_account: email.trim() });
       onCreated?.(res.data);
       setEmail('');
       onClose();

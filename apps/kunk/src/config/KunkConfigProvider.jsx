@@ -152,7 +152,7 @@ export function KunkConfigProvider({ api, children }) {
   }, [config.associationName]);
 
   useEffect(() => {
-    const href = String(config.logo || '').trim();
+    const href = String(config.logoSquare || '').trim();
     let link = document.querySelector("link[rel='icon']");
     if (!href) {
       if (link) link.remove();
@@ -163,14 +163,19 @@ export function KunkConfigProvider({ api, children }) {
       link.setAttribute('rel', 'icon');
       document.head.appendChild(link);
     }
-    const type = href.endsWith('.svg')
+    const path = href.split('?')[0].toLowerCase();
+    const type = path.endsWith('.svg')
       ? 'image/svg+xml'
-      : href.endsWith('.ico')
+      : path.endsWith('.ico')
         ? 'image/x-icon'
-        : 'image/png';
+        : path.endsWith('.jpg') || path.endsWith('.jpeg')
+          ? 'image/jpeg'
+          : path.endsWith('.webp')
+            ? 'image/webp'
+            : 'image/png';
     link.setAttribute('type', type);
     link.setAttribute('href', href);
-  }, [config.logo]);
+  }, [config.logoSquare]);
 
   const setThemeMode = useCallback((mode) => {
     const next = mode === 'light' ? 'light' : 'dark';

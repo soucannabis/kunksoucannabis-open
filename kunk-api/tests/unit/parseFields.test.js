@@ -18,8 +18,8 @@ describe('parseFields', () => {
   });
 
   it('strips sensitive even if requested', () => {
-    const fields = parseFields('users', 'id,account_password,email');
+    const fields = parseFields('users', 'id,account_password,email_account');
     assert.ok(!fields.includes('account_password'));
-    assert.ok(fields.includes('email'));
+    assert.ok(fields.includes('email_account'));
   });
 });

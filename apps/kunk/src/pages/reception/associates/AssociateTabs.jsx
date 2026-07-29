@@ -135,10 +135,6 @@ function personPayload(form, { ciap2Enabled }) {
       out[key] = raw;
     }
   }
-  // Keep login email in sync with contact email when present in schema.
-  if (out.email_account != null) {
-    out.email = out.email_account;
-  }
   if (ciap2Enabled) {
     out.ciap_codes = serializeCiapCodes(form.ciap_codes) || null;
   }

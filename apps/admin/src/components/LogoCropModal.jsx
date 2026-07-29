@@ -32,7 +32,7 @@ function exportForFormat(format) {
 }
 
 /**
- * Assistente de enquadramento (quadrado 1:1 ou retangular 3:1).
+ * Assistente de enquadramento (símbolo 1:1 ou logo completa 3:1).
  */
 export function LogoCropModal({
   src,
@@ -51,6 +51,7 @@ export function LogoCropModal({
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [minZoom, setMinZoom] = useState(1);
+  const [maxZoom, setMaxZoom] = useState(4);
 
   useEffect(() => {
     setReady(false);
@@ -60,18 +61,29 @@ export function LogoCropModal({
       const h = img.naturalHeight;
       setNatural({ w, h });
       const cover = Math.max(stage.w / w, stage.h / h);
-      setMinZoom(cover);
-      setZoom(cover);
+      const contain = Math.min(stage.w / w, stage.h / h);
+      const safeInset = isRect ? Math.round(SAFE_INSET / 2) : SAFE_INSET;
+      // Zoom out até caber na área segura (margem recomendada), não só preencher o quadro.
+      const fitSafe = Math.min(
+        (stage.w - 2 * safeInset) / w,
+        (stage.h - 2 * safeInset) / h,
+      );
+      const minZ = Math.min(contain, fitSafe);
+      const maxZ = Math.max(cover * 4, minZ * 4);
+      setMinZoom(minZ);
+      setMaxZoom(maxZ);
+      // Começa com a logo inteira visível; o usuário pode aproximar ou afastar.
+      setZoom(contain);
       setOffset({
-        x: (stage.w - w * cover) / 2,
-        y: (stage.h - h * cover) / 2,
+        x: (stage.w - w * contain) / 2,
+        y: (stage.h - h * contain) / 2,
       });
       imgRef.current = img;
       setReady(true);
     };
     img.onerror = () => setReady(false);
     img.src = src;
-  }, [src, stage.w, stage.h]);
+  }, [src, stage.w, stage.h, isRect]);
 
   const clampOffset = useCallback((x, y, z, nw, nh) => {
     const iw = nw * z;
@@ -86,7 +98,7 @@ export function LogoCropModal({
   }, [stage.w, stage.h]);
 
   function onZoomChange(nextZoom) {
-    const z = Math.max(minZoom, Math.min(minZoom * 4, Number(nextZoom)));
+    const z = Math.max(minZoom, Math.min(maxZoom, Number(nextZoom)));
     const cx = stage.w / 2;
     const cy = stage.h / 2;
     const scale = z / zoom;
@@ -156,12 +168,14 @@ export function LogoCropModal({
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Enquadrar logo">
       <div className={`modal-card logo-crop-modal${isRect ? ' logo-crop-modal--rect' : ''}`}>
         <h2 style={{ marginTop: 0 }}>
-          {isRect ? 'Enquadrar logo retangular' : 'Enquadrar logo quadrada'}
+          {isRect ? 'Enquadrar logo completa' : 'Enquadrar símbolo'}
         </h2>
         <p className="muted">
-          Arraste e ajuste o zoom para encaixar a logo no quadro (
+          Arraste e use o zoom para encaixar{' '}
+          {isRect ? 'a logo completa' : 'o símbolo'} no quadro (
           {frameHint}
-          ). A área tracejada é a margem recomendada.
+          ). Afaste para ver a imagem inteira ou aproxime para preencher. A área
+          tracejada é a margem recomendada.
         </p>
 
         <div
@@ -202,7 +216,7 @@ export function LogoCropModal({
           <input
             type="range"
             min={minZoom}
-            max={minZoom * 4}
+            max={maxZoom}
             step={0.01}
             value={zoom}
             disabled={!ready || busy}

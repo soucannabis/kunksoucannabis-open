@@ -29,6 +29,7 @@ export const BRANDING_ENV_KEYS = [
   'VITE_ASSOCIATION_LOGO_SQUARE',
   'VITE_ASSOCIATION_LOGO_RECTANGULAR',
   'VITE_ASSOCIATION_LOGO_FORMAT',
+  'VITE_ASSOCIATION_LOGO_PLACEMENTS',
   'VITE_WELCOME_TEXT',
   'VITE_COMPLETION_TEXT',
   'VITE_SHOW_TRIAGE_BUTTON',
@@ -41,6 +42,18 @@ export const LOGO_FORMAT_SQUARE = 'square';
 export const LOGO_FORMAT_RECTANGULAR = 'rectangular';
 export const LOGO_FORMATS = [LOGO_FORMAT_SQUARE, LOGO_FORMAT_RECTANGULAR];
 
+/** Fixed logo frames (CSS px). Crop export uses LOGO_EXPORT sizes. */
+/** Primary square display (login / AuthLoginLayout). */
+export const KUNK_LOGO_FRAME_SIZE = 162;
+export const KUNK_LOGO_EXPORT_SIZE = 512;
+/** Rectangular brand logo (3:1), separate from doc-sign term logo. */
+export const KUNK_LOGO_RECT_ASPECT = 3;
+/** Display size used on login / horizontal bars (matches AuthLoginLayout). */
+export const KUNK_LOGO_RECT_FRAME_W = 500;
+export const KUNK_LOGO_RECT_FRAME_H = Math.round(500 / KUNK_LOGO_RECT_ASPECT);
+export const KUNK_LOGO_RECT_EXPORT_W = 900;
+export const KUNK_LOGO_RECT_EXPORT_H = 300;
+
 /**
  * @param {unknown} value
  * @returns {'square'|'rectangular'}
@@ -51,6 +64,163 @@ export function normalizeLogoFormat(value) {
     return LOGO_FORMAT_RECTANGULAR;
   }
   return LOGO_FORMAT_SQUARE;
+}
+
+/** Apps that show association branding (login + interior menu). */
+export const BRANDING_APPS = ['kunk', 'registration', 'docsign', 'admin'];
+export const BRANDING_SURFACES = ['login', 'menu'];
+
+export const BRANDING_APP_LABELS = {
+  kunk: 'Kunk',
+  registration: 'Cadastramento',
+  docsign: 'Assinatura de termos',
+  admin: 'Admin',
+};
+
+export const BRANDING_SURFACE_LABELS = {
+  login: 'Login',
+  menu: 'Menu',
+};
+
+/**
+ * Default width (px) per app/surface — mirrors legacy getBrandLogoFrameStyle sizes.
+ * @type {Record<string, { login: number, menu: number }>}
+ */
+export const LOGO_PLACEMENT_DEFAULT_WIDTHS = {
+  kunk: { login: KUNK_LOGO_FRAME_SIZE, menu: 120 },
+  registration: { login: KUNK_LOGO_FRAME_SIZE, menu: 40 },
+  docsign: { login: KUNK_LOGO_FRAME_SIZE, menu: 66 },
+  admin: { login: 72, menu: 40 },
+};
+
+/** Clamp logo display width (px). */
+export const LOGO_WIDTH_MIN = 24;
+export const LOGO_WIDTH_MAX = 640;
+
+/**
+ * Height from width + format (square 1:1, rectangular 3:1).
+ * @param {unknown} format
+ * @param {unknown} width
+ * @returns {number}
+ */
+export function logoHeightForWidth(format, width) {
+  const w = clampLogoWidth(width);
+  if (normalizeLogoFormat(format) === LOGO_FORMAT_RECTANGULAR) {
+    return Math.max(1, Math.round(w / KUNK_LOGO_RECT_ASPECT));
+  }
+  return w;
+}
+
+/**
+ * @param {unknown} value
+ * @param {number} [fallback]
+ * @returns {number}
+ */
+export function clampLogoWidth(value, fallback = KUNK_LOGO_FRAME_SIZE) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(LOGO_WIDTH_MAX, Math.max(LOGO_WIDTH_MIN, Math.round(n)));
+}
+
+/**
+ * Build default placements, optionally seeding format from legacy global format.
+ * @param {unknown} [legacyFormat]
+ * @returns {Record<string, { login: { format: string, width: number }, menu: { format: string, width: number } }>}
+ */
+export function defaultLogoPlacements(legacyFormat) {
+  const format = normalizeLogoFormat(legacyFormat);
+  /** @type {Record<string, { login: { format: string, width: number }, menu: { format: string, width: number } }>} */
+  const out = {};
+  for (const app of BRANDING_APPS) {
+    const widths = LOGO_PLACEMENT_DEFAULT_WIDTHS[app];
+    out[app] = {
+      login: { format, width: widths.login },
+      menu: { format, width: widths.menu },
+    };
+  }
+  return out;
+}
+
+/**
+ * Normalize placements JSON (string or object). Missing apps/surfaces get defaults.
+ * @param {unknown} raw
+ * @param {unknown} [legacyFormat]
+ * @returns {ReturnType<typeof defaultLogoPlacements>}
+ */
+export function normalizeLogoPlacements(raw, legacyFormat) {
+  const defaults = defaultLogoPlacements(legacyFormat);
+  let parsed = raw;
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (!trimmed) return defaults;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      return defaults;
+    }
+  }
+  if (!parsed || typeof parsed !== 'object') return defaults;
+
+  /** @type {ReturnType<typeof defaultLogoPlacements>} */
+  const out = {};
+  for (const app of BRANDING_APPS) {
+    const src = parsed[app] && typeof parsed[app] === 'object' ? parsed[app] : {};
+    const def = defaults[app];
+    out[app] = {
+      login: {
+        format: normalizeLogoFormat(src.login?.format ?? def.login.format),
+        width: clampLogoWidth(src.login?.width, def.login.width),
+      },
+      menu: {
+        format: normalizeLogoFormat(src.menu?.format ?? def.menu.format),
+        width: clampLogoWidth(src.menu?.width, def.menu.width),
+      },
+    };
+  }
+  return out;
+}
+
+/**
+ * Serialize placements for system_configs storage.
+ * @param {unknown} placements
+ * @returns {string}
+ */
+export function stringifyLogoPlacements(placements) {
+  return JSON.stringify(normalizeLogoPlacements(placements));
+}
+
+/**
+ * Resolve logo URL + frame for an app surface from placements + assets.
+ * @param {{
+ *   placements?: unknown,
+ *   app?: string,
+ *   surface?: 'login'|'menu'|string,
+ *   square?: unknown,
+ *   rectangular?: unknown,
+ *   legacy?: unknown,
+ *   legacyFormat?: unknown,
+ * }} [opts]
+ * @returns {{ url: string, format: 'square'|'rectangular', width: number, height: number }}
+ */
+export function resolvePlacementLogo(opts = {}) {
+  const placements = normalizeLogoPlacements(opts.placements, opts.legacyFormat);
+  const app = BRANDING_APPS.includes(opts.app) ? opts.app : 'kunk';
+  const surface = BRANDING_SURFACES.includes(opts.surface) ? opts.surface : 'login';
+  const slot = placements[app][surface];
+  const active = resolveActiveBrandingLogo({
+    format: slot.format,
+    square: opts.square,
+    rectangular: opts.rectangular,
+    legacy: opts.legacy,
+  });
+  const width = clampLogoWidth(slot.width, LOGO_PLACEMENT_DEFAULT_WIDTHS[app][surface]);
+  const height = logoHeightForWidth(active.format, width);
+  return {
+    url: active.url,
+    format: active.format,
+    width,
+    height,
+  };
 }
 
 /** Defaults for association identity (Admin → Dados da associação). */
@@ -190,6 +360,7 @@ const ENV_TO_CONFIG = {
   VITE_ASSOCIATION_LOGO_SQUARE: 'associationLogoSquare',
   VITE_ASSOCIATION_LOGO_RECTANGULAR: 'associationLogoRectangular',
   VITE_ASSOCIATION_LOGO_FORMAT: 'associationLogoFormat',
+  VITE_ASSOCIATION_LOGO_PLACEMENTS: 'associationLogoPlacements',
   VITE_WELCOME_TEXT: 'welcomeText',
   VITE_COMPLETION_TEXT: 'completionText',
   VITE_SHOW_TRIAGE_BUTTON: 'showTriageButton',
@@ -218,26 +389,20 @@ const ENV_TO_KUNK_CONFIG = {
   VITE_KUNK_LIGHT_ACCENT_HOVER: 'lightAccentHover',
 };
 
-/** Fixed logo frames (CSS px). Crop export uses LOGO_EXPORT sizes. */
-/** Primary square display (login / AuthLoginLayout). */
-export const KUNK_LOGO_FRAME_SIZE = 162;
-export const KUNK_LOGO_EXPORT_SIZE = 512;
-/** Rectangular brand logo (3:1), separate from doc-sign term logo. */
-export const KUNK_LOGO_RECT_ASPECT = 3;
-/** Display size used on login / horizontal bars (matches AuthLoginLayout). */
-export const KUNK_LOGO_RECT_FRAME_W = 500;
-export const KUNK_LOGO_RECT_FRAME_H = Math.round(500 / KUNK_LOGO_RECT_ASPECT);
-export const KUNK_LOGO_RECT_EXPORT_W = 900;
-export const KUNK_LOGO_RECT_EXPORT_H = 300;
-
 /**
  * Frame dimensions for a logo format + UI variant.
+ * When `widthOverride` is set, height follows format aspect (square 1:1, rect 3:1).
  * @param {unknown} format
  * @param {'default'|'sidebar'|'login'|'shell'|'nav'|'admin'} [variant]
+ * @param {number} [widthOverride]
  * @returns {{ format: 'square'|'rectangular', width: number, height: number }}
  */
-export function getBrandLogoFrameStyle(format, variant = 'default') {
+export function getBrandLogoFrameStyle(format, variant = 'default', widthOverride) {
   const fmt = normalizeLogoFormat(format);
+  if (widthOverride != null && Number.isFinite(Number(widthOverride))) {
+    const width = clampLogoWidth(widthOverride);
+    return { format: fmt, width, height: logoHeightForWidth(fmt, width) };
+  }
   if (fmt === LOGO_FORMAT_RECTANGULAR) {
     const scale =
       variant === 'login' || variant === 'default' ? 1
@@ -699,6 +864,10 @@ export function getPublicConfig(env = import.meta.env) {
     associationLogoSquare: env.VITE_ASSOCIATION_LOGO_SQUARE || '',
     associationLogoRectangular: env.VITE_ASSOCIATION_LOGO_RECTANGULAR || '',
     associationLogoFormat: normalizeLogoFormat(env.VITE_ASSOCIATION_LOGO_FORMAT),
+    associationLogoPlacements: normalizeLogoPlacements(
+      env.VITE_ASSOCIATION_LOGO_PLACEMENTS,
+      env.VITE_ASSOCIATION_LOGO_FORMAT,
+    ),
     welcomeText: env.VITE_WELCOME_TEXT || REGISTRATION_SYSTEM_DEFAULTS.welcomeText,
     completionText: env.VITE_COMPLETION_TEXT || REGISTRATION_SYSTEM_DEFAULTS.completionText,
     showTriageButton: parseEnvBool(env.VITE_SHOW_TRIAGE_BUTTON, REGISTRATION_SYSTEM_DEFAULTS.showTriageButton),
@@ -721,6 +890,7 @@ export function getKunkPublicConfig(env = import.meta.env) {
     logoFormat: d.logoFormat,
     logoSquare: d.logoSquare,
     logoRectangular: d.logoRectangular,
+    logoPlacements: defaultLogoPlacements(d.logoFormat),
     bgMode: env.VITE_KUNK_BG_MODE || d.bgMode,
     bgColor: env.VITE_KUNK_BG_COLOR || d.bgColor,
     bgImage: env.VITE_KUNK_BG_IMAGE || d.bgImage,
@@ -759,6 +929,8 @@ export function mergePublicConfigFromApi(base, apiValues) {
       next[prop] = parseEnvBool(raw, REGISTRATION_SYSTEM_DEFAULTS.showTriageButton);
     } else if (prop === 'associationLogoFormat') {
       next[prop] = normalizeLogoFormat(raw);
+    } else if (prop === 'associationLogoPlacements') {
+      next[prop] = raw;
     } else {
       next[prop] = String(raw);
     }
@@ -770,17 +942,31 @@ export function mergePublicConfigFromApi(base, apiValues) {
   if (!resolveBrandingLogoUrl(next.associationLogoSquare) && resolveBrandingLogoUrl(next.associationLogo)) {
     next.associationLogoSquare = next.associationLogo;
   }
-  const active = resolveActiveBrandingLogo({
-    format: next.associationLogoFormat,
+  next.associationLogoPlacements = normalizeLogoPlacements(
+    next.associationLogoPlacements,
+    next.associationLogoFormat,
+  );
+  const kunkLogin = resolvePlacementLogo({
+    placements: next.associationLogoPlacements,
+    app: 'kunk',
+    surface: 'login',
     square: next.associationLogoSquare,
     rectangular: next.associationLogoRectangular,
     legacy: next.associationLogo,
+    legacyFormat: next.associationLogoFormat,
   });
-  next.associationLogoFormat = active.format;
-  if (active.url) {
-    next.associationLogo = active.url;
-    next.associationLogoMenu = active.url;
-  }
+  const kunkMenu = resolvePlacementLogo({
+    placements: next.associationLogoPlacements,
+    app: 'kunk',
+    surface: 'menu',
+    square: next.associationLogoSquare,
+    rectangular: next.associationLogoRectangular,
+    legacy: next.associationLogo,
+    legacyFormat: next.associationLogoFormat,
+  });
+  next.associationLogoFormat = kunkLogin.format;
+  if (kunkLogin.url) next.associationLogo = kunkLogin.url;
+  if (kunkMenu.url) next.associationLogoMenu = kunkMenu.url;
   return next;
 }
 
@@ -841,7 +1027,8 @@ export function mergeKunkPublicConfigFromApi(base, apiValues) {
 }
 
 /**
- * Apply association branding (square/rect/format) onto a Kunk config object.
+ * Apply association branding (square/rect/placements) onto a Kunk config object.
+ * Default `logo` / `logoFormat` mirror kunk login placement for backward compat.
  * @param {ReturnType<typeof getKunkPublicConfig>} kunkConfig
  * @param {ReturnType<typeof getPublicConfig>|Record<string, unknown>} regConfig
  */
@@ -859,17 +1046,25 @@ export function applyAssociationLogoToKunkConfig(kunkConfig, regConfig = {}) {
     regConfig.associationLogoRectangular,
     kunkConfig.logoRectangular,
   );
-  const active = resolveActiveBrandingLogo({
+  const placements = normalizeLogoPlacements(
+    regConfig.associationLogoPlacements ?? kunkConfig.logoPlacements,
     format,
+  );
+  const login = resolvePlacementLogo({
+    placements,
+    app: 'kunk',
+    surface: 'login',
     square,
     rectangular,
     legacy: kunkConfig.logo,
+    legacyFormat: format,
   });
   return {
     ...kunkConfig,
-    logoFormat: active.format,
+    logoFormat: login.format,
     logoSquare: square,
     logoRectangular: rectangular,
-    logo: active.url || resolveBrandingLogoUrl(kunkConfig.logo) || '',
+    logoPlacements: placements,
+    logo: login.url || resolveBrandingLogoUrl(kunkConfig.logo) || '',
   };
 }

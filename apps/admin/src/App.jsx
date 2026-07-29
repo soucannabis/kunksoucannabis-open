@@ -11,6 +11,7 @@ import { ForbiddenPage } from './pages/ForbiddenPage.jsx';
 import { DataIndexPage, DataCollectionPage, DataItemPage } from './pages/DataPages.jsx';
 import { StoragePage } from './pages/StoragePage.jsx';
 import { AppearancePage } from './pages/AppearancePage.jsx';
+import { UsersImportPage } from './pages/UsersImportPage.jsx';
 import { AssociationDataPage } from './pages/AssociationDataPage.jsx';
 import { RegistrationSystemPage } from './pages/RegistrationSystemPage.jsx';
 import {
@@ -99,6 +100,7 @@ export default function App() {
                   <Route path="permissoes" element={<RolePagesPage api={api} />} />
                   <Route path="ciap2" element={<Ciap2ModulePage api={api} />} />
                   <Route path="aparencia" element={<AppearancePage api={api} />} />
+                  <Route path="importacao" element={<UsersImportPage api={api} />} />
                 </Route>
                 <Route path="/triagem" element={<TriageShell />}>
                   <Route index element={<Navigate to="/triagem/formulario" replace />} />

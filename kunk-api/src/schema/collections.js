@@ -44,7 +44,7 @@ const READONLY_FIELDS = {
 };
 
 const SEARCHABLE = {
-  users: ['associate_name', 'associate_last_name', 'email', 'associate_cpf', 'mobile_number', 'fullname'],
+  users: ['associate_name', 'associate_last_name', 'email_account', 'associate_cpf', 'mobile_number', 'fullname'],
   system_users: ['name', 'last_name', 'email', 'cpf'],
   orders: ['associate_name', 'order_code', 'status', 'tracking_code'],
   institutional_clients: [
@@ -68,7 +68,7 @@ const COLUMNS = {
   files: ['id', 'filename', 'mime_type', 'storage_path', 'storage_driver', 'storage_key', 'created_at', 'is_sample'],
   users: [
     'id', 'status', 'sort', 'date_created', 'date_updated', 'associate_name', 'associate_last_name',
-    'gender', 'nationality', 'associate_rg_issuer', 'marital_status', 'email', 'street', 'street_number',
+    'gender', 'nationality', 'associate_rg_issuer', 'marital_status', 'street', 'street_number',
     'complement', 'neighborhood', 'proof_of_address', 'reason_treatment_text', 'responsible_type',
     'city', 'state', 'cep', 'email_account', 'account_password', 'user_code', 'rg_proof', 'associate_cpf',
     'associate_rg', 'mobile_number', 'associate_status', 'prescription', 'responsible_code',

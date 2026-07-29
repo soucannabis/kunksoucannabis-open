@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ASSOCIATION_DATA_DEFAULTS, LOGO_FORMAT_SQUARE } from '@kunk/config';
+import { ASSOCIATION_DATA_DEFAULTS, defaultLogoPlacements } from '@kunk/config';
 import {
   loadAssociationData,
   loadAssociationLogos,
@@ -19,7 +19,7 @@ export function AssociationDataPage({ api }) {
   const [itemsByKey, setItemsByKey] = useState({});
   const [logoSquare, setLogoSquare] = useState('');
   const [logoRectangular, setLogoRectangular] = useState('');
-  const [logoFormat, setLogoFormat] = useState(LOGO_FORMAT_SQUARE);
+  const [logoPlacements, setLogoPlacements] = useState(() => defaultLogoPlacements());
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -41,7 +41,7 @@ export function AssociationDataPage({ api }) {
         setItemsByKey(items);
         setLogoSquare(logos.logoSquare);
         setLogoRectangular(logos.logoRectangular);
-        setLogoFormat(logos.logoFormat);
+        setLogoPlacements(logos.logoPlacements);
       } catch (err) {
         if (!cancelled) setError(err.message || 'Falha ao carregar dados da associação');
       } finally {
@@ -66,12 +66,12 @@ export function AssociationDataPage({ api }) {
       const result = await saveAssociationLogoAndTitle(api, {
         logoSquare: next.logoSquare,
         logoRectangular: next.logoRectangular,
-        logoFormat: next.logoFormat,
+        logoPlacements: next.logoPlacements,
         associationName: form.associationName,
       });
       setLogoSquare(result.logoSquare);
       setLogoRectangular(result.logoRectangular);
-      setLogoFormat(result.logoFormat);
+      setLogoPlacements(result.logoPlacements);
       setMessage('Logos atualizadas.');
     } catch (err) {
       setError(err.message || 'Falha ao salvar logo');
@@ -99,12 +99,12 @@ export function AssociationDataPage({ api }) {
       const logos = await saveAssociationLogoAndTitle(api, {
         logoSquare,
         logoRectangular,
-        logoFormat,
+        logoPlacements,
         associationName: form.associationName,
       });
       setLogoSquare(logos.logoSquare);
       setLogoRectangular(logos.logoRectangular);
-      setLogoFormat(logos.logoFormat);
+      setLogoPlacements(logos.logoPlacements);
       setMessage('Dados da associação salvos.');
     } catch (err) {
       setError(err.message || 'Falha ao salvar');
@@ -120,8 +120,8 @@ export function AssociationDataPage({ api }) {
       <h1 style={{ marginTop: 0 }}>Dados da associação</h1>
       <p className="muted">
         Identidade jurídica usada no cadastramento, no Kunk e na assinatura de termos. O nome da
-        associação é o título do app Kunk. Escolha o formato de logo (quadrada ou retangular) que os
-        apps exibem. Todos os campos de texto são obrigatórios.
+        associação é o título do app Kunk. Cadastre o símbolo e a logo completa e configure tipo e
+        largura em cada login e menu. Todos os campos de texto são obrigatórios.
       </p>
       {error ? <div className="alert alert-error">{error}</div> : null}
       {message ? <div className="alert alert-success">{message}</div> : null}
@@ -142,7 +142,7 @@ export function AssociationDataPage({ api }) {
           <AssociationLogosField
             logoSquare={logoSquare}
             logoRectangular={logoRectangular}
-            logoFormat={logoFormat}
+            logoPlacements={logoPlacements}
             onPersist={persistLogos}
             api={api}
             onError={setError}

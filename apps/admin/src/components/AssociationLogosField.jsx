@@ -1,24 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  KUNK_LOGO_FRAME_SIZE,
-  KUNK_LOGO_RECT_FRAME_H,
-  KUNK_LOGO_RECT_FRAME_W,
+  BRANDING_APPS,
+  BRANDING_APP_LABELS,
+  BRANDING_SURFACES,
+  BRANDING_SURFACE_LABELS,
   LOGO_FORMAT_RECTANGULAR,
   LOGO_FORMAT_SQUARE,
-  getBrandLogoFrameStyle,
-  normalizeLogoFormat,
+  LOGO_WIDTH_MAX,
+  LOGO_WIDTH_MIN,
+  clampLogoWidth,
+  normalizeLogoPlacements,
+  resolveBrandingLogoUrl,
 } from '@kunk/config';
-import { LogoCropModal } from './LogoCropModal.jsx';
 import { AdminLoader } from './AdminLoader.jsx';
+import { LogoTrimCropModal } from './LogoTrimCropModal.jsx';
 import { uploadAppearanceAsset } from '../lib/kunkAppearanceConfig.js';
 
-function LogoSlot({
+function AssetSlot({
   label,
   hint,
   format,
   value,
-  selected,
-  onSelect,
   onPersist,
   api,
   onError,
@@ -26,8 +28,6 @@ function LogoSlot({
   setBusy,
 }) {
   const [cropSrc, setCropSrc] = useState(null);
-  const frame = getBrandLogoFrameStyle(format, 'default');
-  const isRect = format === LOGO_FORMAT_RECTANGULAR;
 
   function onFile(e) {
     const file = e.target.files?.[0];
@@ -47,9 +47,13 @@ function LogoSlot({
     onError('');
     try {
       const name =
-        format === LOGO_FORMAT_RECTANGULAR ? 'association-logo-rect.png' : 'association-logo-square.png';
-      const file = new File([blob], name, { type: 'image/png' });
-      const uploaded = await uploadAppearanceAsset(api, file);
+        format === LOGO_FORMAT_RECTANGULAR
+          ? 'association-logo-rect.png'
+          : 'association-logo-square.png';
+      const uploaded = await uploadAppearanceAsset(
+        api,
+        new File([blob], name, { type: 'image/png' }),
+      );
       await onPersist(uploaded);
       if (cropSrc) URL.revokeObjectURL(cropSrc);
       setCropSrc(null);
@@ -61,33 +65,16 @@ function LogoSlot({
   }
 
   return (
-    <div className={`logo-slot${selected ? ' logo-slot--selected' : ''}`}>
+    <div className="logo-slot">
       <div className="logo-slot-header">
-        <label className="logo-slot-radio">
-          <input
-            type="radio"
-            name="association-logo-format"
-            checked={selected}
-            disabled={busy || !value}
-            onChange={() => onSelect()}
-          />
-          <span>
-            <strong>{label}</strong>
-            {!value ? <span className="muted"> — envie para usar</span> : null}
-          </span>
-        </label>
+        <strong>{label}</strong>
       </div>
       <p className="muted logo-slot-hint">{hint}</p>
       <div
-        className={`logo-frame-preview logo-frame-preview--${format}`}
-        style={
-          isRect
-            ? { width: '100%', maxWidth: frame.width, height: 'auto', aspectRatio: '3 / 1' }
-            : { width: frame.width, height: frame.height }
-        }
+        className={`logo-asset-preview logo-asset-preview--${format}`}
         aria-label={`Pré-visualização ${label}`}
       >
-        {value ? <img src={value} alt="" /> : <span className="muted">Sem logo</span>}
+        {value ? <img src={value} alt="" /> : <span className="muted">Sem arquivo</span>}
       </div>
       <div className="appearance-upload-row">
         <label className="btn">
@@ -101,9 +88,9 @@ function LogoSlot({
         ) : null}
       </div>
       {cropSrc ? (
-        <LogoCropModal
+        <LogoTrimCropModal
           src={cropSrc}
-          format={format}
+          title={format === LOGO_FORMAT_RECTANGULAR ? 'Recortar logo completa' : 'Recortar símbolo'}
           busy={busy}
           onConfirm={onConfirmCrop}
           onCancel={onCancelCrop}
@@ -113,130 +100,287 @@ function LogoSlot({
   );
 }
 
-function nextFormatAfterChange({ currentFormat, square, rectangular }) {
-  const format = normalizeLogoFormat(currentFormat);
-  if (format === LOGO_FORMAT_SQUARE && !square && rectangular) return LOGO_FORMAT_RECTANGULAR;
-  if (format === LOGO_FORMAT_RECTANGULAR && !rectangular && square) return LOGO_FORMAT_SQUARE;
-  if (!square && rectangular) return LOGO_FORMAT_RECTANGULAR;
-  if (square && !rectangular) return LOGO_FORMAT_SQUARE;
-  return format;
+function PlacementRow({
+  app,
+  surface,
+  placements,
+  logoSquare,
+  logoRectangular,
+  onChange,
+  disabled,
+}) {
+  const hasSquare = Boolean(resolveBrandingLogoUrl(logoSquare));
+  const hasRect = Boolean(resolveBrandingLogoUrl(logoRectangular));
+  const hasAny = hasSquare || hasRect;
+  const slot = placements[app][surface];
+  const controlsDisabled = disabled || !hasAny;
+
+  function setFormat(nextFormat) {
+    if (!hasAny) return;
+    if (nextFormat === LOGO_FORMAT_SQUARE && !hasSquare) return;
+    if (nextFormat === LOGO_FORMAT_RECTANGULAR && !hasRect) return;
+    const next = structuredClone(placements);
+    next[app][surface].format = nextFormat;
+    onChange(next);
+  }
+
+  function setWidthRaw(raw) {
+    if (!hasAny) return;
+    const next = structuredClone(placements);
+    // Mantém o que o usuário digitou; clamp só no save do bloco.
+    const digits = String(raw ?? '').replace(/[^\d]/g, '');
+    next[app][surface].width = digits === '' ? '' : Number(digits);
+    onChange(next);
+  }
+
+  return (
+    <div className={`logo-placement-row${controlsDisabled ? ' logo-placement-row--disabled' : ''}`}>
+      <div className="logo-placement-row-label">{BRANDING_SURFACE_LABELS[surface]}</div>
+      <label className="field logo-placement-field">
+        <span>Tipo</span>
+        <select
+          value={
+            slot.format === LOGO_FORMAT_RECTANGULAR && hasRect
+              ? LOGO_FORMAT_RECTANGULAR
+              : hasSquare
+                ? LOGO_FORMAT_SQUARE
+                : hasRect
+                  ? LOGO_FORMAT_RECTANGULAR
+                  : LOGO_FORMAT_SQUARE
+          }
+          disabled={controlsDisabled || (hasSquare && hasRect ? false : true)}
+          onChange={(e) => setFormat(e.target.value)}
+        >
+          <option value={LOGO_FORMAT_SQUARE} disabled={!hasSquare}>
+            Símbolo
+          </option>
+          <option value={LOGO_FORMAT_RECTANGULAR} disabled={!hasRect}>
+            Logo completa
+          </option>
+        </select>
+      </label>
+      <label className="field logo-placement-field">
+        <span>Largura (px)</span>
+        <input
+          type="number"
+          min={LOGO_WIDTH_MIN}
+          max={LOGO_WIDTH_MAX}
+          step={1}
+          value={slot.width === '' || slot.width == null ? '' : slot.width}
+          disabled={controlsDisabled}
+          onChange={(e) => setWidthRaw(e.target.value)}
+        />
+      </label>
+    </div>
+  );
+}
+
+function AppPlacementBlock({
+  app,
+  savedPlacements,
+  logoSquare,
+  logoRectangular,
+  onSave,
+  disabled,
+}) {
+  const savedApp = savedPlacements[app];
+  const savedKey = JSON.stringify(savedApp);
+  const [draft, setDraft] = useState(() => structuredClone(savedApp));
+  const [dirty, setDirty] = useState(false);
+
+  // Sincroniza só quando os valores persistidos mudam (não a cada render).
+  useEffect(() => {
+    setDraft(JSON.parse(savedKey));
+    setDirty(false);
+  }, [savedKey]);
+
+  const hasAnyAsset = Boolean(
+    resolveBrandingLogoUrl(logoSquare) || resolveBrandingLogoUrl(logoRectangular),
+  );
+
+  const draftPlacements = {
+    ...savedPlacements,
+    [app]: draft,
+  };
+
+  function onDraftChange(nextFull) {
+    setDraft(structuredClone(nextFull[app]));
+    setDirty(true);
+  }
+
+  async function handleSave() {
+    const next = structuredClone(savedPlacements);
+    next[app] = {
+      login: {
+        format: draft.login.format,
+        width: clampLogoWidth(draft.login.width, savedApp.login.width),
+      },
+      menu: {
+        format: draft.menu.format,
+        width: clampLogoWidth(draft.menu.width, savedApp.menu.width),
+      },
+    };
+    await onSave(next);
+  }
+
+  return (
+    <section className="logo-placement-app">
+      <h4 className="logo-placement-app-title">{BRANDING_APP_LABELS[app]}</h4>
+      {BRANDING_SURFACES.map((surface) => (
+        <PlacementRow
+          key={`${app}-${surface}`}
+          app={app}
+          surface={surface}
+          placements={draftPlacements}
+          logoSquare={logoSquare}
+          logoRectangular={logoRectangular}
+          onChange={onDraftChange}
+          disabled={disabled || !hasAnyAsset}
+        />
+      ))}
+      <div className="logo-placement-app-actions">
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={disabled || !hasAnyAsset || !dirty}
+          onClick={handleSave}
+        >
+          Salvar
+        </button>
+      </div>
+    </section>
+  );
 }
 
 /**
- * Duas logos (quadrada + retangular) e escolha do formato ativo nos apps.
+ * Assets (símbolo + completa) + tipo/largura por app (login e menu).
  */
 export function AssociationLogosField({
   logoSquare,
   logoRectangular,
-  logoFormat,
+  logoPlacements,
   onPersist,
   api,
   onError,
 }) {
   const [busy, setBusy] = useState(false);
-  const [savingFormat, setSavingFormat] = useState(false);
-  const format = normalizeLogoFormat(logoFormat);
-
+  const [savingLabel, setSavingLabel] = useState('');
+  const placements = normalizeLogoPlacements(logoPlacements);
 
   async function persistSquare(url) {
-    const nextSquare = String(url || '');
-    await onPersist({
-      logoSquare: nextSquare,
-      logoRectangular,
-      logoFormat: nextFormatAfterChange({
-        currentFormat: format,
-        square: nextSquare,
-        rectangular: logoRectangular,
-      }),
-    });
+    setBusy(true);
+    setSavingLabel('Salvando…');
+    onError('');
+    try {
+      await onPersist({
+        logoSquare: String(url || ''),
+        logoRectangular,
+        logoPlacements: placements,
+      });
+    } finally {
+      setBusy(false);
+      setSavingLabel('');
+    }
   }
 
   async function persistRectangular(url) {
-    const nextRect = String(url || '');
-    await onPersist({
-      logoSquare,
-      logoRectangular: nextRect,
-      logoFormat: nextFormatAfterChange({
-        currentFormat: format,
-        square: logoSquare,
-        rectangular: nextRect,
-      }),
-    });
+    setBusy(true);
+    setSavingLabel('Salvando…');
+    onError('');
+    try {
+      await onPersist({
+        logoSquare,
+        logoRectangular: String(url || ''),
+        logoPlacements: placements,
+      });
+    } finally {
+      setBusy(false);
+      setSavingLabel('');
+    }
   }
 
-  async function selectFormat(next) {
-    const fmt = normalizeLogoFormat(next);
-    if (fmt === LOGO_FORMAT_SQUARE && !logoSquare) {
-      onError('Envie a logo quadrada antes de ativá-la.');
-      return;
-    }
-    if (fmt === LOGO_FORMAT_RECTANGULAR && !logoRectangular) {
-      onError('Envie a logo retangular antes de ativá-la.');
-      return;
-    }
-    if (fmt === format) return;
-    onError('');
-    setSavingFormat(true);
+  async function persistPlacements(nextPlacements) {
     setBusy(true);
+    setSavingLabel('Salvando…');
+    onError('');
     try {
       await onPersist({
         logoSquare,
         logoRectangular,
-        logoFormat: fmt,
+        logoPlacements: normalizeLogoPlacements(nextPlacements),
       });
     } catch {
-      /* erro já tratado em onPersist / página */
+      /* erro já tratado na página */
     } finally {
       setBusy(false);
-      setSavingFormat(false);
+      setSavingLabel('');
     }
   }
+
+  const hasAnyAsset = Boolean(
+    resolveBrandingLogoUrl(logoSquare) || resolveBrandingLogoUrl(logoRectangular),
+  );
 
   return (
     <div className={`association-logos-field${busy ? ' association-logos-field--busy' : ''}`}>
       <p className="muted" style={{ margin: '0 0 0.75rem' }}>
-        Cadastre os dois formatos e escolha qual os apps exibem. Quadrado (
-        {KUNK_LOGO_FRAME_SIZE}×{KUNK_LOGO_FRAME_SIZE}
-        ) para ícone/menu; retangular (
-        {KUNK_LOGO_RECT_FRAME_W}×{KUNK_LOGO_RECT_FRAME_H}
-        , 3:1) para faixas horizontais.
+        Cadastre o <strong>símbolo</strong> e a <strong>logo completa</strong>. No envio você pode
+        recortar a imagem para aparar espaços em branco. Depois escolha o tipo e a largura em cada
+        login e menu e clique em Salvar.
       </p>
 
       <div className="association-logos-grid" aria-busy={busy}>
         {busy ? (
           <div className="association-logos-loader" role="status" aria-live="polite">
             <AdminLoader
-              label={savingFormat ? 'Salvando formato…' : 'Salvando…'}
+              label={savingLabel || 'Salvando…'}
               className="admin-loader--embedded"
             />
           </div>
         ) : null}
-        <LogoSlot
-          label="Quadrada"
-          hint={`1:1 — login, menu do Kunk, favicon e blocos centrais (${KUNK_LOGO_FRAME_SIZE}px).`}
+        <AssetSlot
+          label="Símbolo"
+          hint="Marca compacta — recorte livre para aparar espaços em branco."
           format={LOGO_FORMAT_SQUARE}
           value={logoSquare}
-          selected={format === LOGO_FORMAT_SQUARE}
-          onSelect={() => selectFormat(LOGO_FORMAT_SQUARE)}
           onPersist={persistSquare}
           api={api}
           onError={onError}
           busy={busy}
           setBusy={setBusy}
         />
-        <LogoSlot
-          label="Retangular"
-          hint={`3:1 — login e barras horizontais (${KUNK_LOGO_RECT_FRAME_W}×${KUNK_LOGO_RECT_FRAME_H}px).`}
+        <AssetSlot
+          label="Logo completa"
+          hint="Logo com texto/nome — recorte livre para aparar espaços em branco."
           format={LOGO_FORMAT_RECTANGULAR}
           value={logoRectangular}
-          selected={format === LOGO_FORMAT_RECTANGULAR}
-          onSelect={() => selectFormat(LOGO_FORMAT_RECTANGULAR)}
           onPersist={persistRectangular}
           api={api}
           onError={onError}
           busy={busy}
           setBusy={setBusy}
         />
+      </div>
+
+      <h3 className="logo-placements-title">Exibição por app</h3>
+      {!hasAnyAsset ? (
+        <p className="muted" style={{ margin: '0 0 0.75rem' }}>
+          Envie ao menos um arquivo (símbolo ou logo completa) para configurar tipo e largura.
+        </p>
+      ) : null}
+
+      <div className="logo-placements-list">
+        {BRANDING_APPS.map((app) => (
+          <AppPlacementBlock
+            key={app}
+            app={app}
+            savedPlacements={placements}
+            logoSquare={logoSquare}
+            logoRectangular={logoRectangular}
+            onSave={persistPlacements}
+            disabled={busy}
+          />
+        ))}
       </div>
     </div>
   );

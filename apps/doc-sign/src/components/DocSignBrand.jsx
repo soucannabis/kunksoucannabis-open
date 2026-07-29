@@ -5,9 +5,9 @@ import {
   mergeKunkPublicConfigFromApi,
   mergePublicConfigFromApi,
   applyAssociationLogoToKunkConfig,
-  getBrandLogoFrameStyle,
+  resolvePlacementLogo,
   resolveBrandingLogoUrl,
-  LOGO_FORMAT_RECTANGULAR,
+  LOGO_FORMAT_SQUARE,
 } from '@kunk/config';
 
 /** Título fixo do produto — não substituir pelo nome da associação. */
@@ -39,42 +39,64 @@ function applyFaviconFromLogo(href) {
   link.setAttribute('href', url);
 }
 
-/** DocSign sempre usa a logo retangular (deitada); cai na quadrada só se não houver retangular. */
-function resolveDocSignLandscapeLogo(mergedKunk, mergedReg) {
+/**
+ * Resolve logos de login/menu do doc-sign a partir dos placements.
+ */
+function resolveDocSignBranding(mergedKunk, mergedReg) {
   const withLogo = applyAssociationLogoToKunkConfig(mergedKunk || {}, mergedReg || {});
+  const square = resolveBrandingLogoUrl(
+    withLogo.logoSquare,
+    mergedReg?.associationLogoSquare,
+  );
   const rectangular = resolveBrandingLogoUrl(
     withLogo.logoRectangular,
     mergedReg?.associationLogoRectangular,
   );
-  const square = resolveBrandingLogoUrl(
-    withLogo.logoSquare,
-    withLogo.logo,
-    mergedReg?.associationLogoSquare,
-    mergedReg?.associationLogo,
-  );
+  const login = resolvePlacementLogo({
+    placements: withLogo.logoPlacements || mergedReg?.associationLogoPlacements,
+    app: 'docsign',
+    surface: 'login',
+    square,
+    rectangular,
+    legacy: withLogo.logo,
+  });
+  const menu = resolvePlacementLogo({
+    placements: withLogo.logoPlacements || mergedReg?.associationLogoPlacements,
+    app: 'docsign',
+    surface: 'menu',
+    square,
+    rectangular,
+    legacy: withLogo.logo,
+  });
+  const favicon = resolveBrandingLogoUrl(square, login.url, menu.url);
   return {
-    logo: rectangular || square || '',
-    logoFormat: LOGO_FORMAT_RECTANGULAR,
+    login,
+    menu,
+    favicon: favicon || '',
   };
 }
 
 /**
- * Carrega a logo da associação (sempre retangular) no login e no shell.
+ * Carrega branding do doc-sign (placements login/menu).
  */
 export function useDocSignBranding(api) {
-  const [logo, setLogo] = useState(() => {
-    const boot = resolveDocSignLandscapeLogo(getKunkPublicConfig(), getPublicConfig());
-    return boot.logo;
-  });
-  const [logoFormat, setLogoFormat] = useState(LOGO_FORMAT_RECTANGULAR);
+  const [login, setLogin] = useState(() =>
+    resolveDocSignBranding(getKunkPublicConfig(), getPublicConfig()).login,
+  );
+  const [menu, setMenu] = useState(() =>
+    resolveDocSignBranding(getKunkPublicConfig(), getPublicConfig()).menu,
+  );
+  const [favicon, setFavicon] = useState(() =>
+    resolveDocSignBranding(getKunkPublicConfig(), getPublicConfig()).favicon,
+  );
   const [associationName, setAssociationName] = useState(() =>
     String(getPublicConfig().associationName || '').trim(),
   );
   const [brandingReady, setBrandingReady] = useState(false);
 
   useEffect(() => {
-    applyFaviconFromLogo(logo);
-  }, [logo]);
+    applyFaviconFromLogo(favicon);
+  }, [favicon]);
 
   useEffect(() => {
     const name = String(associationName || '').trim();
@@ -89,7 +111,7 @@ export function useDocSignBranding(api) {
     let cancelled = false;
     setBrandingReady(false);
     (async () => {
-      let nextLogo = resolveDocSignLandscapeLogo(getKunkPublicConfig(), getPublicConfig()).logo;
+      let next = resolveDocSignBranding(getKunkPublicConfig(), getPublicConfig());
       let nextName = String(getPublicConfig().associationName || '').trim();
       try {
         const [kunkJson, regJson] = await Promise.all([
@@ -105,16 +127,15 @@ export function useDocSignBranding(api) {
           getPublicConfig(),
           regJson?.data?.values,
         );
-        const resolved = resolveDocSignLandscapeLogo(mergedKunk, mergedReg);
-        nextLogo = resolved.logo;
+        next = resolveDocSignBranding(mergedKunk, mergedReg);
         nextName = String(mergedReg.associationName || '').trim();
       } catch {
         /* mantém bootstrap */
       }
       if (cancelled) return;
-      // Logo + ready no mesmo commit — evita revelar o form sem marca
-      setLogo(nextLogo);
-      setLogoFormat(LOGO_FORMAT_RECTANGULAR);
+      setLogin(next.login);
+      setMenu(next.menu);
+      setFavicon(next.favicon);
       setAssociationName(nextName);
       setBrandingReady(true);
     })();
@@ -123,7 +144,19 @@ export function useDocSignBranding(api) {
     };
   }, [api]);
 
-  return { logo, logoFormat, title: DOCSIGN_PRODUCT_TITLE, associationName, brandingReady };
+  return {
+    logo: login.url,
+    logoFormat: login.format,
+    logoWidth: login.width,
+    logoHeight: login.height,
+    menuLogo: menu.url,
+    menuLogoFormat: menu.format,
+    menuLogoWidth: menu.width,
+    menuLogoHeight: menu.height,
+    title: DOCSIGN_PRODUCT_TITLE,
+    associationName,
+    brandingReady,
+  };
 }
 
 /** Atualiza o favicon com a logo da associação em todas as rotas. */
@@ -133,22 +166,28 @@ export function DocSignFavicon({ api }) {
 }
 
 /**
- * @param {{ logo?: string, logoFormat?: string, variant?: 'login' | 'shell', className?: string }} props
+ * @param {{
+ *   logo?: string,
+ *   logoFormat?: string,
+ *   logoWidth?: number,
+ *   logoHeight?: number,
+ *   variant?: 'login' | 'shell',
+ *   className?: string,
+ * }} props
  */
 export function DocSignBrand({
   logo = '',
-  logoFormat = LOGO_FORMAT_RECTANGULAR,
+  logoFormat = LOGO_FORMAT_SQUARE,
+  logoWidth,
   variant = 'shell',
   className = '',
 }) {
-  const frame = getBrandLogoFrameStyle(
-    logoFormat || LOGO_FORMAT_RECTANGULAR,
-    variant === 'login' ? 'login' : 'shell',
-  );
+  const format = logoFormat || LOGO_FORMAT_SQUARE;
+  const width = Number(logoWidth) || (variant === 'login' ? 162 : 66);
   const rootClass =
     variant === 'login'
-      ? `docsign-brand docsign-brand--login docsign-brand--${frame.format} ${className}`.trim()
-      : `docsign-brand docsign-brand--shell docsign-brand--${frame.format} brand ${className}`.trim();
+      ? `docsign-brand docsign-brand--login docsign-brand--${format} ${className}`.trim()
+      : `docsign-brand docsign-brand--shell docsign-brand--${format} brand ${className}`.trim();
 
   return (
     <div className={rootClass}>
@@ -158,9 +197,7 @@ export function DocSignBrand({
             className="docsign-brand-logo brand-logo"
             src={logo}
             alt={DOCSIGN_PRODUCT_TITLE}
-            width={frame.width}
-            height={frame.height}
-            style={{ objectFit: 'contain' }}
+            style={{ width, height: 'auto' }}
           />
         </div>
       ) : null}

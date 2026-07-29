@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
@@ -29,14 +30,16 @@ export default function RegistrationPage() {
   const [limit, setLimit] = useState(60);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [filter, setFilter] = useState('');
   const [localQ, setLocalQ] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [patientNames, setPatientNames] = useState({});
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async ({ silent = false, nextLimit } = {}) => {
+    if (silent) setLoadingMore(true);
+    else setLoading(true);
     try {
       const deepA = searchParams.get('a');
       if (deepA) {
@@ -62,7 +65,7 @@ export default function RegistrationPage() {
       }
 
       const params = new URLSearchParams();
-      params.set('limit', String(limit));
+      params.set('limit', String(nextLimit ?? limit));
       params.set('sort', '-created_date');
       params.set('filter[status][_neq]', 'patient');
       params.set('patients', '1');
@@ -91,15 +94,24 @@ export default function RegistrationPage() {
       setPatientNames(names);
     } catch (err) {
       showError(err.message || 'Falha ao carregar associados');
-      setRows([]);
+      if (!silent) setRows([]);
     } finally {
-      setLoading(false);
+      if (silent) setLoadingMore(false);
+      else setLoading(false);
     }
   }, [api, limit, searchParams, showError]);
 
   useEffect(() => {
     load();
-  }, [load]);
+    // Recarrega só na montagem / deep-link; "carregar mais" chama load explicitamente.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api, searchParams, showError]);
+
+  async function handleLoadMore() {
+    const next = limit + 60;
+    setLimit(next);
+    await load({ silent: true, nextLimit: next });
+  }
 
   const visible = useMemo(() => {
     let list = rows.filter((u) => String(u.status) !== 'patient');
@@ -114,7 +126,6 @@ export default function RegistrationPage() {
         const blob = [
           displayName(u),
           u.email_account,
-          u.email,
           u.mobile_number,
           statusLabel(u),
           patientNames[u.user_code],
@@ -137,7 +148,7 @@ export default function RegistrationPage() {
       const created = await api.createReception({
         name,
         last_name: last,
-        email: u.email_account || u.email || null,
+        email: u.email_account || null,
         phone: u.mobile_number || null,
         is_associate: true,
         associate_code: u.user_code,
@@ -177,13 +188,15 @@ export default function RegistrationPage() {
           limit={limit}
           filter={filter}
           onFilterChange={setFilter}
-          onReload={load}
+          onReload={() => load()}
           onCreate={() => setCreateOpen(true)}
           rows={rows}
         />
 
         {loading ? (
-          <CircularProgress size={28} sx={{ color: GREEN }} />
+          <Box sx={{ py: 4, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <CircularProgress size={28} sx={{ color: GREEN }} />
+          </Box>
         ) : (
           <>
             <AssociatesTable
@@ -194,9 +207,30 @@ export default function RegistrationPage() {
               onSendTriage={sendTriage}
               patientNames={patientNames}
             />
-            <Button sx={{ mt: 1 }} onClick={() => setLimit((n) => n + 60)}>
-              Carregar mais
-            </Button>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 3 }}>
+              <Button
+                variant="contained"
+                startIcon={
+                  loadingMore ? (
+                    <CircularProgress size={18} sx={{ color: '#fff' }} />
+                  ) : (
+                    <KeyboardArrowDownIcon sx={{ color: '#fff' }} />
+                  )
+                }
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                sx={{
+                  bgcolor: GREEN,
+                  color: '#fff',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  px: 2.5,
+                  '&:hover': { bgcolor: '#4a684b' },
+                }}
+              >
+                Carregar mais
+              </Button>
+            </Box>
           </>
         )}
 
@@ -224,7 +258,7 @@ export default function RegistrationPage() {
           user={selected}
           api={api}
           onClose={closeModal}
-          onChanged={load}
+          onChanged={() => load()}
         />
 
         {!loading && visible.length === 0 ? (

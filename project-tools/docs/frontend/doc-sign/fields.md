@@ -19,7 +19,7 @@ Os nomes abaixo são os de `attrs.name`; a origem é sempre coluna de `users`.
 | `associate_rg_issuer` | Emissor do RG | responsável: `associate_rg_issuer` | |
 | `nationality` | Nacionalidade | responsável: `nationality` | |
 | `marital_status` | Estado Civil | responsável: `marital_status` | |
-| `email` | Email | responsável: `email_account` (fallback `email`) | |
+| `email` | Email | responsável: `email_account` | |
 | `street` | Rua | responsável: `street` | |
 | `street_number` | Numero | responsável: `street_number` | |
 | `city` | Cidade | responsável: `city` | Também no fecho do termo |

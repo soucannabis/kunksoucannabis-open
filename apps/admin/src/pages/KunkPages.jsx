@@ -43,6 +43,12 @@ export function KunkShell() {
         >
           Aparência
         </NavLink>
+        <NavLink
+          to="/kunk/importacao"
+          className={({ isActive }) => (isActive ? 'btn btn-primary' : 'btn')}
+        >
+          Importação de dados
+        </NavLink>
       </nav>
       <Outlet />
     </div>

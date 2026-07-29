@@ -29,7 +29,6 @@
 | `nationality` | string | character varying | — | sim | — | — | input | — |
 | `emiiter_rg_associate` | string | character varying | — | sim | — | — | input | — |
 | `marital_status` | string | character varying | — | sim | — | — | input | — |
-| `email` | string | character varying | — | sim | — | — | input | — |
 | `mobile_number` | string | character varying | — | sim | — | — | input | — |
 | `secundary_number` | string | character varying | — | sim | — | — | input | — |
 | `street` | string | character varying | — | sim | — | — | input | — |

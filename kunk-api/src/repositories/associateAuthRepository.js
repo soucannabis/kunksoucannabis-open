@@ -180,9 +180,9 @@ async function registerEmail(email, password) {
   // status vira Associado só ao concluir o funil; patient para pacientes.
   const result = await query(
     `INSERT INTO users (
-      email_account, email, account_password, associate_status, status, user_code,
+      email_account, account_password, associate_status, status, user_code,
       date_created, created_date, invalid_fields
-    ) VALUES ($1, $1, $2, $3, $3, $4, NOW(), NOW(), $5)
+    ) VALUES ($1, $2, $3, $3, $4, NOW(), NOW(), $5)
     RETURNING *`,
     [normalized, passwordHash, PHASE.CADASTRO_CRIADO, userCode, JSON.stringify([])]
   );

@@ -29,18 +29,29 @@ export default function AssociatesTable({
 }) {
   return (
     <Box>
-      <TextField
-        size="small"
-        placeholder="Pesquisar..."
-        value={localQ}
-        onChange={(e) => onLocalQ(e.target.value)}
-        sx={{ mb: 1, minWidth: 280, bgcolor: '#fff' }}
-      />
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
+        <TextField
+          size="small"
+          placeholder="Filtrar..."
+          value={localQ}
+          onChange={(e) => onLocalQ(e.target.value)}
+          sx={{
+            minWidth: 280,
+            bgcolor: '#fff',
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              '& fieldset': { borderColor: '#fff' },
+              '&:hover fieldset': { borderColor: '#fff' },
+              '&.Mui-focused fieldset': { borderColor: '#fff' },
+            },
+          }}
+        />
+      </Box>
       <TableContainer component={Paper} className="pageContainerTable">
         <Table size="small">
           <TableHead>
             <TableRow sx={{ bgcolor: GREEN }}>
-              {['', 'Nome', 'E-mail', 'Telefone', 'Status', 'Criado', ''].map((h) => (
+              {['', 'Nome', 'E-mail', 'Telefone', 'Status', 'Criado', 'Triagem'].map((h) => (
                 <TableCell key={h || 'a'} sx={{ color: '#fff', fontWeight: 600 }}>
                   {h}
                 </TableCell>
@@ -79,7 +90,7 @@ export default function AssociatesTable({
                       </Typography>
                     ) : null}
                   </TableCell>
-                  <TableCell>{u.email_account || u.email || '—'}</TableCell>
+                  <TableCell>{u.email_account || '—'}</TableCell>
                   <TableCell>{u.mobile_number || '—'}</TableCell>
                   <TableCell>{statusLabel(u)}</TableCell>
                   <TableCell>{formatCreated(u)}</TableCell>

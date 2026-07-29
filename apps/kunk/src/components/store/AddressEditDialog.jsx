@@ -69,7 +69,6 @@ function displayName(user) {
       .join(' ')
       .trim() ||
     user.email_account ||
-    user.email ||
     ''
   );
 }
@@ -145,7 +144,7 @@ export default function AddressEditDialog({ open, onClose, user, api, onSaved })
           <strong>Nome:</strong> {displayName(user)}
         </Typography>
         <Typography variant="body1">
-          <strong>Email:</strong> {user?.email_account || user?.email || '—'}
+          <strong>Email:</strong> {user?.email_account || '—'}
         </Typography>
         <Typography variant="body1">
           <strong>Telefone:</strong> {formatPhoneNumber(user?.mobile_number)}

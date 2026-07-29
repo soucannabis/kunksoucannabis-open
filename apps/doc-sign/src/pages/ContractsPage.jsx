@@ -56,7 +56,7 @@ function associateLabel(u) {
     (u.full_name || `${u.associate_name || ''} ${u.associate_last_name || ''}`).trim() ||
     u.fullname ||
     'Sem nome';
-  const email = u.email_account || u.email || '';
+  const email = u.email_account || '';
   return { name, email, cpf: u.associate_cpf || '' };
 }
 

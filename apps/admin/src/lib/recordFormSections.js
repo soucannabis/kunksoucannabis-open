@@ -24,7 +24,7 @@ export const RECORD_FORM_SECTIONS = {
     {
       id: 'contact',
       title: 'Contato',
-      fields: ['email', 'email_account', 'mobile_number'],
+      fields: ['email_account', 'mobile_number'],
     },
     {
       id: 'personal',

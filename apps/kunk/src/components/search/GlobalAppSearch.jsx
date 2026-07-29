@@ -151,7 +151,7 @@ export default function GlobalAppSearch() {
       await api.createReception({
         name: String(name).split(' ')[0] || 'Associado',
         last_name: row.associate_last_name || '',
-        email: row.gs_meta?.display_email || row.email_account || row.email || null,
+        email: row.gs_meta?.display_email || row.email_account || null,
         phone: row.gs_meta?.display_phone || row.mobile_number || null,
         is_associate: true,
         associate_code: code,
@@ -215,7 +215,7 @@ export default function GlobalAppSearch() {
       return [
         { label: 'Nome', render: (r) => associadoNomeCell(r) },
         { label: 'Status', render: (r) => r.gs_meta?.display_status ?? r.status ?? '' },
-        { label: 'E-mail', render: (r) => r.gs_meta?.display_email ?? r.email_account ?? r.email ?? '' },
+        { label: 'E-mail', render: (r) => r.gs_meta?.display_email ?? r.email_account ?? '' },
         { label: 'Telefone', render: (r) => r.gs_meta?.display_phone ?? r.mobile_number ?? '' },
         { label: 'Cadastro', render: (r) => formatDate(r.gs_meta?.display_created ?? r.created_date) },
       ];

@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS users (
   nationality VARCHAR(255),
   associate_rg_issuer VARCHAR(255),
   marital_status VARCHAR(255),
-  email VARCHAR(255),
   street VARCHAR(255),
   street_number VARCHAR(255),
   complement VARCHAR(255),

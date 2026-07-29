@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { getPublicConfig, mergePublicConfigFromApi, isPlaceholderLogo, getBrandLogoFrameStyle } from '@kunk/config';
+import { getPublicConfig, mergePublicConfigFromApi, isPlaceholderLogo, resolvePlacementLogo } from '@kunk/config';
 import { useOperatorAuth } from '@kunk/auth-session';
 import { safeInternalPath } from '../lib/lastRoute.js';
 import { useInstallStatus } from '../lib/installStatus.jsx';
@@ -39,6 +39,7 @@ export function LoginPage({ api }) {
   const [busy, setBusy] = useState(false);
   const [logoUrl, setLogoUrl] = useState('');
   const [logoFormat, setLogoFormat] = useState('square');
+  const [logoWidth, setLogoWidth] = useState(72);
   const [brandingReady, setBrandingReady] = useState(false);
   const [logoPainted, setLogoPainted] = useState(false);
 
@@ -58,12 +59,22 @@ export function LoginPage({ api }) {
     (async () => {
       let nextLogo = '';
       let nextFormat = 'square';
+      let nextW = 72;
       try {
         const res = await api.get('/config/public?system=registration');
         if (cancelled) return;
         const merged = mergePublicConfigFromApi(getPublicConfig(), res?.data?.values || {});
-        nextLogo = resolveLoginLogo(merged.associationLogo);
-        nextFormat = merged.associationLogoFormat || 'square';
+        const placement = resolvePlacementLogo({
+          placements: merged.associationLogoPlacements,
+          app: 'admin',
+          surface: 'login',
+          square: merged.associationLogoSquare,
+          rectangular: merged.associationLogoRectangular,
+          legacy: merged.associationLogo,
+        });
+        nextLogo = resolveLoginLogo(placement.url);
+        nextFormat = placement.format;
+        nextW = placement.width;
       } catch {
         nextLogo = '';
       }
@@ -71,6 +82,7 @@ export function LoginPage({ api }) {
       if (cancelled) return;
       setLogoUrl(nextLogo);
       setLogoFormat(nextFormat);
+      setLogoWidth(nextW);
       setBrandingReady(true);
       if (!nextLogo) setLogoPainted(true);
     })();
@@ -143,17 +155,18 @@ export function LoginPage({ api }) {
       <form className="card login-card" onSubmit={onSubmit}>
         <div className="login-brand">
           {logoUrl ? (
-            <img
-              className={`login-logo login-logo--${logoFormat}`}
-              src={logoUrl}
-              alt="Logo da associação"
-              style={{
-                width: getBrandLogoFrameStyle(logoFormat, 'admin').width,
-                height: getBrandLogoFrameStyle(logoFormat, 'admin').height,
-                objectFit: 'contain',
-              }}
-              onError={() => setLogoUrl('')}
-            />
+            <div className="login-logo-wrap">
+              <img
+                className={`login-logo login-logo--${logoFormat}`}
+                src={logoUrl}
+                alt="Logo da associação"
+                style={{
+                  width: logoWidth,
+                  height: 'auto',
+                }}
+                onError={() => setLogoUrl('')}
+              />
+            </div>
           ) : null}
           <h1>Admin</h1>
         </div>

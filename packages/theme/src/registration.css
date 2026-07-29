@@ -113,11 +113,20 @@ select.form-control.is-invalid,
   z-index: 10;
 }
 
+.app-navbar-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
 .app-navbar-logo {
   flex: 0 0 auto;
-  height: 40px;
-  object-fit: contain;
+  display: block;
   width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
 }
 
 .app-navbar-brand {

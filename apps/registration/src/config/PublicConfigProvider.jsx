@@ -5,16 +5,43 @@ import {
   getKunkPublicConfig,
   mergeKunkPublicConfigFromApi,
   applyAssociationLogoToKunkConfig,
-  resolveActiveBrandingLogo,
+  normalizeLogoPlacements,
+  resolvePlacementLogo,
   resolveBrandingLogoUrl,
 } from '@kunk/config';
 
 function withAppearanceLogo(registrationConfig, kunkConfig) {
   const withLogos = applyAssociationLogoToKunkConfig(kunkConfig || {}, registrationConfig || {});
-  const active = resolveActiveBrandingLogo({
-    format: withLogos.logoFormat || registrationConfig?.associationLogoFormat,
-    square: withLogos.logoSquare || registrationConfig?.associationLogoSquare,
-    rectangular: withLogos.logoRectangular || registrationConfig?.associationLogoRectangular,
+  const placements = normalizeLogoPlacements(
+    registrationConfig?.associationLogoPlacements ?? withLogos.logoPlacements,
+    registrationConfig?.associationLogoFormat || withLogos.logoFormat,
+  );
+  const square = resolveBrandingLogoUrl(
+    withLogos.logoSquare,
+    registrationConfig?.associationLogoSquare,
+  );
+  const rectangular = resolveBrandingLogoUrl(
+    withLogos.logoRectangular,
+    registrationConfig?.associationLogoRectangular,
+  );
+  const login = resolvePlacementLogo({
+    placements,
+    app: 'registration',
+    surface: 'login',
+    square,
+    rectangular,
+    legacy: resolveBrandingLogoUrl(
+      withLogos.logo,
+      registrationConfig?.associationLogo,
+      registrationConfig?.associationLogoMenu,
+    ),
+  });
+  const menu = resolvePlacementLogo({
+    placements,
+    app: 'registration',
+    surface: 'menu',
+    square,
+    rectangular,
     legacy: resolveBrandingLogoUrl(
       withLogos.logo,
       registrationConfig?.associationLogo,
@@ -23,12 +50,18 @@ function withAppearanceLogo(registrationConfig, kunkConfig) {
   });
   return {
     ...registrationConfig,
-    associationLogoFormat: active.format,
-    associationLogoSquare: withLogos.logoSquare || registrationConfig?.associationLogoSquare || '',
-    associationLogoRectangular:
-      withLogos.logoRectangular || registrationConfig?.associationLogoRectangular || '',
-    appearanceLogo: active.url,
-    appearanceLogoFormat: active.format,
+    associationLogoFormat: login.format,
+    associationLogoSquare: square || '',
+    associationLogoRectangular: rectangular || '',
+    associationLogoPlacements: placements,
+    appearanceLogo: login.url,
+    appearanceLogoFormat: login.format,
+    appearanceLogoWidth: login.width,
+    appearanceLogoHeight: login.height,
+    appearanceMenuLogo: menu.url,
+    appearanceMenuLogoFormat: menu.format,
+    appearanceMenuLogoWidth: menu.width,
+    appearanceMenuLogoHeight: menu.height,
   };
 }
 
@@ -86,7 +119,11 @@ export function PublicConfigProvider({ api, children }) {
   }, [api, bootstrap, kunkBootstrap]);
 
   useEffect(() => {
-    const href = resolveBrandingLogoUrl(config.appearanceLogo, config.associationLogo);
+    const href = resolveBrandingLogoUrl(
+      config.associationLogoSquare,
+      config.appearanceLogo,
+      config.associationLogo,
+    );
     let link = document.querySelector("link[rel='icon']");
     if (!href) {
       if (link) link.setAttribute('href', '/favicon.svg');
@@ -109,7 +146,7 @@ export function PublicConfigProvider({ api, children }) {
             : 'image/png';
     link.setAttribute('type', type);
     link.setAttribute('href', href);
-  }, [config.appearanceLogo, config.associationLogo]);
+  }, [config.associationLogoSquare, config.appearanceLogo, config.associationLogo]);
 
   useEffect(() => {
     const name = String(config.associationName || '').trim();

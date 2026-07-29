@@ -39,18 +39,7 @@ export default function AssociatesFilters({
 
   return (
     <Box className="pageContainerOptions" sx={{ mb: 2 }}>
-      <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" useFlexGap>
-        <Button
-          variant="contained"
-          startIcon={<PersonAddIcon />}
-          onClick={onCreate}
-          sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#303B30' } }}
-        >
-          Criar Associado
-        </Button>
-        <IconButton onClick={onReload} sx={{ color: PURPLE }} title="Recarregar">
-          <CachedIcon />
-        </IconButton>
+      <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
         <Button
           startIcon={<FilterAltIcon />}
           onClick={(e) => setAnchor(e.currentTarget)}
@@ -81,9 +70,19 @@ export default function AssociatesFilters({
             </MenuItem>
           ))}
         </Menu>
-        <Typography variant="body2" sx={{ color: '#000' }}>
-          Mostrando os últimos {limit} cadastros
-        </Typography>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <IconButton onClick={onReload} sx={{ color: PURPLE }} title="Recarregar">
+            <CachedIcon />
+          </IconButton>
+          <Button
+            variant="contained"
+            startIcon={<PersonAddIcon />}
+            onClick={onCreate}
+            sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#303B30' } }}
+          >
+            Criar Associado
+          </Button>
+        </Stack>
       </Stack>
 
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 2 }}>
@@ -104,6 +103,10 @@ export default function AssociatesFilters({
           </Button>
         ))}
       </Stack>
+
+      <Typography variant="body2" sx={{ color: '#000', mt: 2, textAlign: 'center' }}>
+        Mostrando os últimos {limit} cadastros
+      </Typography>
     </Box>
   );
 }

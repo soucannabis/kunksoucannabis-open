@@ -78,12 +78,21 @@ function RequireAdmin({ api, children }) {
 
 function OperatorShell({ api }) {
   const { user, logout } = useOperatorAuth();
-  const { logo, logoFormat } = useDocSignBranding(api);
+  const {
+    menuLogo,
+    menuLogoFormat,
+    menuLogoWidth,
+  } = useDocSignBranding(api);
 
   return (
     <div className="shell">
       <div className="topbar">
-        <DocSignBrand logo={logo} logoFormat={logoFormat} variant="shell" />
+        <DocSignBrand
+          logo={menuLogo}
+          logoFormat={menuLogoFormat}
+          logoWidth={menuLogoWidth}
+          variant="shell"
+        />
         <div className="topbar-nav">
           <span className="muted">{user?.email}</span>
           <NavLink

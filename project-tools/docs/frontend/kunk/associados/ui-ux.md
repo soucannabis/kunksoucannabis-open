@@ -75,7 +75,7 @@ Itens equivalentes ao legado, com labels OSS:
 |---|---|
 | Avatar | Abre modal |
 | Nome | `fullname` ou nome+sobrenome; subtítulo se houver paciente vinculado no funil |
-| E-mail | `email_account` / `email` |
+| E-mail | `email_account` |
 | Telefone | `mobile_number` |
 | Status | Label mapeado |
 | Criado | `created_date` |

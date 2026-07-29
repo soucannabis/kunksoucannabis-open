@@ -13,7 +13,7 @@ Mesma tabela. Distinção por `status` / `responsible_code`.
 | `fullname` | varchar | Nome completo (busca) | `fullname` |
 | `associate_name` | varchar | Nome | `name_associate` |
 | `associate_last_name` | varchar | Sobrenome | `lastname_associate` |
-| `email` / `email_account` | varchar | Contato / login | `email` / `email_account` |
+| `email_account` | varchar | Login / contato | `email_account` |
 | `mobile_number` | varchar | Telefone | |
 | `associate_cpf` | varchar | CPF | `cpf_associate` |
 | `associate_rg` | varchar | RG | `rg_associate` |

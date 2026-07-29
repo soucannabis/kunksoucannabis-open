@@ -120,7 +120,7 @@ function associateDisplayName(u) {
     .filter(Boolean)
     .join(' ')
     .trim();
-  return full || u.email_account || u.email || u.user_code || '';
+  return full || u.email_account || u.user_code || '';
 }
 
 function institutionalReceiverName(u) {
@@ -134,7 +134,7 @@ function clientContactEmail(u) {
   if (u.__kind === 'institutional') {
     return u.company_email || u.representative_email || '';
   }
-  return u.email_account || u.email || '';
+  return u.email_account || '';
 }
 
 function clientContactPhone(u) {
@@ -659,7 +659,7 @@ export default function CartPage() {
               user_code: associate.user_code,
               name_associate: associateDisplayName(associate),
               receiver_name: associate.receiver_name || associateDisplayName(associate),
-              email: associate.email_account || associate.email,
+              email: associate.email_account,
             }),
         address: address?.street ? address : associate.delivery_address || address,
         items,

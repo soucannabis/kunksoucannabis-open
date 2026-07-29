@@ -20,7 +20,7 @@ const PATCHABLE = [
   'gender', 'nationality', 'associate_cpf', 'associate_rg', 'associate_rg_issuer',
   'marital_status', 'account_password', 'mobile_number', 'street', 'street_number',
   'complement', 'neighborhood', 'city', 'state', 'cep', 'reason_treatment_text',
-  'ciap_codes', 'email', 'prescription', 'preferred_products', 'date_prescription',
+  'ciap_codes', 'email_account', 'prescription', 'preferred_products', 'date_prescription',
   'fullname',
 ];
 
@@ -266,12 +266,12 @@ async function createMyPatient(associateRow, body) {
 
   const cols = [
     'status', 'responsible_type', 'responsible_code', 'user_code',
-    'email', 'email_account', 'invalid_fields', 'date_created', 'created_date',
+    'email_account', 'invalid_fields', 'date_created', 'created_date',
     ...Object.keys(updates),
   ];
   const vals = [
     'patient', 'patient', associateRow.user_code, userCode,
-    associateRow.email_account, null, JSON.stringify(invalidFields), new Date(), new Date(),
+    associateRow.email_account, JSON.stringify(invalidFields), new Date(), new Date(),
     ...Object.values(updates),
   ];
   const placeholders = cols.map((_, idx) => `$${idx + 1}`);

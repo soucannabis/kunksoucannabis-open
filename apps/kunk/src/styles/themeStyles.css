@@ -21,27 +21,20 @@ html {
   background-color: var(--kunk-app-bg) !important;
 }
 
-/* Fixed logo slot in sidebar — square or rectangular by format */
+/* Logo slot in sidebar — width from admin, natural height, centered */
 .kunk-logo-frame {
-  width: var(--kunk-logo-size);
-  height: var(--kunk-logo-size);
   margin: 0.5rem auto 0;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  overflow: hidden;
-}
-
-.kunk-logo-frame--rectangular {
-  width: 180px;
-  height: 60px;
+  overflow: visible;
 }
 
 .kunk-logo-frame img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  width: auto;
+  height: auto;
+  max-width: none;
   display: block;
 }
 

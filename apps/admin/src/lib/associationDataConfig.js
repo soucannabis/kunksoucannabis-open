@@ -4,8 +4,10 @@ import {
   ASSOCIATION_DATA_ENV_KEYS,
   LOGO_FORMAT_SQUARE,
   normalizeLogoFormat,
-  resolveActiveBrandingLogo,
+  normalizeLogoPlacements,
+  resolvePlacementLogo,
   resolveBrandingLogoUrl,
+  stringifyLogoPlacements,
 } from '@kunk/config';
 import { loadKunkAppearance, saveKunkAppearance } from './kunkAppearanceConfig.js';
 
@@ -20,11 +22,12 @@ const KEY_DESCRIPTIONS = {
   VITE_ASSOCIATION_CNPJ: 'CNPJ da associação',
   VITE_ASSOCIATION_CITY: 'Cidade da associação',
   VITE_ASSOCIATION_STATE: 'UF (estado) da associação',
-  VITE_ASSOCIATION_LOGO: 'Logo ativa da associação (resolvida pelo formato)',
-  VITE_ASSOCIATION_LOGO_MENU: 'Logo da associação no menu (espelha a ativa)',
-  VITE_ASSOCIATION_LOGO_SQUARE: 'Logo quadrada (1:1) da associação',
-  VITE_ASSOCIATION_LOGO_RECTANGULAR: 'Logo retangular (3:1) da associação',
-  VITE_ASSOCIATION_LOGO_FORMAT: 'Formato de logo ativo: square | rectangular',
+  VITE_ASSOCIATION_LOGO: 'Logo ativa (espelha kunk login)',
+  VITE_ASSOCIATION_LOGO_MENU: 'Logo do menu (espelha kunk menu)',
+  VITE_ASSOCIATION_LOGO_SQUARE: 'Símbolo (1:1) da associação',
+  VITE_ASSOCIATION_LOGO_RECTANGULAR: 'Logo completa (3:1) da associação',
+  VITE_ASSOCIATION_LOGO_FORMAT: 'Formato legado (fallback de migração)',
+  VITE_ASSOCIATION_LOGO_PLACEMENTS: 'Tipo e largura da logo por app (login/menu)',
 };
 
 const ASSOCIATION_LOGO_KEYS = [
@@ -33,6 +36,7 @@ const ASSOCIATION_LOGO_KEYS = [
   'VITE_ASSOCIATION_LOGO_SQUARE',
   'VITE_ASSOCIATION_LOGO_RECTANGULAR',
   'VITE_ASSOCIATION_LOGO_FORMAT',
+  'VITE_ASSOCIATION_LOGO_PLACEMENTS',
 ];
 
 /**
@@ -59,7 +63,7 @@ export async function loadAssociationData(api) {
 }
 
 /**
- * Load square/rectangular logos + active format (with legacy fallback).
+ * Load square/rectangular logos + placements (with legacy fallback).
  */
 export async function loadAssociationLogos(api) {
   const { values: appearance } = await loadKunkAppearance(api);
@@ -88,18 +92,26 @@ export async function loadAssociationLogos(api) {
   const logoFormat = normalizeLogoFormat(
     items.VITE_ASSOCIATION_LOGO_FORMAT?.value || LOGO_FORMAT_SQUARE,
   );
-  const active = resolveActiveBrandingLogo({
-    format: logoFormat,
+  const logoPlacements = normalizeLogoPlacements(
+    items.VITE_ASSOCIATION_LOGO_PLACEMENTS?.value,
+    logoFormat,
+  );
+  const kunkLogin = resolvePlacementLogo({
+    placements: logoPlacements,
+    app: 'kunk',
+    surface: 'login',
     square: logoSquare,
     rectangular: logoRectangular,
     legacy,
+    legacyFormat: logoFormat,
   });
 
   return {
     logoSquare,
     logoRectangular,
-    logoFormat: active.format,
-    logo: active.url,
+    logoFormat: kunkLogin.format,
+    logoPlacements,
+    logo: kunkLogin.url,
     itemsByKey: items,
   };
 }
@@ -174,13 +186,14 @@ async function upsertRegKey(api, regItems, envKey, value) {
 }
 
 /**
- * Persist square + rectangular logos, active format, and sync Kunk active URL.
+ * Persist square + rectangular logos, placements, and sync Kunk active URL.
  */
 export async function saveAssociationLogoAndTitle(api, {
   logo,
   logoSquare,
   logoRectangular,
   logoFormat,
+  logoPlacements,
   associationName,
 } = {}) {
   let regItems = {};
@@ -206,19 +219,37 @@ export async function saveAssociationLogoAndTitle(api, {
     logoRectangular !== undefined
       ? resolveBrandingLogoUrl(logoRectangular)
       : resolveBrandingLogoUrl(regItems.VITE_ASSOCIATION_LOGO_RECTANGULAR?.value);
-  const currentFormat = normalizeLogoFormat(
+  const legacyFormat = normalizeLogoFormat(
     logoFormat !== undefined ? logoFormat : regItems.VITE_ASSOCIATION_LOGO_FORMAT?.value,
   );
-  const active = resolveActiveBrandingLogo({
-    format: currentFormat,
+  const currentPlacements = normalizeLogoPlacements(
+    logoPlacements !== undefined
+      ? logoPlacements
+      : regItems.VITE_ASSOCIATION_LOGO_PLACEMENTS?.value,
+    legacyFormat,
+  );
+
+  const kunkLogin = resolvePlacementLogo({
+    placements: currentPlacements,
+    app: 'kunk',
+    surface: 'login',
     square: currentSquare,
     rectangular: currentRect,
+    legacyFormat,
+  });
+  const kunkMenu = resolvePlacementLogo({
+    placements: currentPlacements,
+    app: 'kunk',
+    surface: 'menu',
+    square: currentSquare,
+    rectangular: currentRect,
+    legacyFormat,
   });
 
   const { values, itemsByKey } = await loadKunkAppearance(api);
   const nextValues = {
     ...values,
-    logo: active.url,
+    logo: kunkLogin.url,
     title: associationName != null ? String(associationName).trim() || values.title : values.title,
   };
   await saveKunkAppearance(api, nextValues, values, itemsByKey);
@@ -226,9 +257,10 @@ export async function saveAssociationLogoAndTitle(api, {
   const writes = {
     VITE_ASSOCIATION_LOGO_SQUARE: currentSquare,
     VITE_ASSOCIATION_LOGO_RECTANGULAR: currentRect,
-    VITE_ASSOCIATION_LOGO_FORMAT: active.format,
-    VITE_ASSOCIATION_LOGO: active.url,
-    VITE_ASSOCIATION_LOGO_MENU: active.url,
+    VITE_ASSOCIATION_LOGO_FORMAT: kunkLogin.format,
+    VITE_ASSOCIATION_LOGO_PLACEMENTS: stringifyLogoPlacements(currentPlacements),
+    VITE_ASSOCIATION_LOGO: kunkLogin.url,
+    VITE_ASSOCIATION_LOGO_MENU: kunkMenu.url || kunkLogin.url,
   };
 
   for (const envKey of ASSOCIATION_LOGO_KEYS) {
@@ -236,9 +268,10 @@ export async function saveAssociationLogoAndTitle(api, {
   }
 
   return {
-    logo: active.url,
+    logo: kunkLogin.url,
     logoSquare: currentSquare,
     logoRectangular: currentRect,
-    logoFormat: active.format,
+    logoFormat: kunkLogin.format,
+    logoPlacements: currentPlacements,
   };
 }

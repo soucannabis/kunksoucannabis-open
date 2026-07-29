@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createApiClient } from '@kunk/api-client';
-import { getPublicConfig, getBrandLogoFrameStyle, LOGO_FORMAT_SQUARE } from '@kunk/config';
+import { getPublicConfig } from '@kunk/config';
 import { Loader } from '@kunk/ui';
 import { usePublicConfig } from '../config/PublicConfigProvider.jsx';
 
@@ -22,8 +22,8 @@ export function ContactPage() {
   const [iframeReady, setIframeReady] = useState(false);
 
   const logo = String(cfg.appearanceLogo || '').trim();
-  const format = cfg.appearanceLogoFormat || cfg.associationLogoFormat || LOGO_FORMAT_SQUARE;
-  const frame = getBrandLogoFrameStyle(format, 'login');
+  const format = cfg.appearanceLogoFormat || 'square';
+  const frameW = cfg.appearanceLogoWidth || 162;
   const fullName = String(cfg.associationFullName || cfg.associationName || '').trim();
 
   useEffect(() => {
@@ -86,9 +86,8 @@ export function ContactPage() {
               src={logo}
               alt={fullName || 'Logo da associação'}
               style={{
-                width: frame.width,
-                height: frame.height,
-                objectFit: 'contain',
+                width: frameW,
+                height: 'auto',
               }}
             />
           </div>

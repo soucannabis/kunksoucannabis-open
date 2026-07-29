@@ -167,7 +167,7 @@ function resolveVariables(
     associate_rg_issuer: responsible?.associate_rg_issuer || null,
     nationality: responsible?.nationality || null,
     marital_status: responsible?.marital_status || null,
-    email: responsible?.email_account || responsible?.email || null,
+    email: responsible?.email_account || null,
     street: responsible?.street || null,
     street_number: responsible?.street_number || null,
     city: responsible?.city || null,

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useOperatorAuth } from '@kunk/auth-session';
-import { LOGO_FORMAT_SQUARE } from '@kunk/config';
+import { resolvePlacementLogo } from '@kunk/config';
 import { AuthLoginCard, AuthLoginLayout, PasswordInput } from '@kunk/ui';
 import { useKunkConfig } from '../config/KunkConfigProvider.jsx';
 import { KUNK_APP_ROLES } from '../app/menuConfig.js';
@@ -40,8 +40,14 @@ export function LoginPage() {
   const [passwordError, setPasswordError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const logo = String(config.logo || '').trim();
-  const logoFormat = config.logoFormat || LOGO_FORMAT_SQUARE;
+  const placement = resolvePlacementLogo({
+    placements: config.logoPlacements,
+    app: 'kunk',
+    surface: 'login',
+    square: config.logoSquare,
+    rectangular: config.logoRectangular,
+    legacy: config.logo,
+  });
   const title = String(config.title || '').trim() || 'Kunk';
 
   if (!loading && user && hasRequiredRole) {
@@ -101,8 +107,9 @@ export function LoginPage() {
   return (
     <AuthLoginLayout
       backgroundImage={loginBg}
-      logo={logo}
-      logoFormat={logoFormat}
+      logo={placement.url}
+      logoFormat={placement.format}
+      logoWidth={placement.width}
       title={title}
       ready={configReady && !loading}
     >

@@ -77,13 +77,12 @@ a { color: var(--accent); }
 
 .brand-logo,
 .docsign-brand-logo {
-  object-fit: contain;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
   flex-shrink: 0;
   border-radius: 4px;
-}
-
-.docsign-brand--shell .docsign-brand-logo {
-  background: #fff;
 }
 
 .brand-text {
@@ -99,10 +98,11 @@ a { color: var(--accent); }
   min-width: 0;
 }
 
-.docsign-brand--shell .docsign-brand-logo-wrap {
+.docsign-brand-logo-wrap {
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .muted { color: var(--muted); }
