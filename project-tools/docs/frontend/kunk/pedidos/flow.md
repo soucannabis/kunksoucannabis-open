@@ -22,7 +22,7 @@ modal FormAssociate ──seleciona──► painel do associado
                                          │
                                          ├── Editar dados (AddressEditDialog / form endereço)
                                          ├── Editar prescrição (DatePrescriptionEdit)
-                                         └── Ver associado → /app/acolhimento/cadastramento?a={code}
+                                         └── Ver associado → /app/acolhimento/associados?a={code}
 ```
 
 ### Regras

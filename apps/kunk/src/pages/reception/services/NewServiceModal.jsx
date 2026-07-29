@@ -23,6 +23,10 @@ import {
   fetchCollaboratorProfessionals,
   fetchTags,
 } from '../../../lib/cache/fetchers.js';
+import {
+  contentAreaDialogProps,
+  contentAreaAutocompleteSlotProps,
+} from '../../../layout/contentAreaOverlay.js';
 
 function patientLabel(p) {
   if (!p) return '';
@@ -44,6 +48,7 @@ export default function NewServiceModal({
   const [associate, setAssociate] = useState(null);
   const [associateQ, setAssociateQ] = useState('');
   const [associateOpts, setAssociateOpts] = useState([]);
+  const [googleCalendarEnabled, setGoogleCalendarEnabled] = useState(false);
   const [patients, setPatients] = useState([]);
   const [beneficiary, setBeneficiary] = useState('responsible');
   const [professionals, setProfessionals] = useState([]);
@@ -63,14 +68,16 @@ export default function NewServiceModal({
     if (!open) return;
     (async () => {
       try {
-        const [pros, tagList, typesRes] = await Promise.all([
+        const [pros, tagList, typesRes, gcStatus] = await Promise.all([
           fetchCollaboratorProfessionals(api, cacheEnabled),
           fetchTags(api, cacheEnabled),
           api.getProfessionalTypes().catch(() => ({ data: [] })),
+          api.getGoogleCalendarStatus().catch(() => ({ data: {} })),
         ]);
         setProfessionals(pros);
         setTagOpts(tagList.map((t) => t.tag).filter(Boolean));
         setProfessionalTypes(Array.isArray(typesRes.data) ? typesRes.data : []);
+        setGoogleCalendarEnabled(Boolean(gcStatus.data?.enabled));
       } catch {
         /* ignore */
       }
@@ -162,9 +169,10 @@ export default function NewServiceModal({
       const key = String(proId);
       const cur = prev[key] || {};
       const next = { ...cur, ...patch };
-      if (patch.consultation_date !== undefined && patch.consultation_date) {
+      if (googleCalendarEnabled && patch.consultation_date !== undefined && patch.consultation_date) {
         next.create_calendar_event = true;
       }
+      if (!googleCalendarEnabled) next.create_calendar_event = false;
       return { ...prev, [key]: next };
     });
   }
@@ -198,7 +206,9 @@ export default function NewServiceModal({
             price: Number(r.price) || 0,
             donation: Number(r.donation) || 0,
             price_paid: Number(r.price_paid) || 0,
-            create_calendar_event: Boolean(r.create_calendar_event && r.consultation_date),
+            create_calendar_event: Boolean(
+              googleCalendarEnabled && r.create_calendar_event && r.consultation_date
+            ),
           };
         }),
       };
@@ -228,16 +238,7 @@ export default function NewServiceModal({
       maxWidth="md"
       fullWidth
       PaperProps={{ sx: { borderRadius: '20px' } }}
-      sx={{
-        '& .MuiBackdrop-root': {
-          left: 'var(--kunk-sidebar-offset, 220px)',
-          width: 'calc(100% - var(--kunk-sidebar-offset, 220px))',
-        },
-        '& .MuiDialog-container': {
-          marginLeft: 'var(--kunk-sidebar-offset, 220px)',
-          width: 'calc(100% - var(--kunk-sidebar-offset, 220px))',
-        },
-      }}
+      {...contentAreaDialogProps}
     >
       <DialogTitle>Novo Serviço</DialogTitle>
       <DialogContent sx={{ pt: 1 }}>
@@ -253,6 +254,7 @@ export default function NewServiceModal({
           onInputChange={(_, v, reason) => {
             if (reason === 'input') setAssociateQ(v);
           }}
+          slotProps={contentAreaAutocompleteSlotProps}
           renderOption={(props, option) => (
             <li {...props} key={option.user_code || option.id}>
               {associateDisplayName(option)}
@@ -291,6 +293,7 @@ export default function NewServiceModal({
           }
           value={linkService}
           onChange={(_, v) => setLinkService(v)}
+          slotProps={contentAreaAutocompleteSlotProps}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -308,6 +311,7 @@ export default function NewServiceModal({
           }
           value={selectedPros}
           onChange={(_, v) => setSelectedPros(v)}
+          slotProps={contentAreaAutocompleteSlotProps}
           renderInput={(params) => (
             <TextField {...params} label="Profissionais (colaboradores)" margin="dense" fullWidth />
           )}
@@ -367,15 +371,17 @@ export default function NewServiceModal({
                     value={r.consultation_date || ''}
                     onChange={(e) => updateRow(p.id, { consultation_date: e.target.value })}
                   />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={Boolean(r.create_calendar_event)}
-                        onChange={(e) => updateRow(p.id, { create_calendar_event: e.target.checked })}
-                      />
-                    }
-                    label="Criar evento no calendário"
-                  />
+                  {googleCalendarEnabled ? (
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={Boolean(r.create_calendar_event)}
+                          onChange={(e) => updateRow(p.id, { create_calendar_event: e.target.checked })}
+                        />
+                      }
+                      label="Criar evento no calendário"
+                    />
+                  ) : null}
                 </Box>
               </Box>
             </Box>
@@ -387,6 +393,7 @@ export default function NewServiceModal({
           options={tagOpts}
           value={tags}
           onChange={(_, v) => setTags(v)}
+          slotProps={contentAreaAutocompleteSlotProps}
           renderTags={(value, getTagProps) =>
             value.map((option, index) => (
               <Chip variant="outlined" label={option} {...getTagProps({ index })} key={option} />

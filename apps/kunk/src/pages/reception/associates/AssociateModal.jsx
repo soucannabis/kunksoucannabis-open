@@ -3,7 +3,9 @@ import {
   Avatar,
   Box,
   Button,
+  CircularProgress,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
@@ -26,28 +28,39 @@ import {
   PrescriberTab,
   TermStubMenu,
 } from './AssociateTabs.jsx';
-import { displayName, formatCreated, parseAnnotations, contentAreaDialogSx } from './associatesStatus.js';
+import { displayName, formatCreated, parseAnnotations, contentAreaDialogProps, contentAreaDialogSx, CONTENT_AREA_DIALOG_Z } from './associatesStatus.js';
 import { useCacheConfig } from '../../../lib/cache/CacheConfigProvider.jsx';
 import {
   fetchAssociateUser,
   invalidateAssociateCache,
 } from '../../../lib/cache/fetchers.js';
+import { useToast } from '../../../components/toast/ToastProvider.jsx';
 
 const GREEN = '#5a7a5b';
 
+function openFileDownload(url) {
+  if (!url) return;
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 export default function AssociateModal({ open, user: initialUser, api, onClose, onChanged }) {
   const { user: operator } = useOperatorAuth();
+  const toast = useToast();
   const [tab, setTab] = useState(0);
   const [user, setUser] = useState(initialUser);
   const [patients, setPatients] = useState([]);
   const [history, setHistory] = useState({ orders: [], services: [] });
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState('');
+  const [loading, setLoading] = useState(true);
   const [termAnchor, setTermAnchor] = useState(null);
   const [confirmMake, setConfirmMake] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [ciap2Enabled, setCiap2Enabled] = useState(true);
+  const [hasTerm, setHasTerm] = useState(false);
+  const [termStatus, setTermStatus] = useState('none'); // none | pending | completed
+  const [termContract, setTermContract] = useState(null);
+  const [termModal, setTermModal] = useState(null); // { phase: 'loading'|'done'|'error', url?, message? }
   const { enabled: cacheEnabled } = useCacheConfig();
 
   useEffect(() => {
@@ -69,10 +82,15 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
 
   const userKey = initialUser?.user_code || initialUser?.id || null;
 
-  const reload = useCallback(async () => {
+  const reload = useCallback(async ({ initial = false } = {}) => {
     if (!userKey) return;
-    setBusy(true);
-    setMsg('');
+    if (initial) setLoading(true);
+    else setBusy(true);
+    if (initial) {
+      setHasTerm(false);
+      setTermStatus('none');
+      setTermContract(null);
+    }
     try {
       let u = initialUser;
       if (initialUser?.user_code) {
@@ -81,6 +99,49 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
           initialUser;
       }
       setUser(u);
+      if (u?.user_code) {
+        try {
+          const cRes = await api.get(`/doc-sign/contracts/by-user/${u.user_code}`);
+          const rows = cRes.data || [];
+          const completedRow =
+            rows.find((r) => r.status === 'completed') ||
+            (u.adhesion_term ? rows.find((r) => r.id === u.adhesion_term) : null) ||
+            null;
+          let resolvedCompleted = completedRow;
+          if (!resolvedCompleted && u.adhesion_term) {
+            try {
+              const one = await api.get(`/doc-sign/contracts/${u.adhesion_term}`);
+              resolvedCompleted = one.data || null;
+            } catch {
+              /* ignore */
+            }
+          }
+          const pendingRow = rows.find((r) => r.status === 'pending') || null;
+          const completed = Boolean(u.adhesion_term) || Boolean(resolvedCompleted);
+          const pending = Boolean(pendingRow);
+          if (completed) {
+            setTermStatus('completed');
+            setTermContract(resolvedCompleted);
+          } else if (pending) {
+            setTermStatus('pending');
+            setTermContract(pendingRow);
+          } else {
+            setTermStatus('none');
+            setTermContract(null);
+          }
+          setHasTerm(completed || pending);
+        } catch {
+          const completed = Boolean(u.adhesion_term);
+          setTermStatus(completed ? 'completed' : 'none');
+          setHasTerm(completed);
+          setTermContract(null);
+        }
+      } else {
+        const completed = Boolean(u?.adhesion_term);
+        setTermStatus(completed ? 'completed' : 'none');
+        setHasTerm(completed);
+        setTermContract(null);
+      }
       if (u?.id) {
         const [pRes, hRes] = await Promise.all([
           api.getUserPatients(u.id),
@@ -90,34 +151,37 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
         setHistory(hRes.data || { orders: [], services: [] });
       }
     } catch (err) {
-      setMsg(err.message || 'Falha ao carregar');
+      toast.error(err.message || 'Falha ao carregar dados do associado');
     } finally {
-      setBusy(false);
+      if (initial) setLoading(false);
+      else setBusy(false);
     }
     // initialUser usado só como fallback; identidade controlada por userKey
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [api, cacheEnabled, userKey]);
+  }, [api, cacheEnabled, userKey, toast]);
 
   useEffect(() => {
     if (!open) return;
     setTab(0);
+    setLoading(true);
   }, [open, userKey]);
 
   useEffect(() => {
-    if (open) reload();
+    if (open) reload({ initial: true });
   }, [open, reload]);
 
-  async function saveUser(patch) {
+  async function saveUser(patch, { success = 'Dados salvos com sucesso' } = {}) {
     setBusy(true);
-    setMsg('');
     try {
       const res = await api.updateUser(user.id, patch);
       setUser(res.data);
       invalidateAssociateCache(user.user_code);
       onChanged?.();
-      setMsg('Salvo');
+      toast.success(success);
+      return res.data;
     } catch (err) {
-      setMsg(err.message || 'Falha ao salvar');
+      toast.error(err.message || 'Falha ao salvar');
+      return null;
     } finally {
       setBusy(false);
     }
@@ -131,8 +195,9 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
       invalidateAssociateCache(user.user_code);
       onChanged?.();
       setConfirmMake(false);
+      toast.success('Cadastro tornado associado');
     } catch (err) {
-      setMsg(err.message || 'Falha');
+      toast.error(err.message || 'Falha ao tornar associado');
     } finally {
       setBusy(false);
     }
@@ -145,10 +210,12 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
       await api.deleteUser(user.id);
       setConfirmDelete(false);
       onChanged?.();
+      toast.success('Associado excluído');
       onClose();
     } catch (err) {
-      setDeleteError(err.message || 'Não foi possível excluir');
-      setMsg(err.message || 'Não foi possível excluir');
+      const message = err.message || 'Não foi possível excluir';
+      setDeleteError(message);
+      toast.error(message);
     } finally {
       setBusy(false);
     }
@@ -156,6 +223,12 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
 
   const annotations = parseAnnotations(user?.annotations);
   const operatorName = [operator?.name, operator?.last_name].filter(Boolean).join(' ') || 'Operador';
+  const termSigned = termStatus === 'completed' || Boolean(user?.adhesion_term);
+  const termButtonLabel = termSigned
+    ? 'Termo do Associado (Assinado)'
+    : termStatus === 'pending'
+      ? 'Termo do Associado (gerado)'
+      : 'Termo do Associado';
 
   return (
     <>
@@ -164,9 +237,8 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
         onClose={onClose}
         maxWidth="lg"
         fullWidth
-        sx={contentAreaDialogSx}
+        {...contentAreaDialogProps}
         PaperProps={{ sx: { height: '88vh', maxWidth: 1020, borderRadius: '20px' } }}
-        disableEnforceFocus={confirmDelete || confirmMake}
       >
         <DialogTitle sx={{ pr: 6 }}>
           <Stack direction="row" spacing={2} alignItems="center">
@@ -180,25 +252,36 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
               </Typography>
             </Box>
             {String(user?.status) !== 'Associado' ? (
-              <Button variant="outlined" onClick={() => setConfirmMake(true)} sx={{ borderColor: GREEN, color: GREEN }}>
+              <Button
+                variant="outlined"
+                onClick={() => setConfirmMake(true)}
+                disabled={loading}
+                sx={{ borderColor: GREEN, color: GREEN }}
+              >
                 Tornar associado
               </Button>
             ) : null}
             <Button
               startIcon={<DescriptionIcon />}
               onClick={(e) => setTermAnchor(e.currentTarget)}
+              disabled={loading}
               sx={{ bgcolor: GREEN, color: '#fff', '&:hover': { bgcolor: '#303B30' } }}
             >
-              Termo
+              {termButtonLabel}
             </Button>
-            <Menu anchorEl={termAnchor} open={Boolean(termAnchor)} onClose={() => setTermAnchor(null)}>
+            <Menu
+              anchorEl={termAnchor}
+              open={Boolean(termAnchor)}
+              onClose={() => setTermAnchor(null)}
+              sx={{ zIndex: CONTENT_AREA_DIALOG_Z + 1 }}
+            >
               <TermStubMenu
-                canCreate={!user?.adhesion_term}
+                canCreate={!termSigned}
+                canDownload={termSigned}
                 onNewTerm={async () => {
                   setTermAnchor(null);
-                  if (!user?.user_code) return;
-                  setBusy(true);
-                  setMsg('');
+                  if (!user?.user_code || termSigned) return;
+                  setTermModal({ phase: 'loading' });
                   try {
                     const res = await api.post('/doc-sign/contracts', {
                       user_code: user.user_code,
@@ -209,41 +292,47 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
                     if (url && navigator.clipboard?.writeText) {
                       await navigator.clipboard.writeText(url);
                     }
-                    setMsg(url ? `Termo gerado. Link copiado: ${url}` : 'Termo gerado.');
+                    setHasTerm(true);
+                    setTermStatus('pending');
+                    setTermContract(res.data || null);
+                    setTermModal({
+                      phase: 'done',
+                      url: url || null,
+                    });
                     onChanged?.();
+                    toast.success('Termo gerado com sucesso');
                   } catch (err) {
-                    setMsg(err.message || 'Falha ao gerar termo');
-                  } finally {
-                    setBusy(false);
+                    setTermModal(null);
+                    toast.error(err.message || 'Falha ao gerar termo');
                   }
                 }}
-                onCopyLink={async () => {
+                onDownload={async () => {
                   setTermAnchor(null);
                   if (!user?.user_code) return;
                   setBusy(true);
-                  setMsg('');
                   try {
-                    let url = null;
-                    try {
-                      const created = await api.post('/doc-sign/contracts', {
-                        user_code: user.user_code,
-                        regenerate: false,
-                      });
-                      url = created.data?.signing_url;
-                    } catch (err) {
-                      if (err.code !== 'CONTRACT_ALREADY_COMPLETED') throw err;
+                    let contract = termContract;
+                    if (!contract?.signed_pdf_url && !contract?.audit_pdf_url) {
                       const list = await api.get(`/doc-sign/contracts/by-user/${user.user_code}`);
-                      const completed = (list.data || []).find((r) => r.status === 'completed');
-                      url = completed?.signed_pdf_url || completed?.audit_pdf_url || null;
+                      contract =
+                        (list.data || []).find((r) => r.status === 'completed') ||
+                        (list.data || []).find((r) => r.id === user.adhesion_term) ||
+                        null;
+                      if (contract) setTermContract(contract);
                     }
-                    if (!url) {
-                      setMsg('Nenhum termo encontrado para copiar o link.');
+                    const signedUrl = contract?.signed_pdf_url || contract?.filled_pdf_url;
+                    const auditUrl = contract?.audit_pdf_url;
+                    if (!signedUrl && !auditUrl) {
+                      toast.error('PDFs do termo ainda não disponíveis');
                       return;
                     }
-                    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(url);
-                    setMsg(`Link copiado: ${url}`);
+                    openFileDownload(signedUrl);
+                    if (auditUrl) {
+                      window.setTimeout(() => openFileDownload(auditUrl), 250);
+                    }
+                    toast.success('Download do termo iniciado');
                   } catch (err) {
-                    setMsg(err.message || 'Falha ao copiar link');
+                    toast.error(err.message || 'Falha ao baixar termo');
                   } finally {
                     setBusy(false);
                   }
@@ -256,22 +345,38 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
           </IconButton>
         </DialogTitle>
         <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
-          {msg ? (
-            <Typography
-              variant="body2"
+          {loading ? (
+            <Box
               sx={{
-                mb: 1,
-                flexShrink: 0,
-                color: /falha|erro|excluir|inválid|possível|vinculad/i.test(msg)
-                  ? 'error.main'
-                  : 'text.secondary',
-                wordBreak: 'break-word',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 2,
+                minHeight: 280,
               }}
             >
-              {msg}
-            </Typography>
-          ) : null}
-          <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" sx={{ mb: 1, flexShrink: 0 }}>
+              <CircularProgress size={40} sx={{ color: GREEN }} />
+              <Typography variant="body2" color="text.secondary">
+                Carregando informações…
+              </Typography>
+            </Box>
+          ) : (
+            <>
+          <Tabs
+            value={tab}
+            onChange={(_, v) => setTab(v)}
+            centered
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            sx={{
+              mb: 1,
+              flexShrink: 0,
+              '& .MuiTabs-flexContainer': { justifyContent: 'center' },
+            }}
+          >
             <Tab label="Dados Pessoais" />
             <Tab label="Pacientes" />
             <Tab label="Prescritor" />
@@ -283,8 +388,8 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
             sx={{
               flex: 1,
               minHeight: 0,
-              overflow: tab === 0 ? 'hidden' : 'auto',
-              display: tab === 0 ? 'flex' : 'block',
+              overflow: tab === 0 || tab === 4 ? 'hidden' : 'auto',
+              display: tab === 0 || tab === 4 ? 'flex' : 'block',
               flexDirection: 'column',
             }}
           >
@@ -293,13 +398,14 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
                 user={user}
                 busy={busy}
                 ciap2Enabled={ciap2Enabled}
-                onSave={saveUser}
+                onSave={(patch) => saveUser(patch, { success: 'Dados pessoais salvos' })}
                 onDelete={() => setConfirmDelete(true)}
               />
             ) : null}
             {tab === 1 ? (
               <PatientsTab
                 patients={patients}
+                responsible={user}
                 busy={busy}
                 ciap2Enabled={ciap2Enabled}
                 onCreate={async (body) => {
@@ -308,8 +414,9 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
                     await api.createUserPatient(user.id, body);
                     await reload();
                     onChanged?.();
+                    toast.success('Paciente criado');
                   } catch (err) {
-                    setMsg(err.message || 'Falha ao criar paciente');
+                    toast.error(err.message || 'Falha ao criar paciente');
                     throw err;
                   } finally {
                     setBusy(false);
@@ -317,14 +424,13 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
                 }}
                 onSave={async (patientId, body) => {
                   setBusy(true);
-                  setMsg('');
                   try {
                     await api.updateUserPatient(user.id, patientId, body);
                     await reload();
                     onChanged?.();
-                    setMsg('Paciente salvo');
+                    toast.success('Paciente atualizado');
                   } catch (err) {
-                    setMsg(err.message || 'Falha ao salvar paciente');
+                    toast.error(err.message || 'Falha ao salvar paciente');
                     throw err;
                   } finally {
                     setBusy(false);
@@ -336,8 +442,9 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
                     await api.deleteUserPatient(user.id, patientId);
                     await reload();
                     onChanged?.();
+                    toast.success('Paciente excluído');
                   } catch (err) {
-                    setMsg(err.message);
+                    toast.error(err.message || 'Falha ao excluir paciente');
                   } finally {
                     setBusy(false);
                   }
@@ -353,16 +460,31 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
                 busy={busy}
                 operatorName={operatorName}
                 onAdd={async (item) => {
-                  await saveUser({ annotations: [...annotations, item] });
+                  await saveUser(
+                    { annotations: [...annotations, item] },
+                    { success: 'Anotação adicionada' }
+                  );
                 }}
                 onRemove={async (id) => {
-                  await saveUser({ annotations: annotations.filter((a) => a.id !== id) });
+                  await saveUser(
+                    { annotations: annotations.filter((a) => a.id !== id) },
+                    { success: 'Anotação removida' }
+                  );
                 }}
               />
             ) : null}
-            {tab === 4 && user ? <FileUpload api={api} user={user} /> : null}
+            {tab === 4 && user ? (
+              <FileUpload
+                api={api}
+                user={user}
+                onUploaded={() => toast.success('Documento enviado')}
+                onDeleted={() => toast.success('Documento removido')}
+              />
+            ) : null}
             {tab === 5 ? <HistoryTab history={history} /> : null}
           </Box>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -385,6 +507,59 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
         busy={busy}
         error={deleteError}
       />
+      <Dialog
+        open={Boolean(termModal)}
+        onClose={termModal?.phase === 'loading' ? undefined : () => setTermModal(null)}
+        maxWidth="sm"
+        fullWidth
+        {...contentAreaDialogProps}
+        sx={{
+          ...contentAreaDialogSx,
+          zIndex: CONTENT_AREA_DIALOG_Z + 10,
+        }}
+      >
+        <DialogTitle>
+          {termModal?.phase === 'loading'
+            ? 'Gerando termo'
+            : termModal?.title || 'Termo gerado. Link copiado:'}
+        </DialogTitle>
+        <DialogContent>
+          {termModal?.phase === 'loading' ? (
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ py: 1 }}>
+              <CircularProgress size={28} sx={{ color: GREEN }} />
+              <Typography variant="body1">Gerando termo para assinatura</Typography>
+            </Stack>
+          ) : (
+            <>
+              {termModal?.url ? (
+                <Typography
+                  variant="body2"
+                  component="a"
+                  href={termModal.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{ wordBreak: 'break-all', color: GREEN, display: 'block' }}
+                >
+                  {termModal.url}
+                </Typography>
+              ) : (
+                <Typography variant="body1">Termo gerado.</Typography>
+              )}
+            </>
+          )}
+        </DialogContent>
+        {termModal?.phase !== 'loading' ? (
+          <DialogActions>
+            <Button
+              variant="contained"
+              onClick={() => setTermModal(null)}
+              sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#303B30' } }}
+            >
+              OK
+            </Button>
+          </DialogActions>
+        ) : null}
+      </Dialog>
     </>
   );
 }

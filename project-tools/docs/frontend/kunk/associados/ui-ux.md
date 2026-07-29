@@ -8,7 +8,7 @@
 
 | Rota | Uso |
 |---|---|
-| `/app/acolhimento/cadastramento` | Página principal (últimos N) |
+| `/app/acolhimento/associados` | Página principal (últimos N) |
 | `/app/associados` | Opcional: mesma página com limite alto / “todos” |
 
 Permissões: `kunk.role_pages` (default allow-all staff).
@@ -62,10 +62,13 @@ Contagens clicáveis que filtram a tabela (como legado). Labels alinhados às fa
 Itens equivalentes ao legado, com labels OSS:
 
 - Associado
-- Não preencheu
-- Apenas preencheu
-- Termo / fase 4
-- Erro no formulário
+- Não preencheu os dados
+- Apenas preencheu os dados
+- Documentos enviados
+- Termo criado
+- Problema no cadastro
+
+Coluna Status: Chip MUI com ícone + cor + tooltip (hover). Em “Problema no cadastro”, o tooltip lista os campos em `invalid_fields`.
 
 ---
 
@@ -77,7 +80,7 @@ Itens equivalentes ao legado, com labels OSS:
 | Nome | `fullname` ou nome+sobrenome; subtítulo se houver paciente vinculado no funil |
 | E-mail | `email_account` |
 | Telefone | `mobile_number` |
-| Status | Label mapeado |
+| Status | Chip com ícone, cor e tooltip |
 | Criado | `created_date` |
 | Ações | Enviar para triagem (se Associado) |
 

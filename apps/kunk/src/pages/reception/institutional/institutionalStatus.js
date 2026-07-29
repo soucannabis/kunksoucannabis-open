@@ -1,6 +1,12 @@
 /** Helpers da página de clientes institucionais */
 
-export { contentAreaDialogSx } from '../associates/associatesStatus.js';
+export {
+  contentAreaDialogSx,
+  contentAreaDialogProps,
+  contentAreaSelectProps,
+  contentAreaAutocompleteSlotProps,
+  CONTENT_AREA_OVERLAY_Z,
+} from '../../../layout/contentAreaOverlay.js';
 
 export const FILTER_ALL = '';
 export const FILTER_ACTIVE = 'active';

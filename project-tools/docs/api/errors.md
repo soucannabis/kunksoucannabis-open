@@ -26,7 +26,7 @@ Toda resposta de erro segue:
   "message": "Payload inválido",
   "details": {
     "email": ["obrigatório"],
-    "limit": ["deve ser <= 200"]
+    "limit": ["deve ser <= 250"]
   }
 }
 ```

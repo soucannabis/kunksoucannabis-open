@@ -76,6 +76,9 @@ async function main() {
     if (ensured.created?.length) {
       console.log(`Doc-sign: modelos padrão criados (${ensured.created.join(', ')})`);
     }
+    if (ensured.published?.length) {
+      console.log(`Doc-sign: modelos publicados (${ensured.published.join(', ')})`);
+    }
   } catch (err) {
     console.warn('Doc-sign: não foi possível garantir modelos padrão:', err.message);
   }

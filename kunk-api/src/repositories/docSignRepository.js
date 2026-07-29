@@ -1,14 +1,16 @@
 'use strict';
 
+const { v4: uuidv4 } = require('uuid');
 const { query } = require('../db/pool');
 
 async function createTemplate({ kind, title, displayName, requiresPatient, draftContentJson }) {
   const result = await query(
     `INSERT INTO term_templates (
-       kind, title, display_name, requires_patient, draft_content_json
-     ) VALUES ($1, $2, $3, $4, $5::jsonb)
+       id, kind, title, display_name, requires_patient, draft_content_json
+     ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)
      RETURNING *`,
     [
+      uuidv4(),
       kind,
       title,
       displayName,
@@ -105,8 +107,8 @@ async function resetTemplatesToDefaults({ selfContent, withPatientContent, selfT
   );
 
   await query(
-    `INSERT INTO term_templates (kind, title, display_name, requires_patient, draft_content_json)
-     VALUES ('self', $1, 'Associado', false, $2::jsonb)
+    `INSERT INTO term_templates (id, kind, title, display_name, requires_patient, draft_content_json)
+     VALUES ($1, 'self', $2, 'Associado', false, $3::jsonb)
      ON CONFLICT (kind) DO UPDATE SET
        title = EXCLUDED.title,
        display_name = EXCLUDED.display_name,
@@ -115,11 +117,11 @@ async function resetTemplatesToDefaults({ selfContent, withPatientContent, selfT
        logo_file_id = NULL,
        current_version_id = NULL,
        updated_at = NOW()`,
-    [selfTitle, JSON.stringify(selfContent)]
+    [uuidv4(), selfTitle, JSON.stringify(selfContent)]
   );
   await query(
-    `INSERT INTO term_templates (kind, title, display_name, requires_patient, draft_content_json)
-     VALUES ('with_patient', $1, 'Associado com paciente', true, $2::jsonb)
+    `INSERT INTO term_templates (id, kind, title, display_name, requires_patient, draft_content_json)
+     VALUES ($1, 'with_patient', $2, 'Associado com paciente', true, $3::jsonb)
      ON CONFLICT (kind) DO UPDATE SET
        title = EXCLUDED.title,
        display_name = EXCLUDED.display_name,
@@ -128,7 +130,7 @@ async function resetTemplatesToDefaults({ selfContent, withPatientContent, selfT
        logo_file_id = NULL,
        current_version_id = NULL,
        updated_at = NOW()`,
-    [withPatientTitle, JSON.stringify(withPatientContent)]
+    [uuidv4(), withPatientTitle, JSON.stringify(withPatientContent)]
   );
 }
 

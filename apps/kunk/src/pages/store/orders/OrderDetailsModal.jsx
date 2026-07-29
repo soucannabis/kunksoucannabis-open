@@ -23,6 +23,10 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SaveIcon from '@mui/icons-material/Save';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useErrorModal } from '../../../components/errors/ErrorModalProvider.jsx';
+import {
+  contentAreaDialogProps,
+  contentAreaSelectProps,
+} from '../../../layout/contentAreaOverlay.js';
 import FreightRecalcAssistant from './FreightRecalcAssistant.jsx';
 import { shouldOfferFreightRecalc } from '../../../lib/freightRecalc.js';
 import { TrackingPanel, displayTrackingCode } from './TrackingPanel.jsx';
@@ -277,7 +281,7 @@ export default function OrderDetailsModal({
 
   return (
     <>
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth scroll="paper" data-testid="order-details-modal">
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth scroll="paper" data-testid="order-details-modal" {...contentAreaDialogProps}>
       <DialogTitle sx={{ fontWeight: 700 }}>
         Detalhes do pedido {order ? `#${order.id}` : ''}
       </DialogTitle>
@@ -378,6 +382,7 @@ export default function OrderDetailsModal({
                 fullWidth
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
+                SelectProps={contentAreaSelectProps}
               >
                 {statuses.map((s) => (
                   <MenuItem key={s} value={s}>
@@ -493,6 +498,7 @@ export default function OrderDetailsModal({
                           size="small"
                           value={address.state || ''}
                           onChange={(e) => setAddress((a) => ({ ...a, state: e.target.value }))}
+                          SelectProps={contentAreaSelectProps}
                           sx={{ width: 100 }}
                         >
                           {UF_LIST.map((uf) => (

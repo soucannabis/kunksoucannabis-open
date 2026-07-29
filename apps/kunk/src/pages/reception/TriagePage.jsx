@@ -66,6 +66,7 @@ import { createApiClient } from '@kunk/api-client';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
 import { useCacheConfig } from '../../lib/cache/CacheConfigProvider.jsx';
 import { fetchAttendants } from '../../lib/cache/fetchers.js';
+import { contentAreaModalSx } from '../../layout/contentAreaOverlay.js';
 import {
   getEntryStatusValue,
   getKunkPublicConfig,
@@ -1261,7 +1262,7 @@ export default function TriagePage() {
         )}
       </Menu>
 
-      <Modal open={Boolean(linkRow)} onClose={() => setLinkRow(null)}>
+      <Modal open={Boolean(linkRow)} onClose={() => setLinkRow(null)} sx={contentAreaModalSx}>
         <Box
           sx={{
             position: 'absolute',
@@ -1323,7 +1324,7 @@ export default function TriagePage() {
         </Box>
       </Modal>
 
-      <Modal open={Boolean(docsRow)} onClose={() => setDocsRow(null)}>
+      <Modal open={Boolean(docsRow)} onClose={() => setDocsRow(null)} sx={contentAreaModalSx}>
         <Box
           sx={{
             position: 'absolute',
@@ -1375,6 +1376,7 @@ export default function TriagePage() {
       <Modal
         open={chatModal.open}
         onClose={() => !chatBusy && setChatModal({ open: false, row: null, value: '' })}
+        sx={contentAreaModalSx}
       >
         <Box
           sx={{

@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 
 import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
+import { contentAreaDialogProps } from '../../../layout/contentAreaOverlay.js';
 
 const GREEN = '#5a7a5b';
 const PURPLE = '#7A5B7A';
@@ -123,7 +124,7 @@ export default function OrdersBulkActions({
         </MenuItem>
       </Menu>
 
-      <Dialog open={statusOpen} onClose={() => setStatusOpen(false)}>
+      <Dialog open={statusOpen} onClose={() => setStatusOpen(false)} {...contentAreaDialogProps}>
         <DialogTitle>Alterar status</DialogTitle>
         <DialogContent>
           <Stack spacing={1} sx={{ mt: 1, minWidth: 280 }}>
@@ -146,7 +147,7 @@ export default function OrdersBulkActions({
         </DialogActions>
       </Dialog>
 
-      <Dialog open={tagsOpen} onClose={() => setTagsOpen(false)}>
+      <Dialog open={tagsOpen} onClose={() => setTagsOpen(false)} {...contentAreaDialogProps}>
         <DialogTitle>{tagMode === 'add' ? 'Adicionar tags' : 'Remover tags'}</DialogTitle>
         <DialogContent>
           <TextField
@@ -183,7 +184,7 @@ export default function OrdersBulkActions({
 
 export function OrdersBulkResultDialog({ open, onClose, title, results }) {
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth {...contentAreaDialogProps}>
       <DialogTitle>{title || 'Resultado'}</DialogTitle>
       <DialogContent>
         <Box component="ul" sx={{ pl: 2 }}>

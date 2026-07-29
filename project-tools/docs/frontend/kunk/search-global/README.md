@@ -40,7 +40,7 @@ apps/kunk (Theme / shell)
          ├── users | orders | services | reception
          ▼
     Deep links
-         ├── /app/acolhimento/cadastramento?a=
+         ├── /app/acolhimento/associados?a=
          ├── /app/loja/pedidos?p=  (ou equivalente OSS)
          ├── /app/acolhimento/servicos?s=&h=
          └── /app/acolhimento/triagem?t=  (ou fila com code)

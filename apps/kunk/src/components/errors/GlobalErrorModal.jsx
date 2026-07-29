@@ -8,6 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { GLOBAL_SEARCH_Z } from '../../layout/contentAreaOverlay.js';
 
 /**
  * Modal de erro do sistema (controlado pelo ErrorModalProvider).
@@ -22,6 +23,7 @@ export default function GlobalErrorModal({ open, title = 'Erro', message = '', o
       data-testid="global-error-modal"
       aria-labelledby="global-error-title"
       aria-describedby="global-error-message"
+      sx={{ zIndex: GLOBAL_SEARCH_Z + 100 }}
     >
       <DialogTitle
         id="global-error-title"

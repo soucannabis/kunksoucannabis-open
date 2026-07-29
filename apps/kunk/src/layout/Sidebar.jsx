@@ -23,6 +23,7 @@ import { allowedPagesForRoles, filterMenuSections } from '../lib/rolePages.js';
 import { useKunkConfig } from '../config/KunkConfigProvider.jsx';
 import { CacheClearButton } from '../components/CacheClearButton.jsx';
 import { closeSidebar } from './utils.js';
+import { SIDEBAR_Z } from './contentAreaOverlay.js';
 import { resolvePlacementLogo } from '@kunk/config';
 
 const SECTION_ICONS = {
@@ -104,7 +105,7 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
       sx={{
         position: 'fixed',
         transition: 'width 0.3s',
-        zIndex: 10000,
+        zIndex: SIDEBAR_Z,
         height: '100dvh',
         width: collapsed ? '60px' : 'var(--Sidebar-width)',
         top: 0,
@@ -143,6 +144,10 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
             [theme.breakpoints.up('lg')]: {
               '--Sidebar-width': '200px',
             },
+          },
+          /* Section titles in sidebar — beat themeStyles inherit !important */
+          '.Sidebar .SidebarSection-label': {
+            fontWeight: '700 !important',
           },
         })}
       />
@@ -210,12 +215,15 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
           [`& .${listItemButtonClasses.root}`]: {
             gap: 1.5,
             color: menuText,
+            fontWeight: 400,
             '&:hover': {
               color: menuHoverText,
-              fontWeight: 700,
               bgcolor: menuHoverBg,
-              '& .MuiTypography-root': { color: menuHoverText, fontWeight: 700 },
+              '& .MuiTypography-root': { color: menuHoverText },
               '& .MuiSvgIcon-root': { color: menuHoverText },
+            },
+            '&.SidebarSection, &.SidebarSection .SidebarSection-label': {
+              fontWeight: 700,
             },
           },
         }}
@@ -233,7 +241,7 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
             const items = section.items.filter((item) => !item.adminOnly || admin);
             return (
               <React.Fragment key={section.id}>
-                <Divider sx={{ backgroundColor: menuText }} />
+                <Divider sx={{ backgroundColor: menuText, '--Divider-thickness': '0.5px', opacity: 0.35 }} />
                 <ListItem
                   className="ListItem"
                   nested
@@ -245,14 +253,23 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
                     open={openMenu === section.id}
                     renderToggle={({ open }) => (
                       <ListItemButton
-                        className="ListItemButton"
+                        className="ListItemButton SidebarSection"
                         onClick={() => handleToggleMenu(section.id)}
                       >
                         <Icon sx={{ color: menuText }} />
                         <ListItemContent>
-                          <Typography className="ListItemButton" level="title-sm">
+                          <Box
+                            component="span"
+                            className="SidebarSection-label"
+                            sx={{
+                              display: 'block',
+                              fontSize: 'var(--joy-fontSize-sm, 0.875rem)',
+                              lineHeight: 'var(--joy-lineHeight-md, 1.5)',
+                              fontWeight: 700,
+                            }}
+                          >
                             {section.label}
-                          </Typography>
+                          </Box>
                         </ListItemContent>
                         <KeyboardArrowDownIcon
                           sx={{ transform: open ? 'rotate(180deg)' : 'none', color: menuText }}

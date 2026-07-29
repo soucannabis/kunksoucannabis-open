@@ -23,6 +23,7 @@ import {
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
+import { contentAreaDialogProps, contentAreaSelectProps } from '../../layout/contentAreaOverlay.js';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
 import { invalidateProductsCache } from '../../lib/cache/fetchers.js';
 import ProductCsvImportDialog from './products/ProductCsvImportDialog.jsx';
@@ -396,7 +397,7 @@ export default function ProductsPage() {
         </TableContainer>
       </Box>
 
-      <Dialog open={Boolean(dialog)} onClose={() => !busy && setDialog(null)} fullWidth maxWidth="sm">
+      <Dialog open={Boolean(dialog)} onClose={() => !busy && setDialog(null)} fullWidth maxWidth="sm" {...contentAreaDialogProps}>
         <DialogTitle>{dialog?.mode === 'edit' ? 'Editar produto' : 'Novo produto'}</DialogTitle>
         <DialogContent
           sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, pt: 1 }}
@@ -429,6 +430,7 @@ export default function ProductsPage() {
             onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
             fullWidth
             margin="dense"
+            SelectProps={contentAreaSelectProps}
           >
             {STATUS_OPTIONS.map((opt) => (
               <MenuItem key={opt.value} value={opt.value}>
@@ -457,6 +459,7 @@ export default function ProductsPage() {
         onClose={() => !busy && setStockDialog(null)}
         fullWidth
         maxWidth="xs"
+        {...contentAreaDialogProps}
       >
         <DialogTitle>Ajustar estoque — {stockDialog?.sku}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>

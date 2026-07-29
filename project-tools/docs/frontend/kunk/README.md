@@ -24,7 +24,7 @@ Referência legada: [`kunksoucannabis/`](../../../../kunksoucannabis/) + [`kunks
 
 | Página | Rota | Doc |
 |---|---|---|
-| Cadastramento / Associados | `/app/acolhimento/cadastramento` | [pages/cadastramento.md](./pages/cadastramento.md) · **[spec implementação](./associados/README.md)** |
+| Cadastramento / Associados | `/app/acolhimento/associados` | [pages/cadastramento.md](./pages/cadastramento.md) · **[spec implementação](./associados/README.md)** |
 | Triagem | `/app/acolhimento/triagem` | [pages/triagem.md](./pages/triagem.md) · **[spec implementação](./triagem/README.md)** |
 | Pedidos | `/app/loja/pedidos` | [pages/pedidos.md](./pages/pedidos.md) · **[spec carrinho/frete](./pedidos/README.md)** · **[Pagar.me + Pedidos SC](./pagamentos-soucannabis/README.md)** |
 | Serviços | `/app/acolhimento/servicos` | [pages/servicos.md](./pages/servicos.md) · **[spec implementação](./servicos/README.md)** |
@@ -39,7 +39,7 @@ Referência legada: [`kunksoucannabis/`](../../../../kunksoucannabis/) + [`kunks
 
 | Página | Rota | Doc |
 |---|---|---|
-| Cadastramento (associados) | `/app/acolhimento/cadastramento` | [pages/cadastramento.md](./pages/cadastramento.md) · [associados/](./associados/README.md) |
+| Cadastramento (associados) | `/app/acolhimento/associados` | [pages/cadastramento.md](./pages/cadastramento.md) · [associados/](./associados/README.md) |
 | Triagem / acolhimento | `/app/acolhimento/triagem` | [pages/triagem.md](./pages/triagem.md) · [triagem/](./triagem/README.md) |
 | Pedidos | `/app/loja/pedidos` | [pages/pedidos.md](./pages/pedidos.md) · [pedidos/](./pedidos/README.md) · [pagamentos-soucannabis/](./pagamentos-soucannabis/README.md) |
 | Serviços | `/app/acolhimento/servicos` | [pages/servicos.md](./pages/servicos.md) · [servicos/](./servicos/README.md) |

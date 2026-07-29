@@ -25,6 +25,7 @@ import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { useErrorModal } from '../components/errors/ErrorModalProvider.jsx';
 import PhoneField from '../components/PhoneField.jsx';
+import { contentAreaDialogProps, contentAreaSelectProps } from '../layout/contentAreaOverlay.js';
 import { typeLabel, resolvePriceFromType, normalizeProfessionalTypeId } from './reception/services/servicesUtils.js';
 
 const muiTheme = createTheme();
@@ -59,6 +60,7 @@ export default function ProfessionalsPage() {
   const [form, setForm] = useState(EMPTY);
   const [calendars, setCalendars] = useState([]);
   const [primaryId, setPrimaryId] = useState(null);
+  const [googleCalendarEnabled, setGoogleCalendarEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
   const [professionalTypes, setProfessionalTypes] = useState([]);
   const [inviteInfo, setInviteInfo] = useState(null);
@@ -94,9 +96,11 @@ export default function ProfessionalsPage() {
         ]);
         setCalendars(cals.data || []);
         setPrimaryId(status.data?.primary_calendar_id || null);
+        setGoogleCalendarEnabled(Boolean(status.data?.enabled));
         setProfessionalTypes(Array.isArray(typesRes.data) ? typesRes.data : []);
       } catch {
         /* module off */
+        setGoogleCalendarEnabled(false);
       }
     })();
   }, [api]);
@@ -149,7 +153,7 @@ export default function ProfessionalsPage() {
         consultation_price:
           form.consultation_price === '' ? 0 : Number(form.consultation_price) || 0,
         active: form.active ? 1 : 0,
-        calendar_id: form.calendar_id || null,
+        calendar_id: googleCalendarEnabled ? form.calendar_id || null : null,
       };
       if (dialog.mode === 'new') await api.createProfessional(body);
       else await api.updateProfessional(dialog.id, body);
@@ -228,8 +232,8 @@ export default function ProfessionalsPage() {
           <Table size="small">
             <TableHead>
               <TableRow sx={{ bgcolor: GREEN }}>
-                {['Nome', 'Tipo', 'Papéis', 'Valor', 'Agenda', 'Ativo', ''].map((h) => (
-                  <TableCell key={h} sx={{ color: '#fff', fontWeight: 600 }}>
+                {['Nome', 'Tipo', 'Papéis', 'Valor', ...(googleCalendarEnabled ? ['Agenda'] : []), 'Ativo', ''].map((h) => (
+                  <TableCell key={h || 'actions'} sx={{ color: '#fff', fontWeight: 600 }}>
                     {h}
                   </TableCell>
                 ))}
@@ -256,7 +260,9 @@ export default function ProfessionalsPage() {
                       {presc && <Chip size="small" label="Prescritor" />}
                     </TableCell>
                     <TableCell>{row.consultation_price ?? '—'}</TableCell>
-                    <TableCell>{row.calendar?.summary || row.calendar_id || '—'}</TableCell>
+                    {googleCalendarEnabled ? (
+                      <TableCell>{row.calendar?.summary || row.calendar_id || '—'}</TableCell>
+                    ) : null}
                     <TableCell>{row.active === 0 ? 'Não' : 'Sim'}</TableCell>
                     <TableCell>
                       <Button size="small" onClick={() => openEdit(row)}>
@@ -292,7 +298,7 @@ export default function ProfessionalsPage() {
         </TableContainer>
       </Box>
 
-      <Dialog open={Boolean(dialog)} onClose={() => setDialog(null)} maxWidth="sm" fullWidth>
+      <Dialog open={Boolean(dialog)} onClose={() => setDialog(null)} maxWidth="sm" fullWidth {...contentAreaDialogProps}>
         <DialogTitle>{dialog?.mode === 'new' ? 'Novo profissional' : 'Editar profissional'}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'grid', gap: 1.5, mt: 1 }}>
@@ -323,6 +329,7 @@ export default function ProfessionalsPage() {
               label="Tipo"
               value={form.type}
               disabled={!typeOptions.length}
+              SelectProps={contentAreaSelectProps}
               helperText={
                 typeOptions.length
                   ? 'Catálogo do Admin → Tipos de serviços'
@@ -358,24 +365,27 @@ export default function ProfessionalsPage() {
                   : 'Sem preço padrão no tipo — usa este valor no create do serviço'
               }
             />
-            <TextField
-              select
-              label="Agenda secundária (Google)"
-              value={form.calendar_id}
-              onChange={(e) => setForm((f) => ({ ...f, calendar_id: e.target.value }))}
-              helperText={
-                secondaryCalendars.length
-                  ? 'Não use o calendário principal da associação'
-                  : 'Configure Google Calendar em Serviços externos'
-              }
-            >
-              <MenuItem value="">—</MenuItem>
-              {secondaryCalendars.map((c) => (
-                <MenuItem key={c.id} value={c.id}>
-                  {c.summary}
-                </MenuItem>
-              ))}
-            </TextField>
+            {googleCalendarEnabled ? (
+              <TextField
+                select
+                label="Agenda secundária (Google)"
+                value={form.calendar_id}
+                onChange={(e) => setForm((f) => ({ ...f, calendar_id: e.target.value }))}
+                SelectProps={contentAreaSelectProps}
+                helperText={
+                  secondaryCalendars.length
+                    ? 'Não use o calendário principal da associação'
+                    : 'Configure Google Calendar em Serviços externos'
+                }
+              >
+                <MenuItem value="">—</MenuItem>
+                {secondaryCalendars.map((c) => (
+                  <MenuItem key={c.id} value={c.id}>
+                    {c.summary}
+                  </MenuItem>
+                ))}
+              </TextField>
+            ) : null}
             <FormControlLabel
               control={
                 <Checkbox
@@ -413,7 +423,7 @@ export default function ProfessionalsPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={Boolean(inviteInfo)} onClose={() => setInviteInfo(null)} maxWidth="sm" fullWidth>
+      <Dialog open={Boolean(inviteInfo)} onClose={() => setInviteInfo(null)} maxWidth="sm" fullWidth {...contentAreaDialogProps}>
         <DialogTitle>Convite — {inviteInfo?.name}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 1 }}>

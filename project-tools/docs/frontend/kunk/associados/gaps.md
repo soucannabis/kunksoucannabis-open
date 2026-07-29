@@ -5,7 +5,7 @@
 | # | Decisão |
 |---|---|
 | 1 | Layout/visual **igual ao legado** (`dash` + `table` + `UserModal`) |
-| 2 | Rota principal `/app/acolhimento/cadastramento`; `/app/associados` = redirect opcional ou omitir na v1 |
+| 2 | Rota principal `/app/acolhimento/associados`; `/app/associados` = redirect opcional ou omitir na v1 |
 | 3 | Deep link `?a={user_code}` abre o modal |
 | 4 | Abas: Dados Pessoais · Pacientes · **Prescritor** · Anotações · Documentos · Histórico |
 | 5 | **Sem** aba/form Parceiro |
@@ -54,7 +54,7 @@ Não gera termo. Não preenche `adhesion_term`. Confirmação explícita na UI.
 
 Quando o módulo/app de termos existir — spec [`../../doc-sign/`](../../doc-sign/README.md):
 
-1. **Gerar termo** → associado fica com status/label **Termo não assinado** (`associate_status=4` / contrato `pending`)
+1. **Gerar termo** → associado fica com status/label **Termo criado** (`associate_status=assinatura_termo` / contrato `pending`)
 2. **Assinar** → `adhesion_term` + `associate_status=5` (handler interno na API; sem webhook DocuSeal)
 
 No painel v1 atual: botões “Novo Termo” / “Copiar link” **não** alteram banco (stub).
@@ -164,7 +164,7 @@ Detalhamento do que a implementação deve fazer. Defaults já valem como decis�
 
 ### D) Rota `/app/associados`
 
-Menu OSS já usa `/app/acolhimento/cadastramento` (`PATHS.registration`).
+Menu OSS já usa `/app/acolhimento/associados` (`PATHS.registration`).
 
 **Implementar (escolher um):**
 

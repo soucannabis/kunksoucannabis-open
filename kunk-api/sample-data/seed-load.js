@@ -55,10 +55,49 @@ const ORDER_STATUSES = [
 ];
 const SERVICE_STATUSES = ['Aguardando Pagamento', 'Pagamento Concluído'];
 const RECEPTION_STATUSES = ['waiting', 'waiting', 'waiting', 'done', 'waiting'];
+const SERVICE_TAGS = ['retorno', 'teleconsulta', 'primeira-consulta', 'acompanhamento', 'presencial'];
+const RECEPTION_TAGS = ['novo-contato', 'follow-up', 'agendamento', 'informação'];
+const ORDER_TAGS = ['urgente', 'retirada', 'primeiro-pedido', 'demo'];
+const TAG_CATALOG = [
+  { tag: 'urgente', contexts: 'orders', color: '#C62828' },
+  { tag: 'retirada', contexts: 'orders', color: '#1565C0' },
+  { tag: 'primeiro-pedido', contexts: 'orders', color: '#2E7D32' },
+  { tag: 'retorno', contexts: 'services', color: '#6A1B9A' },
+  { tag: 'teleconsulta', contexts: 'services', color: '#00838F' },
+  { tag: 'primeira-consulta', contexts: 'services', color: '#5a7a5b' },
+  { tag: 'acompanhamento', contexts: 'services', color: '#7A5B7A' },
+  { tag: 'presencial', contexts: 'services', color: '#c9a227' },
+  { tag: 'novo-contato', contexts: 'reception', color: '#EF6C00' },
+  { tag: 'follow-up', contexts: 'reception', color: '#455A64' },
+  { tag: 'agendamento', contexts: 'reception', color: '#2e7d32' },
+  { tag: 'informação', contexts: 'reception', color: '#1565c0' },
+  { tag: 'demo', contexts: 'orders,services,reception', color: '#546E7A' },
+];
 const CIAP = ['A98', 'P76', 'L18', 'N01', 'R74', 'T90', 'K86'];
 const GENDER_OPTIONS = [
   'homem-cis', 'mulher-cis', 'homem-trans', 'mulher-trans', 'travesti', 'nao-binario', 'outro',
 ];
+
+/** Combinações canônicas do funil OSS (exclui patient).
+ * Labels UI: Não preencheu · Apenas preencheu · Documentos enviados · Termo criado · Associado · Problema no cadastro.
+ */
+const ASSOCIATE_STATUS_KINDS = [
+  { status: 'Associado', associate_status: 'concluido', invalid_fields: null },
+  { status: 'Associado', associate_status: 'assinatura_termo', invalid_fields: null },
+  { status: 'cadastro_criado', associate_status: 'cadastro_criado', invalid_fields: null },
+  { status: 'cadastro_criado', associate_status: 'dados_pessoais', invalid_fields: null },
+  { status: 'cadastro_criado', associate_status: 'documentos', invalid_fields: null },
+  { status: 'cadastro_criado', associate_status: 'assinatura_termo', invalid_fields: null },
+  {
+    status: 'cadastro_criado',
+    associate_status: 'dados_pessoais',
+    invalid_fields: JSON.stringify(['associate_cpf', 'cep']),
+  },
+];
+
+function pickAssociateStatusKind(i) {
+  return ASSOCIATE_STATUS_KINDS[i % ASSOCIATE_STATUS_KINDS.length];
+}
 
 const PRODUCT_BASE = [
   { name: 'Spectrum Oil 10ml', sku: 'KNK-OIL-100', type: 'oil', unit: 'ml', concentration: 100, price: 189.9, category: 'wellness' },
@@ -251,7 +290,7 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
       'responsible_type', 'city', 'state', 'cep', 'email_account', 'account_password', 'user_code',
       'rg_proof', 'associate_cpf', 'associate_rg', 'mobile_number', 'associate_status', 'prescription',
       'responsible_code', 'documents_folder_id', 'rg_patient_proof', 'patient_user_code',
-      'adhesion_term', 'ciap_codes', 'associate_birth_date', 'preferred_products', 'date_prescription',
+      'adhesion_term', 'invalid_fields', 'ciap_codes', 'associate_birth_date', 'preferred_products', 'date_prescription',
       'created_date', 'avatar_url', 'prescriber', 'delivery_address', 'prescriber_code',
       'session_token', 'session_expires', 'last_activity', 'is_session_active', 'fullname', 'is_sample',
     ];
@@ -269,9 +308,13 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
         const proCode = professionalCodes[i % professionalCodes.length];
         const responsibleIdx = isPatient ? (i - associateCount) % associateCount : null;
         const patientIdx = !isPatient && i < patientCount ? associateCount + i : null;
+        const kind = isPatient
+          ? { status: 'patient', associate_status: null, invalid_fields: null }
+          : pickAssociateStatusKind(i);
+        const isAssociado = kind.status === 'Associado';
 
         return {
-          status: isPatient ? 'patient' : 'Associado',
+          status: kind.status,
           sort: i + 1,
           date_created: daysAgo(400 - (i % 365)),
           date_updated: daysAgo(i % 60),
@@ -298,13 +341,14 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
           associate_cpf: fakeCpf(i + 1),
           associate_rg: `${1000000 + i}`,
           mobile_number: fakePhone(i + 1),
-          associate_status: isPatient ? null : 'concluido',
+          associate_status: kind.associate_status,
           prescription: `rx-${i + 1}.pdf`,
           responsible_code: isPatient ? userCodes[responsibleIdx] : null,
           documents_folder_id: `docs-${i + 1}`,
           rg_patient_proof: `rg-p-${i + 1}.pdf`,
           patient_user_code: patientIdx != null ? userCodes[patientIdx] : null,
-          adhesion_term: null,
+          adhesion_term: isAssociado ? uuid() : null,
+          invalid_fields: kind.invalid_fields,
           ciap_codes: `${pick(CIAP, i)};${pick(CIAP, i + 3)}`,
           associate_birth_date: `19${70 + (i % 30)}-${String((i % 12) + 1).padStart(2, '0')}-15`,
           preferred_products: product.sku,
@@ -472,12 +516,16 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
       client,
       'tags',
       ['tag', 'contexts', 'color', 'is_sample'],
-      (i) => ({
-        tag: `load-tag-${i + 1}`,
-        contexts: pick(['orders', 'services', 'reception', 'orders,services'], i),
-        color: pick(['#5a7a5b', '#7A5B7A', '#c9a227', '#2e7d32', '#1565c0'], i),
-        is_sample: true,
-      }),
+      (i) => {
+        const base = TAG_CATALOG[i % TAG_CATALOG.length];
+        const cycle = Math.floor(i / TAG_CATALOG.length);
+        return {
+          tag: cycle === 0 ? base.tag : `${base.tag}-${cycle + 1}`,
+          contexts: base.contexts,
+          color: base.color,
+          is_sample: true,
+        };
+      },
       counts.tags,
       batchSize,
       'tags'
@@ -543,7 +591,9 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
           carrier_order_code: shipped ? `CARRIER-${7000 + i}` : null,
           payment_code: paid ? `PAY-${8000 + i}` : null,
           order_notes: 'Obs load-test',
-          tags: ['load', ...(i % 3 === 0 ? ['urgente'] : [])],
+          tags: [pick(ORDER_TAGS, i), ...(i % 3 === 0 ? ['urgente'] : [])].filter(
+            (t, idx, arr) => arr.indexOf(t) === idx
+          ),
           delivery_notes: shipped ? 'Horário comercial' : 'Aguardando',
           address: { street: `Rua Load ${assocIdx}`, city, state, cep: fakeCep(assocIdx), country: 'BR' },
           whatsapp_message: 'Msg load',
@@ -604,7 +654,10 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
           service_code: uuid(),
           observations: 'Agendamento fictício (load test).',
           payment_type: pick(['pix', 'credit_card', 'cash'], i),
-          tags: [{ tag: 'load' }],
+          tags: [
+            { tag: pick(SERVICE_TAGS, i) },
+            ...(i % 4 === 0 ? [{ tag: pick(SERVICE_TAGS, i + 2) }] : []),
+          ].filter((t, idx, arr) => arr.findIndex((x) => x.tag === t.tag) === idx),
           created_by_user_code: 'KNK-ACOL',
           payment_code: `SVCPAY-LOAD-${i + 1}`,
           payment_info: { demo: true, paid: status === 'Pagamento Concluído' },
@@ -650,7 +703,7 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
           date_updated: daysAgo(i % 20),
           patient_name: i % 2 === 0 ? `${first} ${last}` : assocName,
           attendant: i % 2 === 0 ? 'Lia Acolhimento' : 'Admin Demo',
-          tags: [{ tag: 'load' }],
+          tags: [{ tag: pick(RECEPTION_TAGS, i) }],
           completion_reason: status === 'done' ? 'Atendido' : null,
           is_prescriber: i % 4 === 0 ? 'true' : 'false',
           full_name: `${first} ${last}`,
@@ -683,7 +736,7 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
         layout_positions: { x: (i % 6) * 2, y: Math.floor(i / 6) * 4, w: 6, h: 4 },
         chart_config: { type: pick(['bar', 'pie', 'line'], i) },
         created_by: SAMPLE_CREATED_BY,
-        tags: [{ tag: 'load' }],
+        tags: [{ tag: 'demo' }],
         column_maps: { status: 'Status', count: 'Total' },
         embedded_report_codes: [],
         favorites: { users: [] },

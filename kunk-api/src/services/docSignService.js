@@ -395,13 +395,15 @@ async function createTemplate(body = {}) {
     requiresPatient,
     draftContentJson,
   });
+  await publish(kind, { notes: 'Publicação automática na criação', requireLogo: false });
+  const published = await repo.getTemplateByKind(kind);
   return {
-    id: row.id,
+    id: published?.id || row.id,
     kind: row.kind,
     title: row.title,
     display_name: row.display_name,
     requires_patient: row.requires_patient,
-    current_version_id: row.current_version_id,
+    current_version_id: published?.current_version_id || null,
   };
 }
 
@@ -470,8 +472,8 @@ async function listTemplateLogos() {
 }
 
 /**
- * Garante os dois modelos padrão (Associado / Associado com paciente).
- * Idempotente — só cria se ainda não existirem.
+ * Garante os dois modelos padrão (Associado / Associado com paciente) e os publica.
+ * Idempotente — só cria se ainda não existirem; republica se ainda sem versão.
  */
 async function ensureDefaultTemplates() {
   const title = defaultTitle(await getAssociationTitleName());
@@ -490,19 +492,29 @@ async function ensureDefaultTemplates() {
     },
   ];
   const created = [];
+  const published = [];
   for (const spec of specs) {
-    const existing = await repo.getTemplateByKind(spec.kind);
-    if (existing) continue;
-    await repo.createTemplate({
-      kind: spec.kind,
-      title,
-      displayName: spec.displayName,
-      requiresPatient: spec.requiresPatient,
-      draftContentJson: spec.draftContentJson,
-    });
-    created.push(spec.kind);
+    let existing = await repo.getTemplateByKind(spec.kind);
+    if (!existing) {
+      await repo.createTemplate({
+        kind: spec.kind,
+        title,
+        displayName: spec.displayName,
+        requiresPatient: spec.requiresPatient,
+        draftContentJson: spec.draftContentJson,
+      });
+      created.push(spec.kind);
+      existing = await repo.getTemplateByKind(spec.kind);
+    }
+    if (existing && !existing.current_version_id) {
+      await publish(spec.kind, {
+        notes: 'Publicação automática na instalação',
+        requireLogo: false,
+      });
+      published.push(spec.kind);
+    }
   }
-  return { created, kinds: specs.map((s) => s.kind) };
+  return { created, published, kinds: specs.map((s) => s.kind) };
 }
 
 async function resetDefaultTemplates() {
@@ -514,6 +526,9 @@ async function resetDefaultTemplates() {
     selfTitle: title,
     withPatientTitle: title,
   });
+  for (const kind of ['self', 'with_patient']) {
+    await publish(kind, { notes: 'Publicação automática após reset', requireLogo: false });
+  }
   return {
     association_name: associationName,
     title,
@@ -529,6 +544,7 @@ async function resetTemplateKind(kind) {
   const content = requiresPatient ? DEFAULT_WITH_PATIENT_CONTENT : DEFAULT_SELF_CONTENT;
   const row = await repo.resetTemplateKind(kind, { content, title });
   if (!row) throw new AppError(404, 'NOT_FOUND', `Template ${kind} não encontrado`);
+  await publish(kind, { notes: 'Publicação automática após reset', requireLogo: false });
   return getTemplate(kind);
 }
 
@@ -610,7 +626,7 @@ async function previewPdf(kind, { contentJson = null, variables: overrides = {} 
   };
 }
 
-async function publish(kind, { notes = null, createdBy = null } = {}) {
+async function publish(kind, { notes = null, createdBy = null, requireLogo = true } = {}) {
   const template = await repo.getTemplateByKind(kind);
   if (!template) throw new AppError(404, 'NOT_FOUND', `Template ${kind} não encontrado`);
   const contentJson = template.draft_content_json || template.published_content_json;
@@ -621,7 +637,7 @@ async function publish(kind, { notes = null, createdBy = null } = {}) {
     throw new AppError(400, 'VALIDATION_ERROR', 'Título do termo é obrigatório para publicar');
   }
   const logoFileId = await resolveTemplateLogoFileId(template.logo_file_id);
-  if (!logoFileId) {
+  if (requireLogo && !logoFileId) {
     throw new AppError(
       400,
       'VALIDATION_ERROR',
@@ -633,8 +649,8 @@ async function publish(kind, { notes = null, createdBy = null } = {}) {
     throw new AppError(400, 'TEMPLATE_INVALID_VARIABLES', check.message, { unknown: check.unknown });
   }
 
-  const logoDataUrl = await loadLogoDataUrl(logoFileId);
-  if (!logoDataUrl) {
+  const logoDataUrl = logoFileId ? await loadLogoDataUrl(logoFileId) : null;
+  if (requireLogo && !logoDataUrl) {
     throw new AppError(400, 'VALIDATION_ERROR', 'Arquivo de logo não encontrado');
   }
 

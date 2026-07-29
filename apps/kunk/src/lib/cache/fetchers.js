@@ -59,10 +59,7 @@ export async function fetchPrescribers(api, enabled) {
     CACHE_KEYS.PROFESSIONALS_PRESCRIBERS,
     CACHE_TTL.PROFESSIONALS_MS,
     async () => {
-      const res = await api.listItems(
-        'professionals',
-        'filter[is_prescriber][_eq]=true&limit=100'
-      );
+      const res = await api.listProfessionals({ is_prescriber: true });
       return res.data || [];
     }
   );

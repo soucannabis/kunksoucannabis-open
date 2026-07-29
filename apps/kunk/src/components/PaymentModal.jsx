@@ -13,6 +13,8 @@ import {
   Typography,
   Alert,
 } from '@mui/material';
+import { contentAreaDialogProps } from '../layout/contentAreaOverlay.js';
+
 /**
  * Checkout Pagar.me (cartão / boleto / parcial).
  * context: 'order' | 'service'
@@ -101,7 +103,7 @@ export default function PaymentModal({
   const active = tabs[tab] || tabs[0];
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" data-testid="payment-modal">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" data-testid="payment-modal" {...contentAreaDialogProps}>
       <DialogTitle>Pagamento Pagar.me</DialogTitle>
       <DialogContent>
         {splitMode && (

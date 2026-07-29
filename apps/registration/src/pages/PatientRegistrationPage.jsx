@@ -76,6 +76,7 @@ export function PatientRegistrationPage({ api }) {
 
   function setField(key, value) {
     setForm((f) => ({ ...f, [key]: value }));
+    setInvalid((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : prev));
   }
 
   async function onSubmit(e) {
@@ -83,15 +84,17 @@ export function PatientRegistrationPage({ api }) {
     setBusy(true);
     setError(null);
     try {
+      // Sempre persiste campos válidos; inválidos ficam em invalid_fields (Problema no cadastro).
       let res;
       if (patientId) res = await api.patchMyPatient(patientId, form);
       else res = await api.createMyPatient(form);
       setPatientId(res.data.id);
-      setInvalid(res.meta?.invalid_fields || []);
+      const inv = res.meta?.invalid_fields || [];
+      setInvalid(inv);
       await refresh();
-      if ((res.meta?.invalid_fields || []).length) {
-        const alert = buildValidationAlert(res.meta.invalid_fields, form);
-        setError(alert.message);
+      if (inv.length) {
+        const alert = buildValidationAlert(inv, form);
+        setError(alert.message || 'Há campos pendentes no cadastro.');
         return;
       }
       await api.advance();

@@ -31,7 +31,7 @@ export function hasAnyRole(roles = [], allowed = []) {
 export function pageTitleFromPath(pathname = '') {
   const part = pathname.split('/').filter(Boolean).pop() || '';
   const map = {
-    cadastramento: 'Associados',
+    associados: 'Associados',
     servicos: 'Serviços',
     triagem: 'Triagem',
     clientesinstitucionais: 'Clientes Institucionais',

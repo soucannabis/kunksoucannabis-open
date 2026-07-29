@@ -21,7 +21,7 @@ const NotFoundPage = lazy(() => import('../pages/NotFoundPage.jsx'));
 
 /** Flat list of app routes for tests and docs (path = Portuguese segment under /app). */
 export const APP_ROUTE_DEFS = [
-  { path: 'acolhimento/cadastramento', fullPath: PATHS.registration, element: 'RegistrationPage' },
+  { path: 'acolhimento/associados', fullPath: PATHS.registration, element: 'RegistrationPage' },
   { path: 'acolhimento/servicos', fullPath: PATHS.services, element: 'ServicesPage' },
   { path: 'acolhimento/triagem', fullPath: PATHS.triage, element: 'TriagePage' },
   {
@@ -55,7 +55,7 @@ export function buildAppRoutes({ roles }) {
       )}
     >
       <Route index element={<AppIndexRedirect roles={roles} />} />
-      <Route path="acolhimento/cadastramento" element={<RegistrationPage />} />
+      <Route path="acolhimento/associados" element={<RegistrationPage />} />
       <Route path="acolhimento/servicos" element={<ServicesPage />} />
       <Route path="acolhimento/triagem" element={<TriagePage />} />
       <Route path="acolhimento/clientesinstitucionais" element={<InstitutionalClientsPage />} />

@@ -58,6 +58,30 @@ const GENDER_OPTIONS = [
   'outro',
 ];
 
+/**
+ * Combinações canônicas de `status` + `associate_status` (+ invalid_fields)
+ * alinhadas ao funil OSS / filtros da lista de associados.
+ * Labels UI: Não preencheu · Apenas preencheu · Documentos enviados · Termo criado · Associado · Problema no cadastro.
+ * Pacientes (`status=patient`) ficam fora desta lista.
+ */
+const ASSOCIATE_STATUS_KINDS = [
+  { status: 'Associado', associate_status: 'concluido', invalid_fields: null },
+  { status: 'Associado', associate_status: 'assinatura_termo', invalid_fields: null },
+  { status: 'cadastro_criado', associate_status: 'cadastro_criado', invalid_fields: null },
+  { status: 'cadastro_criado', associate_status: 'dados_pessoais', invalid_fields: null },
+  { status: 'cadastro_criado', associate_status: 'documentos', invalid_fields: null },
+  { status: 'cadastro_criado', associate_status: 'assinatura_termo', invalid_fields: null },
+  {
+    status: 'cadastro_criado',
+    associate_status: 'dados_pessoais',
+    invalid_fields: JSON.stringify(['associate_cpf', 'cep']),
+  },
+];
+
+function pickAssociateStatusKind(i) {
+  return ASSOCIATE_STATUS_KINDS[i % ASSOCIATE_STATUS_KINDS.length];
+}
+
 const PRODUCT_CATALOG = [
   { name: 'Spectrum Oil 10ml', sku: 'KNK-OIL-100', type: 'oil', unit: 'ml', concentration: 100, price: 189.9, category: 'wellness', amount: 40 },
   { name: 'Spectrum Oil 30ml', sku: 'KNK-OIL-300', type: 'oil', unit: 'ml', concentration: 300, price: 349.9, category: 'wellness', amount: 25 },
@@ -204,9 +228,13 @@ async function buildDataset(passwordHash, countsOverride = null) {
     const userCode = uuid();
     const isPatientLink = i >= 80;
     const product = products[i % products.length];
+    const kind = isPatientLink
+      ? { status: 'patient', associate_status: null, invalid_fields: null }
+      : pickAssociateStatusKind(i);
+    const isAssociado = kind.status === 'Associado';
 
     return {
-      status: isPatientLink ? 'patient' : 'Associado',
+      status: kind.status,
       sort: i + 1,
       date_created: daysAgo(100 - (i % 90)),
       date_updated: daysAgo(i % 30),
@@ -233,11 +261,12 @@ async function buildDataset(passwordHash, countsOverride = null) {
       associate_cpf: fakeCpf(i + 1),
       associate_rg: `${String(1000000 + i)}`,
       mobile_number: fakePhone(i + 1),
-      associate_status: isPatientLink ? null : 'concluido',
+      associate_status: kind.associate_status,
+      invalid_fields: kind.invalid_fields,
       prescription: `prescription-${i + 1}.pdf`,
       documents_folder_id: `docs-user-${i + 1}`,
       rg_patient_proof: isPatientLink ? `rg-patient-${i + 1}.pdf` : `rg-self-${i + 1}.pdf`,
-      adhesion_term: null,
+      adhesion_term: isAssociado ? uuid() : null,
       ciap_codes: `${pick(CIAP, i)};${pick(CIAP, i + 3)}`,
       associate_birth_date: `19${70 + (i % 30)}-${String((i % 12) + 1).padStart(2, '0')}-15`,
       preferred_products: product.sku,
@@ -274,6 +303,8 @@ async function buildDataset(passwordHash, countsOverride = null) {
     users[i].responsible_code = responsible.user_code;
     users[i].patient_user_code = null;
     users[i].associate_status = null;
+    users[i].invalid_fields = null;
+    users[i].adhesion_term = null;
     responsible.patient_user_code = users[i].user_code;
     responsible.responsible_type = 'another';
   }
@@ -790,4 +821,6 @@ module.exports = {
   seedSmallSample,
   SMALL_COUNTS,
   SAMPLE_ASSOCIATE_PASSWORD,
+  ASSOCIATE_STATUS_KINDS,
+  pickAssociateStatusKind,
 };

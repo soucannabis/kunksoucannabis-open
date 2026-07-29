@@ -21,9 +21,13 @@ import {
   getDocumentKind,
 } from '../../lib/documentKinds.js';
 import { useErrorModal } from '../errors/ErrorModalProvider.jsx';
+import { useToast } from '../toast/ToastProvider.jsx';
+import { contentAreaSelectProps } from '../../layout/contentAreaOverlay.js';
 
 const GREEN = '#5a7a5b';
 const GREEN_HOVER = '#303B30';
+
+const SELECT_MENU_PROPS = contentAreaSelectProps.MenuProps;
 
 function labelForFile(file) {
   const docKind = String(file?.doc_kind || '');
@@ -62,6 +66,7 @@ export default function FileUpload({
   readOnly = false,
 }) {
   const fixedKind = kindProp ? getDocumentKind(kindProp) : null;
+  const splitLayout = !fixedKind;
   const [pickerKind, setPickerKind] = useState(kindProp || '');
   const activeKindKey = fixedKind?.key || pickerKind || '';
   const activeKind = getDocumentKind(activeKindKey);
@@ -70,6 +75,7 @@ export default function FileUpload({
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const { showError } = useErrorModal();
+  const toast = useToast();
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewMime, setPreviewMime] = useState('');
   const inputRef = useRef(null);
@@ -133,7 +139,7 @@ export default function FileUpload({
   async function handleUpload(fileList) {
     if (!api || !userId || !activeKind || !fileList?.length) return;
     if (!fixedKind && !pickerKind) {
-      showError('Selecione o tipo do documento.');
+      toast.error('Selecione o tipo do documento.');
       return;
     }
     setUploading(true);
@@ -161,8 +167,9 @@ export default function FileUpload({
       }
       if (!fixedKind) setPickerKind('');
       await loadFiles();
+      if (!onUploaded) toast.success('Documento enviado');
     } catch (err) {
-      showError(err.message || 'Falha no upload');
+      toast.error(err.message || 'Falha no upload');
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';
@@ -176,8 +183,9 @@ export default function FileUpload({
       await api.deleteFile(file.id);
       onDeleted?.(file);
       await loadFiles();
+      if (!onDeleted) toast.success('Documento removido');
     } catch (err) {
-      showError(err.message || 'Falha ao remover');
+      toast.error(err.message || 'Falha ao remover');
     }
   }
 
@@ -187,10 +195,10 @@ export default function FileUpload({
     handleUpload(list);
   }
 
-  return (
-    <Box data-testid="file-upload" sx={{ width: '100%', mt: 1 }}>
-      <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-        {title}
+  const uploadPanel = (
+    <Box>
+      <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700 }}>
+        {splitLayout ? 'Enviar documento' : title}
       </Typography>
 
       {!fixedKind && !readOnly && (
@@ -201,9 +209,13 @@ export default function FileUpload({
           label="Tipo do documento"
           value={pickerKind}
           onChange={(e) => setPickerKind(e.target.value)}
-          sx={{ mb: 1 }}
+          sx={{ mb: 1.5 }}
           data-testid="file-upload-kind"
+          SelectProps={{ MenuProps: SELECT_MENU_PROPS }}
         >
+          <MenuItem value="">
+            <em>Selecione</em>
+          </MenuItem>
           {DOCUMENT_KIND_KEYS.map((key) => (
             <MenuItem key={key} value={key}>
               {DOCUMENT_KINDS[key].label}
@@ -213,10 +225,11 @@ export default function FileUpload({
       )}
 
       {!readOnly && (
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+        <Stack spacing={1}>
           <Button
             variant="contained"
             size="small"
+            fullWidth={splitLayout}
             startIcon={uploading ? <CircularProgress size={16} color="inherit" /> : <UploadFileIcon />}
             disabled={uploading || !userId || (!fixedKind && !pickerKind)}
             onClick={() => inputRef.current?.click()}
@@ -240,11 +253,21 @@ export default function FileUpload({
           )}
         </Stack>
       )}
+    </Box>
+  );
+
+  const filesPanel = (
+    <Box sx={{ minHeight: 0, display: 'flex', flexDirection: 'column', flex: 1 }}>
+      {splitLayout ? (
+        <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700 }}>
+          Documentos do associado
+        </Typography>
+      ) : null}
 
       {loading ? (
         <CircularProgress size={24} sx={{ color: GREEN }} />
       ) : (
-        <Stack spacing={0.75}>
+        <Stack spacing={0.75} sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
           {files.length === 0 && (
             <Typography variant="body2" color="text.secondary">
               Nenhum arquivo {fixedKind ? `de ${fixedKind.label.toLowerCase()} ` : ''}enviado.
@@ -298,7 +321,13 @@ export default function FileUpload({
         <Box sx={{ mt: 2 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
             <Typography variant="caption">Pré-visualização</Typography>
-            <Button size="small" onClick={() => { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }}>
+            <Button
+              size="small"
+              onClick={() => {
+                URL.revokeObjectURL(previewUrl);
+                setPreviewUrl(null);
+              }}
+            >
               Fechar
             </Button>
           </Stack>
@@ -307,18 +336,65 @@ export default function FileUpload({
               component="iframe"
               src={previewUrl}
               title="preview"
-              sx={{ width: '100%', height: 360, border: '1px solid #ccc' }}
+              sx={{ width: '100%', height: 280, border: '1px solid #ccc' }}
             />
           ) : (
             <Box
               component="img"
               src={previewUrl}
               alt="preview"
-              sx={{ maxWidth: '100%', maxHeight: 360, display: 'block', border: '1px solid #ccc' }}
+              sx={{ maxWidth: '100%', maxHeight: 280, display: 'block', border: '1px solid #ccc' }}
             />
           )}
         </Box>
       )}
+    </Box>
+  );
+
+  if (splitLayout) {
+    return (
+      <Box
+        data-testid="file-upload"
+        sx={{
+          width: '100%',
+          height: '100%',
+          minHeight: 0,
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+          gap: 2,
+          alignItems: 'stretch',
+        }}
+      >
+        <Box
+          sx={{
+            border: '1px solid #e0e0e0',
+            borderRadius: 2,
+            p: 2,
+          }}
+        >
+          {uploadPanel}
+        </Box>
+        <Box
+          sx={{
+            border: '1px solid #e0e0e0',
+            borderRadius: 2,
+            p: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
+            overflow: 'hidden',
+          }}
+        >
+          {filesPanel}
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
+    <Box data-testid="file-upload" sx={{ width: '100%', mt: 1 }}>
+      {uploadPanel}
+      <Box sx={{ mt: 2 }}>{filesPanel}</Box>
     </Box>
   );
 }

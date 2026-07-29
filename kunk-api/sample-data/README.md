@@ -24,6 +24,8 @@ Para testes automatizados use `admin@kunk-api.test` / `TestAdmin123!` (`ensureAd
 
 **Importante:** a suíte `npm test` **não** faz TRUNCATE das tabelas de negócio (sample data permanece). Só `npm run seed:sample` / `seed:load` trunca ao reinstalar o seed (preserva `system_users`).
 
+Associados do demo (não-`patient`) alternam fases do funil: `cadastro_criado`, `dados_pessoais`, `documentos`, `assinatura_termo`, `concluido` — com `status` `Associado` ou `cadastro_criado`, e uma fatia com `invalid_fields` (problema no cadastro).
+
 ## Como rodar (demo)
 
 Com `PG_URL (ou PGHOST/PG*)` definido em `kunk-api/.env`:
@@ -63,6 +65,7 @@ npm run seed:load -- --profile=xlarge --yes
 
 Overrides: `--users=2000 --orders=4000 --batch=500`.  
 ~20% dos users são pacientes (`status=patient`) ligados a responsáveis.  
+Os demais distribuem fases do funil (`cadastro_criado`, `dados_pessoais`, `documentos`, `assinatura_termo`, `concluido`) e `status` Associado / em andamento — inclusive alguns com `invalid_fields` (problema no cadastro).  
 Preserva `system_users`, `system_configs` e `system_api_credentials`.
 
 ## Política

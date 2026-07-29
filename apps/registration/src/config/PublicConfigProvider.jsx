@@ -126,7 +126,7 @@ export function PublicConfigProvider({ api, children }) {
     );
     let link = document.querySelector("link[rel='icon']");
     if (!href) {
-      if (link) link.setAttribute('href', '/favicon.svg');
+      if (link) link.remove();
       return;
     }
     if (!link) {

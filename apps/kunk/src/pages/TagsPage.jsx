@@ -27,6 +27,7 @@ import { getKunkPublicConfig } from '@kunk/config';
 import { useErrorModal } from '../components/errors/ErrorModalProvider.jsx';
 import { useCacheConfig } from '../lib/cache/CacheConfigProvider.jsx';
 import { fetchTags, invalidateTagsCache } from '../lib/cache/fetchers.js';
+import { contentAreaDialogProps } from '../layout/contentAreaOverlay.js';
 
 const materialTheme = createTheme({
   palette: {
@@ -342,7 +343,7 @@ export default function TagsPage() {
         )}
       </Box>
 
-      <Dialog open={Boolean(dialog)} onClose={() => !busy && setDialog(null)} fullWidth maxWidth="sm">
+      <Dialog open={Boolean(dialog)} onClose={() => !busy && setDialog(null)} fullWidth maxWidth="sm" {...contentAreaDialogProps}>
         <DialogTitle>{dialog?.mode === 'edit' ? 'Editar tag' : 'Nova tag'}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           <TextField

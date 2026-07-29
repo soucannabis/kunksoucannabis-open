@@ -29,9 +29,10 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { PATHS } from '../../app/menuConfig.js';
+import { GLOBAL_SEARCH_Z } from '../../layout/contentAreaOverlay.js';
 
 const muiTheme = createTheme();
-const Z = 14000;
+const Z = GLOBAL_SEARCH_Z;
 const BLACK = '#000000';
 const PURPLE = '#7A5B7A';
 

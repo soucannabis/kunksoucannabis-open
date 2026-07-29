@@ -13,7 +13,7 @@ test.describe('páginas operacionais', () => {
   });
 
   test('associados carrega filtros', async ({ page }) => {
-    await page.goto('/app/acolhimento/cadastramento');
+    await page.goto('/app/acolhimento/associados');
     await expect(page.getByText(/Filtrar Associados/i)).toBeVisible({ timeout: 20_000 });
   });
 

@@ -20,7 +20,8 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import {
-  contentAreaDialogSx,
+  contentAreaDialogProps,
+  contentAreaSelectProps,
   displayName,
   isCompany,
   parseAnnotations,
@@ -169,7 +170,7 @@ export default function InstitutionalModal({
   const company = isCompany(form);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth sx={contentAreaDialogSx}>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth {...contentAreaDialogProps}>
       <DialogTitle sx={{ pr: 6 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Box>
@@ -242,6 +243,7 @@ export default function InstitutionalModal({
               label="Status"
               value={form.status || 'active'}
               onChange={(e) => setField('status', e.target.value)}
+              SelectProps={contentAreaSelectProps}
               sx={{ mb: 2, minWidth: 160 }}
             >
               <MenuItem value="active">Ativo</MenuItem>

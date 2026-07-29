@@ -22,7 +22,7 @@
 
 | Módulo | Página | Descrição | Testes |
 |---|---|---|---|
-| Associados | `/app/acolhimento/cadastramento` | Lista e edição de associados | e2e: Sim · API: Sim |
+| Associados | `/app/acolhimento/associados` | Lista e edição de associados | e2e: Sim · API: Sim |
 | Serviços | `/app/acolhimento/servicos` | Agenda / serviços | e2e: Sim · API: Sim |
 | Triagem | `/app/acolhimento/triagem` | Fila e atendimento | e2e: Sim · API: Sim |
 | Clientes institucionais | `/app/acolhimento/clientesinstitucionais` | Empresas / CNPJ | e2e: Sim · API: Parcial |

@@ -43,7 +43,7 @@ Campos de display: `display_status`, `display_email`, `display_phone`, `display_
 
 | Entidade | Ação principal | Extra |
 |---|---|---|
-| Associados | Nova aba `/app/acolhimento/cadastramento?a={open_user_code}` | Botão **Triagem** → cria reception e navega para `/app/acolhimento/triagem` |
+| Associados | Nova aba `/app/acolhimento/associados?a={open_user_code}` | Botão **Triagem** → cria reception e navega para `/app/acolhimento/triagem` |
 | Serviços | Nova aba `/app/acolhimento/servicos?s={associate_name}&h={ISO date}` | Filtra/destaca serviço na lista (como legado) |
 | Pedidos | Nova aba URL de pedidos com `?p={order_code}` (helper OSS equivalente a `buildOrdersPageUrl`) | — |
 | Triagem | Abrir fila com `?t={code}` ou `/app/acolhimento/triagem?t=` | Desabilitar se sem `code` |

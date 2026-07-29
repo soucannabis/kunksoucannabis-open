@@ -9,7 +9,7 @@
 
 Recriar a área de **associados** com:
 
-1. **Mesmo layout e visual** da página legada `/app/acolhimento/cadastramento`
+1. **Mesmo layout e visual** da página legada `/app/acolhimento/associados`
 2. Lista dos **últimos cadastros** + cards/filtros de status do funil de cadastramento
 3. Resultados vindos do **search global** (deep link `?a=`)
 4. **Modal do associado** com as mesmas abas do legado (exceto Parceiro — só Prescritor)
@@ -53,7 +53,7 @@ Docs relacionadas:
 ## Posicionamento
 
 ```
-apps/kunk  /app/acolhimento/cadastramento   ←── operadores (lista + modal)
+apps/kunk  /app/acolhimento/associados   ←── operadores (lista + modal)
          │ /app/associados                  ←── atalho opcional (mesma página, lista ampla)
          │
          ├── lista / filtros / cards de status

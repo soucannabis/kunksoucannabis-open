@@ -9,7 +9,7 @@
 |---|---|
 | **`associate_status`** (VARCHAR pt-BR) | **Fase do funil** do responsável. Flag para router, guards e menu/sidebar. |
 | **`status`** (string) | **Tipo / conclusão.** `NULL` no funil → **`Associado`** ao assinar o termo. `patient` = registro do paciente. |
-| **`invalid_fields`** (JSON/texto) | Lista dos campos que **não passaram** na validação no último submit. **Não** é fase do funil. |
+| **`invalid_fields`** (JSON/texto) | Lista dos campos que **não passaram** na validação no último submit. **Não** é fase do funil. No Kunk aparece como **Problema no cadastro**. |
 
 Não existe fase/status `consulta`. Após `status = Associado`, a tela `/consulta` permite agendar, enviar docs extras ou finalizar (`associate_status = concluido`).
 
@@ -17,13 +17,15 @@ Não existe fase/status `consulta`. Após `status = Associado`, a tela `/consult
 
 ## Fases (`associate_status`)
 
-| Fase | Significado | Rota | Menu (sidebar) |
+| Fase | Significado | Rota | Label no Kunk |
 |---|---|---|---|
-| `cadastro_criado` | Cadastro criado com e-mail | `/bem-vindo` → `/cadastro-associado` | Cadastro (atual) |
-| `dados_pessoais` | Preenchendo / preenchidos dados pessoais (+ paciente se `another`) | `/cadastro-associado` e, se preciso, `/cadastro-paciente` | Cadastro |
-| `documentos` | Envio de documentos de identidade | `/documentos` | Documentos |
-| `assinatura_termo` | Assinatura do termo | `/documentos` | Documentos |
-| `concluido` | Cadastro finalizado na UI (após Associado) | `/cadastro-concluido` | Concluído |
+| `cadastro_criado` | Cadastro criado com e-mail | `/bem-vindo` → `/cadastro-associado` | Não preencheu os dados |
+| `dados_pessoais` | Preenchendo / preenchidos dados pessoais (+ paciente se `another`) | `/cadastro-associado` e, se preciso, `/cadastro-paciente` | Apenas preencheu os dados |
+| `documentos` | Envio de documentos de identidade | `/documentos` | Documentos enviados |
+| `assinatura_termo` | Assinatura do termo | `/documentos` | Termo criado |
+| `status=Associado` | Termo assinado | `/consulta` | Associado |
+| `concluido` | Cadastro finalizado na UI (após Associado) | `/cadastro-concluido` | Associado (no painel) |
+| `invalid_fields` ≠ vazio | Save com campos faltando | (mesma fase) | Problema no cadastro |
 
 Ao **assinar o termo**:
 

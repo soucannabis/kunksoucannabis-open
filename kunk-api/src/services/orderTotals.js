@@ -19,9 +19,10 @@ function productsSubtotal(items = []) {
 }
 
 function customPaymentSum(customPayment = []) {
-  return roundMoney(
-    (customPayment || []).reduce((sum, row) => sum + (Number(row?.value) || 0), 0)
-  );
+  // Pedidos legados/sample podem ter custom_payment como objeto { method, gateway }
+  // em vez de array de linhas { item, qnt, value }.
+  const rows = Array.isArray(customPayment) ? customPayment : [];
+  return roundMoney(rows.reduce((sum, row) => sum + (Number(row?.value) || 0), 0));
 }
 
 /**

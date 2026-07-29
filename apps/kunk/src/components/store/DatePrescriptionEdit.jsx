@@ -12,6 +12,7 @@ import {
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CloseIcon from '@mui/icons-material/Close';
 import FileUpload from '../files/FileUpload.jsx';
+import { contentAreaDialogProps } from '../../layout/contentAreaOverlay.js';
 
 const GREEN = '#5a7a5b';
 const GREEN_HOVER = '#303B30';
@@ -76,6 +77,7 @@ export default function DatePrescriptionEdit({ user, api, onDateSaved }) {
         maxWidth="sm"
         fullWidth
         PaperProps={{ sx: { minWidth: 350 } }}
+        {...contentAreaDialogProps}
       >
         <DialogTitle>Data da Prescrição</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>

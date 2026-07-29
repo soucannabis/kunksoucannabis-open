@@ -15,7 +15,7 @@ Roles staff entram no app Kunk; menu/rotas filtram por `role_pages`.
 ## 1. Listagem (cadastramento)
 
 ```
-Abrir /app/acolhimento/cadastramento
+Abrir /app/acolhimento/associados
   → GET últimos N responsáveis (default N=60; “Carregar mais” aumenta)
   → excluir status=patient da lista principal
   → cards de contagem por fase/status do funil
@@ -162,8 +162,8 @@ Painel v1 (stub):
   · NÃO grava adhesion_term; NÃO muda status
 
 Ciclo real (app de assinatura de termos — entrega futura):
-  1. Gerar termo → status/label "Termo não assinado"
-  2. Assinar → status atualizado pelo app de termos
+  1. Gerar termo → status/label "Termo criado"
+  2. Assinar → status atualizado pelo app de termos → Associado
 ```
 
 ---
@@ -203,7 +203,7 @@ Ver atualização em [`../servicos/flow.md`](../servicos/flow.md) (seção benef
 
 Ver [`../search-global/flow.md`](../search-global/flow.md).
 
-Resumo: resultado associado abre `/app/acolhimento/cadastramento?a={code}` (nova aba, como legado) e oferece ação **Triagem**.
+Resumo: resultado associado abre `/app/acolhimento/associados?a={code}` (nova aba, como legado) e oferece ação **Triagem**.
 
 ---
 
@@ -211,17 +211,14 @@ Resumo: resultado associado abre `/app/acolhimento/cadastramento?a={code}` (nova
 
 Mapear para labels de UI (cards + filtros + coluna Status). Fonte de verdade OSS:
 
-| Condição | Label UI sugerido |
+| Condição | Label UI |
 |---|---|
 | `status = Associado` | Associado |
 | `status = patient` | (não lista como responsável) |
-| `associate_status = 1` | Não preencheu / e-mail criado |
-| `associate_status = 2` | Preenchendo / preencheu dados |
-| `associate_status = 3` | Documentos |
-| `associate_status = 4` | Termo (aguardando assinatura — quando módulo existir: “Termo não assinado”) |
-| `status` / label pós-gerar termo (módulo futuro) | Termo não assinado |
-| Após assinatura (módulo futuro) | Atualizado pelo app de termos → tipicamente Associado |
-| `associate_status = 5` + não Associado | Fase final / docs extras |
-| `invalid_fields` não vazio | Destacar / filtro “erro de formulário” |
+| `associate_status = cadastro_criado` | Não preencheu os dados |
+| `associate_status = dados_pessoais` | Apenas preencheu os dados |
+| `associate_status = documentos` | Documentos enviados |
+| `associate_status = assinatura_termo` (não Associado) | Termo criado |
+| `invalid_fields` não vazio | Problema no cadastro |
 
 Compatibilidade de leitura com strings legadas migradas (`published`, `registered`, `proofs`, `signedcontract`, …) via mapa no server ou na UI — ver [fields.md](./fields.md).

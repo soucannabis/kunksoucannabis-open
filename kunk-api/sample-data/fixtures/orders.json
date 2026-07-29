@@ -1,16 +1,16 @@
 [
   {
     "sort": 1,
-    "date_created": "2026-06-03T17:54:45.458Z",
-    "date_updated": "2026-07-23T17:54:45.458Z",
+    "date_created": "2026-06-09T21:41:14.600Z",
+    "date_updated": "2026-07-29T21:41:14.600Z",
     "status": "Aguardando pagamento",
     "total": 484.8,
     "payment_method": "pix",
     "tracking_code": "PENDING-100000",
     "delivery_price": 15,
     "associate_name": "Ana Almeida",
-    "order_code": "5686cf41-8461-419c-90dd-b26d0af8cbd4",
-    "user_code": "c3360fb7-eafe-4a9f-ae51-848ea82c65ed",
+    "order_code": "68249fd0-c45c-405c-8519-ef07718ee7a9",
+    "user_code": "ea049cdf-37b3-4df5-8459-ddbe05becf5c",
     "items": [
       {
         "sku": "KNK-OIL-100",
@@ -33,7 +33,7 @@
         "category": "sleep"
       }
     ],
-    "created_date": "2026-06-03T17:54:45.458Z",
+    "created_date": "2026-06-09T21:41:14.600Z",
     "discount": 10,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -59,32 +59,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "cba1e506-d21b-437e-8c32-7f20fc406d01",
-    "payment_date": "2026-06-03T17:54:45.458Z",
+    "prescriber_code": "5dc8ae1c-c45d-4362-9065-e85ebd5f3ef3",
+    "payment_date": "2026-06-09T21:41:14.600Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.458Z",
-    "last_tracking_date": "2026-06-03T17:54:45.458Z",
+    "tracking_code_date": "2026-06-09T21:41:14.600Z",
+    "last_tracking_date": "2026-06-09T21:41:14.600Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 2,
-    "date_created": "2026-06-04T17:54:45.458Z",
-    "date_updated": "2026-07-22T17:54:45.458Z",
+    "date_created": "2026-06-10T21:41:14.600Z",
+    "date_updated": "2026-07-28T21:41:14.600Z",
     "status": "Pagamento concluído",
     "total": 717.8,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100001",
     "delivery_price": 18,
     "associate_name": "Bruno Dias",
-    "order_code": "9d31a7c8-1a3b-4380-b3ed-f825b47d490d",
-    "user_code": "f2fe98f6-cdc7-4cbb-aec4-ce0ac0494543",
+    "order_code": "52c7d18f-c7e2-448c-9e39-56d41706faa1",
+    "user_code": "9c2846e0-591c-4bc7-886c-5b4765f87a80",
     "items": [
       {
         "sku": "KNK-OIL-300",
@@ -97,7 +97,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-04T17:54:45.458Z",
+    "created_date": "2026-06-10T21:41:14.600Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -122,32 +122,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "7e05101f-a974-4716-82c7-14873670bea4",
-    "payment_date": "2026-06-14T17:54:45.458Z",
+    "prescriber_code": "9c915f92-50fb-4a06-9148-7caadb2e9fe5",
+    "payment_date": "2026-06-20T21:41:14.600Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.458Z",
-    "last_tracking_date": "2026-06-03T17:54:45.458Z",
+    "tracking_code_date": "2026-06-09T21:41:14.600Z",
+    "last_tracking_date": "2026-06-09T21:41:14.600Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 3,
-    "date_created": "2026-06-05T17:54:45.458Z",
-    "date_updated": "2026-07-21T17:54:45.458Z",
+    "date_created": "2026-06-11T21:41:14.600Z",
+    "date_updated": "2026-07-27T21:41:14.600Z",
     "status": "Em produção",
     "total": 600.6,
     "payment_method": "boleto",
     "tracking_code": "PENDING-100002",
     "delivery_price": 21,
     "associate_name": "Carla Gomes",
-    "order_code": "f4e59a2f-98fd-4d58-8b8b-b65334c34f7c",
-    "user_code": "d4839b63-ae5a-4949-9597-06e674a3386e",
+    "order_code": "b3c231d1-196b-4bb3-8f1a-6bb4a198014b",
+    "user_code": "61aede61-5799-44b4-bbf5-1d5187a7c499",
     "items": [
       {
         "sku": "KNK-CAP-25",
@@ -170,7 +170,7 @@
         "category": "recovery"
       }
     ],
-    "created_date": "2026-06-05T17:54:45.458Z",
+    "created_date": "2026-06-11T21:41:14.600Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -195,32 +195,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "16eb82a4-57b2-409e-b439-ee6a7802982a",
-    "payment_date": "2026-06-15T17:54:45.458Z",
+    "prescriber_code": "4c7bfa7e-c02d-47cd-a993-c2358da16be3",
+    "payment_date": "2026-06-21T21:41:14.600Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "Pedro Produção",
-    "tracking_code_date": "2026-06-03T17:54:45.458Z",
-    "last_tracking_date": "2026-06-03T17:54:45.458Z",
+    "tracking_code_date": "2026-06-09T21:41:14.600Z",
+    "last_tracking_date": "2026-06-09T21:41:14.600Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 4,
-    "date_created": "2026-06-06T17:54:45.458Z",
-    "date_updated": "2026-07-20T17:54:45.458Z",
+    "date_created": "2026-06-12T21:41:14.600Z",
+    "date_updated": "2026-07-26T21:41:14.600Z",
     "status": "Produção Finalizada",
     "total": 303.9,
     "payment_method": "pix",
     "tracking_code": "PENDING-100003",
     "delivery_price": 24,
     "associate_name": "Diego Junqueira",
-    "order_code": "18ca2f38-8c78-461a-afc0-6de4db4e86d9",
-    "user_code": "01588964-e5cb-47e8-a237-4b793b1d8699",
+    "order_code": "7b12111e-9885-4074-b1be-93f8f50bc2d6",
+    "user_code": "0d3a8a74-b58a-4b83-adf5-07e5c6c504a3",
     "items": [
       {
         "sku": "KNK-CAP-25-60",
@@ -233,7 +233,7 @@
         "category": "sleep"
       }
     ],
-    "created_date": "2026-06-06T17:54:45.458Z",
+    "created_date": "2026-06-12T21:41:14.600Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -259,32 +259,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "7d03e555-17fd-42df-b29c-93fbf3b4fedf",
-    "payment_date": "2026-06-16T17:54:45.458Z",
+    "prescriber_code": "f2dfd322-e5ce-4897-ae1b-fe84dba51639",
+    "payment_date": "2026-06-22T21:41:14.600Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "Pedro Produção",
-    "tracking_code_date": "2026-06-03T17:54:45.458Z",
-    "last_tracking_date": "2026-06-03T17:54:45.458Z",
+    "tracking_code_date": "2026-06-09T21:41:14.600Z",
+    "last_tracking_date": "2026-06-09T21:41:14.600Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 5,
-    "date_created": "2026-06-07T17:54:45.458Z",
-    "date_updated": "2026-07-19T17:54:45.458Z",
+    "date_created": "2026-06-13T21:41:14.600Z",
+    "date_updated": "2026-07-25T21:41:14.600Z",
     "status": "Adicionado no sistema",
     "total": 546.7,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100004",
     "delivery_price": 27,
     "associate_name": "Elena Mendes",
-    "order_code": "9e477a23-80c9-4165-852b-1cd7f0524d3f",
-    "user_code": "61283506-86ce-40eb-955d-5abc614ac64a",
+    "order_code": "236b1743-50cd-4274-9750-029857440bbd",
+    "user_code": "0476de36-9010-4b78-8d1f-b5035d17059a",
     "items": [
       {
         "sku": "KNK-SFT-15",
@@ -307,7 +307,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-07T17:54:45.458Z",
+    "created_date": "2026-06-13T21:41:14.600Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -332,32 +332,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "79ddd282-35d3-4e56-be1a-3637d08a4ff8",
-    "payment_date": "2026-06-03T17:54:45.458Z",
+    "prescriber_code": "96b4a3f5-3ae4-4073-9485-17c24ff12d03",
+    "payment_date": "2026-06-09T21:41:14.600Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.458Z",
-    "last_tracking_date": "2026-06-03T17:54:45.458Z",
+    "tracking_code_date": "2026-06-09T21:41:14.600Z",
+    "last_tracking_date": "2026-06-09T21:41:14.600Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 6,
-    "date_created": "2026-06-08T17:54:45.458Z",
-    "date_updated": "2026-07-18T17:54:45.458Z",
+    "date_created": "2026-06-14T21:41:14.600Z",
+    "date_updated": "2026-07-24T21:41:14.600Z",
     "status": "Enviado",
     "total": 314.7,
     "payment_method": "boleto",
     "tracking_code": "BRDEMO100005",
     "delivery_price": 15,
     "associate_name": "Fábio Pereira",
-    "order_code": "8eee212e-e113-4ff0-aed7-c3bf4d26239f",
-    "user_code": "3e0ef3ff-9de2-42fe-bdc1-8e1e142627e3",
+    "order_code": "14ac29d1-2813-4e45-9572-3f2fda7155f5",
+    "user_code": "5fca5fbd-c4fb-4c7c-9065-8eeaaacc48bf",
     "items": [
       {
         "sku": "KNK-BAL-50",
@@ -370,7 +370,7 @@
         "category": "recovery"
       }
     ],
-    "created_date": "2026-06-08T17:54:45.458Z",
+    "created_date": "2026-06-14T21:41:14.600Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -395,32 +395,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "62027f7e-7e14-4b61-a3ea-cf1bc4b0df6a",
-    "payment_date": "2026-06-18T17:54:45.458Z",
+    "prescriber_code": "ff7efe51-83d9-4d90-801e-e7ec3bb8cd62",
+    "payment_date": "2026-06-24T21:41:14.600Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-07-18T17:54:45.458Z",
-    "last_tracking_date": "2026-07-19T17:54:45.458Z",
+    "tracking_code_date": "2026-07-24T21:41:14.600Z",
+    "last_tracking_date": "2026-07-25T21:41:14.600Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 7,
-    "date_created": "2026-06-09T17:54:45.458Z",
-    "date_updated": "2026-07-17T17:54:45.458Z",
+    "date_created": "2026-06-15T21:41:14.600Z",
+    "date_updated": "2026-07-23T21:41:14.600Z",
     "status": "Entregue",
     "total": 637.8,
     "payment_method": "pix",
     "tracking_code": "BRDEMO100006",
     "delivery_price": 18,
     "associate_name": "Gabriela Silva",
-    "order_code": "004fb161-0861-42c0-a48a-3856b715f758",
-    "user_code": "b04b206d-6326-4fe4-aea0-84597b598ea4",
+    "order_code": "0e9e6c5d-1d6b-4364-b875-c928a0669272",
+    "user_code": "d83cfff1-042a-4341-b1f0-213481623196",
     "items": [
       {
         "sku": "KNK-DRP-150",
@@ -443,7 +443,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-09T17:54:45.458Z",
+    "created_date": "2026-06-15T21:41:14.600Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -469,32 +469,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "e8a041ea-95d1-4444-b5c4-c6ba0dbb3a24",
-    "payment_date": "2026-06-19T17:54:45.458Z",
+    "prescriber_code": "3fe4c647-5c31-41bc-9d02-da2a6fcddad3",
+    "payment_date": "2026-06-25T21:41:14.600Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-07-19T17:54:45.458Z",
-    "last_tracking_date": "2026-07-20T17:54:45.458Z",
+    "tracking_code_date": "2026-07-25T21:41:14.600Z",
+    "last_tracking_date": "2026-07-26T21:41:14.600Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 8,
-    "date_created": "2026-06-10T17:54:45.458Z",
-    "date_updated": "2026-07-16T17:54:45.458Z",
+    "date_created": "2026-06-16T21:41:14.600Z",
+    "date_updated": "2026-07-22T21:41:14.600Z",
     "status": "Cancelado",
     "total": 540.8,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100007",
     "delivery_price": 21,
     "associate_name": "Hugo Vieira",
-    "order_code": "2490f9d4-3581-48fa-996a-74a45ecb424a",
-    "user_code": "b506005c-465c-410a-8cf3-ae8b3223e7b3",
+    "order_code": "378dc2f8-aba0-4892-9c12-6859b8f6e55e",
+    "user_code": "332e3f4f-895d-4e9c-b661-7dbe0ff8f541",
     "items": [
       {
         "sku": "KNK-TIN-200",
@@ -507,7 +507,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-10T17:54:45.458Z",
+    "created_date": "2026-06-16T21:41:14.600Z",
     "discount": 10,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -532,32 +532,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "d8af4c4d-ae93-42b5-b1d5-d55d80415907",
-    "payment_date": "2026-06-03T17:54:45.458Z",
+    "prescriber_code": "9358600c-a10b-4707-9835-7fff49c0dd2d",
+    "payment_date": "2026-06-09T21:41:14.600Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.458Z",
-    "last_tracking_date": "2026-06-03T17:54:45.458Z",
+    "tracking_code_date": "2026-06-09T21:41:14.600Z",
+    "last_tracking_date": "2026-06-09T21:41:14.600Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 9,
-    "date_created": "2026-06-11T17:54:45.458Z",
-    "date_updated": "2026-07-15T17:54:45.458Z",
+    "date_created": "2026-06-17T21:41:14.601Z",
+    "date_updated": "2026-07-21T21:41:14.601Z",
     "status": "Aguardando pagamento",
     "total": 683.6,
     "payment_method": "boleto",
     "tracking_code": "PENDING-100008",
     "delivery_price": 24,
     "associate_name": "Iris Yamamoto",
-    "order_code": "7c4b6b80-b5ff-44f2-bbfc-f79e4a07f7d2",
-    "user_code": "fa7d95ab-36a4-4b30-bcd4-bef240984cee",
+    "order_code": "bcc526be-f0d1-4f23-95c0-d6f38a1944de",
+    "user_code": "57956d71-7b56-475a-80c4-c60c94da4886",
     "items": [
       {
         "sku": "KNK-GEL-75",
@@ -580,7 +580,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-11T17:54:45.458Z",
+    "created_date": "2026-06-17T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -605,32 +605,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "cdd067f8-a270-4298-96d9-ba08e949221c",
-    "payment_date": "2026-06-03T17:54:45.458Z",
+    "prescriber_code": "7c4b9379-aabb-4646-a5fb-3f2a91c6ff28",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.458Z",
-    "last_tracking_date": "2026-06-03T17:54:45.458Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 10,
-    "date_created": "2026-06-12T17:54:45.458Z",
-    "date_updated": "2026-07-14T17:54:45.458Z",
+    "date_created": "2026-06-18T21:41:14.601Z",
+    "date_updated": "2026-07-20T21:41:14.601Z",
     "status": "Pagamento concluído",
     "total": 426.9,
     "payment_method": "pix",
     "tracking_code": "PENDING-100009",
     "delivery_price": 27,
     "associate_name": "João Barbosa",
-    "order_code": "43afd8ef-f756-43de-8b14-e00b8cb3260a",
-    "user_code": "1e09f220-bbfc-4401-bb21-cae1f695404f",
+    "order_code": "33efa9f7-5593-47f1-a7b9-89e89b8ee98c",
+    "user_code": "85cc16fb-d7b4-4acc-8bfa-1a18e53e7a03",
     "items": [
       {
         "sku": "KNK-ISO-1000",
@@ -643,7 +643,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-12T17:54:45.458Z",
+    "created_date": "2026-06-18T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -669,32 +669,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "c5dd5274-30d2-4d45-bef4-2190be24836a",
-    "payment_date": "2026-06-22T17:54:45.458Z",
+    "prescriber_code": "62b59b7b-85e1-46c8-9dd2-f9e706304209",
+    "payment_date": "2026-06-28T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.458Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 11,
-    "date_created": "2026-06-13T17:54:45.459Z",
-    "date_updated": "2026-07-13T17:54:45.459Z",
+    "date_created": "2026-06-19T21:41:14.601Z",
+    "date_updated": "2026-07-19T21:41:14.601Z",
     "status": "Em produção",
     "total": 544.7,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100010",
     "delivery_price": 15,
     "associate_name": "Karen Esteves",
-    "order_code": "c627493b-33c5-4872-8780-35a1e320979f",
-    "user_code": "994cd4ab-e7b3-4945-8d83-2c55c24fcaf6",
+    "order_code": "82bde630-9238-4a28-863f-00bbae45c796",
+    "user_code": "0963c193-d39c-4e4d-b362-88e211443b78",
     "items": [
       {
         "sku": "KNK-PET-50",
@@ -717,7 +717,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-13T17:54:45.459Z",
+    "created_date": "2026-06-19T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -742,32 +742,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "cba1e506-d21b-437e-8c32-7f20fc406d01",
-    "payment_date": "2026-06-23T17:54:45.459Z",
+    "prescriber_code": "5dc8ae1c-c45d-4362-9065-e85ebd5f3ef3",
+    "payment_date": "2026-06-29T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "Pedro Produção",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 12,
-    "date_created": "2026-06-14T17:54:45.459Z",
-    "date_updated": "2026-07-12T17:54:45.459Z",
+    "date_created": "2026-06-20T21:41:14.601Z",
+    "date_updated": "2026-07-18T21:41:14.601Z",
     "status": "Produção Finalizada",
     "total": 917.7,
     "payment_method": "boleto",
     "tracking_code": "PENDING-100011",
     "delivery_price": 18,
     "associate_name": "Lucas Henrique",
-    "order_code": "9727bb08-01b8-4c7b-9a9a-1a82579d697f",
-    "user_code": "62729eb6-1b7f-44a2-9e85-436deaf5b2f3",
+    "order_code": "dfca0dad-5322-4224-9db0-32af65a55b8b",
+    "user_code": "dd0e1e09-078d-4a2a-b9cc-74becc839d40",
     "items": [
       {
         "sku": "KNK-KIT-001",
@@ -780,7 +780,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-14T17:54:45.459Z",
+    "created_date": "2026-06-20T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -805,32 +805,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "7e05101f-a974-4716-82c7-14873670bea4",
-    "payment_date": "2026-06-24T17:54:45.459Z",
+    "prescriber_code": "9c915f92-50fb-4a06-9148-7caadb2e9fe5",
+    "payment_date": "2026-06-30T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "Pedro Produção",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 13,
-    "date_created": "2026-06-15T17:54:45.459Z",
-    "date_updated": "2026-07-11T17:54:45.459Z",
+    "date_created": "2026-06-21T21:41:14.601Z",
+    "date_updated": "2026-07-17T21:41:14.601Z",
     "status": "Adicionado no sistema",
     "total": 490.8,
     "payment_method": "pix",
     "tracking_code": "PENDING-100012",
     "delivery_price": 21,
     "associate_name": "Marina Klein",
-    "order_code": "96247b1e-a9dd-47c7-b201-3637d3f3376a",
-    "user_code": "d57b183b-881e-48be-a4d0-a7ebf7f08489",
+    "order_code": "72332fe8-db3d-45b1-a42a-74b0c045c272",
+    "user_code": "36f4990f-14bf-4725-b773-ee1c26b4bc2b",
     "items": [
       {
         "sku": "KNK-OIL-100",
@@ -853,7 +853,7 @@
         "category": "sleep"
       }
     ],
-    "created_date": "2026-06-15T17:54:45.459Z",
+    "created_date": "2026-06-21T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -879,32 +879,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "16eb82a4-57b2-409e-b439-ee6a7802982a",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "4c7bfa7e-c02d-47cd-a993-c2358da16be3",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 14,
-    "date_created": "2026-06-16T17:54:45.459Z",
-    "date_updated": "2026-07-10T17:54:45.459Z",
+    "date_created": "2026-06-22T21:41:14.601Z",
+    "date_updated": "2026-07-16T21:41:14.601Z",
     "status": "Enviado",
     "total": 723.8,
     "payment_method": "credit_card",
     "tracking_code": "BRDEMO100013",
     "delivery_price": 24,
     "associate_name": "Nuno Nogueira",
-    "order_code": "b3315fe6-8d5f-41af-a457-7b352b88198d",
-    "user_code": "7263db4b-3f79-45e8-ad18-193992bc518a",
+    "order_code": "95ce7625-ff46-421e-b83c-20eb59550e1d",
+    "user_code": "48075581-c1d4-46a8-8b2c-324a84414a72",
     "items": [
       {
         "sku": "KNK-OIL-300",
@@ -917,7 +917,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-16T17:54:45.459Z",
+    "created_date": "2026-06-22T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -942,32 +942,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "7d03e555-17fd-42df-b29c-93fbf3b4fedf",
-    "payment_date": "2026-06-26T17:54:45.459Z",
+    "prescriber_code": "f2dfd322-e5ce-4897-ae1b-fe84dba51639",
+    "payment_date": "2026-07-02T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-07-18T17:54:45.459Z",
-    "last_tracking_date": "2026-07-19T17:54:45.459Z",
+    "tracking_code_date": "2026-07-24T21:41:14.601Z",
+    "last_tracking_date": "2026-07-25T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 15,
-    "date_created": "2026-06-17T17:54:45.459Z",
-    "date_updated": "2026-07-09T17:54:45.459Z",
+    "date_created": "2026-06-23T21:41:14.601Z",
+    "date_updated": "2026-07-15T21:41:14.601Z",
     "status": "Entregue",
     "total": 606.6,
     "payment_method": "boleto",
     "tracking_code": "BRDEMO100014",
     "delivery_price": 27,
     "associate_name": "Olívia Queiroz",
-    "order_code": "f299e575-991d-4180-9865-d67d83b68706",
-    "user_code": "de96d46a-e574-42b7-a139-efcd1d531142",
+    "order_code": "243bfeae-a4ff-4439-8f9c-45d2f90073fd",
+    "user_code": "c6be7441-8799-4a1b-9d45-3f1ee6de8bf2",
     "items": [
       {
         "sku": "KNK-CAP-25",
@@ -990,7 +990,7 @@
         "category": "recovery"
       }
     ],
-    "created_date": "2026-06-17T17:54:45.459Z",
+    "created_date": "2026-06-23T21:41:14.601Z",
     "discount": 10,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -1015,32 +1015,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "79ddd282-35d3-4e56-be1a-3637d08a4ff8",
-    "payment_date": "2026-06-27T17:54:45.459Z",
+    "prescriber_code": "96b4a3f5-3ae4-4073-9485-17c24ff12d03",
+    "payment_date": "2026-07-03T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-07-19T17:54:45.459Z",
-    "last_tracking_date": "2026-07-20T17:54:45.459Z",
+    "tracking_code_date": "2026-07-25T21:41:14.601Z",
+    "last_tracking_date": "2026-07-26T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 16,
-    "date_created": "2026-06-18T17:54:45.459Z",
-    "date_updated": "2026-07-08T17:54:45.459Z",
+    "date_created": "2026-06-24T21:41:14.601Z",
+    "date_updated": "2026-07-14T21:41:14.601Z",
     "status": "Cancelado",
     "total": 294.9,
     "payment_method": "pix",
     "tracking_code": "PENDING-100015",
     "delivery_price": 15,
     "associate_name": "Paulo Teixeira",
-    "order_code": "931faeca-ebbf-4f6a-a774-0531918d8332",
-    "user_code": "9654dcf3-bd32-411d-b71c-5302e7c40d28",
+    "order_code": "6f56fe59-2b26-43a6-8609-d9e5c41946d8",
+    "user_code": "a4eef822-e70e-44a9-9cf5-c56c9f89ed87",
     "items": [
       {
         "sku": "KNK-CAP-25-60",
@@ -1053,7 +1053,7 @@
         "category": "sleep"
       }
     ],
-    "created_date": "2026-06-18T17:54:45.459Z",
+    "created_date": "2026-06-24T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -1079,32 +1079,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "62027f7e-7e14-4b61-a3ea-cf1bc4b0df6a",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "ff7efe51-83d9-4d90-801e-e7ec3bb8cd62",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 17,
-    "date_created": "2026-06-19T17:54:45.459Z",
-    "date_updated": "2026-07-07T17:54:45.459Z",
+    "date_created": "2026-06-25T21:41:14.601Z",
+    "date_updated": "2026-07-13T21:41:14.601Z",
     "status": "Aguardando pagamento",
     "total": 537.7,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100016",
     "delivery_price": 18,
     "associate_name": "Queila Wagner",
-    "order_code": "8b0f0246-90de-4ff9-ae5a-0879349d0b58",
-    "user_code": "67170015-9be6-4932-aa28-297696847193",
+    "order_code": "f125e2c8-ed77-40ac-8ac5-e715799e54ed",
+    "user_code": "41b16b6d-4386-413a-ab81-89030741edb6",
     "items": [
       {
         "sku": "KNK-SFT-15",
@@ -1127,7 +1127,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-19T17:54:45.459Z",
+    "created_date": "2026-06-25T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -1152,32 +1152,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "e8a041ea-95d1-4444-b5c4-c6ba0dbb3a24",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "3fe4c647-5c31-41bc-9d02-da2a6fcddad3",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 18,
-    "date_created": "2026-06-20T17:54:45.459Z",
-    "date_updated": "2026-07-06T17:54:45.459Z",
+    "date_created": "2026-06-26T21:41:14.601Z",
+    "date_updated": "2026-07-12T21:41:14.601Z",
     "status": "Pagamento concluído",
     "total": 320.7,
     "payment_method": "boleto",
     "tracking_code": "PENDING-100017",
     "delivery_price": 21,
     "associate_name": "Rafael Zanetti",
-    "order_code": "27ca7aa2-13a3-4d8e-af41-1a4e0908b4ac",
-    "user_code": "9645f266-3673-4075-af0f-67fdaa0736cb",
+    "order_code": "774500e5-7895-46de-9e05-c72e190fb49f",
+    "user_code": "4a3f9638-04d0-4cfb-b235-c307bf349eaf",
     "items": [
       {
         "sku": "KNK-BAL-50",
@@ -1190,7 +1190,7 @@
         "category": "recovery"
       }
     ],
-    "created_date": "2026-06-20T17:54:45.459Z",
+    "created_date": "2026-06-26T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -1215,32 +1215,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "d8af4c4d-ae93-42b5-b1d5-d55d80415907",
-    "payment_date": "2026-06-30T17:54:45.459Z",
+    "prescriber_code": "9358600c-a10b-4707-9835-7fff49c0dd2d",
+    "payment_date": "2026-07-06T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 19,
-    "date_created": "2026-06-21T17:54:45.459Z",
-    "date_updated": "2026-07-05T17:54:45.459Z",
+    "date_created": "2026-06-27T21:41:14.601Z",
+    "date_updated": "2026-07-11T21:41:14.601Z",
     "status": "Em produção",
     "total": 643.8,
     "payment_method": "pix",
     "tracking_code": "PENDING-100018",
     "delivery_price": 24,
     "associate_name": "Sofia Cardoso",
-    "order_code": "1bb653ad-ac73-4740-8a42-85f3f635006f",
-    "user_code": "9a4ff3c8-a62c-41af-ae3a-f14e61c4212c",
+    "order_code": "dfb8323b-f1bc-4641-a84a-28cc11bbaaee",
+    "user_code": "f0c22107-a55a-49a9-b921-6a3f824fe647",
     "items": [
       {
         "sku": "KNK-DRP-150",
@@ -1263,7 +1263,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-21T17:54:45.459Z",
+    "created_date": "2026-06-27T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -1289,32 +1289,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "cdd067f8-a270-4298-96d9-ba08e949221c",
-    "payment_date": "2026-07-01T17:54:45.459Z",
+    "prescriber_code": "7c4b9379-aabb-4646-a5fb-3f2a91c6ff28",
+    "payment_date": "2026-07-07T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "Pedro Produção",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 20,
-    "date_created": "2026-06-22T17:54:45.459Z",
-    "date_updated": "2026-07-04T17:54:45.459Z",
+    "date_created": "2026-06-28T21:41:14.601Z",
+    "date_updated": "2026-07-10T21:41:14.601Z",
     "status": "Produção Finalizada",
     "total": 546.8,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100019",
     "delivery_price": 27,
     "associate_name": "Tiago Freitas",
-    "order_code": "fcf21e0e-e98a-4968-b2b5-77168a2b3200",
-    "user_code": "88ffb0b1-07fd-4c1b-8dba-985748074371",
+    "order_code": "05ba4df0-391f-4709-9511-0efe10a0c6f1",
+    "user_code": "be862f6a-a1b6-4a4e-82bd-9cbc39d862ff",
     "items": [
       {
         "sku": "KNK-TIN-200",
@@ -1327,7 +1327,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-22T17:54:45.459Z",
+    "created_date": "2026-06-28T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -1352,32 +1352,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "c5dd5274-30d2-4d45-bef4-2190be24836a",
-    "payment_date": "2026-07-02T17:54:45.459Z",
+    "prescriber_code": "62b59b7b-85e1-46c8-9dd2-f9e706304209",
+    "payment_date": "2026-07-08T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "Pedro Produção",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 21,
-    "date_created": "2026-06-23T17:54:45.459Z",
-    "date_updated": "2026-07-23T17:54:45.459Z",
+    "date_created": "2026-06-29T21:41:14.601Z",
+    "date_updated": "2026-07-29T21:41:14.601Z",
     "status": "Adicionado no sistema",
     "total": 674.6,
     "payment_method": "boleto",
     "tracking_code": "PENDING-100020",
     "delivery_price": 15,
     "associate_name": "Úrsula Ibrahim",
-    "order_code": "8695987c-5e2e-4b61-99fe-4a576d9b6580",
-    "user_code": "5ade90ca-5b43-43a9-bcf9-c9c06d1d1bb6",
+    "order_code": "a7972101-ca0b-42cc-a983-df8d46402ad8",
+    "user_code": "e33f001f-14c4-4ced-b153-4b3bb9af3291",
     "items": [
       {
         "sku": "KNK-GEL-75",
@@ -1400,7 +1400,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-23T17:54:45.459Z",
+    "created_date": "2026-06-29T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -1425,32 +1425,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "cba1e506-d21b-437e-8c32-7f20fc406d01",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "5dc8ae1c-c45d-4362-9065-e85ebd5f3ef3",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 22,
-    "date_created": "2026-06-24T17:54:45.459Z",
-    "date_updated": "2026-07-22T17:54:45.459Z",
+    "date_created": "2026-06-30T21:41:14.601Z",
+    "date_updated": "2026-07-28T21:41:14.601Z",
     "status": "Enviado",
     "total": 417.9,
     "payment_method": "pix",
     "tracking_code": "BRDEMO100021",
     "delivery_price": 18,
     "associate_name": "Vitor Lima",
-    "order_code": "0fd9a391-01f7-4114-bc35-2ec999b0488f",
-    "user_code": "569558be-42e7-4c83-84d5-faebb96a84d9",
+    "order_code": "fd41af71-75c7-4b16-9f7c-11d2ff64224e",
+    "user_code": "fb02c9d3-b243-4691-80d3-0b11f9dd5bcd",
     "items": [
       {
         "sku": "KNK-ISO-1000",
@@ -1463,7 +1463,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-24T17:54:45.459Z",
+    "created_date": "2026-06-30T21:41:14.601Z",
     "discount": 10,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -1489,32 +1489,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "7e05101f-a974-4716-82c7-14873670bea4",
-    "payment_date": "2026-07-04T17:54:45.459Z",
+    "prescriber_code": "9c915f92-50fb-4a06-9148-7caadb2e9fe5",
+    "payment_date": "2026-07-10T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-07-18T17:54:45.459Z",
-    "last_tracking_date": "2026-07-19T17:54:45.459Z",
+    "tracking_code_date": "2026-07-24T21:41:14.601Z",
+    "last_tracking_date": "2026-07-25T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 23,
-    "date_created": "2026-06-25T17:54:45.459Z",
-    "date_updated": "2026-07-21T17:54:45.459Z",
+    "date_created": "2026-07-01T21:41:14.601Z",
+    "date_updated": "2026-07-27T21:41:14.601Z",
     "status": "Entregue",
     "total": 550.7,
     "payment_method": "credit_card",
     "tracking_code": "BRDEMO100022",
     "delivery_price": 21,
     "associate_name": "Wanda Oliveira",
-    "order_code": "4435d35a-71bc-44a6-93b6-1357a5bd4568",
-    "user_code": "dbae74ff-94e7-4694-8663-9ba2a9f636a2",
+    "order_code": "7e49aa5c-4610-4f51-8ea5-854257aafd01",
+    "user_code": "e57433a7-0930-4576-a13d-a8b402f1d61c",
     "items": [
       {
         "sku": "KNK-PET-50",
@@ -1537,7 +1537,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-25T17:54:45.459Z",
+    "created_date": "2026-07-01T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -1562,32 +1562,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "16eb82a4-57b2-409e-b439-ee6a7802982a",
-    "payment_date": "2026-07-05T17:54:45.459Z",
+    "prescriber_code": "4c7bfa7e-c02d-47cd-a993-c2358da16be3",
+    "payment_date": "2026-07-11T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-07-19T17:54:45.459Z",
-    "last_tracking_date": "2026-07-20T17:54:45.459Z",
+    "tracking_code_date": "2026-07-25T21:41:14.601Z",
+    "last_tracking_date": "2026-07-26T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 24,
-    "date_created": "2026-06-26T17:54:45.459Z",
-    "date_updated": "2026-07-20T17:54:45.459Z",
+    "date_created": "2026-07-02T21:41:14.601Z",
+    "date_updated": "2026-07-26T21:41:14.601Z",
     "status": "Cancelado",
     "total": 923.7,
     "payment_method": "boleto",
     "tracking_code": "PENDING-100023",
     "delivery_price": 24,
     "associate_name": "Xavier Ramos",
-    "order_code": "0c71b948-a012-490b-95b6-cdf738cf8866",
-    "user_code": "2f45009b-5857-4c99-9294-76b2f5cd20f6",
+    "order_code": "dd105c7a-5581-49ff-8d33-619b99b526cd",
+    "user_code": "97117863-4651-49e8-a1ea-d1aa500b1f27",
     "items": [
       {
         "sku": "KNK-KIT-001",
@@ -1600,7 +1600,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-26T17:54:45.459Z",
+    "created_date": "2026-07-02T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -1625,32 +1625,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "7d03e555-17fd-42df-b29c-93fbf3b4fedf",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "f2dfd322-e5ce-4897-ae1b-fe84dba51639",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 25,
-    "date_created": "2026-06-27T17:54:45.459Z",
-    "date_updated": "2026-07-19T17:54:45.459Z",
+    "date_created": "2026-07-03T21:41:14.601Z",
+    "date_updated": "2026-07-25T21:41:14.601Z",
     "status": "Aguardando pagamento",
     "total": 496.8,
     "payment_method": "pix",
     "tracking_code": "PENDING-100024",
     "delivery_price": 27,
     "associate_name": "Yasmin Uchoa",
-    "order_code": "a241bcb6-0e34-4aa1-aee9-c669b98226a5",
-    "user_code": "0e183f4b-ede4-4da9-b303-1a142be526c7",
+    "order_code": "efd59a04-de3c-424d-b855-2faf56c67099",
+    "user_code": "8deb77c5-b8a7-4a94-98e1-36d55d4d5892",
     "items": [
       {
         "sku": "KNK-OIL-100",
@@ -1673,7 +1673,7 @@
         "category": "sleep"
       }
     ],
-    "created_date": "2026-06-27T17:54:45.459Z",
+    "created_date": "2026-07-03T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -1699,32 +1699,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "79ddd282-35d3-4e56-be1a-3637d08a4ff8",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "96b4a3f5-3ae4-4073-9485-17c24ff12d03",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 26,
-    "date_created": "2026-06-28T17:54:45.459Z",
-    "date_updated": "2026-07-18T17:54:45.459Z",
+    "date_created": "2026-07-04T21:41:14.601Z",
+    "date_updated": "2026-07-24T21:41:14.601Z",
     "status": "Pagamento concluído",
     "total": 714.8,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100025",
     "delivery_price": 15,
     "associate_name": "Zeca Xavier",
-    "order_code": "945b271c-a9d6-4809-b56b-7a54d4d5ead2",
-    "user_code": "91f4fd9d-49ae-448b-ad51-40367d62901d",
+    "order_code": "bbc2f497-6641-456a-aa7a-a1a276c4b90e",
+    "user_code": "596954c8-a387-4444-b8d9-7ccd54c3895b",
     "items": [
       {
         "sku": "KNK-OIL-300",
@@ -1737,7 +1737,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-28T17:54:45.459Z",
+    "created_date": "2026-07-04T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -1762,32 +1762,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "62027f7e-7e14-4b61-a3ea-cf1bc4b0df6a",
-    "payment_date": "2026-07-08T17:54:45.459Z",
+    "prescriber_code": "ff7efe51-83d9-4d90-801e-e7ec3bb8cd62",
+    "payment_date": "2026-07-14T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 27,
-    "date_created": "2026-06-29T17:54:45.459Z",
-    "date_updated": "2026-07-17T17:54:45.459Z",
+    "date_created": "2026-07-05T21:41:14.601Z",
+    "date_updated": "2026-07-23T21:41:14.601Z",
     "status": "Em produção",
     "total": 597.6,
     "payment_method": "boleto",
     "tracking_code": "PENDING-100026",
     "delivery_price": 18,
     "associate_name": "Beatriz Almeida",
-    "order_code": "d6c34182-7406-4176-948f-328a876ecb0a",
-    "user_code": "1ed234d5-0abb-4a0b-a47a-3178c8f18a12",
+    "order_code": "aba253d6-d4ad-48e5-89a0-d35ff329e43a",
+    "user_code": "4074a317-0f5a-4f88-9976-996898c1f1fb",
     "items": [
       {
         "sku": "KNK-CAP-25",
@@ -1810,7 +1810,7 @@
         "category": "recovery"
       }
     ],
-    "created_date": "2026-06-29T17:54:45.459Z",
+    "created_date": "2026-07-05T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -1835,32 +1835,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "e8a041ea-95d1-4444-b5c4-c6ba0dbb3a24",
-    "payment_date": "2026-07-09T17:54:45.459Z",
+    "prescriber_code": "3fe4c647-5c31-41bc-9d02-da2a6fcddad3",
+    "payment_date": "2026-07-15T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "Pedro Produção",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 28,
-    "date_created": "2026-06-30T17:54:45.459Z",
-    "date_updated": "2026-07-16T17:54:45.459Z",
+    "date_created": "2026-07-06T21:41:14.601Z",
+    "date_updated": "2026-07-22T21:41:14.601Z",
     "status": "Produção Finalizada",
     "total": 300.9,
     "payment_method": "pix",
     "tracking_code": "PENDING-100027",
     "delivery_price": 21,
     "associate_name": "Caio Dias",
-    "order_code": "d05257ae-06a9-4fd6-8d06-113299024c82",
-    "user_code": "6df4a99e-a956-47dc-82d5-10e50eaedb92",
+    "order_code": "237acbfa-7d1e-44f9-8555-4cd8f06e83c1",
+    "user_code": "c8664261-634c-4083-ba4d-2d84ff15a5eb",
     "items": [
       {
         "sku": "KNK-CAP-25-60",
@@ -1873,7 +1873,7 @@
         "category": "sleep"
       }
     ],
-    "created_date": "2026-06-30T17:54:45.459Z",
+    "created_date": "2026-07-06T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -1899,32 +1899,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "d8af4c4d-ae93-42b5-b1d5-d55d80415907",
-    "payment_date": "2026-07-10T17:54:45.459Z",
+    "prescriber_code": "9358600c-a10b-4707-9835-7fff49c0dd2d",
+    "payment_date": "2026-07-16T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "Pedro Produção",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 29,
-    "date_created": "2026-07-01T17:54:45.459Z",
-    "date_updated": "2026-07-15T17:54:45.459Z",
+    "date_created": "2026-07-07T21:41:14.601Z",
+    "date_updated": "2026-07-21T21:41:14.601Z",
     "status": "Adicionado no sistema",
     "total": 543.7,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100028",
     "delivery_price": 24,
     "associate_name": "Débora Gomes",
-    "order_code": "3e4de8b1-152b-47c6-acf6-b20a0813edcf",
-    "user_code": "7a5f8142-7791-437a-be9a-839ecb6e1cbe",
+    "order_code": "68e3df3b-db36-477e-a5fb-0a249933233f",
+    "user_code": "db56cc84-adca-4057-a940-4c88e77b567c",
     "items": [
       {
         "sku": "KNK-SFT-15",
@@ -1947,7 +1947,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-07-01T17:54:45.459Z",
+    "created_date": "2026-07-07T21:41:14.601Z",
     "discount": 10,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -1972,32 +1972,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "cdd067f8-a270-4298-96d9-ba08e949221c",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "7c4b9379-aabb-4646-a5fb-3f2a91c6ff28",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 30,
-    "date_created": "2026-07-02T17:54:45.459Z",
-    "date_updated": "2026-07-14T17:54:45.459Z",
+    "date_created": "2026-07-08T21:41:14.601Z",
+    "date_updated": "2026-07-20T21:41:14.601Z",
     "status": "Enviado",
     "total": 326.7,
     "payment_method": "boleto",
     "tracking_code": "BRDEMO100029",
     "delivery_price": 27,
     "associate_name": "Eduardo Junqueira",
-    "order_code": "6cf7299e-a7fa-42f7-9b5c-bc86b8187dc8",
-    "user_code": "5c8ca01b-5534-4f08-8e5e-d1cdb8fa2818",
+    "order_code": "8ac1e5f7-93cd-4216-ad64-a9923790c405",
+    "user_code": "38dde0f5-a96f-4f52-8cce-63328cebb2c3",
     "items": [
       {
         "sku": "KNK-BAL-50",
@@ -2010,7 +2010,7 @@
         "category": "recovery"
       }
     ],
-    "created_date": "2026-07-02T17:54:45.459Z",
+    "created_date": "2026-07-08T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -2035,32 +2035,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "c5dd5274-30d2-4d45-bef4-2190be24836a",
-    "payment_date": "2026-07-12T17:54:45.459Z",
+    "prescriber_code": "62b59b7b-85e1-46c8-9dd2-f9e706304209",
+    "payment_date": "2026-07-18T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-07-18T17:54:45.459Z",
-    "last_tracking_date": "2026-07-19T17:54:45.459Z",
+    "tracking_code_date": "2026-07-24T21:41:14.601Z",
+    "last_tracking_date": "2026-07-25T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 31,
-    "date_created": "2026-07-03T17:54:45.459Z",
-    "date_updated": "2026-07-13T17:54:45.459Z",
+    "date_created": "2026-07-09T21:41:14.601Z",
+    "date_updated": "2026-07-19T21:41:14.601Z",
     "status": "Entregue",
     "total": 634.8,
     "payment_method": "pix",
     "tracking_code": "BRDEMO100030",
     "delivery_price": 15,
     "associate_name": "Ana Mendes",
-    "order_code": "c8217a7e-cda7-4ae9-a912-29378dd22ac6",
-    "user_code": "9791256b-9f62-48ab-9703-e7d7a9bf537e",
+    "order_code": "fc28a5a0-1220-4409-95cf-0cd00baff54e",
+    "user_code": "2f9a316f-9497-49eb-931e-052a5c68f677",
     "items": [
       {
         "sku": "KNK-DRP-150",
@@ -2083,7 +2083,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-07-03T17:54:45.459Z",
+    "created_date": "2026-07-09T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -2109,32 +2109,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "cba1e506-d21b-437e-8c32-7f20fc406d01",
-    "payment_date": "2026-06-13T17:54:45.459Z",
+    "prescriber_code": "5dc8ae1c-c45d-4362-9065-e85ebd5f3ef3",
+    "payment_date": "2026-06-19T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-07-19T17:54:45.459Z",
-    "last_tracking_date": "2026-07-20T17:54:45.459Z",
+    "tracking_code_date": "2026-07-25T21:41:14.601Z",
+    "last_tracking_date": "2026-07-26T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 32,
-    "date_created": "2026-07-04T17:54:45.459Z",
-    "date_updated": "2026-07-12T17:54:45.459Z",
+    "date_created": "2026-07-10T21:41:14.601Z",
+    "date_updated": "2026-07-18T21:41:14.601Z",
     "status": "Cancelado",
     "total": 537.8,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100031",
     "delivery_price": 18,
     "associate_name": "Bruno Pereira",
-    "order_code": "11b9aff5-1f1b-4b67-b987-a5d2c0b0ec7d",
-    "user_code": "a6c6cd96-fff0-456a-b8a7-4b50ffdcde72",
+    "order_code": "a0bf9ceb-43b1-48d1-96c9-aab7ba128fc4",
+    "user_code": "b1219b4c-3d72-4ae9-9969-b495133951fc",
     "items": [
       {
         "sku": "KNK-TIN-200",
@@ -2147,7 +2147,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-07-04T17:54:45.459Z",
+    "created_date": "2026-07-10T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -2172,32 +2172,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "7e05101f-a974-4716-82c7-14873670bea4",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "9c915f92-50fb-4a06-9148-7caadb2e9fe5",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 33,
-    "date_created": "2026-07-05T17:54:45.459Z",
-    "date_updated": "2026-07-11T17:54:45.459Z",
+    "date_created": "2026-07-11T21:41:14.601Z",
+    "date_updated": "2026-07-17T21:41:14.601Z",
     "status": "Aguardando pagamento",
     "total": 680.6,
     "payment_method": "boleto",
     "tracking_code": "PENDING-100032",
     "delivery_price": 21,
     "associate_name": "Carla Silva",
-    "order_code": "eb50ae12-368a-496e-8a3d-0b953d3f3483",
-    "user_code": "72cfeb51-9a0c-47f9-a10e-32e230949e4c",
+    "order_code": "bddda941-3234-41f6-9d33-c692d24ee7f0",
+    "user_code": "25d60529-9f92-43a5-a033-5935bf13648a",
     "items": [
       {
         "sku": "KNK-GEL-75",
@@ -2220,7 +2220,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-07-05T17:54:45.459Z",
+    "created_date": "2026-07-11T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -2245,32 +2245,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "16eb82a4-57b2-409e-b439-ee6a7802982a",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "4c7bfa7e-c02d-47cd-a993-c2358da16be3",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 34,
-    "date_created": "2026-07-06T17:54:45.459Z",
-    "date_updated": "2026-07-10T17:54:45.459Z",
+    "date_created": "2026-07-12T21:41:14.601Z",
+    "date_updated": "2026-07-16T21:41:14.601Z",
     "status": "Pagamento concluído",
     "total": 423.9,
     "payment_method": "pix",
     "tracking_code": "PENDING-100033",
     "delivery_price": 24,
     "associate_name": "Diego Vieira",
-    "order_code": "0c8bc6f9-5c39-4df1-ada9-7091bd9a66e8",
-    "user_code": "ff602251-9351-4dd7-a1d6-2cdf7f8ac080",
+    "order_code": "016b1a2a-1c12-4b86-bceb-a3a978e31a90",
+    "user_code": "ee1bb4eb-1f1d-45cd-b827-72a5fa15d8ec",
     "items": [
       {
         "sku": "KNK-ISO-1000",
@@ -2283,7 +2283,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-07-06T17:54:45.459Z",
+    "created_date": "2026-07-12T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -2309,32 +2309,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "7d03e555-17fd-42df-b29c-93fbf3b4fedf",
-    "payment_date": "2026-06-16T17:54:45.459Z",
+    "prescriber_code": "f2dfd322-e5ce-4897-ae1b-fe84dba51639",
+    "payment_date": "2026-06-22T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 35,
-    "date_created": "2026-07-07T17:54:45.459Z",
-    "date_updated": "2026-07-09T17:54:45.459Z",
+    "date_created": "2026-07-13T21:41:14.601Z",
+    "date_updated": "2026-07-15T21:41:14.601Z",
     "status": "Em produção",
     "total": 556.7,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100034",
     "delivery_price": 27,
     "associate_name": "Elena Yamamoto",
-    "order_code": "9c11670a-51d9-4da0-a5eb-c42c30570ad7",
-    "user_code": "b56af865-3025-4bb6-8f9f-68fd956cc419",
+    "order_code": "beb244c8-ddfd-415a-b236-e333541a7387",
+    "user_code": "32addef9-6d58-464a-8b22-1ff4a830d8f9",
     "items": [
       {
         "sku": "KNK-PET-50",
@@ -2357,7 +2357,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-07-07T17:54:45.459Z",
+    "created_date": "2026-07-13T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -2382,32 +2382,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "79ddd282-35d3-4e56-be1a-3637d08a4ff8",
-    "payment_date": "2026-06-17T17:54:45.459Z",
+    "prescriber_code": "96b4a3f5-3ae4-4073-9485-17c24ff12d03",
+    "payment_date": "2026-06-23T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "Pedro Produção",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 36,
-    "date_created": "2026-07-08T17:54:45.459Z",
-    "date_updated": "2026-07-08T17:54:45.459Z",
+    "date_created": "2026-07-14T21:41:14.601Z",
+    "date_updated": "2026-07-14T21:41:14.601Z",
     "status": "Produção Finalizada",
     "total": 914.7,
     "payment_method": "boleto",
     "tracking_code": "PENDING-100035",
     "delivery_price": 15,
     "associate_name": "Fábio Barbosa",
-    "order_code": "841a320d-427a-4eee-bf9b-fe672201b96f",
-    "user_code": "6ee31a59-40a0-40a0-9c8d-e5369c54eefb",
+    "order_code": "29f84fbf-6a6d-4273-89de-65cf13e1d74b",
+    "user_code": "3ee5e013-e5fc-42c0-a67f-17b4ace14e0e",
     "items": [
       {
         "sku": "KNK-KIT-001",
@@ -2420,7 +2420,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-07-08T17:54:45.459Z",
+    "created_date": "2026-07-14T21:41:14.601Z",
     "discount": 10,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -2445,32 +2445,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "62027f7e-7e14-4b61-a3ea-cf1bc4b0df6a",
-    "payment_date": "2026-06-18T17:54:45.459Z",
+    "prescriber_code": "ff7efe51-83d9-4d90-801e-e7ec3bb8cd62",
+    "payment_date": "2026-06-24T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "Pedro Produção",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 37,
-    "date_created": "2026-07-09T17:54:45.459Z",
-    "date_updated": "2026-07-07T17:54:45.459Z",
+    "date_created": "2026-07-15T21:41:14.601Z",
+    "date_updated": "2026-07-13T21:41:14.601Z",
     "status": "Adicionado no sistema",
     "total": 487.8,
     "payment_method": "pix",
     "tracking_code": "PENDING-100036",
     "delivery_price": 18,
     "associate_name": "Gabriela Esteves",
-    "order_code": "5eb86acd-62ab-44a1-a8bb-98737e8e5987",
-    "user_code": "79e354cc-d1dc-44af-a4be-e618b9e14f3e",
+    "order_code": "808de60f-24f9-4cf0-a3e5-7a2433cff65e",
+    "user_code": "301a1b16-33c9-49c2-ac95-417e55b65878",
     "items": [
       {
         "sku": "KNK-OIL-100",
@@ -2493,7 +2493,7 @@
         "category": "sleep"
       }
     ],
-    "created_date": "2026-07-09T17:54:45.459Z",
+    "created_date": "2026-07-15T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -2519,32 +2519,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "e8a041ea-95d1-4444-b5c4-c6ba0dbb3a24",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "3fe4c647-5c31-41bc-9d02-da2a6fcddad3",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 38,
-    "date_created": "2026-07-10T17:54:45.459Z",
-    "date_updated": "2026-07-06T17:54:45.459Z",
+    "date_created": "2026-07-16T21:41:14.601Z",
+    "date_updated": "2026-07-12T21:41:14.601Z",
     "status": "Enviado",
     "total": 720.8,
     "payment_method": "credit_card",
     "tracking_code": "BRDEMO100037",
     "delivery_price": 21,
     "associate_name": "Hugo Henrique",
-    "order_code": "cdd206fe-f2dd-478a-ac63-66617ae2c20c",
-    "user_code": "9c766bac-179e-4e68-a6cc-74ff9e19c580",
+    "order_code": "2f32fc31-9a1f-4f7c-91c9-56f4f84d421a",
+    "user_code": "c5abb74d-931a-4482-b370-16bd4b8fb57c",
     "items": [
       {
         "sku": "KNK-OIL-300",
@@ -2557,7 +2557,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-07-10T17:54:45.459Z",
+    "created_date": "2026-07-16T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -2582,32 +2582,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "d8af4c4d-ae93-42b5-b1d5-d55d80415907",
-    "payment_date": "2026-06-20T17:54:45.459Z",
+    "prescriber_code": "9358600c-a10b-4707-9835-7fff49c0dd2d",
+    "payment_date": "2026-06-26T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-07-18T17:54:45.459Z",
-    "last_tracking_date": "2026-07-19T17:54:45.459Z",
+    "tracking_code_date": "2026-07-24T21:41:14.601Z",
+    "last_tracking_date": "2026-07-25T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 39,
-    "date_created": "2026-07-11T17:54:45.459Z",
-    "date_updated": "2026-07-05T17:54:45.459Z",
+    "date_created": "2026-07-17T21:41:14.601Z",
+    "date_updated": "2026-07-11T21:41:14.601Z",
     "status": "Entregue",
     "total": 603.6,
     "payment_method": "boleto",
     "tracking_code": "BRDEMO100038",
     "delivery_price": 24,
     "associate_name": "Iris Klein",
-    "order_code": "381dd49a-4811-4ebb-9000-e8e1d3619e4d",
-    "user_code": "fec05ec7-7f53-46f6-937c-7ce5121fb8e7",
+    "order_code": "01a92ffe-395b-4c1b-8cfb-464a2c93f868",
+    "user_code": "940d8720-80e5-474b-b524-fde9da8ed9d9",
     "items": [
       {
         "sku": "KNK-CAP-25",
@@ -2630,7 +2630,7 @@
         "category": "recovery"
       }
     ],
-    "created_date": "2026-07-11T17:54:45.459Z",
+    "created_date": "2026-07-17T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -2655,32 +2655,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "cdd067f8-a270-4298-96d9-ba08e949221c",
-    "payment_date": "2026-06-21T17:54:45.459Z",
+    "prescriber_code": "7c4b9379-aabb-4646-a5fb-3f2a91c6ff28",
+    "payment_date": "2026-06-27T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-07-19T17:54:45.459Z",
-    "last_tracking_date": "2026-07-20T17:54:45.459Z",
+    "tracking_code_date": "2026-07-25T21:41:14.601Z",
+    "last_tracking_date": "2026-07-26T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 40,
-    "date_created": "2026-07-12T17:54:45.459Z",
-    "date_updated": "2026-07-04T17:54:45.459Z",
+    "date_created": "2026-07-18T21:41:14.601Z",
+    "date_updated": "2026-07-10T21:41:14.601Z",
     "status": "Cancelado",
     "total": 306.9,
     "payment_method": "pix",
     "tracking_code": "PENDING-100039",
     "delivery_price": 27,
     "associate_name": "João Nogueira",
-    "order_code": "374af27d-5abc-43fc-be7f-729ef2277672",
-    "user_code": "1f9867d5-8259-476d-835f-4ae2116752ed",
+    "order_code": "336e21f7-bfc9-4e38-a4ff-cdba3f24673b",
+    "user_code": "4e677c66-9a62-47a9-9911-c90be1a672d5",
     "items": [
       {
         "sku": "KNK-CAP-25-60",
@@ -2693,7 +2693,7 @@
         "category": "sleep"
       }
     ],
-    "created_date": "2026-07-12T17:54:45.459Z",
+    "created_date": "2026-07-18T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -2719,32 +2719,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "c5dd5274-30d2-4d45-bef4-2190be24836a",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "62b59b7b-85e1-46c8-9dd2-f9e706304209",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 41,
-    "date_created": "2026-07-13T17:54:45.459Z",
-    "date_updated": "2026-07-23T17:54:45.459Z",
+    "date_created": "2026-07-19T21:41:14.601Z",
+    "date_updated": "2026-07-29T21:41:14.601Z",
     "status": "Aguardando pagamento",
     "total": 534.7,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100040",
     "delivery_price": 15,
     "associate_name": "Karen Queiroz",
-    "order_code": "d53134ee-61c1-4b8a-9caa-7d8413db4002",
-    "user_code": "ce3627c7-f5ea-4a73-a412-89026f0144ce",
+    "order_code": "c2a3e6c5-b310-464c-8a6f-a2493dbcc196",
+    "user_code": "0e0b077f-e018-4a87-ba20-726942298ea6",
     "items": [
       {
         "sku": "KNK-SFT-15",
@@ -2767,7 +2767,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-07-13T17:54:45.459Z",
+    "created_date": "2026-07-19T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -2792,32 +2792,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "cba1e506-d21b-437e-8c32-7f20fc406d01",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "5dc8ae1c-c45d-4362-9065-e85ebd5f3ef3",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 42,
-    "date_created": "2026-07-14T17:54:45.459Z",
-    "date_updated": "2026-07-22T17:54:45.459Z",
+    "date_created": "2026-07-20T21:41:14.601Z",
+    "date_updated": "2026-07-28T21:41:14.601Z",
     "status": "Pagamento concluído",
     "total": 317.7,
     "payment_method": "boleto",
     "tracking_code": "PENDING-100041",
     "delivery_price": 18,
     "associate_name": "Lucas Teixeira",
-    "order_code": "81c87bd7-2687-4254-be51-6698e031fe93",
-    "user_code": "19510a76-0d40-42e6-bbc5-5af8bdab9488",
+    "order_code": "5594aae4-b2df-42e0-b243-d82cbf6da976",
+    "user_code": "0e00e558-80fe-41cf-ae0b-18f85ea67f9e",
     "items": [
       {
         "sku": "KNK-BAL-50",
@@ -2830,7 +2830,7 @@
         "category": "recovery"
       }
     ],
-    "created_date": "2026-07-14T17:54:45.459Z",
+    "created_date": "2026-07-20T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -2855,32 +2855,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "7e05101f-a974-4716-82c7-14873670bea4",
-    "payment_date": "2026-06-24T17:54:45.459Z",
+    "prescriber_code": "9c915f92-50fb-4a06-9148-7caadb2e9fe5",
+    "payment_date": "2026-06-30T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 43,
-    "date_created": "2026-07-15T17:54:45.459Z",
-    "date_updated": "2026-07-21T17:54:45.459Z",
+    "date_created": "2026-07-21T21:41:14.601Z",
+    "date_updated": "2026-07-27T21:41:14.601Z",
     "status": "Em produção",
     "total": 640.8,
     "payment_method": "pix",
     "tracking_code": "PENDING-100042",
     "delivery_price": 21,
     "associate_name": "Marina Wagner",
-    "order_code": "34debef5-bc27-43d8-9e1c-d5bbaacfcbe5",
-    "user_code": "777d2c19-c46f-40cb-9f17-828fc9422a25",
+    "order_code": "7e7de2a1-9d6a-4f8a-b984-f5e988037328",
+    "user_code": "cc2112d9-836e-4c85-804f-c57cfe748a78",
     "items": [
       {
         "sku": "KNK-DRP-150",
@@ -2903,7 +2903,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-07-15T17:54:45.459Z",
+    "created_date": "2026-07-21T21:41:14.601Z",
     "discount": 10,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -2929,32 +2929,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "16eb82a4-57b2-409e-b439-ee6a7802982a",
-    "payment_date": "2026-06-25T17:54:45.459Z",
+    "prescriber_code": "4c7bfa7e-c02d-47cd-a993-c2358da16be3",
+    "payment_date": "2026-07-01T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "Pedro Produção",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 44,
-    "date_created": "2026-07-16T17:54:45.459Z",
-    "date_updated": "2026-07-20T17:54:45.459Z",
+    "date_created": "2026-07-22T21:41:14.601Z",
+    "date_updated": "2026-07-26T21:41:14.601Z",
     "status": "Produção Finalizada",
     "total": 543.8,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100043",
     "delivery_price": 24,
     "associate_name": "Nuno Zanetti",
-    "order_code": "e77dddac-440c-4dd2-9c7e-f6f1ea1bfaca",
-    "user_code": "4064bc38-d9a9-4b85-828b-f2437214a561",
+    "order_code": "71b3fa41-7448-4cab-8c96-29252b21e7df",
+    "user_code": "95a12cfa-dd81-4c60-9561-be1fce202c9e",
     "items": [
       {
         "sku": "KNK-TIN-200",
@@ -2967,7 +2967,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-07-16T17:54:45.459Z",
+    "created_date": "2026-07-22T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -2992,32 +2992,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "7d03e555-17fd-42df-b29c-93fbf3b4fedf",
-    "payment_date": "2026-06-26T17:54:45.459Z",
+    "prescriber_code": "f2dfd322-e5ce-4897-ae1b-fe84dba51639",
+    "payment_date": "2026-07-02T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "Pedro Produção",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 45,
-    "date_created": "2026-07-17T17:54:45.459Z",
-    "date_updated": "2026-07-19T17:54:45.459Z",
+    "date_created": "2026-07-23T21:41:14.601Z",
+    "date_updated": "2026-07-25T21:41:14.601Z",
     "status": "Adicionado no sistema",
     "total": 686.6,
     "payment_method": "boleto",
     "tracking_code": "PENDING-100044",
     "delivery_price": 27,
     "associate_name": "Olívia Cardoso",
-    "order_code": "737668b8-2be8-4c88-9dbf-94d815eeb1f5",
-    "user_code": "9ea78e01-6015-4ecf-bfca-7e51ba65bbe2",
+    "order_code": "5e216a58-217b-43fe-89eb-ddb5470063fc",
+    "user_code": "5e4da0df-98d1-43e7-82f8-d56239d5b7ad",
     "items": [
       {
         "sku": "KNK-GEL-75",
@@ -3040,7 +3040,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-07-17T17:54:45.459Z",
+    "created_date": "2026-07-23T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -3065,32 +3065,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "79ddd282-35d3-4e56-be1a-3637d08a4ff8",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "96b4a3f5-3ae4-4073-9485-17c24ff12d03",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 46,
-    "date_created": "2026-06-03T17:54:45.459Z",
-    "date_updated": "2026-07-18T17:54:45.459Z",
+    "date_created": "2026-06-09T21:41:14.601Z",
+    "date_updated": "2026-07-24T21:41:14.601Z",
     "status": "Enviado",
     "total": 414.9,
     "payment_method": "pix",
     "tracking_code": "BRDEMO100045",
     "delivery_price": 15,
     "associate_name": "Paulo Freitas",
-    "order_code": "1b85b603-055a-42df-a016-ffc188d16a44",
-    "user_code": "09726916-6007-44d3-98b0-7a5fd21965ca",
+    "order_code": "f200f172-e716-475d-887e-ccecb0f1a798",
+    "user_code": "3753025a-8796-4cd1-8d9f-e6424b721101",
     "items": [
       {
         "sku": "KNK-ISO-1000",
@@ -3103,7 +3103,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-03T17:54:45.459Z",
+    "created_date": "2026-06-09T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -3129,32 +3129,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "62027f7e-7e14-4b61-a3ea-cf1bc4b0df6a",
-    "payment_date": "2026-06-28T17:54:45.459Z",
+    "prescriber_code": "ff7efe51-83d9-4d90-801e-e7ec3bb8cd62",
+    "payment_date": "2026-07-04T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-07-18T17:54:45.459Z",
-    "last_tracking_date": "2026-07-19T17:54:45.459Z",
+    "tracking_code_date": "2026-07-24T21:41:14.601Z",
+    "last_tracking_date": "2026-07-25T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 47,
-    "date_created": "2026-06-04T17:54:45.459Z",
-    "date_updated": "2026-07-17T17:54:45.459Z",
+    "date_created": "2026-06-10T21:41:14.601Z",
+    "date_updated": "2026-07-23T21:41:14.601Z",
     "status": "Entregue",
     "total": 547.7,
     "payment_method": "credit_card",
     "tracking_code": "BRDEMO100046",
     "delivery_price": 18,
     "associate_name": "Queila Ibrahim",
-    "order_code": "e69f264a-4320-48ca-8a35-a84b05f85055",
-    "user_code": "b403be84-4a18-40dd-b683-0b71c816662d",
+    "order_code": "1e399395-f7ab-478b-aae5-5fe186203df4",
+    "user_code": "48cae85c-a2ad-487b-8f42-2e4520f8ed6e",
     "items": [
       {
         "sku": "KNK-PET-50",
@@ -3177,7 +3177,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-04T17:54:45.459Z",
+    "created_date": "2026-06-10T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -3202,32 +3202,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "e8a041ea-95d1-4444-b5c4-c6ba0dbb3a24",
-    "payment_date": "2026-06-29T17:54:45.459Z",
+    "prescriber_code": "3fe4c647-5c31-41bc-9d02-da2a6fcddad3",
+    "payment_date": "2026-07-05T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-07-19T17:54:45.459Z",
-    "last_tracking_date": "2026-07-20T17:54:45.459Z",
+    "tracking_code_date": "2026-07-25T21:41:14.601Z",
+    "last_tracking_date": "2026-07-26T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 48,
-    "date_created": "2026-06-05T17:54:45.459Z",
-    "date_updated": "2026-07-16T17:54:45.459Z",
+    "date_created": "2026-06-11T21:41:14.601Z",
+    "date_updated": "2026-07-22T21:41:14.601Z",
     "status": "Cancelado",
     "total": 920.7,
     "payment_method": "boleto",
     "tracking_code": "PENDING-100047",
     "delivery_price": 21,
     "associate_name": "Rafael Lima",
-    "order_code": "de9a7afe-72e8-43fa-a201-c324f157de6b",
-    "user_code": "3736d86e-9ed4-4b25-89bb-97db36ba3135",
+    "order_code": "74528640-e95e-45db-a3db-29b2e2bd55d0",
+    "user_code": "c8d50859-121b-4523-9776-a87d8de59c28",
     "items": [
       {
         "sku": "KNK-KIT-001",
@@ -3240,7 +3240,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-05T17:54:45.459Z",
+    "created_date": "2026-06-11T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -3265,32 +3265,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "d8af4c4d-ae93-42b5-b1d5-d55d80415907",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "9358600c-a10b-4707-9835-7fff49c0dd2d",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "corrected",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 49,
-    "date_created": "2026-06-06T17:54:45.459Z",
-    "date_updated": "2026-07-15T17:54:45.459Z",
+    "date_created": "2026-06-12T21:41:14.601Z",
+    "date_updated": "2026-07-21T21:41:14.601Z",
     "status": "Aguardando pagamento",
     "total": 493.8,
     "payment_method": "pix",
     "tracking_code": "PENDING-100048",
     "delivery_price": 24,
     "associate_name": "Sofia Oliveira",
-    "order_code": "effedef3-877c-45c3-b104-3a02dd915a9e",
-    "user_code": "2db03c57-18eb-433b-872b-493d8f24de40",
+    "order_code": "9801fa4d-3a59-46b5-b6a0-d5abefe31016",
+    "user_code": "cdaed199-26ae-4b70-8c0a-48600a7aa814",
     "items": [
       {
         "sku": "KNK-OIL-100",
@@ -3313,7 +3313,7 @@
         "category": "sleep"
       }
     ],
-    "created_date": "2026-06-06T17:54:45.459Z",
+    "created_date": "2026-06-12T21:41:14.601Z",
     "discount": 0,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 20,
@@ -3339,32 +3339,32 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "cdd067f8-a270-4298-96d9-ba08e949221c",
-    "payment_date": "2026-06-03T17:54:45.459Z",
+    "prescriber_code": "7c4b9379-aabb-4646-a5fb-3f2a91c6ff28",
+    "payment_date": "2026-06-09T21:41:14.601Z",
     "custom_payment": {
       "method": "pending",
       "installments": 0,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "valid",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true
   },
   {
     "sort": 50,
-    "date_created": "2026-06-07T17:54:45.459Z",
-    "date_updated": "2026-07-14T17:54:45.459Z",
+    "date_created": "2026-06-13T21:41:14.601Z",
+    "date_updated": "2026-07-20T21:41:14.601Z",
     "status": "Pagamento concluído",
     "total": 726.8,
     "payment_method": "credit_card",
     "tracking_code": "PENDING-100049",
     "delivery_price": 27,
     "associate_name": "Tiago Ramos",
-    "order_code": "dafb5580-7a53-4a64-95a0-d1fde1b30bff",
-    "user_code": "c2d1e129-f672-4fbb-8104-01c195e243ae",
+    "order_code": "08433e37-5853-4ba6-9b76-cb9c3f1764b1",
+    "user_code": "622f002e-d55f-495f-a81b-97d631bce082",
     "items": [
       {
         "sku": "KNK-OIL-300",
@@ -3377,7 +3377,7 @@
         "category": "wellness"
       }
     ],
-    "created_date": "2026-06-07T17:54:45.459Z",
+    "created_date": "2026-06-13T21:41:14.601Z",
     "discount": 10,
     "details": "Pedido demo sample-data com todos os campos preenchidos.",
     "donation": 0,
@@ -3402,16 +3402,16 @@
       "country": "BR"
     },
     "whatsapp_message": "Mensagem WhatsApp fictícia do pedido demo.",
-    "prescriber_code": "c5dd5274-30d2-4d45-bef4-2190be24836a",
-    "payment_date": "2026-07-02T17:54:45.459Z",
+    "prescriber_code": "62b59b7b-85e1-46c8-9dd2-f9e706304209",
+    "payment_date": "2026-07-08T21:41:14.601Z",
     "custom_payment": {
       "method": "pix",
       "installments": 1,
       "gateway": "demo-gateway"
     },
     "production_owner": "não atribuído",
-    "tracking_code_date": "2026-06-03T17:54:45.459Z",
-    "last_tracking_date": "2026-06-03T17:54:45.459Z",
+    "tracking_code_date": "2026-06-09T21:41:14.601Z",
+    "last_tracking_date": "2026-06-09T21:41:14.601Z",
     "address_validation": "pending",
     "created_by_user_code": "KNK-ADMIN",
     "is_sample": true

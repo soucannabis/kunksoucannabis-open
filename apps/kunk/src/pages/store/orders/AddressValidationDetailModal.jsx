@@ -24,6 +24,7 @@ import {
   getViaCepDisplayFromResult,
   openGoogleMapsForQuery,
 } from '../../../lib/addressValidationUi.js';
+import { contentAreaDialogProps } from '../../../layout/contentAreaOverlay.js';
 import FreightRecalcAssistant from './FreightRecalcAssistant.jsx';
 import { shouldOfferFreightRecalc } from '../../../lib/freightRecalc.js';
 
@@ -164,7 +165,7 @@ export default function AddressValidationDetailModal({
 
   return (
     <>
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth {...contentAreaDialogProps}>
       <DialogTitle>Verificação de endereço</DialogTitle>
       <DialogContent dividers>
         {order && (

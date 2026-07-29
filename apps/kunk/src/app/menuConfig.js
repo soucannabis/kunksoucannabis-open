@@ -9,7 +9,7 @@ export const KUNK_APP_ROLES = [...KUNK_STAFF_ROLES, 'Profissional'];
  * File/component names stay in English.
  */
 export const PATHS = {
-  registration: '/app/acolhimento/cadastramento',
+  registration: '/app/acolhimento/associados',
   services: '/app/acolhimento/servicos',
   triage: '/app/acolhimento/triagem',
   institutionalClients: '/app/acolhimento/clientesinstitucionais',

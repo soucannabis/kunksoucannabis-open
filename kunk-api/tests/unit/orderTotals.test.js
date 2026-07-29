@@ -33,6 +33,18 @@ describe('orderTotals', () => {
     assert.equal(r.discount_effective, 15);
   });
 
+  it('custom_payment object (legado) is ignored, not thrown', () => {
+    const r = computeExpectedTotal({
+      items: [{ amount: 100, quantity: 1 }],
+      delivery_price: 0,
+      discount: 0,
+      donation: 0,
+      custom_payment: { method: 'pix', gateway: 'demo' },
+    });
+    assert.equal(r.expected_total, 100);
+    assert.equal(r.discount_effective, 0);
+  });
+
   it('apply_to_total false ignores freight', () => {
     const r = computeExpectedTotal({
       items: [{ amount: 50, quantity: 1 }],

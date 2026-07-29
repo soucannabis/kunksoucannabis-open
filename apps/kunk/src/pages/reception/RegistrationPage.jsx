@@ -1,24 +1,35 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, Button, CircularProgress, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  FormControl,
+  MenuItem,
+  Select,
+  Typography,
+} from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
 import { PATHS } from '../../app/menuConfig.js';
-import AssociatesFilters from './associates/AssociatesFilters.jsx';
+import AssociatesFilters, { PAGE_SIZE_OPTIONS } from './associates/AssociatesFilters.jsx';
 import AssociatesTable from './associates/AssociatesTable.jsx';
 import CreateAssociateModal from './associates/CreateAssociateModal.jsx';
 import AssociateModal from './associates/AssociateModal.jsx';
 import {
+  buildAssociatesListQuery,
   displayName,
-  matchesFilter,
-  statusLabel,
 } from './associates/associatesStatus.js';
 
 const muiTheme = createTheme();
 const GREEN = '#5a7a5b';
+const GREEN_HOVER = '#4a684b';
+const PURPLE = '#7a5b7a';
+const DEFAULT_PAGE_SIZE = 30;
 
 export default function RegistrationPage() {
   const bootstrap = getKunkPublicConfig();
@@ -27,25 +38,29 @@ export default function RegistrationPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [limit, setLimit] = useState(60);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [filter, setFilter] = useState('');
-  const [localQ, setLocalQ] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [patientNames, setPatientNames] = useState({});
 
-  const load = useCallback(async ({ silent = false, nextLimit } = {}) => {
-    if (silent) setLoadingMore(true);
-    else setLoading(true);
+  const deepA = searchParams.get('a');
+  const totalPages = Math.max(1, Math.ceil((Number(totalCount) || 0) / pageSize) || 1);
+
+  const load = useCallback(async () => {
+    setLoading(true);
     try {
-      const deepA = searchParams.get('a');
       if (deepA) {
         const res = await api.getUserByCode(deepA, 'patients=1');
         const u = res.data;
         setRows(u ? [u] : []);
+        setTotalCount(u ? 1 : 0);
         setSelected(u || null);
         if (u?.patients?.length) {
           setPatientNames({
@@ -60,18 +75,23 @@ export default function RegistrationPage() {
           } catch {
             /* ignore */
           }
+        } else {
+          setPatientNames({});
         }
         return;
       }
 
-      const params = new URLSearchParams();
-      params.set('limit', String(nextLimit ?? limit));
-      params.set('sort', '-created_date');
-      params.set('filter[status][_neq]', 'patient');
-      params.set('patients', '1');
-      const res = await api.listUsers(params.toString());
-      const data = res.data || [];
+      const qs = buildAssociatesListQuery({
+        page,
+        pageSize,
+        search,
+        statusFilter: filter,
+      });
+      const res = await api.listUsers(qs);
+      const data = (res.data || []).filter((u) => String(u.status) !== 'patient');
       setRows(data);
+      const metaCount = res.meta?.filter_count;
+      setTotalCount(typeof metaCount === 'number' ? metaCount : data.length);
 
       const names = {};
       for (const u of data) {
@@ -94,52 +114,38 @@ export default function RegistrationPage() {
       setPatientNames(names);
     } catch (err) {
       showError(err.message || 'Falha ao carregar associados');
-      if (!silent) setRows([]);
+      setRows([]);
+      setTotalCount(0);
     } finally {
-      if (silent) setLoadingMore(false);
-      else setLoading(false);
+      setLoading(false);
     }
-  }, [api, limit, searchParams, showError]);
+  }, [api, deepA, page, pageSize, search, filter, showError]);
 
   useEffect(() => {
     load();
-    // Recarrega só na montagem / deep-link; "carregar mais" chama load explicitamente.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [api, searchParams, showError]);
+  }, [load]);
 
-  async function handleLoadMore() {
-    const next = limit + 60;
-    setLimit(next);
-    await load({ silent: true, nextLimit: next });
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  function handlePageSizeChange(nextSize) {
+    setPageSize(nextSize);
+    setPage(1);
   }
 
-  const visible = useMemo(() => {
-    let list = rows.filter((u) => String(u.status) !== 'patient');
-    list = list.filter((u) => matchesFilter(u, filter));
-    const q = localQ
-      .normalize('NFD')
-      .replace(/\p{M}/gu, '')
-      .toLowerCase()
-      .trim();
-    if (q) {
-      list = list.filter((u) => {
-        const blob = [
-          displayName(u),
-          u.email_account,
-          u.mobile_number,
-          statusLabel(u),
-          patientNames[u.user_code],
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .normalize('NFD')
-          .replace(/\p{M}/gu, '')
-          .toLowerCase();
-        return blob.includes(q);
-      });
-    }
-    return list;
-  }, [rows, filter, localQ, patientNames]);
+  function handleSearchSubmit() {
+    const next = String(searchInput || '').trim();
+    setPage(1);
+    setSearch(next);
+  }
+
+  function handleFilterChange(nextFilter) {
+    const nextSearch = String(searchInput || '').trim();
+    setPage(1);
+    setSearch(nextSearch);
+    setFilter(nextFilter);
+  }
 
   async function sendTriage(u) {
     try {
@@ -181,16 +187,22 @@ export default function RegistrationPage() {
     });
   }
 
+  const showPager = !deepA && !loading;
+
   return (
     <ThemeProvider theme={muiTheme}>
       <Box>
         <AssociatesFilters
-          limit={limit}
           filter={filter}
-          onFilterChange={setFilter}
+          onFilterChange={handleFilterChange}
+          searchInput={searchInput}
+          onSearchInputChange={setSearchInput}
+          onSearch={handleSearchSubmit}
           onReload={() => load()}
           onCreate={() => setCreateOpen(true)}
-          rows={rows}
+          page={page}
+          pageSize={pageSize}
+          totalCount={deepA ? rows.length : totalCount}
         />
 
         {loading ? (
@@ -200,37 +212,93 @@ export default function RegistrationPage() {
         ) : (
           <>
             <AssociatesTable
-              rows={visible}
-              localQ={localQ}
-              onLocalQ={setLocalQ}
+              rows={rows}
               onOpen={openUser}
               onSendTriage={sendTriage}
               patientNames={patientNames}
             />
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 3 }}>
-              <Button
-                variant="contained"
-                startIcon={
-                  loadingMore ? (
-                    <CircularProgress size={18} sx={{ color: '#fff' }} />
-                  ) : (
-                    <KeyboardArrowDownIcon sx={{ color: '#fff' }} />
-                  )
-                }
-                onClick={handleLoadMore}
-                disabled={loadingMore}
+            {showPager ? (
+              <Box
                 sx={{
-                  bgcolor: GREEN,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 2,
+                  flexWrap: 'wrap',
+                  mx: 'auto',
+                  mt: 2,
+                  mb: 3,
+                  px: 2,
+                  py: 1.25,
+                  maxWidth: 640,
+                  backgroundColor: PURPLE,
+                  borderRadius: '30px',
+                  boxShadow: '0 4px 14px rgba(74, 45, 74, 0.35)',
                   color: '#fff',
-                  textTransform: 'none',
-                  borderRadius: 2,
-                  px: 2.5,
-                  '&:hover': { bgcolor: '#4a684b' },
                 }}
               >
-                Carregar mais
-              </Button>
-            </Box>
+                <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
+                  <Select
+                    value={pageSize}
+                    onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                    disableUnderline
+                    sx={{
+                      color: '#fff',
+                      fontWeight: 600,
+                      fontSize: '0.875rem',
+                      '& .MuiSelect-icon': { color: '#fff' },
+                      '& .MuiSelect-select': { py: 0.5, pr: 3 },
+                    }}
+                    MenuProps={{
+                      PaperProps: { sx: { maxHeight: 280 } },
+                    }}
+                  >
+                    {PAGE_SIZE_OPTIONS.map((n) => (
+                      <MenuItem key={n} value={n}>
+                        {n} / página
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Button
+                  size="small"
+                  startIcon={<ChevronLeftIcon />}
+                  disabled={page <= 1}
+                  onClick={() => {
+                    setPage((p) => Math.max(1, p - 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  sx={{
+                    color: '#fff',
+                    bgcolor: GREEN,
+                    '&:hover': { bgcolor: GREEN_HOVER },
+                    '&.Mui-disabled': { color: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(0,0,0,0.15)' },
+                  }}
+                >
+                  Anterior
+                </Button>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Página {page} de {totalPages}
+                </Typography>
+                <Button
+                  size="small"
+                  endIcon={<ChevronRightIcon />}
+                  disabled={page >= totalPages || totalCount === 0}
+                  onClick={() => {
+                    setPage((p) => p + 1);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  sx={{
+                    color: '#fff',
+                    bgcolor: GREEN,
+                    '&:hover': { bgcolor: GREEN_HOVER },
+                    '&.Mui-disabled': { color: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(0,0,0,0.15)' },
+                  }}
+                >
+                  Próxima
+                </Button>
+              </Box>
+            ) : null}
           </>
         )}
 
@@ -248,7 +316,8 @@ export default function RegistrationPage() {
               }
               return;
             }
-            await load();
+            if (page === 1) await load();
+            else setPage(1);
             if (data) openUser(data);
           }}
         />
@@ -260,12 +329,6 @@ export default function RegistrationPage() {
           onClose={closeModal}
           onChanged={() => load()}
         />
-
-        {!loading && visible.length === 0 ? (
-          <Typography variant="body2" sx={{ mt: 2 }} color="text.secondary">
-            Nenhum associado encontrado.
-          </Typography>
-        ) : null}
       </Box>
     </ThemeProvider>
   );

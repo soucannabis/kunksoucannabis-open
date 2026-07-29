@@ -114,29 +114,22 @@ export function AssociateRegistrationPage({ api }) {
     setBusy(true);
     setError(null);
 
+    // Sempre persiste os campos válidos; inválidos vão para invalid_fields (Problema no cadastro).
     // Senha já definida no cadastro de e-mail — não exige de novo neste formulário.
     const localInvalid = validateAssociateForm(
       { ...form, account_password: user?.account_password ? '********' : '' },
       { ciap2Enabled },
     ).filter((k) => k !== 'account_password');
 
-    if (localInvalid.length) {
-      setInvalid(localInvalid);
-      const alert = buildValidationAlert(localInvalid, form);
-      setError(alert.message || 'Preencha os campos obrigatórios destacados.');
-      setBusy(false);
-      return;
-    }
-
     const body = { ...form };
     try {
       const res = await api.patchMe(body);
       await refresh();
-      const inv = (res.meta?.invalid_fields || []).filter((k) => k !== 'account_password');
+      const inv = (res.meta?.invalid_fields || localInvalid || []).filter((k) => k !== 'account_password');
       setInvalid(inv);
       if (inv.length) {
         const alert = buildValidationAlert(inv, body);
-        setError(alert.message);
+        setError(alert.message || 'Há campos pendentes no cadastro.');
         return;
       }
       if (res.data.responsible_type === 'another') {

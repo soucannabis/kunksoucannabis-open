@@ -19,11 +19,11 @@ test.describe('navigation', () => {
     await page.getByTestId('kunk-sidebar').getByText(sectionLabel, { exact: true }).click();
   }
 
-  test('navega Associados → cadastramento', async ({ page }) => {
+  test('navega Associados → associados', async ({ page }) => {
     await openSection(page, 'Acolhimento');
     await page.getByRole('menuitem', { name: 'Associados' }).click();
-    await expect(page).toHaveURL(/\/app\/acolhimento\/cadastramento/);
-    await expect(page.getByText(/Filtrar Associados/i)).toBeVisible({ timeout: 20_000 });
+    await expect(page).toHaveURL(/\/app\/acolhimento\/associados/);
+    await expect(page.getByPlaceholder(/Pesquisar/i)).toBeVisible({ timeout: 20_000 });
   });
 
   test('navega Triagem → fila', async ({ page }) => {

@@ -456,6 +456,13 @@ async function runInstall(payload = {}) {
     /* ignore */
   }
 
+  try {
+    const docSignService = require('./docSignService');
+    await docSignService.ensureDefaultTemplates();
+  } catch {
+    /* modelos podem ser garantidos no boot / listagem */
+  }
+
   return { installed: true, logo_url: logoUrl, demo: demoPending };
 }
 

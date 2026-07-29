@@ -9,11 +9,72 @@ const { assertUserDeletable } = require('./linkGuards');
 const associateAuthRepository = require('../repositories/associateAuthRepository');
 const { v4: uuidv4 } = require('uuid');
 const { PHASE } = require('../constants/associatePhases');
+const { parseFilterQuery } = require('../query/parseFilter');
+
+/** Busca painel: nome, sobrenome, nome completo, e-mail, CPF, telefone (parcial/completo). */
+function buildUsersSearchFilter(rawSearch) {
+  const term = String(rawSearch || '').trim();
+  if (!term) return null;
+
+  const digits = term.replace(/\D/g, '');
+  const parts = [
+    { associate_name: { _icontains: term } },
+    { associate_last_name: { _icontains: term } },
+    { email_account: { _icontains: term } },
+    { associate_cpf: { _icontains: term } },
+    { mobile_number: { _icontains: term } },
+    { fullname: { _icontains: term } },
+  ];
+
+  if (digits.length >= 3) {
+    parts.push({ mobile_number: { _icontains: digits } });
+    if (digits.startsWith('55') && digits.length >= 12) {
+      parts.push({ mobile_number: { _icontains: digits.slice(2) } });
+    }
+  }
+
+  const words = term.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    const first = words[0];
+    const rest = words.slice(1).join(' ');
+    parts.push({
+      _and: [
+        { associate_name: { _icontains: first } },
+        { associate_last_name: { _icontains: rest } },
+      ],
+    });
+    parts.push({
+      _and: [
+        { associate_name: { _icontains: words.slice(0, -1).join(' ') } },
+        { associate_last_name: { _icontains: words[words.length - 1] } },
+      ],
+    });
+  }
+
+  return { _or: parts };
+}
+
+function mergeFilter(base, extra) {
+  if (!base) return extra || null;
+  if (!extra) return base;
+  return { _and: [base, extra] };
+}
 
 async function list(queryParams = {}, { scopeFilter } = {}) {
   const includeKeys = parseInclude('users', queryParams.include);
   const withPatients = truthyParam(queryParams.patients);
-  const result = await itemsRepository.listItems('users', queryParams, { scopeFilter });
+
+  const qp = { ...queryParams };
+  const searchTerm = qp.search != null ? String(qp.search).trim() : '';
+  delete qp.search;
+
+  if (searchTerm) {
+    const searchFilter = buildUsersSearchFilter(searchTerm);
+    const existing = parseFilterQuery(qp.filter);
+    qp.filter = mergeFilter(existing, searchFilter);
+  }
+
+  const result = await itemsRepository.listItems('users', qp, { scopeFilter });
   if (includeKeys.length) {
     await hydrateIncludes('users', result.data, includeKeys);
   }
@@ -27,7 +88,16 @@ async function searchUsers(q) {
   if (!q || String(q).trim().length < 2) {
     throw new AppError(400, 'VALIDATION_ERROR', 'q deve ter ao menos 2 caracteres');
   }
-  const term = `%${q}%`;
+  const term = String(q).trim();
+  const like = `%${term}%`;
+  const digits = term.replace(/\D/g, '');
+  const params = [like];
+  let phoneClause = '';
+  if (digits.length >= 3) {
+    params.push(`%${digits}%`);
+    phoneClause = ` OR regexp_replace(COALESCE(mobile_number, ''), '\\D', '', 'g') LIKE $${params.length}`;
+  }
+
   const result = await query(
     `SELECT id, user_code, associate_name, associate_last_name, email_account, associate_cpf,
             mobile_number, status, associate_status, patient_user_code, fullname, adhesion_term,
@@ -39,9 +109,11 @@ async function searchUsers(q) {
         OR associate_cpf ILIKE $1
         OR mobile_number ILIKE $1
         OR fullname ILIKE $1
+        OR TRIM(CONCAT(COALESCE(associate_name, ''), ' ', COALESCE(associate_last_name, ''))) ILIKE $1
+        ${phoneClause}
      ORDER BY id DESC
      LIMIT 50`,
-    [term]
+    params
   );
   return result.rows.map((r) => ({
     ...stripSensitive('users', r),
@@ -183,10 +255,21 @@ async function createPatient(responsibleId, payload = {}) {
     date_created: now,
     created_date: now,
     email_account: payload.email_account || responsible.email_account || null,
+    mobile_number: payload.mobile_number || responsible.mobile_number || null,
+    street: payload.street ?? responsible.street ?? null,
+    street_number: payload.street_number ?? responsible.street_number ?? null,
+    complement: payload.complement ?? responsible.complement ?? null,
+    neighborhood: payload.neighborhood ?? responsible.neighborhood ?? null,
+    city: payload.city ?? responsible.city ?? null,
+    state: payload.state ?? responsible.state ?? null,
+    cep: payload.cep ?? responsible.cep ?? null,
   };
   delete body.id;
   delete body.account_password;
   delete body.email;
+  delete body.use_custom_contact;
+  delete body.use_custom_address;
+  delete body.use_delivery;
   return itemsRepository.createItem('users', body);
 }
 
@@ -201,6 +284,9 @@ async function updatePatient(responsibleId, patientId, payload = {}) {
   delete body.user_code;
   delete body.account_password;
   delete body.status;
+  delete body.use_custom_contact;
+  delete body.use_custom_address;
+  delete body.use_delivery;
   if (body.email && !body.email_account) {
     body.email_account = String(body.email).trim().toLowerCase();
   }
@@ -228,7 +314,8 @@ async function getHistory(id) {
   const [orders, services] = await Promise.all([
     query(
       `SELECT id, order_code, status, associate_name, total, discount, donation, items, tags,
-              created_date, date_created, tracking_code, prescriber
+              created_date, date_created, tracking_code, prescriber,
+              freight_carrier, freight_option, carrier_order_code
        FROM orders
        WHERE user_code::text = $1 OR "user" = $2
        ORDER BY COALESCE(created_date, date_created) DESC NULLS LAST
@@ -238,7 +325,7 @@ async function getHistory(id) {
     query(
       `SELECT id, service_code, booking_group_code, status, associate_name, patient_name,
               patient_user_code, professional_name, price, donation, price_paid, tags,
-              consultation_date, date_created
+              consultation_date AS date, consultation_date, date_created
        FROM services
        WHERE associate_user_code = $1 OR patient_user_code = $1
        ORDER BY COALESCE(consultation_date, date_created) DESC NULLS LAST

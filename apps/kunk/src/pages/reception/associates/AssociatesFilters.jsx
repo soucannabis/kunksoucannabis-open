@@ -1,76 +1,118 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Button,
   IconButton,
+  InputAdornment,
   Menu,
   MenuItem,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import CachedIcon from '@mui/icons-material/Cached';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import { FILTER_OPTIONS, statusLabel } from './associatesStatus.js';
+import SearchIcon from '@mui/icons-material/Search';
+import { FILTER_OPTIONS } from './associatesStatus.js';
 
 const GREEN = '#5a7a5b';
 const PURPLE = '#7a5b7a';
 
+export const PAGE_SIZE_OPTIONS = [30, 50, 100, 250];
+
 export default function AssociatesFilters({
-  limit,
   filter,
   onFilterChange,
+  searchInput,
+  onSearchInputChange,
+  onSearch,
   onReload,
   onCreate,
-  rows,
+  page,
+  pageSize,
+  totalCount,
 }) {
   const [anchor, setAnchor] = useState(null);
+  const filterActive = Boolean(filter);
+  const total = Number(totalCount) || 0;
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
 
-  const counts = useMemo(() => {
-    const map = {};
-    for (const opt of FILTER_OPTIONS) map[opt.value] = 0;
-    for (const u of rows || []) {
-      const label = statusLabel(u);
-      const opt = FILTER_OPTIONS.find((o) => o.label === label);
-      if (opt) map[opt.value] += 1;
-    }
-    return map;
-  }, [rows]);
+  function submitSearch(e) {
+    e?.preventDefault?.();
+    onSearch?.();
+  }
 
   return (
     <Box className="pageContainerOptions" sx={{ mb: 2 }}>
       <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-        <Button
-          startIcon={<FilterAltIcon />}
-          onClick={(e) => setAnchor(e.currentTarget)}
-          sx={{ color: '#000' }}
+        <Box
+          component="form"
+          onSubmit={submitSearch}
+          sx={{ flex: 1, maxWidth: 420, minWidth: { xs: 160, sm: 280 } }}
         >
-          Filtrar Associados
-        </Button>
-        <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}>
-          <MenuItem
-            selected={!filter}
-            onClick={() => {
-              onFilterChange('');
-              setAnchor(null);
+          <TextField
+            size="small"
+            fullWidth
+            placeholder="Pesquisar"
+            value={searchInput}
+            onChange={(e) => onSearchInputChange(e.target.value)}
+            sx={{
+              bgcolor: '#fff',
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+              },
             }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    type="submit"
+                    edge="end"
+                    size="small"
+                    title="Pesquisar"
+                    sx={{ color: PURPLE }}
+                    aria-label="Pesquisar"
+                  >
+                    <SearchIcon />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          <IconButton
+            onClick={(e) => setAnchor(e.currentTarget)}
+            sx={{ color: filterActive ? GREEN : PURPLE }}
+            title={filterActive ? `Filtro: ${FILTER_OPTIONS.find((o) => o.value === filter)?.label || filter}` : 'Filtrar por status'}
           >
-            Todos
-          </MenuItem>
-          {FILTER_OPTIONS.map((o) => (
+            <FilterAltIcon />
+          </IconButton>
+          <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}>
             <MenuItem
-              key={o.value}
-              selected={filter === o.value}
+              selected={!filter}
               onClick={() => {
-                onFilterChange(o.value);
+                onFilterChange('');
                 setAnchor(null);
               }}
             >
-              {o.label}
+              Todos
             </MenuItem>
-          ))}
-        </Menu>
-        <Stack direction="row" spacing={1} alignItems="center">
+            {FILTER_OPTIONS.map((o) => (
+              <MenuItem
+                key={o.value}
+                selected={filter === o.value}
+                onClick={() => {
+                  onFilterChange(o.value);
+                  setAnchor(null);
+                }}
+              >
+                {o.label}
+              </MenuItem>
+            ))}
+          </Menu>
           <IconButton onClick={onReload} sx={{ color: PURPLE }} title="Recarregar">
             <CachedIcon />
           </IconButton>
@@ -78,34 +120,17 @@ export default function AssociatesFilters({
             variant="contained"
             startIcon={<PersonAddIcon />}
             onClick={onCreate}
-            sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#303B30' } }}
+            sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#303B30' }, ml: 0.5 }}
           >
             Criar Associado
           </Button>
         </Stack>
       </Stack>
 
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 2 }}>
-        {FILTER_OPTIONS.map((o) => (
-          <Button
-            key={o.value}
-            size="small"
-            variant={filter === o.value ? 'contained' : 'outlined'}
-            onClick={() => onFilterChange(filter === o.value ? '' : o.value)}
-            sx={{
-              borderColor: GREEN,
-              color: filter === o.value ? '#fff' : GREEN,
-              bgcolor: filter === o.value ? GREEN : 'transparent',
-              '&:hover': { borderColor: '#303B30' },
-            }}
-          >
-            {o.label}: {counts[o.value] || 0}
-          </Button>
-        ))}
-      </Stack>
-
-      <Typography variant="body2" sx={{ color: '#000', mt: 2, textAlign: 'center' }}>
-        Mostrando os últimos {limit} cadastros
+      <Typography variant="body2" sx={{ color: '#000', mt: 3, pt: 1, textAlign: 'center' }}>
+        {total === 0
+          ? 'Nenhum cadastro encontrado'
+          : `Mostrando ${from}–${to} de ${total} cadastro${total === 1 ? '' : 's'}`}
       </Typography>
     </Box>
   );

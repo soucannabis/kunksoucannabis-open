@@ -130,11 +130,12 @@ Migration: `ALTER TABLE services ADD COLUMN IF NOT EXISTS patient_user_code UUID
 
 | Legado `status` string | OSS preferido | Label cards/filtros |
 |---|---|---|
-| `published` | `associate_status=1` | Não preencheu os dados |
-| `registered` | `associate_status=2` | Apenas preencheu os dados |
-| `proofs` | `associate_status=4` | Termo não assinado / fase termo |
+| `published` | `associate_status=cadastro_criado` | Não preencheu os dados |
+| `registered` | `associate_status=dados_pessoais` | Apenas preencheu os dados |
+| (fase docs) | `associate_status=documentos` | Documentos enviados |
+| `proofs` | `associate_status=assinatura_termo` | Termo criado |
 | `signedcontract` / `aguardando-aprovacao` | `status=Associado` | Associado |
-| `formerror` | `invalid_fields` ≠ vazio | Erro no formulário |
+| `formerror` | `invalid_fields` ≠ vazio | Problema no cadastro |
 | `Paciente` / `patient` | `status=patient` | Paciente (fora da lista principal) |
 
 Filtros da página devem funcionar com **dados migrados e novos**.

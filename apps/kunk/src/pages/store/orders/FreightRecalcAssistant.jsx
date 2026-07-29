@@ -16,6 +16,7 @@ import {
   pickMatchingFreightOption,
   roundMoney,
 } from '../../../lib/freightRecalc.js';
+import { contentAreaDialogProps } from '../../../layout/contentAreaOverlay.js';
 
 const GREEN = '#5a7a5b';
 
@@ -53,27 +54,28 @@ export default function FreightRecalcAssistant({
   const newPrice = roundMoney(newOption?.price ?? 0);
   const priceChanged = Math.abs(newPrice - oldPrice) > 0.009;
 
+  const source = orderFull || order;
   const currentTotal = roundMoney(
-    orderFull?.total != null
-      ? orderFull.total
+    source?.total != null
+      ? source.total
       : computeOrderTotal({
-          items: orderFull?.items || order?.items || [],
+          items: source?.items || [],
           delivery_price: oldPrice,
           apply_to_total: applyToTotal,
-          discount: orderFull?.discount ?? order?.discount,
-          donation: orderFull?.donation ?? order?.donation,
-          custom_payment: orderFull?.custom_payment || order?.custom_payment,
+          discount: source?.discount,
+          donation: source?.donation,
+          custom_payment: source?.custom_payment,
         })
   );
 
   const nextTotal = newOption
     ? computeOrderTotal({
-        items: orderFull?.items || order?.items || [],
+        items: source?.items || [],
         delivery_price: newPrice,
         apply_to_total: applyToTotal,
-        discount: orderFull?.discount ?? order?.discount,
-        donation: orderFull?.donation ?? order?.donation,
-        custom_payment: orderFull?.custom_payment || order?.custom_payment,
+        discount: source?.discount,
+        donation: source?.donation,
+        custom_payment: source?.custom_payment,
       })
     : currentTotal;
 
@@ -190,7 +192,7 @@ export default function FreightRecalcAssistant({
   const busy = quoting || confirming || loading;
 
   return (
-    <Dialog open={open} onClose={busy ? undefined : onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={busy ? undefined : onClose} maxWidth="sm" fullWidth {...contentAreaDialogProps}>
       <DialogTitle>Recálculo de frete</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

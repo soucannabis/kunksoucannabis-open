@@ -3,7 +3,7 @@
 const { AppError } = require('../utils/response');
 
 const DEFAULT_LIMIT = 25;
-const MAX_LIMIT = 200;
+const MAX_LIMIT = 250;
 
 function parsePagination(query) {
   let limit = query.limit !== undefined ? Number(query.limit) : DEFAULT_LIMIT;

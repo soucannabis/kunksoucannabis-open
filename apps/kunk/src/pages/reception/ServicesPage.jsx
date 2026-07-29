@@ -2,16 +2,20 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
   IconButton,
+  InputAdornment,
   Menu,
   MenuItem,
   ListItemIcon,
   ListItemText,
   Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
@@ -32,31 +36,33 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PaymentIcon from '@mui/icons-material/Payment';
+import SearchIcon from '@mui/icons-material/Search';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useSearchParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
-import { useCacheConfig } from '../../lib/cache/CacheConfigProvider.jsx';
-import {
-  fetchServicesDefaultList,
-  invalidateServicesCache,
-} from '../../lib/cache/fetchers.js';
+import { invalidateServicesCache } from '../../lib/cache/fetchers.js';
 import NewServiceModal from './services/NewServiceModal.jsx';
 import ServiceInfoModal from './services/ServiceInfoModal.jsx';
 import PaymentModal from '../../components/PaymentModal.jsx';
+import { contentAreaDialogProps } from '../../layout/contentAreaOverlay.js';
 import {
-  daysAgoIso,
+  buildServicesListQuery,
+  DEFAULT_PAGE_SIZE,
   formatDateTime,
   formatMoney,
   formatTags,
+  PAGE_SIZE_OPTIONS,
   STATUS_AWAITING,
   STATUS_PAID,
   normalizeServiceStatus,
-  uuidToColor,
 } from './services/servicesUtils.js';
 
 const muiTheme = createTheme();
 const GREEN = '#5a7a5b';
+const GREEN_HOVER = '#4a684b';
 const PURPLE = '#7a5b7a';
 
 function eventOpenUrl(row) {
@@ -82,13 +88,16 @@ export default function ServicesPage() {
   const bootstrap = getKunkPublicConfig();
   const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' }), [bootstrap.apiUrl]);
   const { showError } = useErrorModal();
-  const { enabled: cacheEnabled } = useCacheConfig();
   const [searchParams] = useSearchParams();
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState(searchParams.get('s') || '');
-  const [dateFrom, setDateFrom] = useState(daysAgoIso(14));
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchInput, setSearchInput] = useState(searchParams.get('s') || '');
+  const [search, setSearch] = useState(searchParams.get('s') || '');
+  const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [showOnlyPaid, setShowOnlyPaid] = useState(null);
   const [newOpen, setNewOpen] = useState(Boolean(searchParams.get('u')));
@@ -99,6 +108,9 @@ export default function ServicesPage() {
   const [eventMenu, setEventMenu] = useState(null); // { anchorEl, row }
   const [pagarmeForServices, setPagarmeForServices] = useState(false);
   const [paymentService, setPaymentService] = useState(null);
+  const [googleCalendarEnabled, setGoogleCalendarEnabled] = useState(false);
+
+  const totalPages = Math.max(1, Math.ceil((Number(totalCount) || 0) / pageSize) || 1);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,49 +129,79 @@ export default function ServicesPage() {
     };
   }, [api]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.getGoogleCalendarStatus();
+        if (!cancelled) setGoogleCalendarEnabled(Boolean(res.data?.enabled));
+      } catch {
+        if (!cancelled) setGoogleCalendarEnabled(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      params.set('limit', '200');
-      if (dateFrom) params.set('filter[date_created][_gte]', `${dateFrom}T00:00:00`);
-      if (dateTo) params.set('filter[date_created][_lte]', `${dateTo}T23:59:59`);
-      const paramsString = params.toString();
-      const isDefaultWindow = dateFrom === daysAgoIso(14) && !dateTo;
-      let data = isDefaultWindow
-        ? await fetchServicesDefaultList(api, cacheEnabled, paramsString)
-        : (await api.listServices(paramsString)).data || [];
-      if (showOnlyPaid === true) {
-        data = data.filter((s) => normalizeServiceStatus(s.status) === STATUS_PAID);
-      } else if (showOnlyPaid === false) {
-        data = data.filter((s) => normalizeServiceStatus(s.status) === STATUS_AWAITING);
-      }
-      if (q.trim()) {
-        const words = q
-          .normalize('NFD')
-          .replace(/\p{M}/gu, '')
-          .toLowerCase()
-          .split(/\s+/)
-          .filter(Boolean);
-        data = data.filter((s) => {
-          const hay = `${s.associate_name || ''} ${s.professional_name || ''} ${s.consultation_date || ''}`
-            .normalize('NFD')
-            .replace(/\p{M}/gu, '')
-            .toLowerCase();
-          return words.every((w) => hay.includes(w));
-        });
-      }
+      const qs = buildServicesListQuery({
+        page,
+        pageSize,
+        search,
+        dateFrom,
+        dateTo,
+        showOnlyPaid,
+      });
+      const res = await api.listServices(qs);
+      const data = res.data || [];
       setRows(data);
+      const metaCount = res.meta?.filter_count;
+      setTotalCount(typeof metaCount === 'number' ? metaCount : data.length);
     } catch (err) {
       showError(err);
+      setRows([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
-  }, [api, cacheEnabled, dateFrom, dateTo, showOnlyPaid, q, showError]);
+  }, [api, page, pageSize, search, dateFrom, dateTo, showOnlyPaid, showError]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  function handleSearchSubmit(e) {
+    e?.preventDefault?.();
+    setPage(1);
+    setSearch(String(searchInput || '').trim());
+  }
+
+  function handlePageSizeChange(nextSize) {
+    setPageSize(nextSize);
+    setPage(1);
+  }
+
+  function handleDateFromChange(value) {
+    setPage(1);
+    setDateFrom(value);
+  }
+
+  function handleDateToChange(value) {
+    setPage(1);
+    setDateTo(value);
+  }
+
+  function handlePaidFilterToggle(target) {
+    setPage(1);
+    setShowOnlyPaid((v) => (v === target ? null : target));
+  }
 
   async function toggleStatus(row) {
     const current = normalizeServiceStatus(row.status);
@@ -270,19 +312,36 @@ export default function ServicesPage() {
             alignItems: 'center',
           }}
         >
-          <TextField
-            size="small"
-            label="Pesquisar"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
+          <Box
+            component="form"
+            onSubmit={handleSearchSubmit}
+            sx={{ minWidth: { xs: 160, sm: 260 }, flex: '1 1 220px', maxWidth: 360 }}
+          >
+            <TextField
+              size="small"
+              fullWidth
+              label="Pesquisar"
+              placeholder="Associado ou profissional"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton type="submit" edge="end" size="small" aria-label="Pesquisar" sx={{ color: PURPLE }}>
+                      <SearchIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
           <TextField
             size="small"
             type="date"
             label="Data inicial"
             InputLabelProps={{ shrink: true }}
             value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
+            onChange={(e) => handleDateFromChange(e.target.value)}
           />
           <TextField
             size="small"
@@ -290,48 +349,48 @@ export default function ServicesPage() {
             label="Data final"
             InputLabelProps={{ shrink: true }}
             value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
+            onChange={(e) => handleDateToChange(e.target.value)}
           />
-          <Tooltip title="Somente pagos">
-            <IconButton
-              color={showOnlyPaid === true ? 'success' : 'default'}
-              onClick={() => setShowOnlyPaid((v) => (v === true ? null : true))}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: 'auto' }}>
+            <Tooltip title="Somente pagos">
+              <IconButton
+                color={showOnlyPaid === true ? 'success' : 'default'}
+                onClick={() => handlePaidFilterToggle(true)}
+              >
+                <CheckCircleIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Somente pendentes">
+              <IconButton
+                color={showOnlyPaid === false ? 'primary' : 'default'}
+                onClick={() => handlePaidFilterToggle(false)}
+              >
+                <AccessTimeIcon />
+              </IconButton>
+            </Tooltip>
+            <Button
+              variant="contained"
+              startIcon={<RefreshIcon />}
+              onClick={() => load()}
+              sx={{ bgcolor: PURPLE, '&:hover': { bgcolor: '#4d2d4d' } }}
             >
-              <CheckCircleIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Somente pendentes">
-            <IconButton
-              color={showOnlyPaid === false ? 'primary' : 'default'}
-              onClick={() => setShowOnlyPaid((v) => (v === false ? null : false))}
-            >
-              <AccessTimeIcon />
-            </IconButton>
-          </Tooltip>
-          <Button
-            variant="contained"
-            startIcon={<RefreshIcon />}
-            onClick={load}
-            sx={{ bgcolor: PURPLE, '&:hover': { bgcolor: '#4d2d4d' } }}
-          >
-            Atualizar
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => setNewOpen(true)}
-            sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#303B30' } }}
-          >
-            Novo Serviço
-          </Button>
+              Atualizar
+            </Button>
+          </Box>
         </Box>
 
+        {loading ? (
+          <Box sx={{ py: 4, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <CircularProgress size={28} sx={{ color: GREEN }} />
+          </Box>
+        ) : (
+          <>
         <TableContainer component={Paper} className="pageContainerTable" elevation={0}>
           <Table size="small">
             <TableHead>
               <TableRow sx={{ bgcolor: GREEN }}>
                 {[
                   'Criação',
-                  '',
                   'Tags',
                   'Data da consulta',
                   'Associado',
@@ -349,13 +408,9 @@ export default function ServicesPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {loading ? (
+              {rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11}>Carregando…</TableCell>
-                </TableRow>
-              ) : rows.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={11}>Nenhum serviço</TableCell>
+                  <TableCell colSpan={10}>Nenhum serviço</TableCell>
                 </TableRow>
               ) : (
                 rows.map((row) => {
@@ -378,17 +433,6 @@ export default function ServicesPage() {
                     sx={highlighted ? { bgcolor: 'rgba(122, 91, 122, 0.18)' } : undefined}
                   >
                     <TableCell>{formatDateTime(row.date_created)}</TableCell>
-                    <TableCell>
-                      <Box
-                        sx={{
-                          width: 14,
-                          height: 14,
-                          borderRadius: '50%',
-                          bgcolor: uuidToColor(row.booking_group_code),
-                        }}
-                        title={row.booking_group_code || ''}
-                      />
-                    </TableCell>
                     <TableCell>
                       {formatTags(row.tags)}
                     </TableCell>
@@ -436,34 +480,36 @@ export default function ServicesPage() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Tooltip
-                        title={
-                          hasRealCalendarEvent(row)
-                            ? 'Evento agendado — abrir ou cancelar'
-                            : 'Agendar no Google Calendar'
-                        }
-                      >
-                        <IconButton
-                          size="small"
-                          data-testid={
+                      {googleCalendarEnabled ? (
+                        <Tooltip
+                          title={
                             hasRealCalendarEvent(row)
-                              ? 'service-event-open'
-                              : 'service-event-schedule'
+                              ? 'Evento agendado — abrir ou cancelar'
+                              : 'Agendar no Google Calendar'
                           }
-                          onClick={(e) => {
-                            if (hasRealCalendarEvent(row)) openEventMenu(e, row);
-                            else onSchedule(row);
-                          }}
-                          sx={{
-                            color: hasRealCalendarEvent(row) ? GREEN : undefined,
-                            '&:hover': hasRealCalendarEvent(row)
-                              ? { color: '#303B30', bgcolor: 'rgba(90,122,91,0.12)' }
-                              : undefined,
-                          }}
                         >
-                          <EventIcon />
-                        </IconButton>
-                      </Tooltip>
+                          <IconButton
+                            size="small"
+                            data-testid={
+                              hasRealCalendarEvent(row)
+                                ? 'service-event-open'
+                                : 'service-event-schedule'
+                            }
+                            onClick={(e) => {
+                              if (hasRealCalendarEvent(row)) openEventMenu(e, row);
+                              else onSchedule(row);
+                            }}
+                            sx={{
+                              color: hasRealCalendarEvent(row) ? GREEN : undefined,
+                              '&:hover': hasRealCalendarEvent(row)
+                                ? { color: '#303B30', bgcolor: 'rgba(90,122,91,0.12)' }
+                                : undefined,
+                            }}
+                          >
+                            <EventIcon />
+                          </IconButton>
+                        </Tooltip>
+                      ) : null}
                       <Tooltip title="Info">
                         <IconButton size="small" color="primary" onClick={() => setInfoService(row)}>
                           <InfoIcon />
@@ -482,6 +528,89 @@ export default function ServicesPage() {
             </TableBody>
           </Table>
         </TableContainer>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 2,
+                flexWrap: 'wrap',
+                mx: 'auto',
+                mt: 2,
+                mb: 3,
+                px: 2,
+                py: 1.25,
+                maxWidth: 640,
+                backgroundColor: PURPLE,
+                borderRadius: '30px',
+                boxShadow: '0 4px 14px rgba(74, 45, 74, 0.35)',
+                color: '#fff',
+              }}
+            >
+              <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
+                <Select
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  disableUnderline
+                  sx={{
+                    color: '#fff',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    '& .MuiSelect-icon': { color: '#fff' },
+                    '& .MuiSelect-select': { py: 0.5, pr: 3 },
+                  }}
+                  MenuProps={{
+                    PaperProps: { sx: { maxHeight: 280 } },
+                  }}
+                >
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <MenuItem key={n} value={n}>
+                      {n} / página
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Button
+                size="small"
+                startIcon={<ChevronLeftIcon />}
+                disabled={page <= 1}
+                onClick={() => {
+                  setPage((p) => Math.max(1, p - 1));
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                sx={{
+                  color: '#fff',
+                  bgcolor: GREEN,
+                  '&:hover': { bgcolor: GREEN_HOVER },
+                  '&.Mui-disabled': { color: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(0,0,0,0.15)' },
+                }}
+              >
+                Anterior
+              </Button>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                Página {page} de {totalPages}
+                {totalCount ? ` · ${totalCount}` : ''}
+              </Typography>
+              <Button
+                size="small"
+                endIcon={<ChevronRightIcon />}
+                disabled={page >= totalPages || totalCount === 0}
+                onClick={() => {
+                  setPage((p) => p + 1);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                sx={{
+                  color: '#fff',
+                  bgcolor: GREEN,
+                  '&:hover': { bgcolor: GREEN_HOVER },
+                  '&.Mui-disabled': { color: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(0,0,0,0.15)' },
+                }}
+              >
+                Próxima
+              </Button>
+            </Box>
+          </>
+        )}
       </Box>
 
       <NewServiceModal
@@ -527,7 +656,7 @@ export default function ServicesPage() {
         </MenuItem>
       </Menu>
 
-      <Dialog open={Boolean(editDate)} onClose={() => setEditDate(null)}>
+      <Dialog open={Boolean(editDate)} onClose={() => setEditDate(null)} {...contentAreaDialogProps}>
         <DialogTitle>Editar data</DialogTitle>
         <DialogContent>
           <TextField
@@ -553,7 +682,7 @@ export default function ServicesPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={Boolean(confirmReplace)} onClose={() => setConfirmReplace(null)}>
+      <Dialog open={Boolean(confirmReplace)} onClose={() => setConfirmReplace(null)} {...contentAreaDialogProps}>
         <DialogTitle>Alterar data do evento</DialogTitle>
         <DialogContent>
           Este serviço já possui um evento no calendário. Excluir o evento antigo e criar um novo

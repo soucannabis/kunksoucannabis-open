@@ -1,14 +1,3 @@
-/** Hash UUID → hex color (legado uuidToColor). */
-export function uuidToColor(uuid) {
-  const s = String(uuid || '0');
-  let hash = 0;
-  for (let i = 0; i < s.length; i += 1) {
-    hash = s.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const h = Math.abs(hash) % 360;
-  return `hsl(${h}, 55%, 45%)`;
-}
-
 export function formatMoney(v) {
   const n = Number(v);
   if (Number.isNaN(n)) return '—';
@@ -108,6 +97,55 @@ export const PAYMENT_TYPES = [
 
 export const STATUS_AWAITING = 'Aguardando Pagamento';
 export const STATUS_PAID = 'Pagamento Concluído';
+
+export const PAGE_SIZE_OPTIONS = [30, 50, 100, 250];
+export const DEFAULT_PAGE_SIZE = 30;
+
+/** Status pago/aguardando → nó de filter da API (inclui aliases legados). */
+export function statusFilterToApiNode(showOnlyPaid) {
+  if (showOnlyPaid === true) {
+    return {
+      status: {
+        _in: [STATUS_PAID, 'paid', 'completed', 'confirmed', 'Pagamento concluído'],
+      },
+    };
+  }
+  if (showOnlyPaid === false) {
+    return {
+      status: {
+        _in: [STATUS_AWAITING, 'pending', 'canceled', 'cancelled', 'Aguardando pagamento'],
+      },
+    };
+  }
+  return null;
+}
+
+/** Query string paginada para listagem de serviços (filtros no servidor). */
+export function buildServicesListQuery({
+  page = 1,
+  pageSize = DEFAULT_PAGE_SIZE,
+  search = '',
+  dateFrom = '',
+  dateTo = '',
+  showOnlyPaid = null,
+} = {}) {
+  const and = [];
+  const statusNode = statusFilterToApiNode(showOnlyPaid);
+  if (statusNode) and.push(statusNode);
+  if (dateFrom) and.push({ date_created: { _gte: `${dateFrom}T00:00:00` } });
+  if (dateTo) and.push({ date_created: { _lte: `${dateTo}T23:59:59` } });
+
+  const params = new URLSearchParams();
+  params.set('limit', String(pageSize));
+  params.set('page', String(page));
+  params.set('sort', '-date_created');
+  params.set('meta', 'filter_count');
+  if (and.length === 1) params.set('filter', JSON.stringify(and[0]));
+  else if (and.length > 1) params.set('filter', JSON.stringify({ _and: and }));
+  const q = String(search || '').trim();
+  if (q) params.set('search', q);
+  return params.toString();
+}
 
 /** Status legados do seed antigo → canônicos da UI. */
 export function normalizeServiceStatus(status) {

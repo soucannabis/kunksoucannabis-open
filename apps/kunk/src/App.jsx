@@ -8,6 +8,7 @@ import { buildAppRoutes } from './app/routes.jsx';
 import { KunkConfigProvider } from './config/KunkConfigProvider.jsx';
 import { CacheConfigProvider } from './lib/cache/CacheConfigProvider.jsx';
 import { ErrorModalProvider } from './components/errors/ErrorModalProvider.jsx';
+import { ToastProvider } from './components/toast/ToastProvider.jsx';
 import { SystemErrorBoundary } from './components/errors/SystemErrorBoundary.jsx';
 import { LoginPage } from './pages/LoginPage.jsx';
 import { NewPasswordPage } from './pages/NewPasswordPage.jsx';
@@ -48,9 +49,11 @@ export default function App() {
         <CacheConfigProvider api={api}>
           <SystemErrorBoundary app="kunk" baseUrl={bootstrap.apiUrl}>
             <ErrorModalProvider app="kunk" baseUrl={bootstrap.apiUrl}>
-              <BrowserRouter>
-                <AppRoutes />
-              </BrowserRouter>
+              <ToastProvider>
+                <BrowserRouter>
+                  <AppRoutes />
+                </BrowserRouter>
+              </ToastProvider>
             </ErrorModalProvider>
           </SystemErrorBoundary>
         </CacheConfigProvider>

@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { contentAreaDialogSx } from './institutionalStatus.js';
+import { contentAreaDialogProps } from './institutionalStatus.js';
 import PhoneField from '../../../components/PhoneField.jsx';
 import { isValidPhoneBr } from '@kunk/forms';
 
@@ -100,7 +100,7 @@ export default function CreateInstitutionalModal({ open, onClose, onCreated, api
       }}
       maxWidth="md"
       fullWidth
-      sx={contentAreaDialogSx}
+      {...contentAreaDialogProps}
     >
       <DialogTitle>Criar Cliente Institucional</DialogTitle>
       <DialogContent>

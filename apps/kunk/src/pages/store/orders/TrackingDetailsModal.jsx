@@ -8,6 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import { TrackingPanel, displayTrackingCode } from './TrackingPanel.jsx';
+import { contentAreaDialogProps } from '../../../layout/contentAreaOverlay.js';
 
 export default function TrackingDetailsModal({ open, order, api, onClose }) {
   const [tracking, setTracking] = useState(null);
@@ -41,7 +42,7 @@ export default function TrackingDetailsModal({ open, order, api, onClose }) {
   const code = displayTrackingCode(order) || tracking?.tracking_code || '';
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth {...contentAreaDialogProps}>
       <DialogTitle>
         Detalhes do rastreio
         {order?.id ? (

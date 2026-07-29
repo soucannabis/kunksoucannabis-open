@@ -8,7 +8,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { contentAreaDialogSx } from './associatesStatus.js';
+import { contentAreaDialogProps } from './associatesStatus.js';
 
 const GREEN = '#5a7a5b';
 
@@ -40,7 +40,7 @@ export default function CreateAssociateModal({ open, onClose, onCreated, api }) 
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth sx={contentAreaDialogSx}>
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth {...contentAreaDialogProps}>
       <DialogTitle>Criar Associado</DialogTitle>
       <DialogContent>
         <TextField

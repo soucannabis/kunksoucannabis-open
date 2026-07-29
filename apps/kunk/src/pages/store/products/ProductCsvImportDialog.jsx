@@ -15,6 +15,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import { contentAreaDialogProps } from '../../../layout/contentAreaOverlay.js';
 
 const GREEN = '#5a7a5b';
 const PURPLE = '#7A5B7A';
@@ -105,7 +106,7 @@ export default function ProductCsvImportDialog({ open, onClose, api, onImported,
   const previewRows = useMemo(() => (report?.rows || []).slice(0, 50), [report]);
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
+    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md" {...contentAreaDialogProps}>
       <DialogTitle>Importar produtos (CSV)</DialogTitle>
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
         <Typography variant="body2" color="text.secondary">

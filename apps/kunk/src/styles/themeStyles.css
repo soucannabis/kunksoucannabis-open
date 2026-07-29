@@ -42,26 +42,29 @@ html {
   min-height: 100dvh;
 }
 
-/* Sidebar menu: configurable text + hover */
+/* Sidebar menu: configurable text + hover — bold only on section titles */
 .ListItemButton {
   color: var(--kunk-menu-text) !important;
-  font-weight: 400;
+  font-weight: 400 !important;
 }
 
 .ListItemButton .MuiTypography-root {
   color: inherit !important;
-  font-weight: inherit !important;
+  font-weight: 400 !important;
+}
+
+.ListItemButton.SidebarSection,
+.ListItemButton.SidebarSection .SidebarSection-label {
+  font-weight: 700 !important;
 }
 
 .ListItemButton:hover {
   background-color: var(--kunk-menu-hover-bg) !important;
   color: var(--kunk-menu-hover-text) !important;
-  font-weight: 700 !important;
 }
 
 .ListItemButton:hover .MuiTypography-root {
   color: var(--kunk-menu-hover-text) !important;
-  font-weight: 700 !important;
 }
 
 .ListItemButton:hover .MuiSvgIcon-root {
@@ -71,14 +74,13 @@ html {
 .ListItemButton:active {
   background-color: var(--kunk-menu-hover-bg) !important;
   color: var(--kunk-menu-hover-text) !important;
-  font-weight: 700 !important;
 }
 
-/* Nested items: same hover */
+/* Nested items: same hover, keep regular weight */
 .ListItem.nested .ListItem .ListItemButton:hover {
   background-color: var(--kunk-menu-hover-bg) !important;
   color: var(--kunk-menu-hover-text) !important;
-  font-weight: 700 !important;
+  font-weight: 400 !important;
 }
 
 .ListItem.nested .ListItem .ListItemButton:hover .MuiTypography-root,
@@ -87,7 +89,7 @@ html {
 }
 
 .ListItem.nested .ListItem .ListItemButton:hover .MuiTypography-root {
-  font-weight: 700 !important;
+  font-weight: 400 !important;
 }
 
 .namePage {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { PhoneInput } from '@kunk/forms';
+import { CONTENT_AREA_OVERLAY_Z } from '../layout/contentAreaOverlay.js';
 
 const GREEN = '#5a7a5b';
 
@@ -26,7 +27,7 @@ const phoneBoxSx = {
     background: '#fff',
   },
   '& .kunk-phone-dropdown': {
-    zIndex: 1400,
+    zIndex: CONTENT_AREA_OVERLAY_Z,
   },
 };
 

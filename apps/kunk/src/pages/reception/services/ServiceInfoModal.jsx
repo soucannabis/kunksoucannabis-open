@@ -18,6 +18,11 @@ import {
   fetchTags,
   invalidateServicesCache,
 } from '../../../lib/cache/fetchers.js';
+import {
+  contentAreaDialogProps,
+  contentAreaSelectProps,
+  contentAreaAutocompleteSlotProps,
+} from '../../../layout/contentAreaOverlay.js';
 
 export default function ServiceInfoModal({ open, service, api, onClose, onSaved }) {
   const [group, setGroup] = useState([]);
@@ -112,7 +117,7 @@ export default function ServiceInfoModal({ open, service, api, onClose, onSaved 
   if (!service) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '20px' } }}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '20px' } }} {...contentAreaDialogProps}>
       <DialogTitle>Observações do Serviço</DialogTitle>
       <DialogContent>
         {error && <Box sx={{ color: '#b00020', mb: 1 }}>{error}</Box>}
@@ -147,6 +152,7 @@ export default function ServiceInfoModal({ open, service, api, onClose, onSaved 
           getOptionLabel={(o) => `${o.name || ''} ${o.last_name || ''}`.trim()}
           value={selectedPro}
           onChange={(_, v) => setSelectedPro(v)}
+          slotProps={contentAreaAutocompleteSlotProps}
           renderInput={(params) => (
             <TextField {...params} label="Alterar profissional" margin="dense" fullWidth />
           )}
@@ -157,6 +163,7 @@ export default function ServiceInfoModal({ open, service, api, onClose, onSaved 
           options={tagOpts}
           value={tags}
           onChange={(_, v) => setTags(v)}
+          slotProps={contentAreaAutocompleteSlotProps}
           renderTags={(value, getTagProps) =>
             value.map((option, index) => (
               <Chip variant="outlined" label={option} {...getTagProps({ index })} key={option} />
@@ -180,6 +187,7 @@ export default function ServiceInfoModal({ open, service, api, onClose, onSaved 
           margin="dense"
           value={paymentType}
           onChange={(e) => setPaymentType(e.target.value)}
+          SelectProps={contentAreaSelectProps}
         >
           <MenuItem value="">—</MenuItem>
           {PAYMENT_TYPES.map((t) => (

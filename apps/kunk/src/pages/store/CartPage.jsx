@@ -36,6 +36,7 @@ import { getKunkPublicConfig } from '@kunk/config';
 import { PATHS } from '../../app/menuConfig.js';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
 import { useCacheConfig } from '../../lib/cache/CacheConfigProvider.jsx';
+import { contentAreaModalSx } from '../../layout/contentAreaOverlay.js';
 import {
   fetchLocalProducts,
   fetchPrescribers,
@@ -83,8 +84,9 @@ function computeLocalTotal({ items, deliveryPrice, applyToTotal, discount, donat
     (items || []).reduce((s, it) => s + (Number(it.amount) || 0) * (Number(it.quantity) || 0), 0)
   );
   const freight = applyToTotal ? roundMoney(deliveryPrice) : 0;
+  const customRows = Array.isArray(customPayment) ? customPayment : [];
   const customSum = roundMoney(
-    (customPayment || []).reduce((s, r) => s + (Number(r.value) || 0), 0)
+    customRows.reduce((s, r) => s + (Number(r.value) || 0), 0)
   );
   return {
     products,
@@ -785,7 +787,7 @@ export default function CartPage() {
         </Box>
 
         {/* Modal novo prescritor */}
-        <Modal open={showPrescriberModal} onClose={() => setShowPrescriberModal(false)}>
+        <Modal open={showPrescriberModal} onClose={() => setShowPrescriberModal(false)} sx={contentAreaModalSx}>
           <Box
             data-testid="prescriber-modal"
             sx={{

@@ -10,43 +10,23 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
-import { displayName, formatCreated, statusLabel } from './associatesStatus.js';
+import AssociateStatusChip from './AssociateStatusChip.jsx';
+import { displayName, formatCreated, formatPhoneBr } from './associatesStatus.js';
 
 const GREEN = '#5a7a5b';
 
 export default function AssociatesTable({
   rows,
-  localQ,
-  onLocalQ,
   onOpen,
   onSendTriage,
   patientNames,
 }) {
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
-        <TextField
-          size="small"
-          placeholder="Filtrar..."
-          value={localQ}
-          onChange={(e) => onLocalQ(e.target.value)}
-          sx={{
-            minWidth: 280,
-            bgcolor: '#fff',
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-              '& fieldset': { borderColor: '#fff' },
-              '&:hover fieldset': { borderColor: '#fff' },
-              '&.Mui-focused fieldset': { borderColor: '#fff' },
-            },
-          }}
-        />
-      </Box>
       <TableContainer component={Paper} className="pageContainerTable">
         <Table size="small">
           <TableHead>
@@ -91,8 +71,10 @@ export default function AssociatesTable({
                     ) : null}
                   </TableCell>
                   <TableCell>{u.email_account || '—'}</TableCell>
-                  <TableCell>{u.mobile_number || '—'}</TableCell>
-                  <TableCell>{statusLabel(u)}</TableCell>
+                  <TableCell>{formatPhoneBr(u.mobile_number)}</TableCell>
+                  <TableCell>
+                    <AssociateStatusChip user={u} />
+                  </TableCell>
                   <TableCell>{formatCreated(u)}</TableCell>
                   <TableCell>
                     {String(u.status) === 'Associado' ? (

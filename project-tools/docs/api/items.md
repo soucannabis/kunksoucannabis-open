@@ -114,7 +114,7 @@ Opcional na v1; priorizar item único.
 5. Write: só colunas do schema; campo desconhecido → **400** `VALIDATION_ERROR`
 6. FK inválida (UUID inexistente na tabela relacionada) → **400** `VALIDATION_ERROR`
 7. Unique violation → **409** `CONFLICT`
-8. Limite máximo de `limit` (ex.: 100 ou 200); default 25
+8. Limite máximo de `limit` (ex.: 250); default 25
 9. Sem raw SQL, sem `select *` implícito em campos sensíveis
 
 ## Quando **não** usar `/items`

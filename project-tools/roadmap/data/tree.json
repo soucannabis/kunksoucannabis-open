@@ -350,7 +350,7 @@
             {
               "id": "kunk-associados",
               "label": "Associados",
-              "path": "/app/acolhimento/cadastramento",
+              "path": "/app/acolhimento/associados",
               "description": "Lista e modal (dados, pacientes, docs, histórico, CIAP-2)",
               "baseline": { "e2e": true, "api": true, "manual": false }
             },

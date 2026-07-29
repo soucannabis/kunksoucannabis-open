@@ -4,6 +4,7 @@ const { query } = require('../db/pool');
 const itemsRepository = require('../repositories/itemsRepository');
 const { stripSensitive } = require('../schema/collections');
 const { parseInclude, hydrateIncludes } = require('./includeService');
+const { parseFilterQuery } = require('../query/parseFilter');
 const { v4: uuidv4 } = require('uuid');
 const { AppError } = require('../utils/response');
 const { env } = require('../config/env');
@@ -17,9 +18,50 @@ function resolveConsultationPrice(professional, explicitPrice, typeOrConfig) {
   return professionalTypesConfig.resolveConsultationPrice(professional, explicitPrice, typeOrConfig);
 }
 
+/** Busca painel: associado OU profissional (e paciente/nome do serviço). */
+function buildServicesSearchFilter(rawSearch) {
+  const term = String(rawSearch || '').trim();
+  if (!term) return null;
+  const parts = [
+    { associate_name: { _icontains: term } },
+    { professional_name: { _icontains: term } },
+    { patient_name: { _icontains: term } },
+    { name: { _icontains: term } },
+  ];
+  const words = term.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    parts.push({
+      _and: words.map((w) => ({
+        _or: [
+          { associate_name: { _icontains: w } },
+          { professional_name: { _icontains: w } },
+          { patient_name: { _icontains: w } },
+        ],
+      })),
+    });
+  }
+  return { _or: parts };
+}
+
+function mergeFilter(base, extra) {
+  if (!base) return extra || null;
+  if (!extra) return base;
+  return { _and: [base, extra] };
+}
+
 async function list(queryParams = {}, { scopeFilter } = {}) {
   const includeKeys = parseInclude('services', queryParams.include);
-  const result = await itemsRepository.listItems('services', queryParams, { scopeFilter });
+  const qp = { ...queryParams };
+  const searchTerm = qp.search != null ? String(qp.search).trim() : '';
+  delete qp.search;
+
+  if (searchTerm) {
+    const searchFilter = buildServicesSearchFilter(searchTerm);
+    const existing = parseFilterQuery(qp.filter);
+    qp.filter = mergeFilter(existing, searchFilter);
+  }
+
+  const result = await itemsRepository.listItems('services', qp, { scopeFilter });
   if (includeKeys.length) {
     await hydrateIncludes('services', result.data, includeKeys);
   }

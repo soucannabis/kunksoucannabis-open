@@ -8,7 +8,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Rota** | `/app/acolhimento/cadastramento` |
+| **Rota** | `/app/acolhimento/associados` |
 | **Componente** | `Dash` |
 | **Arquivo legado** | `src/components/master/dash.jsx (+ table.jsx, UserModal, createAssociate, contract)` |
 | **Permissões** | Administrador | Acolhimento | Produção (via `role_pages`) |

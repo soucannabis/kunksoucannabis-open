@@ -9,6 +9,7 @@ import {
   Typography,
   Alert,
 } from '@mui/material';
+import { contentAreaDialogProps } from '../../layout/contentAreaOverlay.js';
 
 const GREEN = '#5a7a5b';
 const GREEN_HOVER = '#303B30';
@@ -132,7 +133,7 @@ export default function AddressEditDialog({ open, onClose, user, api, onSaved })
   } — ${user?.neighborhood || ''}, ${user?.city || ''} - ${user?.state || ''}, ${user?.cep || ''}`;
 
   return (
-    <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="sm" fullWidth {...contentAreaDialogProps}>
       <DialogTitle>Dados do Associado</DialogTitle>
       <DialogContent>
         {error && (
