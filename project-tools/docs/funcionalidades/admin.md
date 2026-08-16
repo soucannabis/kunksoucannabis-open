@@ -44,6 +44,9 @@
 | Módulo | Página | Descrição | Testes |
 |---|---|---|---|
 | Operadores | `/usuarios`, `/usuarios/novo`, `/usuarios/:id` | CRUD `system_users` | e2e: Sim |
+| Credenciais de suporte | `/credenciais-suporte` | Conta temporária de suporte | e2e: Não · API: Sim |
+| API | `/acesso-api` | Tokens Bearer | e2e: Não · API: Sim |
+| Webhooks | `/webhooks` | URLs outbound por tabela/ação | e2e: Não · API: Sim |
 | Erros do sistema | `/erros-sistema` | Grupos de `system_errors` | e2e: Sim · API: Sim |
 | Web Vitals | `/web-vitals` | Métricas Core Web Vitals | e2e: Sim · API: Sim |
 

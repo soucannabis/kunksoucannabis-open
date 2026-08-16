@@ -976,6 +976,23 @@ async function completeOpenByAssociate({ email, associate_code, completion_reaso
 
   const actorFields = activityService.fromActor(actor);
   for (const row of result.rows) {
+    try {
+      const { emitWebhookSafe } = require('./webhooks/emit');
+      // UPDATE só altera status / completion_reason / date_updated
+      emitWebhookSafe({
+        table: 'reception',
+        action: 'update',
+        recordId: row.id,
+        data: {
+          id: row.id,
+          status: row.status,
+          completion_reason: row.completion_reason,
+          date_updated: row.date_updated,
+        },
+      });
+    } catch {
+      /* fail-soft */
+    }
     await activityService.recordSafe({
       entity_type: 'reception',
       entity_id: String(row.id),

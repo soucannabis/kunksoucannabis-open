@@ -9,25 +9,30 @@ import {
 } from '@mui/material';
 import { PRESETS } from './analyticsLayout.js';
 
-const GREEN = '#5a7a5b';
+const GREEN = '#496b4c';
 
 export default function AnalyticsGlobalFilters({
   period,
   onPreset,
   onChangeRange,
   onApply,
+  embedded = false,
 }) {
   return (
     <Box
-      sx={{
-        p: 2,
-        mb: 2,
-        bgcolor: '#fff',
-        borderRadius: 2,
-        border: '1px solid #e6ebe6',
-      }}
+      sx={
+        embedded
+          ? undefined
+          : {
+              p: 2,
+              mb: 2,
+              bgcolor: '#fff',
+              borderRadius: 2,
+              border: '1px solid #e6ebe6',
+            }
+      }
     >
-      <Typography variant="subtitle2" sx={{ mb: 1, color: '#555' }}>
+      <Typography variant="subtitle2" sx={{ mb: 1, color: '#465348', fontWeight: 700 }}>
         Filtro global de período
       </Typography>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }}>
@@ -41,7 +46,7 @@ export default function AnalyticsGlobalFilters({
               color={period.preset === p.id ? 'primary' : 'default'}
               sx={
                 period.preset === p.id
-                  ? { bgcolor: GREEN, color: '#fff', '&:hover': { bgcolor: '#4a6a4b' } }
+                  ? { bgcolor: GREEN, color: '#fff', '&:hover': { bgcolor: '#3d5a40' } }
                   : undefined
               }
             />
@@ -68,7 +73,7 @@ export default function AnalyticsGlobalFilters({
         <Button
           variant="contained"
           onClick={onApply}
-          sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#4a6a4b' }, textTransform: 'none' }}
+          sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#3d5a40' }, textTransform: 'none', fontWeight: 700 }}
         >
           Aplicar
         </Button>

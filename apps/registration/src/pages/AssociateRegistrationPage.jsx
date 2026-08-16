@@ -12,6 +12,7 @@ import {
   validateAssociateForm,
 } from '@kunk/forms';
 import { AlertError } from '@kunk/ui';
+import { Icon } from '../components/Icon.jsx';
 import { buildValidationAlert } from '../lib/fieldLabels.js';
 
 const EMPTY = {
@@ -183,6 +184,7 @@ export function AssociateRegistrationPage({ api }) {
             },
           ].map((opt) => {
             const selected = form.responsible_type === opt.value;
+            const iconName = opt.value === 'himself' ? 'user' : opt.value === 'another' ? 'users' : 'paw';
             return (
               <button
                 key={opt.value}
@@ -193,6 +195,7 @@ export function AssociateRegistrationPage({ api }) {
                 onClick={() => setField('responsible_type', opt.value)}
               >
                 <span className="responsible-type__radio" aria-hidden />
+                <Icon name={iconName} size={20} className="responsible-type__icon" />
                 <span className="responsible-type__text">
                   <span className="responsible-type__title">{opt.title}</span>
                   <span className="responsible-type__desc">{opt.desc}</span>
@@ -339,7 +342,8 @@ export function AssociateRegistrationPage({ api }) {
         emptyFields={invalid.length ? buildValidationAlert(invalid, form).missingLabels : []}
       />
 
-      <button className="btn btn-success mt-3" type="submit" disabled={busy}>
+      <button className="btn btn-success mt-3 btn-with-icon" type="submit" disabled={busy}>
+        <Icon name="save" size={18} />
         Salvar e continuar
       </button>
     </form>

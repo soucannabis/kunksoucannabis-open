@@ -325,10 +325,12 @@ export default function PublicQueuePage() {
         .fila-theme-dark {
           background: linear-gradient(160deg, #1a2a1c 0%, #0f1410 55%, #1a1520 100%);
           color: #e8efe9;
+          color-scheme: dark;
         }
         .fila-theme-light {
           background: linear-gradient(160deg, #f5f7f5 0%, #eef1ef 55%, #f7f8f9 100%);
           color: #1a241c;
+          color-scheme: light;
         }
         .fila-embed { min-height: auto; padding: 0; overflow: hidden; background: transparent !important; }
         .fila-theme-dark.fila-embed,
@@ -406,6 +408,38 @@ export default function PublicQueuePage() {
         .fila-theme-light .fila-field select {
           border: 1px solid #c9d2cb; background: #fff; color: #1a241c;
         }
+        .fila-theme-dark .fila-field input:focus,
+        .fila-theme-dark .fila-field input:focus-visible,
+        .fila-theme-dark .fila-field textarea:focus,
+        .fila-theme-dark .fila-field textarea:focus-visible,
+        .fila-theme-dark .fila-field select:focus,
+        .fila-theme-dark .fila-field select:focus-visible {
+          border: 1px solid #2d3b30 !important;
+          outline: none;
+          box-shadow: none;
+        }
+        .fila-theme-light .fila-field input:focus,
+        .fila-theme-light .fila-field input:focus-visible,
+        .fila-theme-light .fila-field textarea:focus,
+        .fila-theme-light .fila-field textarea:focus-visible,
+        .fila-theme-light .fila-field select:focus,
+        .fila-theme-light .fila-field select:focus-visible {
+          border: 1px solid #c9d2cb !important;
+          outline: none;
+          box-shadow: none;
+        }
+        .fila-theme-light .fila-field input:-webkit-autofill,
+        .fila-theme-light .fila-field input:-webkit-autofill:hover,
+        .fila-theme-light .fila-field input:-webkit-autofill:focus,
+        .fila-theme-light .fila-field textarea:-webkit-autofill,
+        .fila-theme-light .fila-field textarea:-webkit-autofill:hover,
+        .fila-theme-light .fila-field textarea:-webkit-autofill:focus {
+          -webkit-text-fill-color: #1a241c;
+          caret-color: #1a241c;
+          box-shadow: 0 0 0 1000px #fff inset;
+          border: 1px solid #c9d2cb !important;
+          transition: background-color 99999s ease-out;
+        }
         .fila-field-invalid input,
         .fila-field-invalid textarea,
         .fila-field-invalid select,
@@ -433,6 +467,18 @@ export default function PublicQueuePage() {
           border: 1px solid #c9d2cb !important;
           background: #fff !important;
           color: #1a241c !important;
+        }
+        .fila-theme-dark .fila-phone .fila-phone-input:focus,
+        .fila-theme-dark .fila-phone .fila-phone-input:focus-visible {
+          border: 1px solid #2d3b30 !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        .fila-theme-light .fila-phone .fila-phone-input:focus,
+        .fila-theme-light .fila-phone .fila-phone-input:focus-visible {
+          border: 1px solid #c9d2cb !important;
+          outline: none !important;
+          box-shadow: none !important;
         }
         .fila-phone .flag-dropdown,
         .fila-phone .kunk-phone-flag-btn {

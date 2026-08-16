@@ -11,7 +11,9 @@ import {
   DialogTitle,
   FormControlLabel,
   FormGroup,
+  InputAdornment,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -22,6 +24,9 @@ import {
   Typography,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { useErrorModal } from '../components/errors/ErrorModalProvider.jsx';
@@ -31,13 +36,31 @@ import { contentAreaDialogProps } from '../layout/contentAreaOverlay.js';
 
 const materialTheme = createTheme({
   palette: {
-    primary: { main: '#5a7a5b' },
-    secondary: { main: '#7A5B7A' },
+    primary: { main: '#496b4c' },
+    secondary: { main: '#705372' },
   },
+  typography: { fontFamily: 'inherit' },
+  shape: { borderRadius: 12 },
 });
 
-const GREEN = '#5a7a5b';
-const PURPLE = '#7A5B7A';
+const GREEN = '#496b4c';
+const GREEN_HOVER = '#385a3c';
+const PURPLE = '#705372';
+const PURPLE_HOVER = '#5e4460';
+
+const fieldSx = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 2.5,
+    bgcolor: '#f8faf8',
+    transition: 'background-color 160ms ease, box-shadow 160ms ease',
+    '& fieldset': { borderColor: 'rgba(49, 67, 51, 0.14)' },
+    '&:hover fieldset': { borderColor: 'rgba(73, 107, 76, 0.38)' },
+    '&.Mui-focused': {
+      bgcolor: '#fff',
+      boxShadow: '0 0 0 3px rgba(73, 107, 76, 0.1)',
+    },
+  },
+};
 
 const CONTEXT_OPTIONS = [
   { value: 'orders', label: 'Pedidos' },
@@ -97,8 +120,8 @@ export default function TagsPage() {
         setScTags(
           list.map((t) =>
             typeof t === 'string'
-              ? { tag: t, color: '#5a7a5b' }
-              : { tag: t.tag || t.name, color: t.color || '#5a7a5b' }
+              ? { tag: t, color: '#496b4c' }
+              : { tag: t.tag || t.name, color: t.color || '#496b4c' }
           )
         );
       } else {
@@ -189,144 +212,285 @@ export default function TagsPage() {
 
   return (
     <ThemeProvider theme={materialTheme}>
-      <Box sx={{ width: '100%', mb: 2 }}>
+      <Box sx={{ width: '100%', maxWidth: 1600, mx: 'auto', pb: 2 }}>
+        <Box
+          sx={{
+            position: 'relative',
+            overflow: 'hidden',
+            mb: 2,
+            p: { xs: 2.5, md: 3.25 },
+            color: '#fff',
+            borderRadius: 3,
+            background: 'linear-gradient(120deg, #314a34 0%, #496b4c 58%, #5d735e 100%)',
+            boxShadow: '0 14px 36px rgba(27, 46, 30, 0.2)',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              width: 230,
+              height: 230,
+              right: -55,
+              top: -110,
+              borderRadius: '50%',
+              border: '42px solid rgba(255,255,255,0.06)',
+            },
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
+            <Box
+              sx={{
+                width: 52,
+                height: 52,
+                flex: '0 0 auto',
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: 2.5,
+                bgcolor: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.16)',
+              }}
+            >
+              <LocalOfferOutlinedIcon sx={{ fontSize: 28 }} />
+            </Box>
+            <Box>
+              <Typography
+                variant="overline"
+                sx={{ color: 'rgba(255,255,255,0.68)', letterSpacing: '0.11em', fontWeight: 700 }}
+              >
+                Sistema
+              </Typography>
+              <Typography variant="h5" component="h1" sx={{ fontWeight: 750, lineHeight: 1.15 }}>
+                Tags
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.65, color: 'rgba(255,255,255,0.76)' }}>
+                Organize rótulos usados em pedidos, serviços e triagem.
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
+
         <Paper
           elevation={0}
           sx={{
-            backgroundColor: '#f5f5f5',
-            borderRadius: '30px',
-            p: '20px 24px',
+            bgcolor: '#fff',
+            border: '1px solid rgba(49, 67, 51, 0.1)',
+            borderRadius: 3,
+            p: { xs: 2, md: 2.5 },
             mb: 2,
-            display: 'flex',
-            gap: 2,
-            flexWrap: 'wrap',
-            alignItems: 'center',
+            boxShadow: '0 8px 30px rgba(34, 53, 36, 0.07)',
           }}
         >
-          <TextField
-            size="small"
-            label="Buscar"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            sx={{ minWidth: 220 }}
-          />
-          <Button
-            variant="contained"
-            onClick={openNew}
-            sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#466147' } }}
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={2}
+            alignItems={{ xs: 'stretch', md: 'center' }}
+            justifyContent="space-between"
           >
-            Nova tag
-          </Button>
-          <Typography variant="body2" sx={{ color: GREEN, fontWeight: 700 }}>
-            {filtered.length} tag{filtered.length === 1 ? '' : 's'}
+            <TextField
+              size="small"
+              fullWidth
+              placeholder="Buscar por nome ou contexto"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              sx={{ ...fieldSx, maxWidth: 420 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchRoundedIcon sx={{ color: '#708172', fontSize: 20 }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Button
+              variant="contained"
+              startIcon={<AddRoundedIcon />}
+              onClick={openNew}
+              sx={{
+                bgcolor: GREEN,
+                borderRadius: 2.5,
+                px: 2,
+                textTransform: 'none',
+                fontWeight: 700,
+                boxShadow: '0 7px 18px rgba(73, 107, 76, 0.22)',
+                '&:hover': { bgcolor: GREEN_HOVER, boxShadow: '0 9px 22px rgba(73, 107, 76, 0.28)' },
+              }}
+            >
+              Nova tag
+            </Button>
+          </Stack>
+          <Typography variant="body2" sx={{ mt: 2, color: '#657167' }}>
+            {filtered.length === 0
+              ? 'Nenhuma tag encontrada'
+              : `Exibindo ${filtered.length} tag${filtered.length === 1 ? '' : 's'}`}
           </Typography>
         </Paper>
 
-        <TableContainer
-          component={Paper}
-          elevation={0}
-          sx={{ backgroundColor: '#f5f5f5', borderRadius: '30px', overflow: 'hidden' }}
-        >
-          <Table>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: GREEN }}>
-                {['Tag', 'Contextos', 'Cor', ''].map((h) => (
-                  <TableCell key={h || 'actions'} sx={{ color: '#fff', fontWeight: 700 }}>
-                    {h}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
-                    <CircularProgress size={28} sx={{ color: GREEN }} />
-                  </TableCell>
+        {loading ? (
+          <Box
+            sx={{
+              py: 10,
+              display: 'flex',
+              justifyContent: 'center',
+              bgcolor: '#fff',
+              borderRadius: 3,
+              border: '1px solid rgba(49, 67, 51, 0.1)',
+            }}
+          >
+            <CircularProgress size={30} sx={{ color: GREEN }} />
+          </Box>
+        ) : (
+          <TableContainer
+            component={Paper}
+            elevation={0}
+            sx={{
+              borderRadius: 3,
+              border: '1px solid rgba(49, 67, 51, 0.1)',
+              boxShadow: '0 8px 30px rgba(34, 53, 36, 0.07)',
+              overflow: 'hidden',
+            }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: '#f4f7f4' }}>
+                  {['Tag', 'Contextos', 'Cor', 'Ações'].map((h) => (
+                    <TableCell
+                      key={h}
+                      align={h === 'Ações' ? 'right' : 'left'}
+                      sx={{
+                        color: '#627064',
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        borderBottomColor: 'rgba(49, 67, 51, 0.1)',
+                        py: 1.5,
+                      }}
+                    >
+                      {h}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 4, color: '#666' }}>
-                    Nenhuma tag encontrada
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filtered.map((row) => {
-                  const contexts = parseContexts(row.contexts);
-                  return (
-                    <TableRow key={row.id} hover>
-                      <TableCell>
-                        <Chip
-                          label={row.tag || '—'}
-                          size="small"
+              </TableHead>
+              <TableBody>
+                {filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} sx={{ py: 8, borderBottom: 0 }}>
+                      <Stack alignItems="center" spacing={1.25}>
+                        <Box
                           sx={{
-                            bgcolor: row.color || '#546E7A',
-                            color: '#fff',
-                            fontWeight: 600,
+                            width: 52,
+                            height: 52,
+                            display: 'grid',
+                            placeItems: 'center',
+                            borderRadius: '50%',
+                            bgcolor: 'rgba(73, 107, 76, 0.1)',
+                            color: GREEN,
                           }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                          {contexts.length
-                            ? contexts.map((c) => (
-                                <Chip
-                                  key={c}
-                                  label={CONTEXT_LABELS[c] || c}
-                                  size="small"
-                                  variant="outlined"
-                                />
-                              ))
-                            : '—'}
+                        >
+                          <LocalOfferOutlinedIcon />
                         </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box
+                        <Typography fontWeight={700} color="#334235">
+                          Nenhuma tag encontrada
+                        </Typography>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filtered.map((row) => {
+                    const contexts = parseContexts(row.contexts);
+                    return (
+                      <TableRow
+                        key={row.id}
+                        hover
+                        sx={{
+                          '& td': { borderBottomColor: 'rgba(49, 67, 51, 0.08)', py: 1.55 },
+                          '&:last-of-type td': { borderBottom: 0 },
+                          '&:hover': { bgcolor: 'rgba(73, 107, 76, 0.035)' },
+                        }}
+                      >
+                        <TableCell>
+                          <Chip
+                            label={row.tag || '—'}
+                            size="small"
                             sx={{
-                              width: 18,
-                              height: 18,
-                              borderRadius: '4px',
-                              bgcolor: row.color || '#ccc',
-                              border: '1px solid #bbb',
+                              bgcolor: row.color || '#546E7A',
+                              color: '#fff',
+                              fontWeight: 600,
                             }}
                           />
-                          <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                            {row.color || '—'}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Button size="small" onClick={() => openEdit(row)}>
-                          Editar
-                        </Button>
-                        <Button size="small" color="error" onClick={() => onDelete(row)}>
-                          Excluir
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                            {contexts.length
+                              ? contexts.map((c) => (
+                                  <Chip
+                                    key={c}
+                                    label={CONTEXT_LABELS[c] || c}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{ borderColor: 'rgba(73, 107, 76, 0.35)', color: GREEN }}
+                                  />
+                                ))
+                              : '—'}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box
+                              sx={{
+                                width: 18,
+                                height: 18,
+                                borderRadius: '4px',
+                                bgcolor: row.color || '#ccc',
+                                border: '1px solid #bbb',
+                              }}
+                            />
+                            <Typography variant="body2" sx={{ fontFamily: 'monospace', color: '#536056' }}>
+                              {row.color || '—'}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Button
+                            size="small"
+                            onClick={() => openEdit(row)}
+                            sx={{ color: GREEN, textTransform: 'none', fontWeight: 700 }}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            size="small"
+                            color="error"
+                            onClick={() => onDelete(row)}
+                            sx={{ textTransform: 'none', fontWeight: 700 }}
+                          >
+                            Excluir
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
 
         {scTags.length > 0 && (
           <Paper
             elevation={0}
             data-testid="sc-tags-section"
             sx={{
-              backgroundColor: '#f5f5f5',
-              borderRadius: '30px',
-              p: '20px 24px',
+              bgcolor: '#fff',
+              border: '1px solid rgba(49, 67, 51, 0.1)',
+              borderRadius: 3,
+              p: { xs: 2, md: 2.5 },
               mt: 2,
+              boxShadow: '0 8px 30px rgba(34, 53, 36, 0.07)',
             }}
           >
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: GREEN, mb: 1 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: GREEN, mb: 0.5 }}>
               Tags SouCannabis
             </Typography>
-            <Typography variant="body2" sx={{ color: '#666', mb: 1.5 }}>
+            <Typography variant="body2" sx={{ color: '#657167', mb: 1.5 }}>
               Somente leitura — sincronizadas do catálogo externo.
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -335,7 +499,7 @@ export default function TagsPage() {
                   key={t.tag}
                   label={t.tag}
                   size="small"
-                  sx={{ bgcolor: t.color || GREEN, color: '#fff' }}
+                  sx={{ bgcolor: t.color || GREEN, color: '#fff', fontWeight: 600 }}
                 />
               ))}
             </Box>
@@ -343,7 +507,13 @@ export default function TagsPage() {
         )}
       </Box>
 
-      <Dialog open={Boolean(dialog)} onClose={() => !busy && setDialog(null)} fullWidth maxWidth="sm" {...contentAreaDialogProps}>
+      <Dialog
+        open={Boolean(dialog)}
+        onClose={() => !busy && setDialog(null)}
+        fullWidth
+        maxWidth="sm"
+        {...contentAreaDialogProps}
+      >
         <DialogTitle>{dialog?.mode === 'edit' ? 'Editar tag' : 'Nova tag'}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           <TextField
@@ -399,7 +569,7 @@ export default function TagsPage() {
             variant="contained"
             onClick={onSave}
             disabled={busy}
-            sx={{ bgcolor: PURPLE, '&:hover': { bgcolor: '#4d2d4d' } }}
+            sx={{ bgcolor: PURPLE, '&:hover': { bgcolor: PURPLE_HOVER } }}
           >
             {busy ? 'Salvando…' : 'Salvar'}
           </Button>

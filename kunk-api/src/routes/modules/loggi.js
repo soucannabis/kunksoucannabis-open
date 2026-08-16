@@ -10,18 +10,41 @@ const loggiClient = require('../../services/loggi/client');
 const credentialsService = require('../../services/credentialsService');
 
 const router = Router();
-router.use(requireModule('loggi'));
 
-router.get('/', (req, res) => {
-  res.json(ok({ module: 'loggi', status: 'enabled' }));
-});
-
-router.get('/status', (req, res) => {
-  res.json(ok({ module: 'loggi', enabled: true }));
+/**
+ * Setup / teste / catálogo ficam FORA do requireModule.
+ * Senão: módulo off → 503 → impossível autenticar para depois ativar.
+ */
+router.get('/status', async (req, res, next) => {
+  try {
+    const { isModuleEnabled } = require('../../services/moduleFlags');
+    res.json(ok({ module: 'loggi', enabled: await isModuleEnabled('loggi') }));
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get('/service-options', (req, res) => {
   res.json(ok({ provider: 'loggi', options: LOGGI_SERVICE_CATALOG }));
+});
+
+router.post('/test', async (req, res, next) => {
+  try {
+    const creds = await credentialsService.resolveAll('loggi');
+    await loggiClient.testConnection(creds);
+    await credentialsService.markTestResult('loggi', true);
+    res.json(ok({ ok: true }));
+  } catch (err) {
+    await credentialsService.markTestResult('loggi', false).catch(() => {});
+    next(err);
+  }
+});
+
+// Cotação / etiqueta exigem módulo ativo no Admin.
+router.use(requireModule('loggi'));
+
+router.get('/', (req, res) => {
+  res.json(ok({ module: 'loggi', status: 'enabled' }));
 });
 
 router.post('/quote-freight', async (req, res, next) => {
@@ -56,18 +79,6 @@ router.post('/packages', async (req, res, next) => {
     const data = await loggiLabel.getPackages(req.body || {});
     res.json(ok(data));
   } catch (err) {
-    next(err);
-  }
-});
-
-router.post('/test', async (req, res, next) => {
-  try {
-    const creds = await credentialsService.resolveAll('loggi');
-    await loggiClient.testConnection(creds);
-    await credentialsService.markTestResult('loggi', true);
-    res.json(ok({ ok: true }));
-  } catch (err) {
-    await credentialsService.markTestResult('loggi', false).catch(() => {});
     next(err);
   }
 });

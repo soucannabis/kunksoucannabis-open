@@ -165,9 +165,9 @@ async function getReport(queryParams = {}, user) {
 
 async function validateBatch(body, user) {
   const roles = user?.roles || user?.permissions || [];
-  if (isProfessionalRole(roles) && !isStaffRoles(roles)) {
-    throw new AppError(403, 'FORBIDDEN', 'Profissional não pode aprovar/contestar linhas');
-  }
+  const staff = isStaffRoles(roles);
+  const asProfessional = isProfessionalRole(roles) && !staff;
+
   const ids = Array.isArray(body?.ids) ? body.ids.map(Number).filter(Number.isFinite) : [];
   const validation = body?.commission_validation;
   if (!ids.length) throw new AppError(400, 'VALIDATION_ERROR', 'ids obrigatório');
@@ -175,6 +175,32 @@ async function validateBatch(body, user) {
     throw new AppError(400, 'VALIDATION_ERROR', 'commission_validation inválido');
   }
   const value = validation === '' ? null : validation;
+
+  if (asProfessional) {
+    if (!user?.internal_code) {
+      throw new AppError(403, 'FORBIDDEN', 'Profissional sem código interno');
+    }
+    if (value !== 'approved' && value !== 'contested') {
+      throw new AppError(400, 'VALIDATION_ERROR', 'commission_validation inválido');
+    }
+    const result = await query(
+      `UPDATE services
+       SET commission_validation = $1
+       WHERE id = ANY($2::int[])
+         AND professional_id = $3
+       RETURNING id, service_code, commission_validation`,
+      [value, ids, String(user.internal_code)]
+    );
+    if (result.rows.length !== ids.length) {
+      throw new AppError(403, 'FORBIDDEN', 'Só pode validar os próprios atendimentos');
+    }
+    return { updated: result.rows };
+  }
+
+  if (!staff) {
+    throw new AppError(403, 'FORBIDDEN', 'Sem permissão para validar');
+  }
+
   const result = await query(
     `UPDATE services
      SET commission_validation = $1
@@ -205,6 +231,10 @@ async function appendContestReport(professionalId, body, user) {
     month,
     date: new Date().toISOString(),
   };
+  const serviceId = Number(body?.service_id);
+  if (Number.isFinite(serviceId) && serviceId > 0) {
+    entry.service_id = serviceId;
+  }
   const next = [...current, entry];
   const updated = await professionalsService.update(pro.id, { contest_reports: next });
   return {
@@ -224,8 +254,21 @@ async function deleteContestReport(professionalId, index, user) {
   if (!Number.isFinite(idx) || idx < 0 || idx >= current.length) {
     throw new AppError(404, 'NOT_FOUND', 'Contestação não encontrada');
   }
+  const removed = current[idx];
   const next = current.filter((_, i) => i !== idx);
   const updated = await professionalsService.update(pro.id, { contest_reports: next });
+
+  const serviceId = Number(removed?.service_id);
+  if (Number.isFinite(serviceId) && serviceId > 0) {
+    await query(
+      `UPDATE services
+       SET commission_validation = 'approved'
+       WHERE id = $1
+         AND professional_id = $2`,
+      [serviceId, String(pro.professional_code)]
+    );
+  }
+
   return {
     ...updated,
     contest_reports: parseContestReports(updated.contest_reports),

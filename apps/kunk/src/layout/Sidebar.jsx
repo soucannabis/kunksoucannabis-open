@@ -16,6 +16,18 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import GroupRoundedIcon from '@mui/icons-material/GroupRounded';
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import Groups2Icon from '@mui/icons-material/Groups2';
+import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
+import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
+import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
+import AccessTimeFilledOutlinedIcon from '@mui/icons-material/AccessTimeFilledOutlined';
+import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
+import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
+import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import { useNavigate } from 'react-router-dom';
 import { useOperatorAuth } from '@kunk/auth-session';
 import { MENU_SECTIONS } from '../app/menuConfig.js';
@@ -30,6 +42,22 @@ const SECTION_ICONS = {
   acolhimento: GroupRoundedIcon,
   loja: ShoppingCartRoundedIcon,
   profissionais: Groups2Icon,
+  relatorios: AssessmentOutlinedIcon,
+  sistema: SettingsRoundedIcon,
+};
+
+const ITEM_ICONS = {
+  associados: PersonOutlineRoundedIcon,
+  servicos: EventAvailableOutlinedIcon,
+  triagem: AccessTimeFilledOutlinedIcon,
+  'institutional-clients': BusinessOutlinedIcon,
+  pedidos: LocalShippingOutlinedIcon,
+  produtos: Inventory2OutlinedIcon,
+  profissionais: BadgeOutlinedIcon,
+  'relatorios-dashboard': DashboardOutlinedIcon,
+  'relatorios-servicos': AssessmentOutlinedIcon,
+  historico: HistoryRoundedIcon,
+  tags: LocalOfferOutlinedIcon,
 };
 
 function Toggler({ open, renderToggle, children }) {
@@ -67,7 +95,7 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
   const menuText = config.menuText || '#ffffff';
   const menuBg = config.menuBg || 'var(--kunk-menu-bg)';
   const menuHoverBg = config.menuHoverBg || '#fff';
-  const menuHoverText = config.menuHoverText || '#000';
+  const menuHoverText = config.menuHoverText || '#2a3b2b';
   const menuPlacement = resolvePlacementLogo({
     placements: config.logoPlacements,
     app: 'kunk',
@@ -232,7 +260,7 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
           size="sm"
           sx={{
             gap: 1,
-            '--List-nestedInsetStart': '30px',
+            '--List-nestedInsetStart': '16px',
             '--ListItem-radius': (theme) => theme.vars.radius.sm,
           }}
         >
@@ -278,19 +306,26 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
                     )}
                   >
                     <List sx={{ gap: 0.5 }}>
-                      {items.map((item) => (
-                        <ListItem key={item.id} className="ListItem" sx={{ mt: 0.5 }}>
-                          <ListItemButton
-                            className="ListItemButton"
-                            role="menuitem"
-                            onClick={() => {
-                              if (item.path) navigate(item.path);
-                            }}
-                          >
-                            {item.label}
-                          </ListItemButton>
-                        </ListItem>
-                      ))}
+                      {items.map((item) => {
+                        const ItemIcon = ITEM_ICONS[item.id];
+                        return (
+                          <ListItem key={item.id} className="ListItem" sx={{ mt: 0.5 }}>
+                            <ListItemButton
+                              className="ListItemButton"
+                              role="menuitem"
+                              onClick={() => {
+                                if (item.path) navigate(item.path);
+                              }}
+                              sx={{ gap: 1 }}
+                            >
+                              {ItemIcon ? (
+                                <ItemIcon sx={{ fontSize: 18, color: menuText, opacity: 0.9 }} />
+                              ) : null}
+                              {item.label}
+                            </ListItemButton>
+                          </ListItem>
+                        );
+                      })}
                     </List>
                   </Toggler>
                 </ListItem>

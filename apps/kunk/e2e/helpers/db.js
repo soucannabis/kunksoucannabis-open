@@ -74,9 +74,17 @@ async function upsertUser({ email, password, permissions, name, lastName, code }
   if (existing.rows[0]) {
     await p.query(`DELETE FROM operator_sessions WHERE user_id = $1`, [existing.rows[0].id]).catch(() => {});
     await p.query(
-      `UPDATE system_users SET password = $1, permissions = $2, status = 'active',
-        session_token = NULL, is_session_active = false WHERE id = $3`,
-      [hash, JSON.stringify(permissions), existing.rows[0].id]
+      `UPDATE system_users
+       SET password = $1,
+           permissions = $2,
+           status = 'active',
+           name = COALESCE($3, name),
+           last_name = COALESCE($4, last_name),
+           internal_code = COALESCE($5, internal_code),
+           session_token = NULL,
+           is_session_active = false
+       WHERE id = $6`,
+      [hash, JSON.stringify(permissions), name || null, lastName || null, code || null, existing.rows[0].id]
     );
   } else {
     await p.query(
@@ -99,6 +107,17 @@ export async function ensureAdminUser() {
   });
 }
 
+export async function ensureDemoAdminUser() {
+  return upsertUser({
+    email: 'admin@soucannabis.ong.br',
+    password: 'Admin@2026!',
+    permissions: ['Administrador'],
+    name: 'Administrador',
+    lastName: 'Sou Cannabis',
+    code: 'ADMIN-SOUCANNABIS',
+  });
+}
+
 export async function ensureAcolhimentoUser() {
   return upsertUser({
     email: 'acolhimento@kunk-api.test',
@@ -118,5 +137,39 @@ export async function ensureFinanceiroUser() {
     name: 'Financeiro',
     lastName: 'Test',
     code: 'FIN-TEST',
+  });
+}
+
+/**
+ * Garante login de profissional vinculado a `professionals.professional_code`
+ * via `system_users.internal_code` (portal /relatorio/servicos).
+ */
+export async function ensureProfessionalUser({
+  email = process.env.DEMO_PROFESSIONAL_EMAIL || 'profissional@soucannabis.ong.br',
+  password = process.env.DEMO_PROFESSIONAL_PASSWORD || 'Marina@2026!',
+  name = 'Marina',
+  lastName = 'Oliveira',
+} = {}) {
+  const p = getPool();
+  const { rows } = await p.query(
+    `SELECT professional_code, name, last_name, email
+     FROM professionals
+     WHERE lower(email) = lower($1)
+        OR (name ILIKE $2 AND last_name ILIKE $3)
+     ORDER BY CASE WHEN lower(email) = lower($1) THEN 0 ELSE 1 END, id ASC
+     LIMIT 1`,
+    [email, name, lastName]
+  );
+  const pro = rows[0];
+  if (!pro?.professional_code) {
+    throw new Error(`Profissional não encontrado para ${email} / ${name} ${lastName}`);
+  }
+  return upsertUser({
+    email,
+    password,
+    permissions: ['Profissional'],
+    name: pro.name || name,
+    lastName: pro.last_name || lastName,
+    code: String(pro.professional_code),
   });
 }

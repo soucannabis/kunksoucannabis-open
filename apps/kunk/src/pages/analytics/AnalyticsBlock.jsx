@@ -22,7 +22,7 @@ import {
 import { formatKpiValue } from './analyticsPeriod.js';
 import { AnalyticsBarChart, AnalyticsLineChart, AnalyticsPieChart } from './charts/AnalyticsCharts.jsx';
 
-const GREEN = '#5a7a5b';
+const GREEN = '#496b4c';
 
 function statusOptionsForTab(tabId) {
   if (tabId === 'associates') return ASSOCIATE_STATUS_OPTIONS;

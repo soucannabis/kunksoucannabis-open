@@ -4,6 +4,7 @@ const credentialsService = require('../credentialsService');
 const { AppError } = require('../../utils/response');
 
 const DEFAULT_API_BASE = 'https://api.pagar.me/core/v5';
+const TEST_API_BASE = 'https://sdx-api.pagar.me/core/v5';
 
 async function resolveConfig(credsOverride = null) {
   const resolved = credsOverride || (await credentialsService.resolveAll('pagarme'));
@@ -21,12 +22,22 @@ function authHeader(secretKey) {
   return `Basic ${token}`;
 }
 
-async function request(path, { method = 'GET', body = null, credsOverride = null } = {}) {
+function getPaymentLinksApiBase(secretKey, apiBase) {
+  return /^sk_test_/i.test(secretKey) ? TEST_API_BASE : apiBase;
+}
+
+async function paymentLinksApiBase(credsOverride = null) {
+  const { secretKey, apiBase } = await resolveConfig(credsOverride);
+  return getPaymentLinksApiBase(secretKey, apiBase);
+}
+
+async function request(path, { method = 'GET', body = null, credsOverride = null, apiBase: overrideApiBase = null } = {}) {
   const { secretKey, apiBase } = await resolveConfig(credsOverride);
   if (!secretKey) {
     throw new AppError(400, 'CREDENTIAL_MISSING', 'secret_key Pagar.me ausente');
   }
-  const url = `${apiBase}${path.startsWith('/') ? path : `/${path}`}`;
+  const base = String(overrideApiBase || apiBase).replace(/\/$/, '');
+  const url = `${base}${path.startsWith('/') ? path : `/${path}`}`;
   const res = await fetch(url, {
     method,
     headers: {
@@ -86,7 +97,10 @@ async function ensureCredentialRows() {
 
 module.exports = {
   DEFAULT_API_BASE,
+  TEST_API_BASE,
   resolveConfig,
+  getPaymentLinksApiBase,
+  paymentLinksApiBase,
   request,
   testConnection,
   ensureCredentialRows,

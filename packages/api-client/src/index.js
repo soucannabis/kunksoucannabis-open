@@ -170,6 +170,17 @@ export function createApiClient({ baseUrl, app } = {}) {
     getCacheStatus: () => request('GET', '/cache/status'),
     clearCache: () => request('POST', '/cache/clear', {}),
 
+    // Outbound webhooks (admin)
+    listWebhooks: () => request('GET', '/admin/webhooks'),
+    getWebhooksCatalog: () => request('GET', '/admin/webhooks/catalog'),
+    createWebhook: (body) => request('POST', '/admin/webhooks', body),
+    updateWebhook: (id, body) => request('PATCH', `/admin/webhooks/${id}`, body),
+    deleteWebhook: (id) => request('DELETE', `/admin/webhooks/${id}`),
+    rotateWebhookSecret: (id) => request('POST', `/admin/webhooks/${id}/rotate-secret`, {}),
+    testWebhook: (id) => request('POST', `/admin/webhooks/${id}/test`, {}),
+    listWebhookDeliveries: (id, qs = '') =>
+      request('GET', `/admin/webhooks/${id}/deliveries${qs ? `?${qs}` : ''}`),
+
     // Operator password reset
     forgotOperatorPassword: (email, app) =>
       request('POST', '/auth/forgot-password', { email, app }),
@@ -198,6 +209,7 @@ export function createApiClient({ baseUrl, app } = {}) {
     ordersFacets: (qs = '') => request('GET', `/orders/facets${qs ? `?${qs}` : ''}`),
     ordersStatusConfig: () => request('GET', '/orders/status-config'),
     ordersBulk: (body) => request('POST', '/orders/bulk', body),
+    updateOrderProduction: (id, body) => request('PATCH', `/orders/${id}/production`, body),
     updateOrderStatus: (id, status, opts = {}) =>
       request('PATCH', `/orders/${id}/status`, {
         status,

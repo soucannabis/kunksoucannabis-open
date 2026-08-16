@@ -14,7 +14,7 @@
 | `invalid_fields` | Lista de campos inválidos (não é fase) |
 | Persistência parcial | Só grava campos válidos |
 | CIAP2 | Associado e paciente → `ciap_codes` + texto |
-| Documentos | Assistente RG (frente+verso) / CNH (frente); termo só após todos |
+| Documentos | Assistente RG (frente+verso) / CNH (aberta); termo só após todos |
 | `prescription` | ex-`medical_prescription` |
 | Cadastro | Sempre por um **responsável** |
 

@@ -18,16 +18,27 @@ const {
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 const router = Router();
 
+/**
+ * Sessão de associado no cookie (cadastramento).
+ * Em localhost o jar é compartilhado: se houver sessão de operador (cookie app ou Bearer),
+ * ignora associate_session — inclusive expirada — para não bloquear upload do Kunk/Admin.
+ */
 async function resolveAssociateFromCookie(req) {
   const token = req.cookies?.associate_session;
   if (!token) return null;
-  // Ignore operator session cookies on localhost (shared across ports).
-  if (extractBearer(req)) {
-    throw new AppError(401, 'AUTH_CONFLICT', 'Use cookie ou Bearer, não ambos');
+
+  const {
+    resolveOperatorApp,
+    extractOperatorCookieToken,
+  } = require('../constants/authCookies');
+  const app = resolveOperatorApp(req);
+  if (extractBearer(req) || extractOperatorCookieToken(req, app)) {
+    return null;
   }
+
   const row = await associateAuthRepository.resolveSessionRow(token);
-  if (!row) throw new AppError(401, 'UNAUTHORIZED', 'Sessão inválida ou expirada');
-  return row;
+  // Cookie associado inválido/expirado: não falha aqui — deixa o authenticate do operador decidir.
+  return row || null;
 }
 
 router.get('/', authenticate, authorize('files', 'read'), async (req, res, next) => {
@@ -160,13 +171,13 @@ router.get('/:id', async (req, res, next) => {
 });
 
 /**
- * Branding assets (logo, fundo, etc.) live in system_configs as /files/:id/download
- * and must be readable without auth so login/sidebar <img> and favicon work.
+ * Assets embutidos em páginas públicas (login, sidebar, página de assinatura do termo)
+ * precisam ser legíveis sem auth: branding em system_configs e logo do template do termo.
  */
-async function isPublicBrandingFile(fileId) {
+async function isPubliclyReadableFile(fileId) {
   const id = String(fileId || '').trim();
   if (!id) return false;
-  const result = await query(
+  const branding = await query(
     `SELECT 1 FROM system_configs
      WHERE is_sensitive = false
        AND value IS NOT NULL
@@ -178,12 +189,18 @@ async function isPublicBrandingFile(fileId) {
      LIMIT 1`,
     [id, `/api/v1/files/${id}/download`, `%/files/${id}/%`]
   );
-  return Boolean(result.rows[0]);
+  if (branding.rows[0]) return true;
+
+  const termLogo = await query(
+    `SELECT 1 FROM term_templates WHERE logo_file_id = $1::uuid LIMIT 1`,
+    [id]
+  );
+  return Boolean(termLogo.rows[0]);
 }
 
 router.get('/:id/download', async (req, res, next) => {
   try {
-    const publicBranding = await isPublicBrandingFile(req.params.id);
+    const publicBranding = await isPubliclyReadableFile(req.params.id);
     if (!publicBranding) {
       const associateRow = await resolveAssociateFromCookie(req).catch(() => null);
       if (associateRow) {

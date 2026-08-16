@@ -27,6 +27,7 @@
     "@mui/material": "^6.4.8",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
+    "pdf-lib": "^1.17.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.6.2",

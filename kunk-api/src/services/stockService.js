@@ -247,8 +247,23 @@ async function listMovements(productId, { limit = 100 } = {}) {
   return res.rows;
 }
 
+async function resolveProductRow(client, item, fields = 'id, COALESCE(amount, 0)::int AS amount, batch') {
+  const productId = item?.product_id != null ? Number(item.product_id) : null;
+  const sku = lineSku(item);
+
+  if (Number.isFinite(productId) && productId > 0) {
+    const res = await client.query(`SELECT ${fields} FROM products WHERE id = $1`, [productId]);
+    if (res.rows[0]) return res.rows[0];
+  }
+  if (sku) {
+    const res = await client.query(`SELECT ${fields} FROM products WHERE sku = $1`, [sku]);
+    if (res.rows[0]) return res.rows[0];
+  }
+  return null;
+}
+
 /**
- * Anexa stock_at_order em cada item resolvido e retorna também se houve estoque zero.
+ * Anexa stock_at_order (e batch do produto, se houver) em cada item resolvido.
  */
 async function snapshotItemsStock(items) {
   const list = parseItems(items);
@@ -258,33 +273,20 @@ async function snapshotItemsStock(items) {
     const enriched = [];
     let hasZero = false;
     for (const item of list) {
-      let stock = null;
-      const productId = item?.product_id != null ? Number(item.product_id) : null;
-      const sku = lineSku(item);
-
-      let row = null;
-      if (Number.isFinite(productId) && productId > 0) {
-        const res = await client.query(
-          `SELECT id, COALESCE(amount, 0)::int AS amount FROM products WHERE id = $1`,
-          [productId]
-        );
-        row = res.rows[0] || null;
-      }
-      if (!row && sku) {
-        const res = await client.query(
-          `SELECT id, COALESCE(amount, 0)::int AS amount FROM products WHERE sku = $1`,
-          [sku]
-        );
-        row = res.rows[0] || null;
-      }
+      const row = await resolveProductRow(client, item);
 
       if (row) {
-        stock = row.amount;
+        const stock = row.amount;
         if (stock <= 0) hasZero = true;
+        const productBatch = String(row.batch || '').trim();
+        const existingBatch = String(item.batch || '').trim();
         enriched.push({
           ...item,
           product_id: item.product_id || row.id,
           stock_at_order: stock,
+          ...(productBatch || existingBatch
+            ? { batch: productBatch || existingBatch }
+            : null),
         });
       } else {
         enriched.push({ ...item, stock_at_order: item.stock_at_order ?? null });
@@ -292,6 +294,40 @@ async function snapshotItemsStock(items) {
     }
     return { items: enriched, has_zero_stock: hasZero };
   });
+}
+
+/**
+ * Grava o lote vigente do produto nos itens do pedido (fallback legado sem SCP/FIFO).
+ * Preferência: products.batch atual; mantém item.batch se o produto não tiver lote.
+ * @param {object} client - client pg (transação)
+ * @param {unknown} items
+ * @returns {Promise<{ items: object[], changed: boolean }>}
+ */
+async function stampItemsBatch(client, items) {
+  const list = parseItems(items);
+  if (!list.length) return { items: list, changed: false };
+
+  let changed = false;
+  const enriched = [];
+  for (const item of list) {
+    const row = await resolveProductRow(client, item, 'id, batch');
+    if (!row) {
+      enriched.push(item);
+      continue;
+    }
+
+    const productBatch = String(row.batch || '').trim();
+    const currentBatch = String(item?.batch || '').trim();
+    const nextBatch = productBatch || currentBatch || null;
+    const next = {
+      ...item,
+      product_id: item.product_id || row.id,
+      ...(nextBatch ? { batch: nextBatch } : { batch: item.batch ?? null }),
+    };
+    if (String(next.batch || '').trim() !== currentBatch) changed = true;
+    enriched.push(next);
+  }
+  return { items: enriched, changed };
 }
 
 module.exports = {
@@ -306,4 +342,5 @@ module.exports = {
   resolveDebitLines,
   parseItems,
   snapshotItemsStock,
+  stampItemsBatch,
 };

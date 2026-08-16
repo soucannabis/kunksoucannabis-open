@@ -57,6 +57,8 @@ Credenciais → Autenticar → Dados necessários → Módulo ativo → Usos
 | Utalk (WhatsApp) | [Utalk](/inicio/servicos-utalk) |
 | Armazenamento e Backup | [Armazenamento e Backup](/inicio/configuracoes-armazenamento) |
 
+Para **notificar sua própria API** quando dados mudam (associados, pedidos, etc.), use [Webhooks](/inicio/webmaster-webhooks) em Webmaster — não é um serviço de terceiro, e sim endpoints outbound configuráveis.
+
 ## Documentação técnica (desenvolvedores)
 
 A especificação interna da API Kunk para cada módulo fica em `project-tools/docs/api/modules/` no repositório. No dia a dia do Admin, use os guias desta central e os links oficiais de cada fornecedor.

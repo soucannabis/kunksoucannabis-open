@@ -5,7 +5,7 @@
     "users": 100,
     "institutional_clients": 10,
     "professionals": 10,
-    "products": 12,
+    "products": 5,
     "tags": 8,
     "orders": 50,
     "services": 20,
@@ -36,7 +36,7 @@
   "notes": [
     "Todos os dados são fictícios — não copiar produção/Directus.",
     "Não cria system_users — operadores só via Admin/API.",
-    "Produtos usam catálogo KNK-* (mg/SKU), sem padrão de cores/proporções do Directus.",
+    "Produtos: 5 linhas canabinoides (CBD, THC, CBG, CBC, CBN) com SKU KNK-*.",
     "Rodar com: npm run seed:sample"
   ]
 }

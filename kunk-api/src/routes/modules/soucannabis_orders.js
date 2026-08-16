@@ -159,12 +159,10 @@ outboundRouter.get('/users/:user_code', async (req, res, next) => {
 
 router.use('/outbound', outboundRouter);
 
-router.use(requireModule('soucannabis_orders'));
-
-router.get('/', (req, res) => {
-  res.json(ok({ module: 'soucannabis_orders', status: 'enabled' }));
-});
-
+/**
+ * Setup / status / teste / credenciais outbound ficam FORA do requireModule.
+ * Senão: módulo off → 503 → impossível autenticar para depois ativar.
+ */
 router.get('/status', async (req, res, next) => {
   try {
     res.json(ok(await sc.getStatus()));
@@ -181,22 +179,6 @@ router.get('/me', async (req, res, next) => {
   }
 });
 
-router.get('/products', async (req, res, next) => {
-  try {
-    res.json(ok(await sc.listProducts()));
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get('/tags', async (req, res, next) => {
-  try {
-    res.json(ok(await sc.listTags()));
-  } catch (err) {
-    next(err);
-  }
-});
-
 router.post('/test', async (req, res, next) => {
   try {
     const credentialsService = require('../../services/credentialsService');
@@ -207,17 +189,6 @@ router.post('/test', async (req, res, next) => {
   } catch (err) {
     const credentialsService = require('../../services/credentialsService');
     await credentialsService.markTestResult('soucannabis_orders', false).catch(() => {});
-    next(err);
-  }
-});
-
-router.post('/sync/order/:id', async (req, res, next) => {
-  try {
-    const result = await sc.syncOrders.createIfNeeded(Number(req.params.id), {
-      external_payment_info: req.body?.external_payment_info,
-    });
-    res.json(ok(result));
-  } catch (err) {
     next(err);
   }
 });
@@ -297,6 +268,40 @@ router.get('/webhook-info', async (req, res, next) => {
         },
       })
     );
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Catálogo / sync exigem módulo ativo no Admin.
+router.use(requireModule('soucannabis_orders'));
+
+router.get('/', (req, res) => {
+  res.json(ok({ module: 'soucannabis_orders', status: 'enabled' }));
+});
+
+router.get('/products', async (req, res, next) => {
+  try {
+    res.json(ok(await sc.listProducts()));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/tags', async (req, res, next) => {
+  try {
+    res.json(ok(await sc.listTags()));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/sync/order/:id', async (req, res, next) => {
+  try {
+    const result = await sc.syncOrders.createIfNeeded(Number(req.params.id), {
+      external_payment_info: req.body?.external_payment_info,
+    });
+    res.json(ok(result));
   } catch (err) {
     next(err);
   }

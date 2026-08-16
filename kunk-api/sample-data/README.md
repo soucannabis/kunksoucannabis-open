@@ -10,7 +10,7 @@ Dados **fictícios** para popular o schema alvo em demos e instalação com samp
 | orders | 50 |
 | institutional_clients | 10 |
 | professionals | 10 |
-| products | 12 |
+| products | 5 |
 | services | 20 |
 | reception | 15 |
 | tags | 8 |
@@ -74,6 +74,6 @@ Preserva `system_users`, `system_configs` e `system_api_credentials`.
 - **Todos os campos** de cada tabela do `target-schema.sql` (exceto `system_users`) são preenchidos no seed demo.
 - Cada registro do seed grava `is_sample = true`. Dados criados pelo uso normal ficam com `is_sample = false` (default).
 - No admin (**Dados** → Excluir dados de exemplo) é possível remover só as linhas com `is_sample = true`.
-- Produtos: catálogo `KNK-*` com concentrações em **mg**, sem cores/proporções do Directus.
+- Produtos: 5 linhas (`Linha CBD`, `THC`, `CBG`, `CBC`, `CBN`) com SKU `KNK-*` e concentrações em **mg**.
 - CPFs/emails/telefones são inventados e claramente de demo.
 - `reception.status` usa os valores OSS da triagem (`waiting` / `done`), alinhados a `triage.statuses`.

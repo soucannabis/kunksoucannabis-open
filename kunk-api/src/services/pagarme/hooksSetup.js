@@ -17,7 +17,7 @@ const VALIDATION_ORDER_PREFIX = 'KUNK_WH_';
 /** localhost não recebe webhook da Pagar.me — padrão de túnel para testes locais. */
 const DEFAULT_WEBHOOK_PUBLIC_BASE = 'https://stallion-hot-weasel.ngrok-free.app';
 const DASHBOARD_HINT =
-  'Conta → Configurações → Webhooks → Criar webhook. Eventos: order.created (obrigatório) e order.paid. Basic Auth com usuário/senha abaixo. Crie o link (passo 2); no passo 3 a validação confere se o order.created já chegou (pode levar até 1 minuto).';
+  'Conta → Configurações → Webhooks → Criar webhook. Eventos: order.created (obrigatório) e order.paid. Basic Auth com usuário/senha abaixo. Crie o link (passo 2), abra-o e gere o boleto sem pagá-lo; no passo 3 a validação confere se o order.created já chegou (pode levar até 1 minuto).';
 
 function webhookPaths() {
   return {
@@ -481,7 +481,7 @@ async function clearValidationReceipt() {
 }
 
 function isOrderCreatedEvent(type) {
-  return /^order\.created$/i.test(String(type || '').trim());
+  return /^order\.create(?:d)?$/i.test(String(type || '').trim());
 }
 
 function receiptMatchesTestPayment(receipt, testPayment) {
@@ -494,93 +494,66 @@ function receiptMatchesTestPayment(receipt, testPayment) {
 }
 
 /**
- * Cria link de pagamento (checkout boleto) na Pagar.me para disparar order.created.
- * Persistido para o passo 3 conferir o webhook sem criar outro pedido.
+ * Cria Payment Link boleto na Pagar.me e ativa o módulo.
+ * O passo 3 (webhooks) permanece opcional para validar a entrega dos eventos.
  */
 async function createTestPaymentLink() {
   const { secretKey } = await client.resolveConfig();
   const isTestKey = /^sk_test_/i.test(String(secretKey || ''));
   const code = `${VALIDATION_ORDER_PREFIX}${Date.now()}`;
-  const address = {
-    line_1: 'Av Paulista, 1000, Bela Vista',
-    zip_code: '01310100',
-    city: 'Sao Paulo',
-    state: 'SP',
-    country: 'BR',
-  };
-  const customer = {
-    name: 'Cliente Teste Webhook Kunk',
-    email: 'webhook-test-kunk@example.com',
-    type: 'individual',
-    document: '39053344705',
-    document_type: 'CPF',
-    phones: {
-      mobile_phone: { country_code: '55', area_code: '11', number: '988887777' },
-    },
-    address,
-  };
-  const dueAt = new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10);
   const amount = 1500;
-
   const body = {
-    code,
-    customer,
-    items: [
-      {
-        amount,
-        description: 'Teste validacao webhook boleto Kunk',
-        quantity: 1,
-        code: 'WH-BOL-TEST',
+    type: 'order',
+    name: 'Teste webhook Kunk',
+    order_code: code,
+    max_paid_sessions: 1,
+    expires_in: 120,
+    payment_settings: {
+      accepted_payment_methods: ['boleto'],
+      boleto_settings: {
+        due_in: 5,
+        instructions: 'Teste webhook Kunk — não pagar',
       },
-    ],
-    payments: [
-      {
-        payment_method: 'checkout',
-        amount,
-        checkout: {
-          expires_in: 120,
-          accepted_payment_methods: ['boleto'],
-          customer_editable: false,
-          billing_address_editable: false,
-          billing_address: address,
-          success_url: 'https://example.com/ok',
-          boleto: {
-            instructions: 'Teste webhook Kunk — nao pagar',
-            due_at: dueAt,
-          },
+    },
+    cart_settings: {
+      items: [
+        {
+          name: 'Teste validação webhook boleto Kunk',
+          description: 'Gere o boleto para validar o webhook; não efetue o pagamento.',
+          amount,
+          default_quantity: 1,
         },
-      },
-    ],
+      ],
+    },
   };
 
   await clearValidationReceipt();
   await clearWebhookValidation();
 
-  const order = await client.request('/orders', { method: 'POST', body });
-  if (String(order.status || '').toLowerCase() === 'failed') {
-    const msg =
-      order.charges?.[0]?.last_transaction?.gateway_response?.errors?.[0]?.message ||
-      'Pedido boleto falhou na Pagar.me';
-    throw new AppError(502, 'PAGARME_ERROR', msg, { order });
-  }
+  const paymentLink = await client.request('/paymentlinks', {
+    method: 'POST',
+    body,
+    apiBase: await client.paymentLinksApiBase(),
+  });
 
   const payload = {
     at: new Date().toISOString(),
     code,
     is_test_key: isTestKey,
-    method: 'payment_link',
+    method: 'payment_link_api',
     expected_events: ['order.created'],
-    payment_url: order.checkouts?.[0]?.payment_url || null,
-    checkout_id: order.checkouts?.[0]?.id || null,
+    payment_url: paymentLink?.url || null,
+    checkout_id: paymentLink?.id || null,
     order: {
-      id: order.id,
-      code: order.code || code,
-      status: order.status,
-      charge_status: order.charges?.[0]?.status || null,
+      id: paymentLink?.id || null,
+      code: paymentLink?.order_code || code,
+      status: paymentLink?.status || null,
+      charge_status: null,
     },
   };
   await saveTestPayment(payload);
-  return payload;
+  await enablePagarmeModule();
+  return { ...payload, module_enabled: true };
 }
 
 /** @deprecated use createTestPaymentLink */
@@ -592,7 +565,19 @@ async function enablePagarmeModule() {
   await config.setConfigValue(
     'modules.pagarme.enabled',
     true,
-    'Módulo pagarme ativado após webhooks validados',
+    'Módulo pagarme ativado após link de pagamento de teste',
+    'boolean'
+  );
+  await config.setConfigValue(
+    'modules.pagarme.use_for_orders',
+    true,
+    'Pagar.me em pedidos (ativado com o módulo)',
+    'boolean'
+  );
+  await config.setConfigValue(
+    'modules.pagarme.use_for_services',
+    true,
+    'Pagar.me em serviços (ativado com o módulo)',
     'boolean'
   );
 }

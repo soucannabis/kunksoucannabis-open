@@ -108,7 +108,7 @@ async function assertAuthenticatedToEnable(service) {
 }
 
 async function getModuleConfigFlags(service) {
-  const { isModuleEnabled, asBool: flagBool } = require('../services/moduleFlags');
+  const { isModuleEnabled, asBool: flagBool, moduleEnabledDefault } = require('../services/moduleFlags');
   const enabledKey = `modules.${service}.enabled`;
   const quoteKey = `modules.${service}.use_for_quote`;
   const labelKey = `modules.${service}.use_for_label`;
@@ -155,13 +155,14 @@ async function getModuleConfigFlags(service) {
     enabled: await isModuleEnabled(service),
     /** Value stored in Admin, if any. */
     config_enabled: hasAdminEnabled ? flagBool(values[enabledKey], false) : null,
-    /** Default quando Admin nunca gravou (sempre off — env não ativa módulos). */
-    env_default: false,
+    /** Default quando Admin nunca gravou (uso no sistema sempre off). */
+    env_default: moduleEnabledDefault(service),
     source: hasAdminEnabled ? 'admin' : 'default',
   };
   if (FREIGHT_SERVICES.has(service)) {
     const scOn = await isModuleEnabled('soucannabis_orders');
-    flags.use_for_quote = scOn ? false : flagBool(values[quoteKey], false);
+    const quoteDefault = false;
+    flags.use_for_quote = scOn ? false : flagBool(values[quoteKey], quoteDefault);
     flags.use_for_label = scOn ? false : flagBool(values[labelKey], false);
     flags.use_for_tracking = flagBool(values[trackingKey], false);
     flags.sc_blocks_quote_label = scOn;
@@ -413,14 +414,14 @@ router.get('/:service', async (req, res, next) => {
       } catch (err) {
         payload.pagarme_status = { error: err.message || String(err) };
       }
-      // Efetivo: secret + webhooks ready. Se o flag no Admin/env estiver "on" sem isso, mostra desligado.
+      // Efetivo: flag Admin + Secret key. Webhooks (passo 3) não bloqueiam o módulo.
       const effectivelyOn = await isModuleEnabled('pagarme');
       payload.enabled = effectivelyOn;
       if (!effectivelyOn && payload.config_enabled === true) {
         await upsertModuleFlag(
           'modules.pagarme.enabled',
           false,
-          'Módulo pagarme desligado: exige Secret key e webhooks validados'
+          'Módulo pagarme desligado: exige Secret key autenticada'
         );
         payload.config_enabled = false;
         payload.source = 'admin';
@@ -647,11 +648,13 @@ router.patch('/:service', async (req, res, next) => {
             'Autentique a Secret key do Pagar.me antes de ativar o módulo'
           );
         }
-        if (!pagarmeStatus.webhooks?.ready) {
+        const testPayment =
+          pagarmeStatus.webhooks?.test_payment || pagarmeStatus.webhooks?.test_order;
+        if (!testPayment?.order?.id) {
           throw new AppError(
             400,
-            'WEBHOOKS_NOT_VALIDATED',
-            'Valide os webhooks (usuário, senha e URLs no painel Pagar.me) antes de ativar o módulo'
+            'TEST_PAYMENT_REQUIRED',
+            'Crie um link de pagamento de teste (passo 2) antes de ativar o módulo'
           );
         }
       }

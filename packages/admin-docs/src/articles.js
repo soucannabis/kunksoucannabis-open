@@ -19,6 +19,7 @@ import webmasterUsuarios from '../content/webmaster-usuarios.md?raw';
 import webmasterCredenciaisSuporte from '../content/webmaster-credenciais-suporte.md?raw';
 import webmasterErros from '../content/webmaster-erros.md?raw';
 import webmasterWebVitals from '../content/webmaster-web-vitals.md?raw';
+import webmasterWebhooks from '../content/webmaster-webhooks.md?raw';
 import servicosIndex from '../content/servicos-externos/_index.md?raw';
 import servicosEnvio from '../content/servicos-externos/envio.md?raw';
 import servicosLoggi from '../content/servicos-externos/loggi.md?raw';
@@ -50,6 +51,7 @@ const SLUG_BY_ID = {
   'webmaster-credenciais-suporte': 'webmaster-credenciais-suporte',
   'webmaster-erros': 'webmaster-erros',
   'webmaster-web-vitals': 'webmaster-web-vitals',
+  'webmaster-webhooks': 'webmaster-webhooks',
   'servicos-externos': 'servicos-externos',
   'servicos-envio': 'servicos-envio',
   'servicos-loggi': 'servicos-loggi',
@@ -81,6 +83,7 @@ const RAW_ARTICLES = [
   webmasterCredenciaisSuporte,
   webmasterErros,
   webmasterWebVitals,
+  webmasterWebhooks,
   servicosIndex,
   servicosEnvio,
   servicosLoggi,

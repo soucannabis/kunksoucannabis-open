@@ -100,8 +100,63 @@ async function isSplitMode() {
   return Boolean(cfg.enabled && cfg.association_recipient_id && cfg.soucannabis_recipient_id);
 }
 
+function paymentLinkBoletoDueIn(checkoutExpiresIn) {
+  const minutes = Number(checkoutExpiresIn);
+  if (!Number.isFinite(minutes) || minutes <= 0) return 7;
+  return Math.max(1, Math.ceil(minutes / (24 * 60)));
+}
+
+function buildPaymentLinkBody({
+  code,
+  context,
+  amountCents,
+  methods,
+  installments,
+  checkoutExpiresIn,
+}) {
+  const accepted = methods.filter((method) => method === 'credit_card' || method === 'boleto');
+  const paymentSettings = {
+    accepted_payment_methods: accepted.length ? accepted : ['credit_card'],
+  };
+
+  if (paymentSettings.accepted_payment_methods.includes('credit_card')) {
+    paymentSettings.credit_card_settings = {
+      operation_type: 'auth_and_capture',
+      installments,
+    };
+  }
+  if (paymentSettings.accepted_payment_methods.includes('boleto')) {
+    paymentSettings.boleto_settings = {
+      due_in: paymentLinkBoletoDueIn(checkoutExpiresIn),
+      instructions: 'Pagamento Associação',
+    };
+  }
+
+  const expiresIn = Number(checkoutExpiresIn);
+  return {
+    type: 'order',
+    name: `Pagamento ${context} ${code}`,
+    order_code: code,
+    // Um pagamento por link evita vários pedidos pagos com o mesmo order_code.
+    max_paid_sessions: 1,
+    ...(Number.isFinite(expiresIn) && expiresIn > 0 ? { expires_in: expiresIn } : {}),
+    payment_settings: paymentSettings,
+    cart_settings: {
+      items: [
+        {
+          name: 'Pagamento Associação',
+          description: `Pagamento ${context} ${code}`,
+          amount: amountCents,
+          default_quantity: 1,
+        },
+      ],
+    },
+  };
+}
+
 /**
- * Cria checkout Pagarme para order ou service.
+ * Cria link Pagar.me para order ou service.
+ * Standalone usa Payment Links; split SC preserva o checkout em /orders.
  * body: { context, entity_id, methods, amount_override? }
  */
 async function createCheckout(body = {}) {
@@ -147,7 +202,7 @@ async function createCheckout(body = {}) {
   } else {
     entity = await itemsRepository.getItem('services', entityId);
     if (!entity) throw new AppError(404, 'NOT_FOUND', 'Serviço não encontrado');
-    userCode = entity.associate || entity.user_code;
+    userCode = entity.associate || entity.associate_user_code || entity.user_code;
     code = String(entity.service_code || entity.booking_group_code || entity.id);
     baseAmount =
       body.amount_override != null
@@ -179,24 +234,6 @@ async function createCheckout(body = {}) {
       ? [1, 2, 3, 4, 5].map((n) => ({ number: n, total: amountCents }))
       : [1, 2, 3].map((n) => ({ number: n, total: amountCents }));
 
-  const accepted = methods.filter((m) => m === 'credit_card' || m === 'boleto');
-  const payment = {
-    amount: amountCents,
-    payment_method: 'checkout',
-    checkout: {
-      expires_in: cfg.checkout_expires_in || 10080,
-      billing_address_editable: false,
-      billing_address: billing,
-      customer_editable: true,
-      accepted_payment_methods: accepted.length ? accepted : ['credit_card'],
-      success_url: cfg.success_url || 'https://soucannabis.ong.br',
-      boleto: {
-        due_at: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
-      },
-      credit_card: { installments },
-    },
-  };
-
   let splitRules = null;
   if (splitMode) {
     const pct = assertIntegerPercentage(await getScPaymentPercentage());
@@ -205,41 +242,78 @@ async function createCheckout(body = {}) {
       soucannabisRecipientId: cfg.soucannabis_recipient_id,
       associationRecipientId: cfg.association_recipient_id,
     });
-    payment.split = splitRules;
   }
 
-  const requestBody = {
-    code,
-    customer: {
-      name: fullName,
-      email,
-      phones: {
-        mobile_phone: {
-          country_code: phone.country_code,
-          area_code: phone.area_code,
-          number: phone.number,
+  let pagarme;
+  let paymentUrl = null;
+  let paymentCode = null;
+
+  if (splitMode) {
+    const accepted = methods.filter((method) => method === 'credit_card' || method === 'boleto');
+    const payment = {
+      amount: amountCents,
+      payment_method: 'checkout',
+      checkout: {
+        expires_in: cfg.checkout_expires_in || 10080,
+        billing_address_editable: false,
+        billing_address: billing,
+        customer_editable: true,
+        accepted_payment_methods: accepted.length ? accepted : ['credit_card'],
+        success_url: cfg.success_url || 'https://soucannabis.ong.br',
+        boleto: {
+          due_at: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+        },
+        credit_card: { installments },
+      },
+      split: splitRules,
+    };
+    const requestBody = {
+      code,
+      customer: {
+        name: fullName,
+        email,
+        phones: {
+          mobile_phone: {
+            country_code: phone.country_code,
+            area_code: phone.area_code,
+            number: phone.number,
+          },
         },
       },
-    },
-    items: [
-      {
-        amount: amountCents,
-        quantity: 1,
-        code: splitMode ? 'SC-ORDER' : 'SINGLE-PAYMENT',
-        name: 'Pagamento Associação',
-        description: `Pagamento ${context} ${code}`,
-        category: 'payment',
-      },
-    ],
-    payments: [payment],
-  };
-
-  const pagarmeOrder = await client.request('/orders', { method: 'POST', body: requestBody });
-  const paymentUrl = pagarmeOrder?.checkouts?.[0]?.payment_url || null;
-  const paymentCode =
-    pagarmeOrder?.charges?.[0]?.last_transaction?.qr_code ||
-    pagarmeOrder?.charges?.[0]?.last_transaction?.qr_code_url ||
-    null;
+      items: [
+        {
+          amount: amountCents,
+          quantity: 1,
+          code: 'SC-ORDER',
+          name: 'Pagamento Associação',
+          description: `Pagamento ${context} ${code}`,
+          category: 'payment',
+        },
+      ],
+      payments: [payment],
+    };
+    pagarme = await client.request('/orders', { method: 'POST', body: requestBody });
+    paymentUrl = pagarme?.checkouts?.[0]?.payment_url || null;
+    paymentCode =
+      pagarme?.charges?.[0]?.last_transaction?.qr_code ||
+      pagarme?.charges?.[0]?.last_transaction?.qr_code_url ||
+      null;
+  } else {
+    const requestBody = buildPaymentLinkBody({
+      code,
+      context,
+      amountCents,
+      methods,
+      installments,
+      checkoutExpiresIn: cfg.checkout_expires_in,
+    });
+    pagarme = await client.request('/paymentlinks', {
+      method: 'POST',
+      body: requestBody,
+      apiBase: await client.paymentLinksApiBase(),
+    });
+    paymentUrl = pagarme?.url || null;
+  }
 
   const patch = {};
   if (paymentUrl) patch.payment_link = paymentUrl;
@@ -250,13 +324,14 @@ async function createCheckout(body = {}) {
   }
 
   return {
-    pagarme: pagarmeOrder,
+    pagarme,
     payment_link: paymentUrl,
     payment_code: paymentCode,
     code,
     split_mode: splitMode,
     split: splitRules,
     amount_cents: amountCents,
+    upstream: splitMode ? 'orders' : 'paymentlinks',
   };
 }
 
@@ -266,4 +341,6 @@ module.exports = {
   getScPaymentPercentage,
   loadUserByCode,
   associateFullName,
+  buildPaymentLinkBody,
+  paymentLinkBoletoDueIn,
 };

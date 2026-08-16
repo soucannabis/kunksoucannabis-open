@@ -21,6 +21,7 @@ const webVitalsAdmin = require('./webVitalsAdmin');
 const cacheAdmin = require('./cacheAdmin');
 const supportCredentialsAdmin = require('./supportCredentialsAdmin');
 const systemHealthAdmin = require('./systemHealthAdmin');
+const webhooksAdmin = require('./webhooksAdmin');
 
 const router = Router();
 router.use(authenticate, requireRole('Administrador'));
@@ -33,6 +34,7 @@ router.use('/web-vitals', webVitalsAdmin);
 router.use('/cache', cacheAdmin);
 router.use('/support-credentials', supportCredentialsAdmin);
 router.use('/system-health', systemHealthAdmin);
+router.use('/webhooks', webhooksAdmin);
 
 const ROLE_DESCRIPTIONS = {
   Administrador: 'Acesso total + app admin',

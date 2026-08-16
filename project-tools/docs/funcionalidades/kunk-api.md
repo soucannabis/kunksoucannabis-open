@@ -47,6 +47,7 @@ Não há Playwright na API; e2e dos apps exercitam parte das rotas.
 | System errors | `/admin/system-errors` | Triagem de erros | Sim |
 | Web vitals | `/admin/web-vitals` | Consulta agregada | Sim |
 | Cache | `/admin/cache` | Admin do memory cache | Sim |
+| Webhooks | `/admin/webhooks` | Endpoints outbound + outbox | Sim |
 
 ## Módulos externos (`/modules`)
 
@@ -72,6 +73,7 @@ Não há Playwright na API; e2e dos apps exercitam parte das rotas.
 | `productsService` / `stockService` | Produtos e estoque | Sim |
 | `servicesService` / `servicesReportsService` | Serviços e relatório | Sim / Parcial |
 | `receptionService` | Triagem | Sim |
+| `webhooks` (emit/worker/dispatch) | Outbound configurável + outbox | Sim |
 | `usersService` / `registrationService` | Associados / funil | Sim |
 | `systemUsersService` | Operadores | Sim |
 | `itemsService` + parsers (filter/sort/fields) | CRUD genérico | Sim |

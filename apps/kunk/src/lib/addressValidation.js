@@ -3,6 +3,11 @@
  * pedidos com endereço estruturado e sem address_validation.
  */
 
+/** Status do GET /modules/geoapify/status — UI de validação só com módulo ativo. */
+export function isAddressValidationUiActive(status) {
+  return Boolean(status?.enabled && status?.use_for_validation);
+}
+
 function hasStructuredAddress(address) {
   if (!address || typeof address !== 'object') return false;
   const street = String(address.street || '').trim();

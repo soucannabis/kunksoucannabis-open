@@ -52,7 +52,7 @@ Auth: Basic `Base64(secret_key + ":")`.
 
 ### A) Standalone (SC off)
 
-- Checkout sem `split`
+- Payment Link (`POST /paymentlinks`) sem `split`
 - Abas UI: cartão, boleto, **cartão parcial**
 - `code` = `order_code` (ou identificador estável do serviço)
 
@@ -95,9 +95,10 @@ Detalhe: [gaps.md §14–§15](../../frontend/kunk/pagamentos-soucannabis/gaps.m
 ## Admin
 
 1. Autenticar (Secret key + teste).
-2. Criar link de pagamento de teste (`POST /webhooks/test-payment` → `KUNK_WH_*`).
+2. Criar link de pagamento de teste (`POST /webhooks/test-payment` → `KUNK_WH_*`), abrir o link e
+   gerar o boleto sem pagá-lo.
 3. Webhooks: cadastrar URLs no painel Pagar.me (com Basic Auth); `POST /webhooks/validate`
-   confere se o `order.created` do link já chegou (não cria boleto de novo). Se ok, ativa
+   confere se o `order.created` do boleto de teste já chegou. Se ok, ativa
    `modules.pagarme.enabled`. Módulo efetivo exige secret + webhooks `ready`.
 4. `association_recipient_id` / `soucannabis_recipient_id` ficam no onboarding SC.
 
@@ -122,7 +123,8 @@ Body app:
 
 Regras:
 
-1. Monta customer/items/checkout no server.
+1. Sem split, monta um Payment Link no servidor (`/paymentlinks`) com `order_code`.
+   Com split, monta customer/items/checkout em `/orders`.
 2. **`code` = `order_code`** do pedido (ou code de serviço acordado).
 3. Se split: validar `is_psp` e `payment_percentage` inteiro; senão `PAGARME_NOT_PSP` / `PAYMENT_PERCENTAGE_NOT_INTEGER`.
 4. Se `split_mode` e pedido total > 0 → anexa `payments[].split` (`type: percentage`).

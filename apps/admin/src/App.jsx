@@ -39,6 +39,7 @@ import { CachePage } from './pages/CachePage.jsx';
 import { DocsHomePage } from './pages/DocsHomePage.jsx';
 import { HomePage } from './pages/HomePage.jsx';
 import { ApiAccessPage } from './pages/ApiAccessPage.jsx';
+import { WebhooksPage } from './pages/WebhooksPage.jsx';
 import { SupportCredentialsPage } from './pages/SupportCredentialsPage.jsx';
 import { AdminFavicon } from './components/AdminFavicon.jsx';
 import { InstallStatusProvider } from './lib/installStatus.jsx';
@@ -121,6 +122,7 @@ export default function App() {
                 <Route path="/usuarios/novo" element={<UserFormPage api={api} isNew />} />
                 <Route path="/usuarios/:id" element={<UserFormPage api={api} />} />
                 <Route path="/acesso-api" element={<ApiAccessPage api={api} />} />
+                <Route path="/webhooks" element={<WebhooksPage api={api} />} />
                 <Route path="/credenciais-suporte" element={<SupportCredentialsPage api={api} />} />
               </Route>
               <Route path="*" element={<Navigate to="/home" replace />} />

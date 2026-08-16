@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { parseEnvBool, REGISTRATION_SYSTEM_DEFAULTS } from '@kunk/config';
 import { useAssociateAuth } from '@kunk/auth-session';
 import { AlertError } from '@kunk/ui';
+import { Icon } from '../components/Icon.jsx';
 import { usePublicConfig } from '../config/PublicConfigProvider.jsx';
 
 const EXTRA_KINDS = [
@@ -132,7 +133,10 @@ function ExtraKindSection({ kind, files, api, busy, uploading, onUpload }) {
             <>
               <span className="docs-slot-title">{kind.emptyCta}</span>
               <span className="docs-slot-hint">{kind.hint}</span>
-              <span className="docs-slot-cta">Escolher arquivos</span>
+              <span className="docs-slot-cta">
+                <Icon name="upload" size={16} />
+                Escolher arquivos
+              </span>
             </>
           )}
         </label>
@@ -294,6 +298,7 @@ export function ConsultationPage({ api }) {
               target="_blank"
               rel="noreferrer"
             >
+              <Icon name="whatsapp" size={18} />
               Agendar consulta no WhatsApp
             </a>
           ) : (
@@ -322,6 +327,7 @@ export function ConsultationPage({ api }) {
               className="btn btn-success docs-primary-btn"
               onClick={() => setDocsOpen(true)}
             >
+              <Icon name="paperclip" size={18} />
               Anexar documentos
             </button>
           ) : (
@@ -331,6 +337,7 @@ export function ConsultationPage({ api }) {
                 className="finish-docs-close"
                 onClick={() => setDocsOpen(false)}
               >
+                <Icon name="eyeOff" size={16} />
                 Ocultar envios
               </button>
               {EXTRA_KINDS.map((kind) => (
@@ -361,6 +368,7 @@ export function ConsultationPage({ api }) {
             disabled={busy || Boolean(uploadingKind)}
             onClick={finish}
           >
+            <Icon name="checkCircle" size={18} />
             {busy ? 'Concluindo…' : 'Finalizar cadastro'}
           </button>
         </section>
@@ -409,6 +417,7 @@ export function RegistrationCompletePage() {
                 className="btn btn-success docs-primary-btn welcome-cta"
                 href={triageUrl}
               >
+                <Icon name="message" size={18} />
                 Abrir uma solicitação de contato
               </a>
             ) : null}
@@ -422,6 +431,7 @@ export function RegistrationCompletePage() {
             className="btn btn-success docs-primary-btn"
             href={triageUrl}
           >
+            <Icon name="message" size={18} />
             Abrir uma solicitação de contato
           </a>
         </div>

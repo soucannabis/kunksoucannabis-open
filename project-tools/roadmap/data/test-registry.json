@@ -588,6 +588,23 @@
         "description": "Valida tokens/scopes de users_api."
       }
     },
+    "admin-webhooks": {
+      "e2e": {
+        "id": "e2e.admin.webhooks",
+        "status": "missing",
+        "label": "Admin · Webhooks (UI)"
+      },
+      "api": {
+        "id": "api.admin.webhooks",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/unit/webhooks.test.js",
+          "tests/integration/admin/webhooks.test.js"
+        ],
+        "label": "API · webhooks outbound",
+        "description": "Valida CRUD admin, emit/diff de payload, assinatura HMAC, outbox/retries e teste síncrono de entrega."
+      }
+    },
     "admin-erros": {
       "e2e": {
         "id": "e2e.admin.erros",

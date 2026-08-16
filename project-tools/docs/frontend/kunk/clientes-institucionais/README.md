@@ -21,5 +21,5 @@
 ## Fora de escopo (v1)
 
 - Login/portal próprio do cliente institucional
-- Triagem / serviços / recepção
+- Triagem / serviços / acolhimento
 - Migração de dados Directus legado

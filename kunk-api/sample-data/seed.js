@@ -83,18 +83,11 @@ function pickAssociateStatusKind(i) {
 }
 
 const PRODUCT_CATALOG = [
-  { name: 'Spectrum Oil 10ml', sku: 'KNK-OIL-100', type: 'oil', unit: 'ml', concentration: 100, price: 189.9, category: 'wellness', amount: 40 },
-  { name: 'Spectrum Oil 30ml', sku: 'KNK-OIL-300', type: 'oil', unit: 'ml', concentration: 300, price: 349.9, category: 'wellness', amount: 25 },
-  { name: 'Calm Caps 30ct', sku: 'KNK-CAP-25', type: 'capsule', unit: 'unit', concentration: 25, price: 159.9, category: 'sleep', amount: 60 },
-  { name: 'Calm Caps 60ct', sku: 'KNK-CAP-25-60', type: 'capsule', unit: 'unit', concentration: 25, price: 279.9, category: 'sleep', amount: 35 },
-  { name: 'Focus Softgel 30ct', sku: 'KNK-SFT-15', type: 'softgel', unit: 'unit', concentration: 15, price: 129.9, category: 'focus', amount: 50 },
-  { name: 'Recovery Balm 50g', sku: 'KNK-BAL-50', type: 'topical', unit: 'g', concentration: 50, price: 99.9, category: 'recovery', amount: 45 },
-  { name: 'Night Drops 15ml', sku: 'KNK-DRP-150', type: 'oil', unit: 'ml', concentration: 150, price: 219.9, category: 'sleep', amount: 30 },
-  { name: 'Daily Tincture 20ml', sku: 'KNK-TIN-200', type: 'tincture', unit: 'ml', concentration: 200, price: 259.9, category: 'wellness', amount: 28 },
-  { name: 'Sport Gel 75ml', sku: 'KNK-GEL-75', type: 'topical', unit: 'ml', concentration: 75, price: 119.9, category: 'recovery', amount: 40 },
-  { name: 'Extract Isolate 1g', sku: 'KNK-ISO-1000', type: 'extract', unit: 'g', concentration: 1000, price: 399.9, category: 'wellness', amount: 15 },
-  { name: 'Pet Care Oil 10ml', sku: 'KNK-PET-50', type: 'oil', unit: 'ml', concentration: 50, price: 89.9, category: 'pet', amount: 20 },
-  { name: 'Starter Kit Duo', sku: 'KNK-KIT-001', type: 'kit', unit: 'unit', concentration: 125, price: 299.9, category: 'wellness', amount: 18 },
+  { name: 'Linha CBD', sku: 'KNK-CBD', type: 'oil', unit: 'ml', concentration: 300, price: 247.9, category: 'cbd', amount: 12 },
+  { name: 'Linha THC', sku: 'KNK-THC', type: 'oil', unit: 'ml', concentration: 100, price: 389.5, category: 'thc', amount: 14 },
+  { name: 'Linha CBG', sku: 'KNK-CBG', type: 'oil', unit: 'ml', concentration: 200, price: 198.0, category: 'cbg', amount: 11 },
+  { name: 'Linha CBC', sku: 'KNK-CBC', type: 'oil', unit: 'ml', concentration: 150, price: 312.4, category: 'cbc', amount: 15 },
+  { name: 'Linha CBN', sku: 'KNK-CBN', type: 'oil', unit: 'ml', concentration: 250, price: 165.9, category: 'cbn', amount: 10 },
 ];
 
 /** Colunas que precisam de aspas no SQL */
@@ -380,12 +373,10 @@ async function buildDataset(passwordHash, countsOverride = null) {
         installments: paid ? 1 : 0,
         gateway: 'demo-gateway',
       },
-      production_owner: ['Em produção', 'Produção Finalizada'].includes(status)
-        ? 'Pedro Produção'
-        : 'não atribuído',
+      production_owner: null,
       tracking_code_date: shipped ? daysAgo(10 - (i % 8)) : daysAgo(50),
       last_tracking_date: shipped ? daysAgo(5 - (i % 4)) : daysAgo(50),
-      address_validation: pick(['valid', 'pending', 'corrected'], i),
+      address_validation: null,
       created_by_user_code: 'KNK-ADMIN',
     };
   });
@@ -758,7 +749,7 @@ const SMALL_COUNTS = {
   users: 12,
   institutional_clients: 2,
   professionals: 3,
-  products: 6,
+  products: 5,
   tags: 4,
   orders: 8,
   services: 5,

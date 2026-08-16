@@ -113,7 +113,9 @@ export default function OrdersOrderCard({
   zebra,
   dateField = 'created_date',
   labelBusy = false,
+  statusBusy = false,
   productStockMap = null,
+  addressValidationEnabled = false,
 }) {
   const total = Number(order.total || 0);
   const paymentLocked = Boolean(splitMode && total > 0);
@@ -121,19 +123,16 @@ export default function OrdersOrderCard({
   // Com split: só libera reverter pago→aguardando (não marcar pago pelo toggle).
   const canToggle =
     canToggleBase &&
-    !(paymentLocked && order.status === awaitingStatus);
+    !(paymentLocked && order.status === awaitingStatus) &&
+    !statusBusy;
   const carrier = String(
     order.freight_carrier || order.freight_option?.provider || ''
   ).toLowerCase();
   const labelProvider =
     carrier === 'loggi' || carrier === 'melhorenvio' ? carrier : null;
-  const labelModuleOn =
-    labelProvider === 'loggi'
-      ? Boolean(labelFlags?.loggi)
-      : labelProvider === 'melhorenvio'
-        ? Boolean(labelFlags?.melhorenvio)
-        : false;
-  const showLabelActions = Boolean(labelProvider && labelModuleOn);
+  const activeLabelProviders = labelProvider
+    ? (labelFlags?.[labelProvider] ? [labelProvider] : [])
+    : ['loggi', 'melhorenvio'].filter((provider) => Boolean(labelFlags?.[provider]));
   const trackingDisplay = displayTrackingCode(order);
   const hasLabel = Boolean(order.tracking_code || order.carrier_order_code);
   const hasTracking = Boolean(trackingDisplay);
@@ -150,7 +149,7 @@ export default function OrdersOrderCard({
       : formatDate(order.date_created || order.created_date);
 
   function togglePaymentStatus() {
-    if (!canToggle) return;
+    if (!canToggle || statusBusy) return;
     const next = order.status === awaitingStatus ? paidStatus : awaitingStatus;
     onStatusChange(order, next);
   }
@@ -183,7 +182,17 @@ export default function OrdersOrderCard({
           maxWidth: { xs: 'calc(100% - 56px)', sm: 'none' },
         }}
       >
-        {canToggle ? (
+        {statusBusy ? (
+          <Box
+            data-testid={`order-status-loading-${order.id}`}
+            sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, py: 0.5 }}
+          >
+            <CircularProgress size={18} sx={{ color: GREEN }} />
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+              Atualizando status…
+            </Typography>
+          </Box>
+        ) : canToggle ? (
           <Tooltip title="Clique para alternar o status" placement="bottom" arrow>
             <Box
               component="span"
@@ -303,6 +312,14 @@ export default function OrdersOrderCard({
               {order.user_code}
             </Typography>
           )}
+          {order.production_owner &&
+            String(order.production_owner).trim().toLowerCase() !== 'não atribuído' && (
+            <Chip
+              size="small"
+              label={`No relatório de produção (${order.production_owner})`}
+              sx={{ mt: 0.5, bgcolor: '#e8f2e8', color: GREEN, fontWeight: 700 }}
+            />
+          )}
 
           <Typography
             variant="body2"
@@ -311,7 +328,9 @@ export default function OrdersOrderCard({
             {addressLine(order.address)}
           </Typography>
 
-          {order.address_validation != null && order.address_validation !== '' && (
+          {addressValidationEnabled &&
+            order.address_validation != null &&
+            order.address_validation !== '' && (
             <Box
               sx={{
                 display: 'flex',
@@ -599,25 +618,25 @@ export default function OrdersOrderCard({
                 </Button>
               </Tooltip>
             )}
-            {showLabelActions && (
-              <>
+            {activeLabelProviders.map((provider) => (
+              <React.Fragment key={provider}>
                 <Tooltip
                   title={
-                    labelProvider === 'loggi'
+                    provider === 'loggi'
                       ? 'Gerar etiqueta Loggi'
                       : 'Gerar etiqueta Melhor Envio'
                   }
                 >
                   <span>
                     <Button
-                      data-testid={`label-${labelProvider}-${order.id}`}
-                      onClick={() => onCreateLabel(order, labelProvider)}
+                      data-testid={`label-${provider}-${order.id}`}
+                      onClick={() => onCreateLabel(order, provider)}
                       disabled={labelBusy}
                       sx={actionBtnSx(PURPLE, '#4d2d4d')}
                     >
                       {labelBusy ? (
                         <CircularProgress size={18} sx={{ color: '#fff' }} />
-                      ) : labelProvider === 'loggi' ? (
+                      ) : provider === 'loggi' ? (
                         <LocalShippingIcon fontSize="small" />
                       ) : (
                         <Typography component="span" sx={{ fontSize: 11, fontWeight: 800 }}>
@@ -627,18 +646,18 @@ export default function OrdersOrderCard({
                     </Button>
                   </span>
                 </Tooltip>
-                {hasLabel && (
+                {hasLabel && provider === labelProvider && (
                   <Tooltip
                     title={
-                      labelProvider === 'loggi'
+                      provider === 'loggi'
                         ? 'Cancelar etiqueta Loggi'
                         : 'Cancelar etiqueta Melhor Envio'
                     }
                   >
                     <span>
                       <Button
-                        data-testid={`cancel-${labelProvider}-${order.id}`}
-                        onClick={() => onCancelLabel(order, labelProvider)}
+                        data-testid={`cancel-${provider}-${order.id}`}
+                        onClick={() => onCancelLabel(order, provider)}
                         disabled={labelBusy}
                         sx={{
                           ...actionBtnSx('#bdbdbd', '#9e9e9e'),
@@ -651,8 +670,8 @@ export default function OrdersOrderCard({
                     </span>
                   </Tooltip>
                 )}
-              </>
-            )}
+              </React.Fragment>
+            ))}
             <Tooltip title="Detalhes do pedido">
               <Button
                 data-testid={`details-${order.id}`}

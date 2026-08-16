@@ -40,11 +40,11 @@ test.describe('navigation', () => {
     await expect(page.getByTestId('orders-page')).toBeVisible();
   });
 
-  test('navega Serviços → listagem', async ({ page }) => {
+  test('navega Atendimentos → listagem', async ({ page }) => {
     await openSection(page, 'Acolhimento');
-    await page.getByRole('menuitem', { name: 'Serviços' }).click();
+    await page.getByRole('menuitem', { name: 'Atendimentos' }).click();
     await expect(page).toHaveURL(/\/app\/acolhimento\/servicos/);
-    await expect(page.getByRole('button', { name: /Novo Serviço/i })).toBeVisible({
+    await expect(page.getByRole('button', { name: /Novo Atendimento/i })).toBeVisible({
       timeout: 20_000,
     });
   });

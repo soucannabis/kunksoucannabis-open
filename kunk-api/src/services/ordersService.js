@@ -805,6 +805,10 @@ async function updateStatus(id, status, options = {}) {
     if (status === paid && existing.status !== paid) {
       sets.push(`payment_date = $${params.length + 1}`);
       params.push(now);
+      // Lote vigente do produto nos itens (legado sem SCP/FIFO).
+      const stamped = await stockService.stampItemsBatch(client, existing.items);
+      sets.push(`items = $${params.length + 1}::jsonb`);
+      params.push(JSON.stringify(stamped.items));
     } else if (status === awaiting && existing.status === paid) {
       sets.push(`payment_date = $${params.length + 1}`);
       params.push(null);
@@ -827,21 +831,40 @@ async function updateStatus(id, status, options = {}) {
   const previous = updated.previous;
   try {
     const syncOrders = require('./soucannabis_orders/syncOrders');
-    if (syncOrders.isSkipped(id)) return row;
-    if (status === paid && previous.status !== paid) {
-      await syncOrders.createIfNeeded(id, {
-        external_payment_info: options.external_payment_info || row.external_payment_info,
-      });
-    } else if (status === awaiting && previous.status === paid) {
-      await syncOrders.mirrorIfMapped(id, {
-        status: awaiting,
-        payment_date: null,
-      });
-    } else if (previous.soucannabis_order_id || row.soucannabis_order_id) {
-      await syncOrders.mirrorIfMapped(id, { status });
+    if (!syncOrders.isSkipped(id)) {
+      if (status === paid && previous.status !== paid) {
+        await syncOrders.createIfNeeded(id, {
+          external_payment_info: options.external_payment_info || row.external_payment_info,
+        });
+      } else if (status === awaiting && previous.status === paid) {
+        await syncOrders.mirrorIfMapped(id, {
+          status: awaiting,
+          payment_date: null,
+        });
+      } else if (previous.soucannabis_order_id || row.soucannabis_order_id) {
+        await syncOrders.mirrorIfMapped(id, { status });
+      }
     }
   } catch {
     /* sync error already persisted on order */
+  }
+  try {
+    const { emitWebhookSafe } = require('./webhooks/emit');
+    const { stripSensitive } = require('../schema/collections');
+    const { diffChangedFields, hasMeaningfulChanges } = require('./webhooks/diff');
+    const after = stripSensitive('orders', row);
+    const before = stripSensitive('orders', previous);
+    const changed = diffChangedFields(before, after, { alwaysInclude: ['id'] });
+    if (hasMeaningfulChanges(changed, ['id'])) {
+      emitWebhookSafe({
+        table: 'orders',
+        action: 'update',
+        recordId: row.id,
+        data: changed,
+      });
+    }
+  } catch {
+    /* fail-soft */
   }
   return row;
 }
@@ -881,7 +904,42 @@ async function deleteOrder(id) {
   // Pedido já sincronizado: DELETE remoto na SC antes do local (falha remota bloqueia).
   const syncOrders = require('./soucannabis_orders/syncOrders');
   await syncOrders.deleteIfMapped(id);
-  return itemsRepository.deleteItem('orders', id);
+
+  const { isModuleEnabled } = require('./moduleFlags');
+  const scOn = await isModuleEnabled('soucannabis_orders');
+
+  const deleted = await stockService.withTransaction(async (client) => {
+    const existingRes = await client.query(`SELECT * FROM orders WHERE id = $1 FOR UPDATE`, [id]);
+    const existing = existingRes.rows[0];
+    if (!existing) throw new AppError(404, 'NOT_FOUND', 'Pedido não encontrado');
+
+    // Estorna baixa local antes de remover o histórico (sem módulo SC).
+    if (!scOn && existing.stock_debited_at) {
+      await stockService.reverseSaleForOrder(id, client);
+    }
+
+    await client.query(`DELETE FROM product_stock_movements WHERE order_id = $1`, [id]);
+    await client.query(`DELETE FROM orders_files WHERE order_id = $1`, [id]);
+
+    const result = await client.query(`DELETE FROM orders WHERE id = $1 RETURNING id`, [id]);
+    if (!result.rows[0]) throw new AppError(404, 'NOT_FOUND', 'Pedido não encontrado');
+    return { id: result.rows[0].id, before: existing };
+  });
+
+  try {
+    const { emitWebhookSafe } = require('./webhooks/emit');
+    const { stripSensitive } = require('../schema/collections');
+    emitWebhookSafe({
+      table: 'orders',
+      action: 'delete',
+      recordId: deleted.id,
+      data: stripSensitive('orders', deleted.before) || { id: deleted.id },
+    });
+  } catch {
+    /* fail-soft */
+  }
+
+  return { id: deleted.id };
 }
 
 function normalizeTags(tags) {

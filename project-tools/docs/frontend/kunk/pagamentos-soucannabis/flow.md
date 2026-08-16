@@ -51,7 +51,7 @@ Sem SC: fluxo pedidos atual (frete Loggi/ME, estoque local se houver).
 
 ```text
 PaymentModal: Cartão | Boleto | Cartão parcial
-  → POST /modules/pagarme/orders (sem split)
+  → POST /modules/pagarme/orders → Payment Link (`/paymentlinks`, sem split)
   → code = order_code
   → webhook ou operação local atualiza status
 ```

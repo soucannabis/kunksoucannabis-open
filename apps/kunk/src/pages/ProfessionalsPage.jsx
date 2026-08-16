@@ -4,13 +4,17 @@ import {
   Button,
   Checkbox,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   FormControlLabel,
+  IconButton,
+  InputAdornment,
   MenuItem,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -18,9 +22,17 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import PersonAddAlt1OutlinedIcon from '@mui/icons-material/PersonAddAlt1Outlined';
+import ForwardToInboxOutlinedIcon from '@mui/icons-material/ForwardToInboxOutlined';
+import PersonOffOutlinedIcon from '@mui/icons-material/PersonOffOutlined';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { useErrorModal } from '../components/errors/ErrorModalProvider.jsx';
@@ -28,8 +40,30 @@ import PhoneField from '../components/PhoneField.jsx';
 import { contentAreaDialogProps, contentAreaSelectProps } from '../layout/contentAreaOverlay.js';
 import { typeLabel, resolvePriceFromType, normalizeProfessionalTypeId } from './reception/services/servicesUtils.js';
 
-const muiTheme = createTheme();
-const GREEN = '#5a7a5b';
+const muiTheme = createTheme({
+  palette: {
+    primary: { main: '#496b4c' },
+    secondary: { main: '#705372' },
+  },
+  typography: { fontFamily: 'inherit' },
+  shape: { borderRadius: 12 },
+});
+const GREEN = '#496b4c';
+const GREEN_HOVER = '#385a3c';
+
+const fieldSx = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 2.5,
+    bgcolor: '#f8faf8',
+    transition: 'background-color 160ms ease, box-shadow 160ms ease',
+    '& fieldset': { borderColor: 'rgba(49, 67, 51, 0.14)' },
+    '&:hover fieldset': { borderColor: 'rgba(73, 107, 76, 0.38)' },
+    '&.Mui-focused': {
+      bgcolor: '#fff',
+      boxShadow: '0 0 0 3px rgba(73, 107, 76, 0.1)',
+    },
+  },
+};
 
 const EMPTY = {
   name: '',
@@ -54,6 +88,7 @@ export default function ProfessionalsPage() {
   const { showError } = useErrorModal();
 
   const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [role, setRole] = useState('all');
   const [q, setQ] = useState('');
   const [dialog, setDialog] = useState(null);
@@ -70,6 +105,7 @@ export default function ProfessionalsPage() {
   }, [professionalTypes]);
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       const params = { enrich_calendar: true, q: q || undefined };
       if (role === 'collaborators') params.role = 'collaborators';
@@ -79,6 +115,9 @@ export default function ProfessionalsPage() {
       setRows(res.data || []);
     } catch (err) {
       showError(err);
+      setRows([]);
+    } finally {
+      setLoading(false);
     }
   }, [api, q, role, showError]);
 
@@ -206,93 +245,344 @@ export default function ProfessionalsPage() {
 
   return (
     <ThemeProvider theme={muiTheme}>
-      <Box sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, alignItems: 'center' }}>
-          <TextField size="small" label="Buscar" value={q} onChange={(e) => setQ(e.target.value)} />
-          {[
-            ['all', 'Todos'],
-            ['collaborators', 'Colaboradores'],
-            ['prescribers', 'Prescritores'],
-            ['both', 'Ambos'],
-          ].map(([id, label]) => (
-            <Chip
-              key={id}
-              label={label}
-              color={role === id ? 'success' : 'default'}
-              onClick={() => setRole(id)}
-              sx={role === id ? { bgcolor: GREEN, color: '#fff' } : undefined}
-            />
-          ))}
-          <Button variant="contained" sx={{ bgcolor: GREEN }} onClick={openNew}>
-            Novo profissional
-          </Button>
+      <Box sx={{ width: '100%', maxWidth: 1600, mx: 'auto', pb: 2 }}>
+        <Box
+          sx={{
+            position: 'relative',
+            overflow: 'hidden',
+            mb: 2,
+            p: { xs: 2.5, md: 3.25 },
+            color: '#fff',
+            borderRadius: 3,
+            background: 'linear-gradient(120deg, #314a34 0%, #496b4c 58%, #5d735e 100%)',
+            boxShadow: '0 14px 36px rgba(27, 46, 30, 0.2)',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              width: 230,
+              height: 230,
+              right: -55,
+              top: -110,
+              borderRadius: '50%',
+              border: '42px solid rgba(255,255,255,0.06)',
+            },
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
+            <Box
+              sx={{
+                width: 52,
+                height: 52,
+                flex: '0 0 auto',
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: 2.5,
+                bgcolor: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.16)',
+              }}
+            >
+              <BadgeOutlinedIcon sx={{ fontSize: 28 }} />
+            </Box>
+            <Box>
+              <Typography
+                variant="overline"
+                sx={{ color: 'rgba(255,255,255,0.68)', letterSpacing: '0.11em', fontWeight: 700 }}
+              >
+                Equipe
+              </Typography>
+              <Typography variant="h5" component="h1" sx={{ fontWeight: 750, lineHeight: 1.15 }}>
+                Profissionais
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.65, color: 'rgba(255,255,255,0.76)' }}>
+                Cadastre colaboradores, prescritores e vínculos de agenda.
+              </Typography>
+            </Box>
+          </Stack>
         </Box>
 
-        <TableContainer component={Paper} elevation={0}>
+        <Paper
+          elevation={0}
+          sx={{
+            bgcolor: '#fff',
+            border: '1px solid rgba(49, 67, 51, 0.1)',
+            borderRadius: 3,
+            p: { xs: 2, md: 2.5 },
+            mb: 2,
+            boxShadow: '0 8px 30px rgba(34, 53, 36, 0.07)',
+          }}
+        >
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={2}
+            alignItems={{ xs: 'stretch', md: 'center' }}
+            justifyContent="space-between"
+          >
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1.5}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              sx={{ flex: 1, minWidth: 0 }}
+            >
+              <TextField
+                size="small"
+                fullWidth
+                placeholder="Buscar por nome"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                sx={{ ...fieldSx, maxWidth: 320 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchRoundedIcon sx={{ color: '#708172', fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {[
+                  ['all', 'Todos'],
+                  ['collaborators', 'Colaboradores'],
+                  ['prescribers', 'Prescritores'],
+                  ['both', 'Ambos'],
+                ].map(([id, label]) => (
+                  <Chip
+                    key={id}
+                    label={label}
+                    onClick={() => setRole(id)}
+                    sx={{
+                      fontWeight: 700,
+                      bgcolor: role === id ? GREEN : 'rgba(73, 107, 76, 0.08)',
+                      color: role === id ? '#fff' : GREEN,
+                      '&:hover': {
+                        bgcolor: role === id ? GREEN_HOVER : 'rgba(73, 107, 76, 0.14)',
+                      },
+                    }}
+                  />
+                ))}
+              </Stack>
+            </Stack>
+            <Button
+              variant="contained"
+              startIcon={<AddRoundedIcon />}
+              onClick={openNew}
+              sx={{
+                bgcolor: GREEN,
+                borderRadius: 2.5,
+                px: 2,
+                textTransform: 'none',
+                fontWeight: 700,
+                boxShadow: '0 7px 18px rgba(73, 107, 76, 0.22)',
+                '&:hover': { bgcolor: GREEN_HOVER, boxShadow: '0 9px 22px rgba(73, 107, 76, 0.28)' },
+              }}
+            >
+              Novo profissional
+            </Button>
+          </Stack>
+          <Typography variant="body2" sx={{ mt: 2, color: '#657167' }}>
+            {loading
+              ? 'Carregando profissionais…'
+              : rows.length === 0
+                ? 'Nenhum profissional encontrado'
+                : `Exibindo ${rows.length} profissional${rows.length === 1 ? '' : 'is'}`}
+          </Typography>
+        </Paper>
+
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{
+            borderRadius: 3,
+            border: '1px solid rgba(49, 67, 51, 0.1)',
+            boxShadow: '0 8px 30px rgba(34, 53, 36, 0.07)',
+            overflow: 'hidden',
+          }}
+        >
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ bgcolor: GREEN }}>
-                {['Nome', 'Tipo', 'Papéis', 'Valor', ...(googleCalendarEnabled ? ['Agenda'] : []), 'Ativo', ''].map((h) => (
-                  <TableCell key={h || 'actions'} sx={{ color: '#fff', fontWeight: 600 }}>
-                    {h}
-                  </TableCell>
-                ))}
+              <TableRow sx={{ bgcolor: '#f4f7f4' }}>
+                {['Nome', 'Tipo', 'Papéis', 'Valor', ...(googleCalendarEnabled ? ['Agenda'] : []), 'Ativo', 'Ações'].map(
+                  (h) => (
+                    <TableCell
+                      key={h}
+                      align={h === 'Ações' ? 'center' : 'left'}
+                      sx={{
+                        color: '#627064',
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        borderBottomColor: 'rgba(49, 67, 51, 0.1)',
+                        py: 1.5,
+                      }}
+                    >
+                      {h}
+                    </TableCell>
+                  )
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
-              {rows.map((row) => {
-                const collab =
-                  row.is_collaborator === true ||
-                  String(row.is_collaborator).toLowerCase() === 'true' ||
-                  row.is_collaborator === 'Sim';
-                const presc =
-                  row.is_prescriber === true ||
-                  String(row.is_prescriber).toLowerCase() === 'true' ||
-                  row.is_prescriber === 'Sim';
-                return (
-                  <TableRow key={row.id} hover>
-                    <TableCell>
-                      {row.name} {row.last_name}
-                    </TableCell>
-                    <TableCell>{typeLabel(row.type, professionalTypes)}</TableCell>
-                    <TableCell>
-                      {collab && <Chip size="small" label="Colaborador" sx={{ mr: 0.5 }} />}
-                      {presc && <Chip size="small" label="Prescritor" />}
-                    </TableCell>
-                    <TableCell>{row.consultation_price ?? '—'}</TableCell>
-                    {googleCalendarEnabled ? (
-                      <TableCell>{row.calendar?.summary || row.calendar_id || '—'}</TableCell>
-                    ) : null}
-                    <TableCell>{row.active === 0 ? 'Não' : 'Sim'}</TableCell>
-                    <TableCell>
-                      <Button size="small" onClick={() => openEdit(row)}>
-                        Editar
-                      </Button>
-                      {collab && (
-                        <Button
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6 + (googleCalendarEnabled ? 1 : 0)}
+                    sx={{ py: 8, borderBottom: 0 }}
+                  >
+                    <Stack alignItems="center" spacing={1.25}>
+                      <CircularProgress size={30} sx={{ color: GREEN }} />
+                      <Typography variant="body2" sx={{ color: GREEN, fontWeight: 600 }}>
+                        Carregando profissionais…
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              ) : rows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6 + (googleCalendarEnabled ? 1 : 0)}
+                    sx={{ py: 8, borderBottom: 0 }}
+                  >
+                    <Stack alignItems="center" spacing={1.25}>
+                      <Box
+                        sx={{
+                          width: 52,
+                          height: 52,
+                          display: 'grid',
+                          placeItems: 'center',
+                          borderRadius: '50%',
+                          bgcolor: 'rgba(73, 107, 76, 0.1)',
+                          color: GREEN,
+                        }}
+                      >
+                        <BadgeOutlinedIcon />
+                      </Box>
+                      <Typography fontWeight={700} color="#334235">
+                        Nenhum profissional encontrado
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rows.map((row) => {
+                  const collab =
+                    row.is_collaborator === true ||
+                    String(row.is_collaborator).toLowerCase() === 'true' ||
+                    row.is_collaborator === 'Sim';
+                  const presc =
+                    row.is_prescriber === true ||
+                    String(row.is_prescriber).toLowerCase() === 'true' ||
+                    row.is_prescriber === 'Sim';
+                  return (
+                    <TableRow
+                      key={row.id}
+                      hover
+                      sx={{
+                        '& td': { borderBottomColor: 'rgba(49, 67, 51, 0.08)', py: 1.55 },
+                        '&:last-of-type td': { borderBottom: 0 },
+                        '&:hover': { bgcolor: 'rgba(73, 107, 76, 0.035)' },
+                      }}
+                    >
+                      <TableCell sx={{ color: '#2f3d31', fontWeight: 650 }}>
+                        {row.name} {row.last_name}
+                      </TableCell>
+                      <TableCell sx={{ color: '#536056' }}>
+                        {typeLabel(row.type, professionalTypes)}
+                      </TableCell>
+                      <TableCell>
+                        {collab && (
+                          <Chip
+                            size="small"
+                            label="Colaborador"
+                            sx={{
+                              mr: 0.5,
+                              fontWeight: 600,
+                              bgcolor: 'rgba(73, 107, 76, 0.12)',
+                              color: GREEN,
+                            }}
+                          />
+                        )}
+                        {presc && (
+                          <Chip
+                            size="small"
+                            label="Prescritor"
+                            sx={{
+                              fontWeight: 600,
+                              bgcolor: 'rgba(112, 83, 114, 0.12)',
+                              color: '#705372',
+                            }}
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell sx={{ color: '#536056' }}>{row.consultation_price ?? '—'}</TableCell>
+                      {googleCalendarEnabled ? (
+                        <TableCell sx={{ color: '#536056' }}>
+                          {row.calendar?.summary || row.calendar_id || '—'}
+                        </TableCell>
+                      ) : null}
+                      <TableCell>
+                        <Chip
                           size="small"
-                          disabled={busy}
-                          onClick={() => onCreatePortalAccess(row, false)}
-                        >
-                          Criar conta
-                        </Button>
-                      )}
-                      {collab && (
-                        <Button
-                          size="small"
-                          disabled={busy}
-                          onClick={() => onCreatePortalAccess(row, true)}
-                        >
-                          Reenviar convite
-                        </Button>
-                      )}
-                      <Button size="small" color="error" onClick={() => onSoftDelete(row)}>
-                        Desativar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                          label={row.active === 0 ? 'Não' : 'Sim'}
+                          sx={{
+                            fontWeight: 700,
+                            bgcolor:
+                              row.active === 0
+                                ? 'rgba(180, 70, 70, 0.12)'
+                                : 'rgba(73, 107, 76, 0.12)',
+                            color: row.active === 0 ? '#8a5a5a' : GREEN,
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell align="center" sx={{ px: 1.5, verticalAlign: 'middle' }}>
+                        <Stack direction="row" spacing={0.25} justifyContent="center" alignItems="center">
+                          <Tooltip title="Editar">
+                            <IconButton size="small" onClick={() => openEdit(row)} sx={{ color: GREEN }}>
+                              <EditOutlinedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          {collab ? (
+                            <Tooltip title="Criar conta">
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  disabled={busy}
+                                  onClick={() => onCreatePortalAccess(row, false)}
+                                  sx={{ color: '#705372' }}
+                                >
+                                  <PersonAddAlt1OutlinedIcon fontSize="small" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          ) : null}
+                          {collab ? (
+                            <Tooltip title="Reenviar convite">
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  disabled={busy}
+                                  onClick={() => onCreatePortalAccess(row, true)}
+                                  sx={{ color: '#536056' }}
+                                >
+                                  <ForwardToInboxOutlinedIcon fontSize="small" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          ) : null}
+                          <Tooltip title="Desativar">
+                            <IconButton
+                              size="small"
+                              onClick={() => onSoftDelete(row)}
+                              sx={{ color: '#8a5a5a' }}
+                            >
+                              <PersonOffOutlinedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -393,7 +683,7 @@ export default function ProfessionalsPage() {
                   onChange={(e) => setForm((f) => ({ ...f, is_collaborator: e.target.checked }))}
                 />
               }
-              label="Colaborador — mostrar em Serviços"
+              label="Colaborador — mostrar em Atendimentos"
             />
             <FormControlLabel
               control={
@@ -417,7 +707,7 @@ export default function ProfessionalsPage() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialog(null)}>Cancelar</Button>
-          <Button variant="contained" disabled={busy} onClick={onSave} sx={{ bgcolor: GREEN }}>
+          <Button variant="contained" disabled={busy} onClick={onSave} sx={{ bgcolor: GREEN, '&:hover': { bgcolor: GREEN_HOVER } }}>
             Salvar
           </Button>
         </DialogActions>

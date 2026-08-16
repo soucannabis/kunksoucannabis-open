@@ -2,7 +2,7 @@
 
 export const ANALYTICS_TABS = [
   { id: 'associates', label: 'Associados' },
-  { id: 'services', label: 'Serviços' },
+  { id: 'services', label: 'Atendimentos' },
   { id: 'orders', label: 'Pedidos' },
   { id: 'reception', label: 'Triagem' },
 ];
@@ -118,7 +118,7 @@ export const ANALYTICS_BLOCKS = {
     {
       id: 'kpi-services-total',
       type: 'kpi',
-      title: 'Total de serviços',
+      title: 'Total de atendimentos',
       layout: { xs: 12, sm: 6, md: 3 },
       kpiKey: 'total',
       kpiFormat: 'number',
@@ -163,7 +163,7 @@ export const ANALYTICS_BLOCKS = {
     {
       id: 'chart-services-by-date',
       type: 'chart',
-      title: 'Serviços por data',
+      title: 'Atendimentos por data',
       layout: { xs: 12, md: 9 },
       chartVariant: 'line',
       seriesKey: 'by_date',
@@ -172,7 +172,7 @@ export const ANALYTICS_BLOCKS = {
     {
       id: 'chart-services-by-type',
       type: 'chart',
-      title: 'Serviços por tipo',
+      title: 'Atendimentos por tipo',
       layout: { xs: 12, md: 6 },
       chartVariant: 'bar',
       seriesKey: 'by_type',
@@ -181,7 +181,7 @@ export const ANALYTICS_BLOCKS = {
     {
       id: 'chart-services-by-professional',
       type: 'chart',
-      title: 'Serviços por profissional',
+      title: 'Atendimentos por profissional',
       layout: { xs: 12, md: 6 },
       chartVariant: 'bar',
       seriesKey: 'by_professional',
@@ -190,7 +190,7 @@ export const ANALYTICS_BLOCKS = {
     {
       id: 'ranking-services-associates',
       type: 'ranking',
-      title: 'Associados com mais serviços',
+      title: 'Associados com mais atendimentos',
       layout: { xs: 12, md: 6 },
       rankingKey: 'top_associates',
       filterFields: ['status', 'tags'],
@@ -290,7 +290,7 @@ export const ANALYTICS_BLOCKS = {
     {
       id: 'kpi-reception-services',
       type: 'kpi',
-      title: 'Triagens → serviços',
+      title: 'Triagens → atendimentos',
       layout: { xs: 12, sm: 6, md: 4 },
       kpiKey: 'to_services',
       kpiFormat: 'number',

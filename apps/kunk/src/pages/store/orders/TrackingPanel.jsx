@@ -131,7 +131,11 @@ export function TrackingPanel({ order, tracking, loading, onRefresh, compact = f
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
                 Histórico
               </Typography>
-              <Stack spacing={0.75} sx={{ maxHeight: 280, overflow: 'auto' }}>
+              <Stack
+                spacing={0.75}
+                sx={{ maxHeight: 280, overflow: 'auto' }}
+                data-testid="tracking-history"
+              >
                 {history.map((h, i) => (
                   <Box key={i} sx={{ pl: 1, borderLeft: '2px solid #c5d0c5' }}>
                     <Typography variant="caption" color="text.secondary">

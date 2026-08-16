@@ -6,12 +6,14 @@ import {
   Checkbox,
   CircularProgress,
   Paper,
+  Stack,
   Typography,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig, ORDER_STATUS_AWAITING, ORDER_STATUS_PAID } from '@kunk/config';
@@ -26,14 +28,26 @@ import { useCacheConfig } from '../../lib/cache/CacheConfigProvider.jsx';
 import { fetchLocalProducts, fetchTags } from '../../lib/cache/fetchers.js';
 import OrderDetailsModal, { displayTrackingCode } from './orders/OrderDetailsModal.jsx';
 import AddressValidationDetailModal from './orders/AddressValidationDetailModal.jsx';
-import { processAutoAddressValidation } from '../../lib/addressValidation.js';
+import ProductionReportModal from './orders/ProductionReportModal.jsx';
+import { isAddressValidationUiActive, processAutoAddressValidation } from '../../lib/addressValidation.js';
 import PaymentModal from '../../components/PaymentModal.jsx';
 
-const muiTheme = createTheme();
-const GREEN = '#5a7a5b';
-const GREEN_HOVER = '#406040';
-const PURPLE = '#7A5B7A';
-const PURPLE_HOVER = '#4d2d4d';
+const muiTheme = createTheme({
+  palette: {
+    primary: { main: '#496b4c' },
+    secondary: { main: '#705372' },
+  },
+  typography: {
+    fontFamily: 'inherit',
+  },
+  shape: {
+    borderRadius: 12,
+  },
+});
+const GREEN = '#496b4c';
+const GREEN_HOVER = '#385a3c';
+const PURPLE = '#705372';
+const PURPLE_HOVER = '#5e4460';
 const PAGE_SIZE = 50;
 
 function buildQs(filters, { limit = PAGE_SIZE, offset = 0 } = {}) {
@@ -78,6 +92,7 @@ export default function OrdersPage() {
   const [tagOptions, setTagOptions] = useState([]);
   const [labelFlags, setLabelFlags] = useState({ loggi: false, melhorenvio: false });
   const [labelBusyId, setLabelBusyId] = useState(null);
+  const [statusBusyId, setStatusBusyId] = useState(null);
   const [splitMode, setSplitMode] = useState(false);
   const [pagarmeForOrders, setPagarmeForOrders] = useState(false);
   const [paymentOrder, setPaymentOrder] = useState(null);
@@ -92,6 +107,8 @@ export default function OrdersPage() {
   const [detailsOrderId, setDetailsOrderId] = useState(null);
   const [trackingOrder, setTrackingOrder] = useState(null);
   const [addressValidationOrder, setAddressValidationOrder] = useState(null);
+  const [addressValidationEnabled, setAddressValidationEnabled] = useState(false);
+  const [productionReportOrders, setProductionReportOrders] = useState(null);
   const [productStockMap, setProductStockMap] = useState(() => new Map());
   const deepLinkP = (searchParams.get('p') || '').trim();
 
@@ -209,6 +226,12 @@ export default function OrdersPage() {
         setSplitMode(false);
         setPagarmeForOrders(false);
       }
+      try {
+        const res = await api.getGeoapifyStatus();
+        setAddressValidationEnabled(isAddressValidationUiActive(res.data));
+      } catch {
+        setAddressValidationEnabled(false);
+      }
     })();
   }, [api, cacheEnabled]);
 
@@ -271,6 +294,7 @@ export default function OrdersPage() {
   }
 
   async function onStatusChange(order, status) {
+    setStatusBusyId(order.id);
     try {
       await api.updateOrderStatus(order.id, status);
       setMsg(`Pedido #${order.id} → ${status}`);
@@ -278,6 +302,8 @@ export default function OrdersPage() {
       if (facetsLoaded) await loadFacets();
     } catch (err) {
       showError(err.message || 'Falha ao atualizar status');
+    } finally {
+      setStatusBusyId(null);
     }
   }
 
@@ -383,6 +409,21 @@ export default function OrdersPage() {
     }
   }
 
+  function openProductionReport() {
+    const selectedOrders = orders.filter((order) => selected.has(order.id));
+    if (!selectedOrders.length) {
+      showError('Selecione ao menos um pedido para gerar o relatório de produção.');
+      return;
+    }
+    setProductionReportOrders(
+      [...selectedOrders].sort((a, b) => {
+        const aDate = new Date(a.tracking_code_date || 0).getTime() || 0;
+        const bDate = new Date(b.tracking_code_date || 0).getTime() || 0;
+        return bDate - aDate;
+      })
+    );
+  }
+
   function applySearch() {
     setOffset(0);
     loadOrders();
@@ -398,14 +439,68 @@ export default function OrdersPage() {
 
   return (
     <ThemeProvider theme={muiTheme}>
-      <Box sx={{ width: '100%', pb: 4 }} data-testid="orders-page">
+      <Box sx={{ width: '100%', maxWidth: 1600, mx: 'auto', pb: 4 }} data-testid="orders-page">
+        <Box
+          sx={{
+            position: 'relative',
+            overflow: 'hidden',
+            mb: 2,
+            p: { xs: 2.5, md: 3.25 },
+            color: '#fff',
+            borderRadius: 3,
+            background: 'linear-gradient(120deg, #314a34 0%, #496b4c 58%, #5d735e 100%)',
+            boxShadow: '0 14px 36px rgba(27, 46, 30, 0.2)',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              width: 230,
+              height: 230,
+              right: -55,
+              top: -110,
+              borderRadius: '50%',
+              border: '42px solid rgba(255,255,255,0.06)',
+            },
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
+            <Box
+              sx={{
+                width: 52,
+                height: 52,
+                flex: '0 0 auto',
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: 2.5,
+                bgcolor: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.16)',
+              }}
+            >
+              <LocalShippingOutlinedIcon sx={{ fontSize: 28 }} />
+            </Box>
+            <Box>
+              <Typography
+                variant="overline"
+                sx={{ color: 'rgba(255,255,255,0.68)', letterSpacing: '0.11em', fontWeight: 700 }}
+              >
+                Loja
+              </Typography>
+              <Typography variant="h5" component="h1" sx={{ fontWeight: 750, lineHeight: 1.15 }}>
+                Gestão de pedidos
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.65, color: 'rgba(255,255,255,0.76)' }}>
+                Filtre, acompanhe status e execute ações em massa nos pedidos.
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
+
         {msg && (
-          <Alert severity="success" sx={{ mb: 1, ml: '10px', mr: 2 }} onClose={() => setMsg('')}>
+          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setMsg('')}>
             {msg}
           </Alert>
         )}
 
-        <Box className="pageContainerOptions" sx={{ paddingTop: 1, paddingBottom: 1 }}>
+        <Box className="pageContainerOptions" sx={{ pb: 1 }}>
           <OrdersStatusChips
             statusCounts={statusCounts}
             statusFilter={statusFilter}
@@ -447,8 +542,15 @@ export default function OrdersPage() {
             }}
           />
 
-          {/* Bulk + Atualizar — centralizados como Produção/Atualizar no legado */}
-          <Box display="flex" justifyContent="center" alignItems="center" gap={2} mb={1} flexWrap="wrap">
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1.5}
+            alignItems={{ xs: 'stretch', sm: 'center' }}
+            justifyContent="space-between"
+            sx={{ mb: 1.5 }}
+            flexWrap="wrap"
+            useFlexGap
+          >
             <OrdersBulkActions
               selectedCount={selectedIds.length}
               statusOptions={statusConfig.statuses}
@@ -468,45 +570,53 @@ export default function OrdersPage() {
                   provider,
                 })
               }
+              onProductionReport={openProductionReport}
               onShowOnlySelected={() => setShowOnlySelected(true)}
             />
-            <Button
-              variant="contained"
-              startIcon={<RefreshIcon />}
-              onClick={() => loadOrders()}
-              data-testid="orders-refresh"
-              sx={{
-                bgcolor: PURPLE,
-                color: 'white',
-                minHeight: 36,
-                minWidth: 100,
-                marginTop: selectedIds.length ? 0 : 3,
-                boxShadow: '0 2px 8px #7A5B7A55',
-                '&:hover': { bgcolor: PURPLE_HOVER },
-              }}
-            >
-              Atualizar
-            </Button>
-          </Box>
-
-          <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1} flexWrap="wrap">
-            <Typography variant="body2" color="text.secondary">
-              {loading
-                ? 'Carregando registros...'
-                : `${displayed.length} de ${total} registro${total === 1 ? '' : 's'}`}
-              {!loading && showOnlySelected ? ' (apenas selecionados)' : ''}
-            </Typography>
-            {showOnlySelected && (
+            <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Typography variant="body2" sx={{ color: '#657167' }}>
+                {loading
+                  ? 'Carregando registros...'
+                  : `${displayed.length} de ${total} registro${total === 1 ? '' : 's'}`}
+                {!loading && showOnlySelected ? ' (apenas selecionados)' : ''}
+              </Typography>
+              {showOnlySelected ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => setShowOnlySelected(false)}
+                  sx={{
+                    color: PURPLE,
+                    borderColor: 'rgba(112, 83, 114, 0.3)',
+                    borderRadius: 2.5,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    '&:hover': { borderColor: PURPLE, bgcolor: 'rgba(112, 83, 114, 0.06)' },
+                  }}
+                >
+                  Mostrar todos
+                </Button>
+              ) : null}
               <Button
-                size="small"
-                variant="outlined"
-                onClick={() => setShowOnlySelected(false)}
-                sx={{ color: PURPLE, borderColor: PURPLE }}
+                variant="contained"
+                startIcon={<RefreshIcon />}
+                onClick={() => loadOrders()}
+                data-testid="orders-refresh"
+                sx={{
+                  bgcolor: PURPLE,
+                  color: 'white',
+                  minHeight: 36,
+                  borderRadius: 2.5,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  boxShadow: '0 7px 18px rgba(112, 83, 114, 0.22)',
+                  '&:hover': { bgcolor: PURPLE_HOVER },
+                }}
               >
-                Mostrar todos
+                Atualizar
               </Button>
-            )}
-          </Box>
+            </Stack>
+          </Stack>
         </Box>
 
         {/* Tabela / lista — legado pageContainerTable */}
@@ -542,7 +652,7 @@ export default function OrdersPage() {
 
           {loading ? (
             <Box sx={{ py: 6, textAlign: 'center' }}>
-              <CircularProgress sx={{ color: GREEN }} />
+              <CircularProgress sx={{ color: '#fff' }} />
             </Box>
           ) : displayed.length === 0 ? (
             <Typography align="center" color="text.secondary" sx={{ py: 4 }}>
@@ -559,6 +669,7 @@ export default function OrdersPage() {
                 paidStatus={statusConfig.paid}
                 labelFlags={labelFlags}
                 labelBusy={labelBusyId === o.id}
+                statusBusy={statusBusyId === o.id}
                 onStatusChange={onStatusChange}
                 onCreateLabel={onCreateLabel}
                 onCancelLabel={onCancelLabel}
@@ -567,7 +678,11 @@ export default function OrdersPage() {
                 onCopyTracking={onCopyTracking}
                 onOpenTracking={(ord) => setTrackingOrder(ord)}
                 onOpenDetails={(ord) => setDetailsOrderId(ord.id)}
-                onAddressValidationDetail={(ord) => setAddressValidationOrder(ord)}
+                onAddressValidationDetail={
+                  addressValidationEnabled
+                    ? (ord) => setAddressValidationOrder(ord)
+                    : undefined
+                }
                 onOpenPayment={(ord) => setPaymentOrder(ord)}
                 onRetrySync={onRetrySync}
                 splitMode={splitMode}
@@ -575,6 +690,7 @@ export default function OrdersPage() {
                 zebra={i % 2 === 1}
                 dateField={dateField}
                 productStockMap={productStockMap}
+                addressValidationEnabled={addressValidationEnabled}
               />
             ))
           )}
@@ -617,6 +733,27 @@ export default function OrdersPage() {
           onSaved={() => {
             loadOrders();
             if (facetsLoaded) loadFacets();
+          }}
+        />
+
+        <ProductionReportModal
+          open={Boolean(productionReportOrders)}
+          orders={productionReportOrders || []}
+          api={api}
+          onClose={() => setProductionReportOrders(null)}
+          onComplete={({ owner, markedIds, skipped }) => {
+            const marked = new Set(markedIds);
+            setOrders((previous) =>
+              previous.map((order) =>
+                marked.has(order.id) ? { ...order, production_owner: owner } : order
+              )
+            );
+            setProductionReportOrders(null);
+            setMsg(
+              skipped.length
+                ? `Relatório exportado. ${skipped.length} receita(s) não puderam ser incluídas.`
+                : 'Relatório de produção exportado e pedidos marcados.'
+            );
           }}
         />
 

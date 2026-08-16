@@ -78,8 +78,9 @@ function googleOauthResultHtml(opts) {
   });
 }
 
-/** OAuth callback must be public — Melhor Envio redirects the browser here without our session. */
-router.get('/melhorenvio/oauth/callback', requireModule('melhorenvio'), async (req, res, next) => {
+/** OAuth callback must be public — Melhor Envio redirects the browser here without our session.
+ *  Sem requireModule: auth precisa funcionar com o módulo ainda desligado no Admin. */
+router.get('/melhorenvio/oauth/callback', async (req, res, next) => {
   const asJson = String(req.query.format || '') === 'json';
   try {
     const code = req.query.code;
@@ -103,7 +104,8 @@ router.get('/melhorenvio/oauth/callback', requireModule('melhorenvio'), async (r
 
 const gcAuth = require('../../services/google_calendar/auth');
 
-router.get('/google_calendar/oauth/callback', requireModule('google_calendar'), async (req, res, next) => {
+/** Sem requireModule: auth precisa funcionar com o módulo ainda desligado no Admin. */
+router.get('/google_calendar/oauth/callback', async (req, res, next) => {
   const asJson = String(req.query.format || '') === 'json';
   try {
     const code = req.query.code;

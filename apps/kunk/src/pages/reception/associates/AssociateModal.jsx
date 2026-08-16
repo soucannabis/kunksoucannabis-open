@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Avatar,
   Box,
@@ -35,6 +36,7 @@ import {
   invalidateAssociateCache,
 } from '../../../lib/cache/fetchers.js';
 import { useToast } from '../../../components/toast/ToastProvider.jsx';
+import { PATHS } from '../../../app/menuConfig.js';
 
 const GREEN = '#5a7a5b';
 
@@ -46,6 +48,7 @@ function openFileDownload(url) {
 export default function AssociateModal({ open, user: initialUser, api, onClose, onChanged }) {
   const { user: operator } = useOperatorAuth();
   const toast = useToast();
+  const navigate = useNavigate();
   const [tab, setTab] = useState(0);
   const [user, setUser] = useState(initialUser);
   const [patients, setPatients] = useState([]);
@@ -221,6 +224,37 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
     }
   }
 
+  async function sendTriage() {
+    if (!user?.user_code) return;
+    setBusy(true);
+    try {
+      const name = user.associate_name || displayName(user).split(' ')[0] || 'Associado';
+      const created = await api.createReception({
+        name,
+        last_name: user.associate_last_name || '',
+        email: user.email_account || null,
+        phone: user.mobile_number || null,
+        is_associate: true,
+        associate_code: user.user_code,
+        associate_name: displayName(user),
+      });
+      const code = created?.data?.code;
+      onClose();
+      navigate(code ? `${PATHS.triage}?t=${encodeURIComponent(code)}` : PATHS.triage);
+    } catch (err) {
+      toast.error(err.message || 'Falha ao enviar para triagem');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function goToOrderOrService(kind) {
+    if (!user?.user_code) return;
+    const path = kind === 'order' ? PATHS.newOrder : PATHS.services;
+    onClose();
+    navigate(`${path}?u=${encodeURIComponent(user.user_code)}`);
+  }
+
   const annotations = parseAnnotations(user?.annotations);
   const operatorName = [operator?.name, operator?.last_name].filter(Boolean).join(' ') || 'Operador';
   const termSigned = termStatus === 'completed' || Boolean(user?.adhesion_term);
@@ -262,12 +296,28 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
               </Button>
             ) : null}
             <Button
-              startIcon={<DescriptionIcon />}
+              startIcon={
+                loading ? (
+                  <CircularProgress size={18} sx={{ color: '#fff' }} />
+                ) : (
+                  <DescriptionIcon />
+                )
+              }
               onClick={(e) => setTermAnchor(e.currentTarget)}
               disabled={loading}
-              sx={{ bgcolor: GREEN, color: '#fff', '&:hover': { bgcolor: '#303B30' } }}
+              sx={{
+                bgcolor: GREEN,
+                color: '#fff',
+                '&:hover': { bgcolor: '#303B30' },
+                '&.Mui-disabled': {
+                  bgcolor: GREEN,
+                  color: '#fff',
+                  opacity: 0.85,
+                },
+                '&.Mui-disabled .MuiButton-startIcon': { color: '#fff' },
+              }}
             >
-              {termButtonLabel}
+              {loading ? 'Carregando termo…' : termButtonLabel}
             </Button>
             <Menu
               anchorEl={termAnchor}
@@ -400,6 +450,9 @@ export default function AssociateModal({ open, user: initialUser, api, onClose, 
                 ciap2Enabled={ciap2Enabled}
                 onSave={(patch) => saveUser(patch, { success: 'Dados pessoais salvos' })}
                 onDelete={() => setConfirmDelete(true)}
+                onSendTriage={sendTriage}
+                onGoOrder={() => goToOrderOrService('order')}
+                onGoService={() => goToOrderOrService('service')}
               />
             ) : null}
             {tab === 1 ? (

@@ -23,7 +23,8 @@ export function ContactPage() {
 
   const logo = String(cfg.appearanceLogo || '').trim();
   const format = cfg.appearanceLogoFormat || 'square';
-  const frameW = cfg.appearanceLogoWidth || 162;
+  const configuredW = Number(cfg.appearanceLogoWidth) || 162;
+  const frameW = Math.round(configuredW * 0.72);
   const fullName = String(cfg.associationFullName || cfg.associationName || '').trim();
 
   useEffect(() => {
@@ -80,19 +81,21 @@ export function ContactPage() {
   return (
     <div className={`contact-page${iframeTheme === 'light' ? ' contact-page--light' : ''}`}>
       <div className="contact-page-inner">
-        {logo ? (
-          <div className={`contact-page-logo auth-public-logo auth-public-logo--${format}`}>
-            <img
-              src={logo}
-              alt={fullName || 'Logo da associação'}
-              style={{
-                width: frameW,
-                height: 'auto',
-              }}
-            />
-          </div>
-        ) : null}
-        {fullName ? <p className="auth-association-name">{fullName}</p> : null}
+        <header className="contact-page-brand">
+          {logo ? (
+            <div className={`contact-page-logo auth-public-logo auth-public-logo--${format}`}>
+              <img
+                src={logo}
+                alt={fullName || 'Logo da associação'}
+                style={{
+                  width: frameW,
+                  height: 'auto',
+                }}
+              />
+            </div>
+          ) : null}
+          {fullName ? <h1 className="contact-page-title auth-association-name">{fullName}</h1> : null}
+        </header>
 
         {!showForm ? (
           <div className="contact-loader" aria-live="polite" aria-busy="true">

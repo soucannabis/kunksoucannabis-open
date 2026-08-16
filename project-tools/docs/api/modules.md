@@ -124,5 +124,6 @@ Módulos: [`modules/pagarme.md`](./modules/pagarme.md) · [`modules/soucannabis_
 | `email` | [modules/email.md](./modules/email.md) |
 | `pagarme` | [modules/pagarme.md](./modules/pagarme.md) |
 | `soucannabis_orders` | [modules/soucannabis_orders.md](./modules/soucannabis_orders.md) |
+| Webhooks outbound (Admin) | [modules/webhooks.md](./modules/webhooks.md) |
 
 Demais módulos: criar `docs/api/modules/{name}.md` na implementação. Este arquivo define o **contrato de ativação** comum.

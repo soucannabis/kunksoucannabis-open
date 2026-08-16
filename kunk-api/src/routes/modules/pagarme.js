@@ -9,7 +9,7 @@ const router = Router();
 
 /**
  * Rotas de setup/validação ficam FORA do requireModule.
- * Caso contrário: módulo só ativa com webhooks ready → validate retorna 503 → nunca valida.
+ * Setup (auth, test-payment, validate) fica fora de requireModule.
  */
 router.get('/status', async (req, res, next) => {
   try {

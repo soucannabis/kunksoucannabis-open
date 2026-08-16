@@ -3879,3 +3879,13 @@ div.triage-options-cell {
   color: #f0c0c0;
   background: #2a1818;
 }
+
+.webhook-row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: nowrap;
+}
+.webhook-row-actions .btn-icon:disabled {
+  opacity: 0.55;
+}

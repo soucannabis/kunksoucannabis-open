@@ -194,7 +194,7 @@ test.describe('Funil — validação de dados e uploads', () => {
       try {
         await seedAssociate(page, { email, phase: 3 });
         await page.goto('/documentos');
-        await page.getByRole('radio', { name: /CNH \(frente\)/i }).click();
+        await page.getByRole('radio', { name: /CNH \(aberta\)/i }).click();
 
         const input = page.locator('#responsible-front');
         await expect(input).toHaveAttribute('accept', /image\/\*|\.pdf/i);
@@ -230,7 +230,7 @@ test.describe('Funil — validação de dados e uploads', () => {
       try {
         await seedAssociate(page, { email, phase: 3 });
         await page.goto('/documentos');
-        await page.getByRole('radio', { name: /CNH \(frente\)/i }).click();
+        await page.getByRole('radio', { name: /CNH \(aberta\)/i }).click();
 
         const waitUpload = page.waitForResponse(
           (r) => r.url().includes('/files') && r.request().method() === 'POST',
@@ -290,7 +290,7 @@ test.describe('Funil — validação de dados e uploads', () => {
       try {
         await seedAssociate(page, { email, phase: 3 });
         await page.goto('/documentos');
-        await page.getByRole('radio', { name: /CNH \(frente\)/i }).click();
+        await page.getByRole('radio', { name: /CNH \(aberta\)/i }).click();
         await pickAndUploadJpeg(page, 'responsible-front', 'Responsável');
         await expect(page.getByRole('button', { name: /Avançar para assinatura/i })).toBeVisible({
           timeout: 20_000,

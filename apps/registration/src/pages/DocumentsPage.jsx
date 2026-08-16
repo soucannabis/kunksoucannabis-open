@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAssociateAuth } from '@kunk/auth-session';
 import { AlertError } from '@kunk/ui';
+import { Icon } from '../components/Icon.jsx';
 import { PHASE, normalizePhase } from '../lib/associatePhases.js';
 
 const SIDE_LABEL = {
@@ -68,6 +69,7 @@ function DocPreview({ file, api, badge, onRemove, removeDisabled }) {
             disabled={removeDisabled}
             onClick={onRemove}
           >
+            <Icon name="trash" size={14} />
             Remover
           </button>
         ) : null}
@@ -112,7 +114,10 @@ function UploadSlot({
               <>
                 <span className="docs-slot-title">{title}</span>
                 <span className="docs-slot-hint">{hint}</span>
-                <span className="docs-slot-cta">Escolher arquivo</span>
+                <span className="docs-slot-cta">
+                  <Icon name="upload" size={16} />
+                  Escolher arquivo
+                </span>
               </>
             )}
           </label>
@@ -230,7 +235,7 @@ function SubjectDocs({ api, subject, label, status, onUploaded }) {
       setError(
         docType === 'rg'
           ? 'Selecione frente e verso do RG antes de enviar.'
-          : 'Selecione a frente da CNH antes de enviar.',
+          : 'Selecione a CNH aberta antes de enviar.',
       );
       return;
     }
@@ -283,8 +288,11 @@ function SubjectDocs({ api, subject, label, status, onUploaded }) {
             onClick={() => setDocType('rg')}
             disabled={uploading}
           >
-            <span className="docs-type-option-title">RG (frente e verso)</span>
-            <span className="docs-type-option-desc">Envie frente e verso do documento</span>
+            <Icon name="idCard" size={22} className="docs-type-option-icon" />
+            <span className="docs-type-option-body">
+              <span className="docs-type-option-title">RG (frente e verso)</span>
+              <span className="docs-type-option-desc">Envie frente e verso do documento</span>
+            </span>
           </button>
           <button
             type="button"
@@ -294,8 +302,11 @@ function SubjectDocs({ api, subject, label, status, onUploaded }) {
             onClick={() => setDocType('cnh')}
             disabled={uploading}
           >
-            <span className="docs-type-option-title">CNH (frente)</span>
-            <span className="docs-type-option-desc">Envie somente a frente</span>
+            <Icon name="fileText" size={22} className="docs-type-option-icon" />
+            <span className="docs-type-option-body">
+              <span className="docs-type-option-title">CNH (aberta)</span>
+              <span className="docs-type-option-desc">Envie a CNH aberta, com todos os dados visíveis</span>
+            </span>
           </button>
         </div>
       ) : null}
@@ -303,8 +314,12 @@ function SubjectDocs({ api, subject, label, status, onUploaded }) {
       <div className="docs-slots">
         <UploadSlot
           id={`${subject}-front`}
-          title="Selecionar frente"
-          hint="Foto ou PDF nítido do documento"
+          title={docType === 'cnh' ? 'Selecionar CNH aberta' : 'Selecionar frente'}
+          hint={
+            docType === 'cnh'
+              ? 'Foto ou PDF nítido da CNH aberta'
+              : 'Foto ou PDF nítido do documento'
+          }
           busy={uploading}
           file={frontFile}
           api={api}
@@ -342,16 +357,13 @@ function SubjectDocs({ api, subject, label, status, onUploaded }) {
             disabled={uploading || !readyToUpload}
             onClick={uploadPending}
           >
+            <Icon name="upload" size={18} />
             {uploading ? 'Enviando…' : 'Enviar documentos'}
           </button>
         </div>
       ) : null}
     </section>
   );
-}
-
-function docSignOrigin() {
-  return import.meta.env.VITE_DOC_SIGN_URL || 'http://localhost:4258';
 }
 
 export function DocumentsPage({ api }) {
@@ -426,27 +438,30 @@ export function DocumentsPage({ api }) {
         </p>
         <AlertError message={error} />
         <div className="docs-sign-card">
+          <p className="docs-sign-note">
+            Para se tornar um associado, por favor, leia e assine o Termo de Adesão do Associado
+            clicando no botão abaixo
+          </p>
           {canRetry ? (
             <button
               type="button"
-              className="btn btn-success docs-primary-btn"
+              className="btn btn-success docs-primary-btn docs-sign-btn"
               onClick={() => setSigningAttempt((n) => n + 1)}
             >
+              <Icon name="refresh" size={20} />
               Tentar novamente
             </button>
           ) : (
             <button
               type="button"
-              className="btn btn-success docs-primary-btn"
+              className="btn btn-success docs-primary-btn docs-sign-btn"
               disabled={busy || !signingUrl}
               onClick={openSigning}
             >
-              {busy && !signingUrl ? 'Preparando termo…' : 'Assinar termo'}
+              <Icon name="pen" size={20} />
+              {busy && !signingUrl ? 'Preparando termo…' : 'Assinar termo de adesão'}
             </button>
           )}
-          <p className="docs-sign-note">
-            Você será redirecionado para {docSignOrigin()}
-          </p>
         </div>
       </div>
     );
@@ -485,6 +500,7 @@ export function DocumentsPage({ api }) {
         <div className="docs-advance">
           <p className="docs-advance-text">Tudo certo. Você já pode avançar para a assinatura do termo.</p>
           <button type="button" className="btn btn-success docs-primary-btn" disabled={busy} onClick={advanceToTerms}>
+            <Icon name="arrowRight" size={18} />
             {busy ? 'Avançando…' : 'Avançar para assinatura'}
           </button>
         </div>

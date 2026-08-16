@@ -16,7 +16,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -113,7 +112,6 @@ export default function OrderDetailsModal({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [testPaying, setTestPaying] = useState(false);
   const [order, setOrder] = useState(null);
   const [receiverName, setReceiverName] = useState('');
   const [details, setDetails] = useState('');
@@ -255,29 +253,9 @@ export default function OrderDetailsModal({
     }
   }
 
-  async function handleTestForcePaid() {
-    if (!order || !paidStatus) return;
-    setTestPaying(true);
-    setMsg('');
-    try {
-      await api.updateOrderStatus(order.id, paidStatus, { skip_payment_lock: true });
-      setMsg('Teste: status alterado para pagamento concluído (bypass SouCannabis)');
-      await load();
-      onSaved?.();
-    } catch (err) {
-      showError(err.message || 'Falha ao forçar pagamento de teste');
-    } finally {
-      setTestPaying(false);
-    }
-  }
-
   const statuses = statusOptions.length
     ? statusOptions
     : [awaitingStatus, paidStatus, 'Cancelado', 'Entregue'].filter(Boolean);
-
-  const trackingCode = displayTrackingCode(order || {});
-  const canTestForcePaid =
-    Boolean(order && paidStatus && order.status !== paidStatus && Number(order.total || 0) > 0);
 
   return (
     <>
@@ -299,40 +277,6 @@ export default function OrderDetailsModal({
             }}
           >
             <Stack spacing={2}>
-              {canTestForcePaid && (
-                <Box
-                  data-testid="order-test-force-paid"
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 1,
-                    border: '1px dashed #c62828',
-                    bgcolor: '#fff8f8',
-                  }}
-                >
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#b71c1c', mb: 0.5 }}>
-                    Teste — pagamento SouCannabis
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.25 }}>
-                    Com Pedidos SouCannabis ativo, o status não pode ir para “Pagamento concluído”
-                    pelo seletor normal (bloqueio PAYMENT_LOCK). Use este botão só para validar o
-                    fluxo: ele burla a proteção e marca o pedido como pago (como se fosse
-                    comprovante/Pagar.me), disparando o sync com a SouCannabis.
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    color="warning"
-                    data-testid="order-test-force-paid-btn"
-                    disabled={testPaying || uploading || saving}
-                    onClick={handleTestForcePaid}
-                    startIcon={testPaying ? <CircularProgress size={16} color="inherit" /> : null}
-                  >
-                    {testPaying
-                      ? 'Marcando pago…'
-                      : 'Teste: marcar Pagamento concluído (burlar bloqueio)'}
-                  </Button>
-                </Box>
-              )}
-
               <Box>
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
                   Comprovantes de pagamento
@@ -535,20 +479,6 @@ export default function OrderDetailsModal({
                 loading={trackingLoading}
                 onRefresh={refreshTracking}
               />
-              {trackingCode && (
-                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Código salvo: {trackingCode}
-                  </Typography>
-                  <IconButton
-                    size="small"
-                    onClick={() => navigator.clipboard?.writeText(trackingCode)}
-                    aria-label="Copiar rastreio"
-                  >
-                    <ContentCopyIcon fontSize="inherit" />
-                  </IconButton>
-                </Box>
-              )}
             </Box>
           </Box>
         )}

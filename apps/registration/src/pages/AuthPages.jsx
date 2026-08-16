@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAssociateAuth } from '@kunk/auth-session';
 import { AlertError, AuthLoginCard, PasswordInput } from '@kunk/ui';
 import { ApiError } from '@kunk/api-client';
+import { Icon } from '../components/Icon.jsx';
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -89,9 +90,11 @@ export function SignupPage() {
       ) : null}
       <div className="auth-login-actions">
         <button className="auth-login-submit" type="submit" disabled={busy}>
+          <Icon name="userPlus" size={18} />
           Se cadastrar como Associado
         </button>
         <Link className="auth-login-secondary" to="/login">
+          <Icon name="logIn" size={16} />
           Já tenho conta — Login
         </Link>
       </div>
@@ -150,12 +153,15 @@ export function LoginPage() {
       </div>
       <div className="auth-login-actions">
         <button className="auth-login-submit" type="submit" disabled={busy}>
+          <Icon name="logIn" size={18} />
           Entrar
         </button>
         <Link className="auth-login-link" to="/nova-senha">
+          <Icon name="key" size={16} />
           Esqueci a senha
         </Link>
         <Link className="auth-login-secondary" to="/cadastro">
+          <Icon name="userPlus" size={16} />
           Criar conta
         </Link>
       </div>
@@ -222,8 +228,12 @@ export function NewPasswordPage({ api }) {
             />
           </div>
           <div className="auth-login-actions">
-            <button className="auth-login-submit" type="submit">Enviar link</button>
+            <button className="auth-login-submit" type="submit">
+              <Icon name="mail" size={18} />
+              Enviar link
+            </button>
             <button type="button" className="auth-login-link" onClick={() => setMode('reset')}>
+              <Icon name="key" size={16} />
               Já tenho o token
             </button>
           </div>
@@ -264,7 +274,10 @@ export function NewPasswordPage({ api }) {
             />
           </div>
           <div className="auth-login-actions">
-            <button className="auth-login-submit" type="submit">Redefinir</button>
+            <button className="auth-login-submit" type="submit">
+              <Icon name="lock" size={18} />
+              Redefinir
+            </button>
           </div>
         </form>
       )}

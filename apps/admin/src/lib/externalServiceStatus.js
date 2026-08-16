@@ -115,16 +115,23 @@ export function deriveExternalServiceStatus(data, opts = {}) {
     };
   }
 
-  if (data.service === 'pagarme' && data.enabled && !data.pagarme_status?.webhooks?.ready && isAuthenticated(data)) {
-    return {
-      kind: 'warning',
-      label: 'Configuração incompleta',
-      detail: 'API autenticada, mas webhooks ainda não validados.',
-    };
-  }
-
   const enabled = Boolean(data.enabled);
   const authed = isAuthenticated(data);
+
+  if (
+    data.service === 'pagarme' &&
+    enabled &&
+    authed &&
+    !data.pagarme_status?.webhooks?.ready
+  ) {
+    return {
+      kind: 'ok',
+      label: 'Ativo',
+      detail: 'Módulo habilitado. Webhooks ainda não validados (passo 3) — recomendado para atualizar pagamentos automaticamente.',
+      enabled: true,
+      authenticated: true,
+    };
+  }
 
   if (authed && enabled) {
     return {

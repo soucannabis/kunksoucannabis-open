@@ -450,6 +450,14 @@ a.btn-primary:visited {
   font-size: 0.85rem;
 }
 
+.sign-continue-btn {
+  margin-top: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
 .tabs {
   display: flex;
   gap: 0.4rem;

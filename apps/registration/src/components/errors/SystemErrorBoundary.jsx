@@ -1,5 +1,6 @@
 import React from 'react';
 import { payloadFromError, reportSystemError } from '@kunk/api-client';
+import { Icon } from '../Icon.jsx';
 
 export class SystemErrorBoundary extends React.Component {
   constructor(props) {
@@ -28,7 +29,8 @@ export class SystemErrorBoundary extends React.Component {
         <div style={{ padding: 24 }}>
           <h1>Algo deu errado</h1>
           <p>{this.state.message}</p>
-          <button type="button" onClick={() => window.location.reload()}>
+          <button type="button" className="btn-with-icon" onClick={() => window.location.reload()}>
+            <Icon name="refresh" size={16} />
             Recarregar
           </button>
         </div>

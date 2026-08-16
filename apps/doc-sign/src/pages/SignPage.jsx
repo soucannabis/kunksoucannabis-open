@@ -230,7 +230,22 @@ export function SignPage({ api }) {
           {returnUrl ? (
             <>
               <p className="muted">Redirecionando para continuar o cadastro…</p>
-              <a className="btn btn-primary" href={returnUrl} style={{ marginTop: 8 }}>
+              <a className="btn btn-primary sign-continue-btn" href={returnUrl}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M5 12h14"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M13 6l6 6-6 6"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
                 Continuar cadastro
               </a>
             </>

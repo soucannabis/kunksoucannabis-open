@@ -279,6 +279,13 @@
               "baseline": { "e2e": true, "api": false, "manual": false }
             },
             {
+              "id": "admin-webhooks",
+              "label": "Webhooks",
+              "path": "/webhooks",
+              "description": "Endpoints outbound por tabela/ação (outbox + HMAC)",
+              "baseline": { "e2e": false, "api": true, "manual": false }
+            },
+            {
               "id": "admin-erros",
               "label": "Erros do sistema",
               "path": "/erros-sistema",

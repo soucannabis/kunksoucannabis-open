@@ -56,6 +56,7 @@ export function buildAppRoutes({ roles }) {
     >
       <Route index element={<AppIndexRedirect roles={roles} />} />
       <Route path="acolhimento/associados" element={<RegistrationPage />} />
+      <Route path="acolhimento/cadastramento" element={<Navigate to={PATHS.registration} replace />} />
       <Route path="acolhimento/servicos" element={<ServicesPage />} />
       <Route path="acolhimento/triagem" element={<TriagePage />} />
       <Route path="acolhimento/clientesinstitucionais" element={<InstitutionalClientsPage />} />

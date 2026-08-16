@@ -1,6 +1,6 @@
 /**
  * Camadas da área de conteúdo (página):
- *   menu < modal da página < menus/selects do modal < pesquisar global < toast
+ *   menu < pesquisar global < modal da página < menus/selects do modal < toast
  *
  * Dialogs da página não cobrem o Sidebar (left + pointer-events),
  * para o menu continuar usável com modal aberto.
@@ -9,14 +9,14 @@
 /** Menu lateral — abaixo dos dialogs da área de conteúdo. */
 export const SIDEBAR_Z = 14000;
 
-/** Dialogs/Modals de página — acima do menu; abaixo do Pesquisar. */
-export const CONTENT_AREA_DIALOG_Z = 15000;
+/** Botão + dialog do Pesquisar global — abaixo dos modais de página. */
+export const GLOBAL_SEARCH_Z = 16000;
+
+/** Dialogs/Modals de página — acima do menu e do Pesquisar. */
+export const CONTENT_AREA_DIALOG_Z = 17000;
 
 /** Menus/Selects/Autocompletes portaled — acima do Dialog da página. */
 export const CONTENT_AREA_OVERLAY_Z = CONTENT_AREA_DIALOG_Z + 1;
-
-/** Botão + dialog do Pesquisar global — acima dos modais de página e do menu. */
-export const GLOBAL_SEARCH_Z = 16000;
 
 export const contentAreaSelectProps = {
   MenuProps: {
@@ -53,6 +53,9 @@ export const contentAreaDialogSx = {
 export const contentAreaDialogProps = {
   disableEnforceFocus: true,
   disableAutoFocus: true,
+  // Sem scroll lock: o MUI trocaria overflow do body e compensaria a scrollbar
+  // com padding, reflowando a página inteira ao abrir/fechar o modal.
+  disableScrollLock: true,
   sx: contentAreaDialogSx,
 };
 
@@ -62,4 +65,10 @@ export const contentAreaModalSx = {
   left: 'var(--kunk-sidebar-offset, 220px)',
   right: 0,
   width: 'auto',
+};
+
+/** Props padrão para Modals de página — mesmo motivo do disableScrollLock acima. */
+export const contentAreaModalProps = {
+  disableScrollLock: true,
+  sx: contentAreaModalSx,
 };

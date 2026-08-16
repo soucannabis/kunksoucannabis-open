@@ -41,7 +41,7 @@ test.describe('Funil completo — cadastro até contato', () => {
 
       // 4. Enviar documento de identidade (CNH)
       await expect(page.getByRole('heading', { name: /Documentos de identidade/i })).toBeVisible();
-      await page.getByRole('radio', { name: /CNH \(frente\)/i }).click();
+      await page.getByRole('radio', { name: /CNH \(aberta\)/i }).click();
       await pickAndUploadJpeg(page, 'responsible-front', 'Responsável');
       await expect(page.getByRole('button', { name: /Avançar para assinatura/i })).toBeVisible({
         timeout: 20_000,

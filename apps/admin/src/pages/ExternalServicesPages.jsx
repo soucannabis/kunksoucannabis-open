@@ -85,7 +85,8 @@ const HIDDEN_CRED_FIELDS = new Set([
 
 /** Pagar.me: webhooks ficam fora do bloco “Autenticar”. */
 const PAGARME_WEBHOOK_FIELDS = new Set(['webhook_user', 'webhook_pass']);
-const PAGARME_AUTH_FIELDS = new Set(['secret_key', 'public_key']);
+const PAGARME_AUTH_FIELDS = new Set(['secret_key', 'public_key', 'api_base_url']);
+const PAGARME_DEFAULT_API_BASE = 'https://api.pagar.me/core/v5/';
 
 const FIELD_LABELS = {
   client_id: 'Client ID',
@@ -136,7 +137,8 @@ const FIELD_PLACEHOLDERS = {
   from_phone: '+5562999999999',
 };
 
-function credentialPlaceholder(fieldKey, isSecret) {
+function credentialPlaceholder(fieldKey, isSecret, serviceName) {
+  if (serviceName === 'pagarme' && fieldKey === 'api_base_url') return PAGARME_DEFAULT_API_BASE;
   if (FIELD_PLACEHOLDERS[fieldKey]) return FIELD_PLACEHOLDERS[fieldKey];
   if (isSecret) return 'Cole o valor secreto';
   return 'Preencha este campo';
@@ -328,6 +330,7 @@ function CredentialField({
   envSuffix,
   alwaysEditable = false,
   className = '',
+  serviceName = '',
 }) {
   const label = FIELD_LABELS[cred.field_key] || cred.description || cred.field_key;
   const fieldClass = `field${className ? ` ${className}` : ''}`;
@@ -395,13 +398,13 @@ function CredentialField({
                 value={onlyDigits(value || '')}
                 onChange={(digits) => onChange(digits ? `+${digits}` : '')}
                 inputClass="input admin-phone-control"
-                placeholder={credentialPlaceholder(cred.field_key)}
+                placeholder={credentialPlaceholder(cred.field_key, false, serviceName)}
                 inputProps={{
                   id: `cred-${cred.field_key}`,
                   name: 'from_phone',
                   'data-testid': `cred-${cred.field_key}`,
                   autoComplete: 'tel',
-                  placeholder: credentialPlaceholder(cred.field_key),
+                  placeholder: credentialPlaceholder(cred.field_key, false, serviceName),
                 }}
               />
               <p className="muted" style={{ margin: '0.35rem 0 0', fontSize: '0.8rem' }}>
@@ -423,7 +426,7 @@ function CredentialField({
                       : 'text'
               }
               data-testid={`cred-${cred.field_key}`}
-              placeholder={credentialPlaceholder(cred.field_key, cred.is_secret)}
+              placeholder={credentialPlaceholder(cred.field_key, cred.is_secret, serviceName)}
               autoComplete={cred.field_key === 'pass' ? 'new-password' : 'off'}
               value={value || ''}
               onChange={(e) => onChange(e.target.value)}
@@ -583,6 +586,9 @@ export function ExternalServiceDetailPage({ api }) {
     for (const c of res.credentials || []) {
       if (!c.is_secret && c.value) initial[c.field_key] = c.value;
     }
+    if (service === 'pagarme' && !String(initial.api_base_url || '').trim()) {
+      initial.api_base_url = PAGARME_DEFAULT_API_BASE;
+    }
     setFields(initial);
     setEditing({});
     if (res.sc_status) {
@@ -691,19 +697,21 @@ export function ExternalServiceDetailPage({ api }) {
     }
     if (flag === 'enabled' && value === true) {
       const authed = isExternalServiceAuthenticated(data);
+      const pagarmeTestPayment =
+        data?.pagarme_status?.webhooks?.test_payment || data?.pagarme_status?.webhooks?.test_order;
       const canTurnOn =
         service === 'pagarme'
           ? Boolean(
               (data?.pagarme_status?.credentials_complete ||
                 (data?.credentials || []).some((c) => c.field_key === 'secret_key' && c.has_value)) &&
-                data?.pagarme_status?.webhooks?.ready
+                pagarmeTestPayment?.order?.id
             )
           : authed;
       if (!canTurnOn) {
         reportError(
           'flags',
           service === 'pagarme'
-            ? 'Conclua a autenticação e a validação dos webhooks antes de ativar o módulo.'
+            ? 'Autentique a API e crie o link de pagamento de teste (passo 2) antes de ativar.'
             : 'Autentique o módulo antes de ativá-lo.'
         );
         return;
@@ -940,11 +948,14 @@ export function ExternalServiceDetailPage({ api }) {
         }
       }
 
-      // Pagar.me: secret/public tipados entram mesmo sem clicar “editar” no estado.
+      // Pagar.me: secret/public/api_base tipados entram mesmo sem clicar “editar” no estado.
       if (service === 'pagarme') {
-        for (const key of ['secret_key', 'public_key']) {
+        for (const key of ['secret_key', 'public_key', 'api_base_url']) {
           const v = fields[key];
           if (v !== undefined && v !== '') payload[key] = v;
+        }
+        if (!String(payload.api_base_url || '').trim()) {
+          payload.api_base_url = PAGARME_DEFAULT_API_BASE;
         }
       }
 
@@ -1052,6 +1063,7 @@ export function ExternalServiceDetailPage({ api }) {
         ? EMAIL_FORM_CREDS
         : data.credentials || [];
   const UTALK_CRED_ORDER = ['api_token', 'organization_id', 'from_phone', 'api_base_url'];
+  const PAGARME_AUTH_ORDER = ['secret_key', 'public_key', 'api_base_url'];
   const editableCreds = credList
     .filter((c) => {
       if (service === 'melhorenvio' || service === 'google_calendar') {
@@ -1060,14 +1072,22 @@ export function ExternalServiceDetailPage({ api }) {
         return false;
       }
       if (service === 'pagarme' && PAGARME_WEBHOOK_FIELDS.has(c.field_key)) return false;
+      if (service === 'pagarme' && !PAGARME_AUTH_FIELDS.has(c.field_key)) return false;
       return true;
     })
     .slice()
     .sort((a, b) => {
-      if (service !== 'utalk') return 0;
-      const ia = UTALK_CRED_ORDER.indexOf(a.field_key);
-      const ib = UTALK_CRED_ORDER.indexOf(b.field_key);
-      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      if (service === 'utalk') {
+        const ia = UTALK_CRED_ORDER.indexOf(a.field_key);
+        const ib = UTALK_CRED_ORDER.indexOf(b.field_key);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      }
+      if (service === 'pagarme') {
+        const ia = PAGARME_AUTH_ORDER.indexOf(a.field_key);
+        const ib = PAGARME_AUTH_ORDER.indexOf(b.field_key);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      }
+      return 0;
     });
   const pagarmeWebhookCreds = credList.filter((c) => PAGARME_WEBHOOK_FIELDS.has(c.field_key));
   const oauth = data.oauth;
@@ -1086,7 +1106,7 @@ export function ExternalServiceDetailPage({ api }) {
   const pagarmeTestPayment =
     data.pagarme_status?.webhooks?.test_payment || data.pagarme_status?.webhooks?.test_order || null;
   const pagarmePaymentLinkReady = Boolean(pagarmeTestPayment?.order?.id);
-  const pagarmeCanEnable = pagarmeAuthed && pagarmeWebhooksReady;
+  const pagarmeCanEnable = pagarmeAuthed && pagarmePaymentLinkReady;
   const moduleAuthenticated = isExternalServiceAuthenticated(data);
   const canTurnModuleOn = service === 'pagarme' ? pagarmeCanEnable : moduleAuthenticated;
   const pagarmeSetupComplete =
@@ -1146,7 +1166,7 @@ export function ExternalServiceDetailPage({ api }) {
                 <strong>Módulo ativo</strong>
                 <span className="muted">
                   {service === 'pagarme'
-                    ? 'Só pode ativar com API autenticada, link de teste e webhooks validados.'
+                    ? 'Ativa automaticamente após autenticar a API e criar o link de teste (passo 2).'
                     : FREIGHT_SERVICES.has(service)
                       ? 'Requer autenticação e Dados de envio completos.'
                       : 'Só pode ativar depois de autenticar o serviço. Desligar permanece permitido.'}
@@ -1159,9 +1179,7 @@ export function ExternalServiceDetailPage({ api }) {
                     {service === 'pagarme'
                       ? !pagarmeAuthed
                         ? 'Autentique a Secret key (passo 1).'
-                        : !pagarmePaymentLinkReady
-                          ? 'Crie um link de pagamento de teste (passo 2).'
-                          : 'Valide os webhooks (passo 3) antes de ativar.'
+                        : 'Crie um link de pagamento de teste (passo 2).'
                       : 'Autentique o serviço abaixo antes de ativar o módulo.'}
                   </span>
                 ) : null}
@@ -1511,7 +1529,8 @@ export function ExternalServiceDetailPage({ api }) {
                   cred={c}
                   value={fields[c.field_key]}
                   editing={Boolean(editing[c.field_key])}
-                  alwaysEditable={false}
+                  alwaysEditable={c.field_key === 'api_base_url'}
+                  serviceName={service}
                   onChange={(v) => setFields((prev) => ({ ...prev, [c.field_key]: v }))}
                   onStartEdit={() => {
                     setEditing((prev) => ({ ...prev, [c.field_key]: true }));
@@ -1530,6 +1549,9 @@ export function ExternalServiceDetailPage({ api }) {
                       const next = { ...prev };
                       if (c.is_secret) delete next[c.field_key];
                       else if (c.value) next[c.field_key] = c.value;
+                      else if (c.field_key === 'api_base_url') {
+                        next.api_base_url = PAGARME_DEFAULT_API_BASE;
+                      }
                       return next;
                     });
                   }}
@@ -1554,7 +1576,7 @@ export function ExternalServiceDetailPage({ api }) {
             </div>
             <ExtActionFeedback at="auth" feedbackAt={feedbackAt} error={error} msg={msg} />
             <p className="muted" data-testid="pagarme-auth-hint" style={{ marginTop: 10 }}>
-              Autenticar salva secret/public e testa a API (lista recipients → indica se a conta é
+              Autenticar salva secret/public/URL e testa a API (lista recipients → indica se a conta é
               PSP). Contas Gateway só suportam Pagar.me standalone, sem split SouCannabis.
             </p>
           </form>
@@ -1586,6 +1608,7 @@ export function ExternalServiceDetailPage({ api }) {
                   value={fields[c.field_key]}
                   editing={Boolean(editing[c.field_key])}
                   alwaysEditable={service === 'email'}
+                  serviceName={service}
                   onChange={(v) => setFields((prev) => ({ ...prev, [c.field_key]: v }))}
                   onStartEdit={() => {
                     setEditing((prev) => ({ ...prev, [c.field_key]: true }));
@@ -1661,10 +1684,6 @@ export function ExternalServiceDetailPage({ api }) {
           style={pagarmeSetupBlockStyle}
         >
           <h3 style={{ marginTop: 0 }}>2. Link de pagamento de teste</h3>
-          <p className="muted" style={{ fontSize: '0.85rem', marginTop: 0 }}>
-            Cria um checkout boleto na Pagar.me (<code>KUNK_WH_*</code>). Isso dispara o{' '}
-            <code>order.created</code> que o passo 3 vai conferir — não pague o boleto.
-          </p>
           {pagarmePaymentLinkReady && pagarmeTestPayment ? (
             <div
               data-testid="pagarme-test-payment-result"
@@ -1680,7 +1699,7 @@ export function ExternalServiceDetailPage({ api }) {
                 Link de pagamento criado
               </p>
               <p style={{ margin: '0 0 6px', fontSize: '0.85rem', color: 'var(--admin-muted)' }}>
-                Pedido <code>{pagarmeTestPayment.order.id}</code>
+                Link <code>{pagarmeTestPayment.order.id}</code>
                 {' · '}
                 code <code>{pagarmeTestPayment.code}</code>
                 {' · '}
@@ -1726,6 +1745,7 @@ export function ExternalServiceDetailPage({ api }) {
                   prev
                     ? {
                         ...prev,
+                        enabled: true,
                         pagarme_status: {
                           ...(prev.pagarme_status || {}),
                           webhooks: {
@@ -1741,8 +1761,8 @@ export function ExternalServiceDetailPage({ api }) {
                 reportMsg(
                   'misc',
                   tp?.payment_url
-                    ? 'Link de pagamento criado. Configure os webhooks e valide no passo 3.'
-                    : `Pedido ${tp?.order?.id || tp?.code} criado. Configure os webhooks no passo 3.`
+                    ? 'Link criado — módulo ativado. Configure os webhooks no passo 3 quando quiser.'
+                    : `Link ${tp?.order?.id || tp?.code} criado — módulo ativado.`
                 );
                 await reload();
               } catch (err) {
@@ -1780,9 +1800,9 @@ export function ExternalServiceDetailPage({ api }) {
           >
             Conta → Configurações → Webhooks → Criar webhook. Eventos:{' '}
             <code>order.created</code> (obrigatório) e <code>order.paid</code>. Copie as URLs, use
-            usuário/senha abaixo e clique em Validar — a API confere se já recebeu o{' '}
-            <code>order.created</code> do link do passo 2. Isso pode levar até 1 minuto; se ainda
-            não aparecer, tente de novo em breve. Se ok, o módulo é ativado.
+            usuário/senha abaixo, abra o link do passo 2 e gere o boleto sem pagá-lo. Em seguida,
+            clique em Validar — a API confere se recebeu o <code>order.created</code>. Isso pode
+            levar até 1 minuto; se ainda não aparecer, tente de novo em breve.
           </p>
 
           <div style={{ marginBottom: 16 }}>
@@ -1906,6 +1926,7 @@ export function ExternalServiceDetailPage({ api }) {
                   value={fields[c.field_key]}
                   editing={Boolean(editing[c.field_key])}
                   alwaysEditable={false}
+                  serviceName={service}
                   onChange={(v) => setFields((prev) => ({ ...prev, [c.field_key]: v }))}
                   onStartEdit={() => {
                     setEditing((prev) => ({ ...prev, [c.field_key]: true }));

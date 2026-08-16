@@ -10,7 +10,7 @@ test.describe('Documentos — assistente RG/CNH e fase 4', () => {
     await page.goto('/documentos');
     await expect(page.getByRole('heading', { name: /Documentos de identidade/i })).toBeVisible();
 
-    await page.getByRole('radio', { name: /CNH \(frente\)/i }).click();
+    await page.getByRole('radio', { name: /CNH \(aberta\)/i }).click();
     await pickAndUploadJpeg(page, 'responsible-front', 'Responsável');
     await expect(page.getByRole('button', { name: /Avançar para assinatura/i })).toBeVisible({
       timeout: 20_000,
@@ -44,7 +44,7 @@ test.describe('Documentos — assistente RG/CNH e fase 4', () => {
     await seedAssociate(page, { email, phase: 3, responsibleType: 'another' });
     await page.goto('/documentos');
 
-    await page.getByRole('radio', { name: /CNH \(frente\)/i }).first().click();
+    await page.getByRole('radio', { name: /CNH \(aberta\)/i }).first().click();
     await pickAndUploadJpeg(page, 'responsible-front', 'Responsável');
     await expect(page.getByRole('button', { name: /Avançar para assinatura/i })).toHaveCount(0);
 

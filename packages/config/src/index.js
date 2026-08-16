@@ -321,6 +321,22 @@ export const API_TOKEN_COLLECTION_LABELS = {
   system_activity: 'Atividade do sistema',
 };
 
+/** Outbound webhook subscriptions (Admin → /webhooks). */
+export const WEBHOOK_TABLES = ['users', 'orders', 'services', 'reception'];
+
+export const WEBHOOK_ACTIONS = [
+  { key: 'create', label: 'Criar' },
+  { key: 'update', label: 'Atualizar' },
+  { key: 'delete', label: 'Excluir' },
+];
+
+export const WEBHOOK_TABLE_LABELS = {
+  users: 'Associados (users)',
+  orders: 'Pedidos',
+  services: 'Serviços',
+  reception: 'Triagem',
+};
+
 /** Appearance keys resolved via API for system=kunk (operational app). */
 export const KUNK_BRANDING_ENV_KEYS = [
   'VITE_KUNK_TITLE',
@@ -467,7 +483,7 @@ export const KUNK_APPEARANCE_DEFAULTS = {
   menuBg: '#5a7a5b',
   menuText: '#ffffff',
   menuHoverBg: '#ffffff',
-  menuHoverText: '#000000',
+  menuHoverText: '#2a3b2b',
   defaultTheme: 'dark',
   darkBg: '#2a3b2b',
   darkPrimary: '#5a7a5b',

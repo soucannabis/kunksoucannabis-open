@@ -10,13 +10,13 @@
 | Facets | Contagem de status + tags (sob demanda) |
 | Filtros | busca, status, tags, datas (criação/pagamento) |
 | Toggle pagamento | Aguardando ↔ Pagamento concluído + `payment_date` |
-| Bulk | status, tags add/remove, gerar/cancelar etiqueta Loggi e ME |
+| Bulk | status, tags add/remove, gerar/cancelar etiqueta Loggi e ME, relatório de produção PDF |
 | Status config | `store.order_statuses` (seed: 2 system) + Admin Loja |
 
 ## Exclusões
 
 - BeeViral, WhatsApp/Utalk, DC-e, etiquetas Correio PDF
-- Relatório de produção / menu Produção / FAB estoque SCP
+- Menu Produção separado / FAB estoque SCP
 - Cupom, comissão prescritor, FIFO SCP no pagamento
 
 ## Docs

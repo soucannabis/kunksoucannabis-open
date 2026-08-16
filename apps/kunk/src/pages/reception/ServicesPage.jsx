@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
+  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -16,6 +17,7 @@ import {
   ListItemText,
   Paper,
   Select,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -27,18 +29,21 @@ import {
   Typography,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import InfoIcon from '@mui/icons-material/Info';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import EventIcon from '@mui/icons-material/Event';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PaymentIcon from '@mui/icons-material/Payment';
-import SearchIcon from '@mui/icons-material/Search';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
 import { useSearchParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
@@ -51,7 +56,6 @@ import { contentAreaDialogProps } from '../../layout/contentAreaOverlay.js';
 import {
   buildServicesListQuery,
   DEFAULT_PAGE_SIZE,
-  formatDateTime,
   formatMoney,
   formatTags,
   PAGE_SIZE_OPTIONS,
@@ -60,10 +64,87 @@ import {
   normalizeServiceStatus,
 } from './services/servicesUtils.js';
 
-const muiTheme = createTheme();
-const GREEN = '#5a7a5b';
-const GREEN_HOVER = '#4a684b';
-const PURPLE = '#7a5b7a';
+const muiTheme = createTheme({
+  palette: {
+    primary: { main: '#496b4c' },
+    secondary: { main: '#705372' },
+  },
+  typography: {
+    fontFamily: 'inherit',
+  },
+  shape: {
+    borderRadius: 12,
+  },
+});
+const GREEN = '#496b4c';
+const GREEN_HOVER = '#385a3c';
+const PURPLE = '#705372';
+
+const TABLE_HEADERS = [
+  { key: 'criacao', label: 'Criação', width: '10%' },
+  { key: 'associado', label: 'Associado', width: '18%' },
+  { key: 'profissional', label: 'Profissional', width: '16%' },
+  { key: 'consulta', label: 'Consulta', width: '10%' },
+  { key: 'doacao', label: 'Doação', width: '9%' },
+  { key: 'valor', label: 'Valor', width: '9%' },
+  { key: 'tags', label: 'Tags', width: '10%' },
+  { key: 'status', label: 'Status', width: '10%' },
+  { key: 'acoes', label: 'Ações', width: '8%' },
+];
+
+const cellEllipsisSx = {
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  maxWidth: 0,
+};
+
+const fieldSx = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 2.5,
+    bgcolor: '#f8faf8',
+    transition: 'background-color 160ms ease, box-shadow 160ms ease',
+    '& fieldset': { borderColor: 'rgba(49, 67, 51, 0.14)' },
+    '&:hover fieldset': { borderColor: 'rgba(73, 107, 76, 0.38)' },
+    '&.Mui-focused': {
+      bgcolor: '#fff',
+      boxShadow: '0 0 0 3px rgba(73, 107, 76, 0.1)',
+    },
+  },
+};
+
+function splitDateTime(v) {
+  if (!v) return { date: '—', time: '' };
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return { date: String(v), time: '' };
+  return {
+    date: d.toLocaleDateString('pt-BR'),
+    time: d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+  };
+}
+
+function DateTimeStack({ value, color = '#536056', emphasize = false }) {
+  const { date, time } = splitDateTime(value);
+  return (
+    <Box sx={{ lineHeight: 1.2, minWidth: 0 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: emphasize ? '#2f3d31' : color,
+          fontWeight: emphasize ? 650 : 500,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {date}
+      </Typography>
+      {time ? (
+        <Typography variant="caption" sx={{ color: '#829084', display: 'block', whiteSpace: 'nowrap' }}>
+          {time}
+        </Typography>
+      ) : null}
+    </Box>
+  );
+}
 
 function eventOpenUrl(row) {
   if (!hasRealCalendarEvent(row)) return null;
@@ -111,6 +192,10 @@ export default function ServicesPage() {
   const [googleCalendarEnabled, setGoogleCalendarEnabled] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil((Number(totalCount) || 0) / pageSize) || 1);
+  const from = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, totalCount);
+  const paidFilterLabel =
+    showOnlyPaid === true ? 'Somente pagos' : showOnlyPaid === false ? 'Somente pendentes' : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -297,317 +382,601 @@ export default function ServicesPage() {
 
   return (
     <ThemeProvider theme={muiTheme}>
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ width: '100%', maxWidth: 1600, mx: 'auto', pb: 2 }}>
         <Box
-          className="pageContainerOptions"
           sx={{
-            bgcolor: '#f5f5f5',
-            borderRadius: '30px',
-            px: 3,
-            py: 3,
+            position: 'relative',
+            overflow: 'hidden',
             mb: 2,
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 1.5,
-            alignItems: 'center',
+            p: { xs: 2.5, md: 3.25 },
+            color: '#fff',
+            borderRadius: 3,
+            background: 'linear-gradient(120deg, #314a34 0%, #496b4c 58%, #5d735e 100%)',
+            boxShadow: '0 14px 36px rgba(27, 46, 30, 0.2)',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              width: 230,
+              height: 230,
+              right: -55,
+              top: -110,
+              borderRadius: '50%',
+              border: '42px solid rgba(255,255,255,0.06)',
+            },
           }}
         >
-          <Box
-            component="form"
-            onSubmit={handleSearchSubmit}
-            sx={{ minWidth: { xs: 160, sm: 260 }, flex: '1 1 220px', maxWidth: 360 }}
-          >
-            <TextField
-              size="small"
-              fullWidth
-              label="Pesquisar"
-              placeholder="Associado ou profissional"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton type="submit" edge="end" size="small" aria-label="Pesquisar" sx={{ color: PURPLE }}>
-                      <SearchIcon />
-                    </IconButton>
-                  </InputAdornment>
-                ),
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
+            <Box
+              sx={{
+                width: 52,
+                height: 52,
+                flex: '0 0 auto',
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: 2.5,
+                bgcolor: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.16)',
               }}
-            />
-          </Box>
-          <TextField
-            size="small"
-            type="date"
-            label="Data inicial"
-            InputLabelProps={{ shrink: true }}
-            value={dateFrom}
-            onChange={(e) => handleDateFromChange(e.target.value)}
-          />
-          <TextField
-            size="small"
-            type="date"
-            label="Data final"
-            InputLabelProps={{ shrink: true }}
-            value={dateTo}
-            onChange={(e) => handleDateToChange(e.target.value)}
-          />
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: 'auto' }}>
-            <Tooltip title="Somente pagos">
-              <IconButton
-                color={showOnlyPaid === true ? 'success' : 'default'}
-                onClick={() => handlePaidFilterToggle(true)}
-              >
-                <CheckCircleIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Somente pendentes">
-              <IconButton
-                color={showOnlyPaid === false ? 'primary' : 'default'}
-                onClick={() => handlePaidFilterToggle(false)}
-              >
-                <AccessTimeIcon />
-              </IconButton>
-            </Tooltip>
-            <Button
-              variant="contained"
-              startIcon={<RefreshIcon />}
-              onClick={() => load()}
-              sx={{ bgcolor: PURPLE, '&:hover': { bgcolor: '#4d2d4d' } }}
             >
-              Atualizar
-            </Button>
-          </Box>
+              <CalendarMonthRoundedIcon sx={{ fontSize: 28 }} />
+            </Box>
+            <Box>
+              <Typography
+                variant="overline"
+                sx={{ color: 'rgba(255,255,255,0.68)', letterSpacing: '0.11em', fontWeight: 700 }}
+              >
+                Acolhimento
+              </Typography>
+              <Typography variant="h5" component="h1" sx={{ fontWeight: 750, lineHeight: 1.15 }}>
+                Gestão de atendimentos
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.65, color: 'rgba(255,255,255,0.76)' }}>
+                Acompanhe consultas, pagamentos e agendamentos dos associados.
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
+
+        <Box
+          sx={{
+            bgcolor: '#fff',
+            border: '1px solid rgba(49, 67, 51, 0.1)',
+            borderRadius: 3,
+            p: { xs: 2, md: 2.5 },
+            mb: 2,
+            boxShadow: '0 8px 30px rgba(34, 53, 36, 0.07)',
+          }}
+        >
+          <Stack
+            direction={{ xs: 'column', lg: 'row' }}
+            spacing={2}
+            alignItems={{ xs: 'stretch', lg: 'center' }}
+            justifyContent="space-between"
+          >
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={1.5}
+              alignItems={{ xs: 'stretch', md: 'center' }}
+              sx={{ flex: 1, minWidth: 0 }}
+            >
+              <Box
+                component="form"
+                onSubmit={handleSearchSubmit}
+                sx={{ flex: 1, maxWidth: 420, minWidth: { xs: 0, md: 240 } }}
+              >
+                <TextField
+                  size="small"
+                  fullWidth
+                  placeholder="Associado ou profissional"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  sx={fieldSx}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchRoundedIcon sx={{ color: '#708172', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Button
+                          type="submit"
+                          size="small"
+                          sx={{ color: GREEN, minWidth: 0, fontWeight: 700, textTransform: 'none' }}
+                        >
+                          Buscar
+                        </Button>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
+              <TextField
+                size="small"
+                type="date"
+                label="Data inicial"
+                InputLabelProps={{ shrink: true }}
+                value={dateFrom}
+                onChange={(e) => handleDateFromChange(e.target.value)}
+                sx={{ ...fieldSx, minWidth: 150 }}
+              />
+              <TextField
+                size="small"
+                type="date"
+                label="Data final"
+                InputLabelProps={{ shrink: true }}
+                value={dateTo}
+                onChange={(e) => handleDateToChange(e.target.value)}
+                sx={{ ...fieldSx, minWidth: 150 }}
+              />
+            </Stack>
+
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              justifyContent={{ xs: 'space-between', sm: 'flex-end' }}
+              flexWrap="wrap"
+              useFlexGap
+            >
+              <Tooltip title="Somente pagos">
+                <IconButton
+                  onClick={() => handlePaidFilterToggle(true)}
+                  sx={{
+                    color: showOnlyPaid === true ? '#fff' : GREEN,
+                    bgcolor: showOnlyPaid === true ? GREEN : 'transparent',
+                    border: '1px solid',
+                    borderColor: showOnlyPaid === true ? GREEN : 'rgba(49, 67, 51, 0.14)',
+                    borderRadius: 2.5,
+                    '&:hover': {
+                      bgcolor: showOnlyPaid === true ? GREEN_HOVER : 'rgba(73, 107, 76, 0.08)',
+                    },
+                  }}
+                >
+                  <CheckCircleIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Somente pendentes">
+                <IconButton
+                  onClick={() => handlePaidFilterToggle(false)}
+                  sx={{
+                    color: showOnlyPaid === false ? '#fff' : PURPLE,
+                    bgcolor: showOnlyPaid === false ? PURPLE : 'transparent',
+                    border: '1px solid',
+                    borderColor: showOnlyPaid === false ? PURPLE : 'rgba(112, 83, 114, 0.3)',
+                    borderRadius: 2.5,
+                    '&:hover': {
+                      bgcolor: showOnlyPaid === false ? '#5e4460' : 'rgba(112, 83, 114, 0.06)',
+                    },
+                  }}
+                >
+                  <AccessTimeIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Atualizar lista">
+                <IconButton
+                  onClick={() => load()}
+                  sx={{
+                    color: '#526354',
+                    border: '1px solid rgba(49, 67, 51, 0.14)',
+                    borderRadius: 2.5,
+                    '&:hover': { bgcolor: 'rgba(73, 107, 76, 0.08)' },
+                  }}
+                >
+                  <RefreshRoundedIcon />
+                </IconButton>
+              </Tooltip>
+              <Button
+                variant="contained"
+                startIcon={<AddRoundedIcon />}
+                onClick={() => setNewOpen(true)}
+                sx={{
+                  bgcolor: GREEN,
+                  borderRadius: 2.5,
+                  px: 2,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  boxShadow: '0 7px 18px rgba(73, 107, 76, 0.22)',
+                  '&:hover': { bgcolor: GREEN_HOVER, boxShadow: '0 9px 22px rgba(73, 107, 76, 0.28)' },
+                }}
+              >
+                Novo Atendimento
+              </Button>
+            </Stack>
+          </Stack>
+
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1}
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            sx={{ mt: 2 }}
+          >
+            <Typography variant="body2" sx={{ color: '#657167' }}>
+              {totalCount === 0
+                ? 'Nenhum atendimento encontrado'
+                : `Exibindo ${from}–${to} de ${totalCount} atendimento${totalCount === 1 ? '' : 's'}`}
+            </Typography>
+            {paidFilterLabel ? (
+              <Chip
+                size="small"
+                label={paidFilterLabel}
+                onDelete={() => setShowOnlyPaid(null)}
+                sx={{
+                  bgcolor: 'rgba(112, 83, 114, 0.1)',
+                  color: '#5e4460',
+                  fontWeight: 600,
+                  '& .MuiChip-deleteIcon': { color: '#705372' },
+                }}
+              />
+            ) : null}
+          </Stack>
         </Box>
 
         {loading ? (
-          <Box sx={{ py: 4, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <CircularProgress size={28} sx={{ color: GREEN }} />
+          <Box
+            sx={{
+              py: 10,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              bgcolor: '#fff',
+              borderRadius: 3,
+              border: '1px solid rgba(49, 67, 51, 0.1)',
+            }}
+          >
+            <CircularProgress size={30} sx={{ color: GREEN }} />
           </Box>
         ) : (
           <>
-        <TableContainer component={Paper} className="pageContainerTable" elevation={0}>
-          <Table size="small">
-            <TableHead>
-              <TableRow sx={{ bgcolor: GREEN }}>
-                {[
-                  'Criação',
-                  'Tags',
-                  'Data da consulta',
-                  'Associado',
-                  'Profissional',
-                  'Pago',
-                  'Doação',
-                  'Consulta',
-                  'Status',
-                  'Ações',
-                ].map((h) => (
-                  <TableCell key={h} sx={{ color: '#fff', fontWeight: 600 }}>
-                    {h}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={10}>Nenhum serviço</TableCell>
-                </TableRow>
-              ) : (
-                rows.map((row) => {
-                  const rowIso = row.consultation_date || row.date_created;
-                  let highlighted = false;
-                  if (highlightIso && rowIso) {
-                    try {
-                      highlighted =
-                        Math.abs(new Date(rowIso).getTime() - new Date(highlightIso).getTime()) <
-                        60_000;
-                    } catch {
-                      highlighted = false;
-                    }
-                  }
-                  return (
-                  <TableRow
-                    key={row.id}
-                    hover
-                    data-highlight={highlighted ? '1' : undefined}
-                    sx={highlighted ? { bgcolor: 'rgba(122, 91, 122, 0.18)' } : undefined}
-                  >
-                    <TableCell>{formatDateTime(row.date_created)}</TableCell>
-                    <TableCell>
-                      {formatTags(row.tags)}
-                    </TableCell>
-                    <TableCell
-                      sx={{ cursor: 'pointer', textDecoration: 'underline' }}
-                      onClick={() =>
-                        setEditDate({
-                          row,
-                          value: row.consultation_date
-                            ? new Date(row.consultation_date).toISOString().slice(0, 16)
-                            : '',
-                        })
-                      }
-                    >
-                      {formatDateTime(row.consultation_date)}
-                    </TableCell>
-                    <TableCell>{row.associate_name}</TableCell>
-                    <TableCell>{row.professional_name}</TableCell>
-                    <TableCell>{formatMoney(row.price_paid)}</TableCell>
-                    <TableCell>{formatMoney(row.donation)}</TableCell>
-                    <TableCell>{formatMoney(row.price)}</TableCell>
-                    <TableCell>
-                      <IconButton size="small" onClick={() => toggleStatus(row)}>
-                        {normalizeServiceStatus(row.status) === STATUS_PAID ? (
-                          <CheckCircleIcon color="success" />
-                        ) : (
-                          <AccessTimeIcon color="primary" />
-                        )}
-                      </IconButton>
-                      {pagarmeForServices &&
-                        normalizeServiceStatus(row.status) === STATUS_AWAITING &&
-                        Number(row.price_paid || row.price || 0) > 0 && (
-                          <Tooltip title="Pagamento Pagar.me">
-                            <IconButton
-                              size="small"
-                              data-testid={`service-pay-${row.id}`}
-                              onClick={() => setPaymentService(row)}
-                            >
-                              <PaymentIcon fontSize="small" color="primary" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      <Typography variant="caption" display="block">
-                        {normalizeServiceStatus(row.status) || STATUS_AWAITING}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      {googleCalendarEnabled ? (
-                        <Tooltip
-                          title={
-                            hasRealCalendarEvent(row)
-                              ? 'Evento agendado — abrir ou cancelar'
-                              : 'Agendar no Google Calendar'
-                          }
-                        >
-                          <IconButton
-                            size="small"
-                            data-testid={
-                              hasRealCalendarEvent(row)
-                                ? 'service-event-open'
-                                : 'service-event-schedule'
-                            }
-                            onClick={(e) => {
-                              if (hasRealCalendarEvent(row)) openEventMenu(e, row);
-                              else onSchedule(row);
-                            }}
+            <TableContainer
+              component={Paper}
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: '1px solid rgba(49, 67, 51, 0.1)',
+                boxShadow: '0 8px 30px rgba(34, 53, 36, 0.07)',
+                // hidden: corta o thead no radius do bloco (md+ usava overflow visible e “quadrava” o topo)
+                overflow: 'hidden',
+                overflowX: { xs: 'auto', md: 'hidden' },
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                '&::-webkit-scrollbar': { display: 'none' },
+              }}
+            >
+              <Table
+                size="small"
+                sx={{
+                  width: '100%',
+                  tableLayout: 'fixed',
+                  minWidth: { xs: 1080, md: 'unset' },
+                  borderCollapse: 'separate',
+                  borderSpacing: 0,
+                  '& .MuiTableHead-root .MuiTableRow-root .MuiTableCell-root:first-of-type': {
+                    borderTopLeftRadius: 12,
+                  },
+                  '& .MuiTableHead-root .MuiTableRow-root .MuiTableCell-root:last-of-type': {
+                    borderTopRightRadius: 12,
+                  },
+                }}
+              >
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#f4f7f4' }}>
+                    {TABLE_HEADERS.map((h) => (
+                      <TableCell
+                        key={h.key}
+                        align={h.key === 'acoes' ? 'center' : 'left'}
+                        sx={{
+                          width: h.width,
+                          color: '#627064',
+                          fontSize: '0.72rem',
+                          fontWeight: 800,
+                          letterSpacing: '0.06em',
+                          textTransform: 'uppercase',
+                          borderBottomColor: 'rgba(49, 67, 51, 0.1)',
+                          py: 1.5,
+                          whiteSpace: 'nowrap',
+                          ...(h.key === 'acoes' ? { px: 1.5 } : null),
+                          ...(h.key === 'status' ? { px: 1.25 } : null),
+                        }}
+                      >
+                        {h.label}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={TABLE_HEADERS.length} sx={{ py: 8, borderBottom: 0 }}>
+                        <Stack alignItems="center" spacing={1.25}>
+                          <Box
                             sx={{
-                              color: hasRealCalendarEvent(row) ? GREEN : undefined,
-                              '&:hover': hasRealCalendarEvent(row)
-                                ? { color: '#303B30', bgcolor: 'rgba(90,122,91,0.12)' }
-                                : undefined,
+                              width: 52,
+                              height: 52,
+                              display: 'grid',
+                              placeItems: 'center',
+                              borderRadius: '50%',
+                              bgcolor: 'rgba(73, 107, 76, 0.1)',
+                              color: GREEN,
                             }}
                           >
-                            <EventIcon />
-                          </IconButton>
-                        </Tooltip>
-                      ) : null}
-                      <Tooltip title="Info">
-                        <IconButton size="small" color="primary" onClick={() => setInfoService(row)}>
-                          <InfoIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Excluir">
-                        <IconButton size="small" onClick={() => onDelete(row)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                            <EventAvailableOutlinedIcon />
+                          </Box>
+                          <Typography fontWeight={700} color="#334235">
+                            Nenhum atendimento encontrado
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Ajuste os filtros ou cadastre um novo atendimento.
+                          </Typography>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    rows.map((row) => {
+                      const rowIso = row.consultation_date || row.date_created;
+                      let highlighted = false;
+                      if (highlightIso && rowIso) {
+                        try {
+                          highlighted =
+                            Math.abs(new Date(rowIso).getTime() - new Date(highlightIso).getTime()) <
+                            60_000;
+                        } catch {
+                          highlighted = false;
+                        }
+                      }
+                      const status = normalizeServiceStatus(row.status);
+                      const isPaid = status === STATUS_PAID;
+                      const statusLabel = isPaid ? 'Pago' : 'Pendente';
+                      return (
+                        <TableRow
+                          key={row.id}
+                          hover
+                          data-highlight={highlighted ? '1' : undefined}
+                          sx={{
+                            bgcolor: highlighted ? 'rgba(112, 83, 114, 0.12)' : undefined,
+                            '& td': { borderBottomColor: 'rgba(49, 67, 51, 0.08)', py: 1.55 },
+                            '&:last-of-type td': { borderBottom: 0 },
+                            '&:hover': {
+                              bgcolor: highlighted
+                                ? 'rgba(112, 83, 114, 0.16)'
+                                : 'rgba(73, 107, 76, 0.035)',
+                            },
+                          }}
+                        >
+                          <TableCell sx={{ verticalAlign: 'middle' }}>
+                            <DateTimeStack value={row.date_created} color="#667168" />
+                          </TableCell>
+                          <TableCell
+                            title={row.associate_name || ''}
+                            sx={{ color: '#2f3d31', fontWeight: 650, ...cellEllipsisSx }}
+                          >
+                            {row.associate_name || '—'}
+                          </TableCell>
+                          <TableCell
+                            title={row.professional_name || ''}
+                            sx={{ color: '#536056', ...cellEllipsisSx }}
+                          >
+                            {row.professional_name || '—'}
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              cursor: 'pointer',
+                              verticalAlign: 'middle',
+                              '&:hover .MuiTypography-body2': { color: GREEN },
+                            }}
+                            onClick={() =>
+                              setEditDate({
+                                row,
+                                value: row.consultation_date
+                                  ? new Date(row.consultation_date).toISOString().slice(0, 16)
+                                  : '',
+                              })
+                            }
+                          >
+                            <DateTimeStack value={row.consultation_date} emphasize />
+                          </TableCell>
+                          <TableCell sx={{ color: '#536056', whiteSpace: 'nowrap' }}>
+                            {formatMoney(row.donation)}
+                          </TableCell>
+                          <TableCell sx={{ color: '#536056', whiteSpace: 'nowrap' }}>
+                            {formatMoney(row.price)}
+                          </TableCell>
+                          <TableCell
+                            title={formatTags(row.tags)}
+                            sx={{ color: '#536056', ...cellEllipsisSx }}
+                          >
+                            {formatTags(row.tags)}
+                          </TableCell>
+                          <TableCell sx={{ verticalAlign: 'middle', px: 1.25 }}>
+                            <Chip
+                              size="small"
+                              label={statusLabel}
+                              onClick={() => toggleStatus(row)}
+                              icon={
+                                isPaid ? (
+                                  <CheckCircleIcon sx={{ fontSize: '16px !important' }} />
+                                ) : (
+                                  <AccessTimeIcon sx={{ fontSize: '16px !important' }} />
+                                )
+                              }
+                              title={status || STATUS_AWAITING}
+                              sx={{
+                                height: 26,
+                                fontWeight: 700,
+                                bgcolor: isPaid ? 'rgba(73, 107, 76, 0.12)' : 'rgba(112, 83, 114, 0.12)',
+                                color: isPaid ? GREEN : PURPLE,
+                                cursor: 'pointer',
+                                '& .MuiChip-icon': { color: 'inherit' },
+                                '&:hover': {
+                                  bgcolor: isPaid ? 'rgba(73, 107, 76, 0.18)' : 'rgba(112, 83, 114, 0.18)',
+                                },
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{
+                              verticalAlign: 'middle',
+                              px: 1.5,
+                            }}
+                          >
+                            <Stack spacing={0.35} alignItems="center">
+                              {pagarmeForServices &&
+                                status === STATUS_AWAITING &&
+                                Number(row.price_paid || row.price || 0) > 0 && (
+                                  <Tooltip title="Pagamento Pagar.me">
+                                    <IconButton
+                                      size="small"
+                                      data-testid={`service-pay-${row.id}`}
+                                      onClick={() => setPaymentService(row)}
+                                      sx={{ color: PURPLE }}
+                                    >
+                                      <PaymentIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                              {googleCalendarEnabled ? (
+                                <Tooltip
+                                  title={
+                                    hasRealCalendarEvent(row)
+                                      ? 'Evento agendado — abrir ou cancelar'
+                                      : 'Agendar no Google Calendar'
+                                  }
+                                >
+                                  <IconButton
+                                    size="small"
+                                    data-testid={
+                                      hasRealCalendarEvent(row)
+                                        ? 'service-event-open'
+                                        : 'service-event-schedule'
+                                    }
+                                    onClick={(e) => {
+                                      if (hasRealCalendarEvent(row)) openEventMenu(e, row);
+                                      else onSchedule(row);
+                                    }}
+                                    sx={{
+                                      color: hasRealCalendarEvent(row) ? GREEN : '#667168',
+                                      '&:hover': hasRealCalendarEvent(row)
+                                        ? { color: GREEN_HOVER, bgcolor: 'rgba(73,107,76,0.12)' }
+                                        : undefined,
+                                    }}
+                                  >
+                                    <EventIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              ) : null}
+                              <Tooltip title="Info">
+                                <IconButton
+                                  size="small"
+                                  data-testid="service-info"
+                                  onClick={() => setInfoService(row)}
+                                  sx={{ color: PURPLE }}
+                                >
+                                  <InfoOutlinedIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Excluir">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => onDelete(row)}
+                                  sx={{ color: '#8a5a5a' }}
+                                >
+                                  <DeleteOutlineRoundedIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
             <Box
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: 2,
+                justifyContent: { xs: 'center', sm: 'space-between' },
+                gap: 1.5,
                 flexWrap: 'wrap',
-                mx: 'auto',
                 mt: 2,
-                mb: 3,
-                px: 2,
+                mb: 1,
+                px: { xs: 1.5, sm: 2 },
                 py: 1.25,
-                maxWidth: 640,
-                backgroundColor: PURPLE,
-                borderRadius: '30px',
-                boxShadow: '0 4px 14px rgba(74, 45, 74, 0.35)',
-                color: '#fff',
+                bgcolor: 'rgba(255,255,255,0.92)',
+                border: '1px solid rgba(49, 67, 51, 0.1)',
+                borderRadius: 2.5,
+                boxShadow: '0 6px 22px rgba(34, 53, 36, 0.05)',
               }}
             >
-              <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
-                <Select
-                  value={pageSize}
-                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                  disableUnderline
-                  sx={{
-                    color: '#fff',
-                    fontWeight: 600,
-                    fontSize: '0.875rem',
-                    '& .MuiSelect-icon': { color: '#fff' },
-                    '& .MuiSelect-select': { py: 0.5, pr: 3 },
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="caption" sx={{ color: '#6a766c' }}>
+                  Itens por página
+                </Typography>
+                <FormControl size="small" sx={{ minWidth: 72 }}>
+                  <Select
+                    value={pageSize}
+                    onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: '0.82rem',
+                      borderRadius: 2,
+                      '& .MuiSelect-select': { py: 0.75 },
+                    }}
+                    MenuProps={{
+                      PaperProps: { sx: { maxHeight: 280 } },
+                    }}
+                  >
+                    {PAGE_SIZE_OPTIONS.map((n) => (
+                      <MenuItem key={n} value={n}>
+                        {n}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <IconButton
+                  size="small"
+                  aria-label="Página anterior"
+                  disabled={page <= 1}
+                  onClick={() => {
+                    setPage((p) => Math.max(1, p - 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  MenuProps={{
-                    PaperProps: { sx: { maxHeight: 280 } },
+                  sx={{
+                    border: '1px solid rgba(49, 67, 51, 0.14)',
+                    borderRadius: 2,
+                    color: GREEN,
+                    '&:hover': { bgcolor: 'rgba(73, 107, 76, 0.08)' },
                   }}
                 >
-                  {PAGE_SIZE_OPTIONS.map((n) => (
-                    <MenuItem key={n} value={n}>
-                      {n} / página
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Button
-                size="small"
-                startIcon={<ChevronLeftIcon />}
-                disabled={page <= 1}
-                onClick={() => {
-                  setPage((p) => Math.max(1, p - 1));
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                sx={{
-                  color: '#fff',
-                  bgcolor: GREEN,
-                  '&:hover': { bgcolor: GREEN_HOVER },
-                  '&.Mui-disabled': { color: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(0,0,0,0.15)' },
-                }}
-              >
-                Anterior
-              </Button>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                Página {page} de {totalPages}
-                {totalCount ? ` · ${totalCount}` : ''}
-              </Typography>
-              <Button
-                size="small"
-                endIcon={<ChevronRightIcon />}
-                disabled={page >= totalPages || totalCount === 0}
-                onClick={() => {
-                  setPage((p) => p + 1);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                sx={{
-                  color: '#fff',
-                  bgcolor: GREEN,
-                  '&:hover': { bgcolor: GREEN_HOVER },
-                  '&.Mui-disabled': { color: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(0,0,0,0.15)' },
-                }}
-              >
-                Próxima
-              </Button>
+                  <ChevronLeftRoundedIcon />
+                </IconButton>
+                <Typography variant="body2" sx={{ minWidth: 120, textAlign: 'center', color: '#465348' }}>
+                  Página <strong>{page}</strong> de {totalPages}
+                </Typography>
+                <IconButton
+                  size="small"
+                  aria-label="Próxima página"
+                  disabled={page >= totalPages || totalCount === 0}
+                  onClick={() => {
+                    setPage((p) => p + 1);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  sx={{
+                    borderRadius: 2,
+                    color: '#fff',
+                    bgcolor: GREEN,
+                    '&:hover': { bgcolor: GREEN_HOVER },
+                    '&.Mui-disabled': { color: '#aab3ab', bgcolor: '#edf0ed' },
+                  }}
+                >
+                  <ChevronRightRoundedIcon />
+                </IconButton>
+              </Stack>
             </Box>
           </>
         )}
@@ -672,7 +1041,7 @@ export default function ServicesPage() {
           <Button onClick={() => setEditDate(null)}>Cancelar</Button>
           <Button
             variant="contained"
-            sx={{ bgcolor: GREEN }}
+            sx={{ bgcolor: GREEN, '&:hover': { bgcolor: GREEN_HOVER } }}
             onClick={() =>
               applyDateChange(editDate.row, editDate.value || null, false)
             }
@@ -692,7 +1061,7 @@ export default function ServicesPage() {
           <Button onClick={() => setConfirmReplace(null)}>Cancelar</Button>
           <Button
             variant="contained"
-            sx={{ bgcolor: GREEN }}
+            sx={{ bgcolor: GREEN, '&:hover': { bgcolor: GREEN_HOVER } }}
             onClick={() =>
               applyDateChange(confirmReplace.row, confirmReplace.newDate, true)
             }

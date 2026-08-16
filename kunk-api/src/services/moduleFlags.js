@@ -9,9 +9,12 @@ function asBool(v, fallback = false) {
 }
 
 /**
- * Resolve whether a module is enabled.
+ * Resolve whether a module is enabled for *uso no sistema*.
  * Source of truth: Admin (`system_configs` modules.{name}.enabled).
  * Sem valor no Admin → desabilitado.
+ *
+ * Auth / OAuth / teste NÃO devem depender disso — rotas de setup ficam
+ * fora de requireModule (padrão Pagar.me).
  */
 async function isModuleEnabled(name) {
   const key = `modules.${name}.enabled`;
@@ -25,16 +28,13 @@ async function isModuleEnabled(name) {
   }
   if (!enabled) return false;
 
-  // Pagar.me só fica efetivamente ativo com Secret key + webhooks validados.
+  // Pagar.me só fica efetivamente ativo com Secret key (ativação após link de teste no Admin).
   if (name === 'pagarme') {
     try {
       const credentialsService = require('./credentialsService');
-      const hooksSetup = require('./pagarme/hooksSetup');
       const creds = await credentialsService.listPublic('pagarme');
       const hasSecret = Boolean(creds.find((c) => c.field_key === 'secret_key')?.has_value);
       if (!hasSecret) return false;
-      const webhooks = await hooksSetup.getWebhooksStatus();
-      if (!webhooks?.ready) return false;
     } catch {
       return false;
     }
@@ -47,8 +47,14 @@ function envModuleDefault() {
   return false;
 }
 
+/** Default de uso no sistema quando Admin nunca gravou (sempre off). */
+function moduleEnabledDefault(_name) {
+  return false;
+}
+
 module.exports = {
   asBool,
   isModuleEnabled,
   envModuleDefault,
+  moduleEnabledDefault,
 };

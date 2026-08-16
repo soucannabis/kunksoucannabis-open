@@ -1,0 +1,285 @@
+---
+import "../styles/home.css";
+---
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Sistema open source para associações de cannabis medicinal — documentação, instalação e apps."
+    />
+    <title>Kunk — Sistema open source para associações</title>
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="site-header is-over-hero" id="header">
+      <div class="header-inner">
+        <a class="brand" href="/">Kunk</a>
+        <nav class="nav" aria-label="Principal">
+          <a href="/">Início</a>
+          <a href="/introducao/o-que-e/">Documentação</a>
+          <a href="/apps/">Apps</a>
+          <a href="/api/">API</a>
+          <a
+            href="https://github.com/soucannabis/kunksoucannabis-open"
+            target="_blank"
+            rel="noreferrer">GitHub</a
+          >
+        </nav>
+        <a class="btn-install" href="/instalacao/setup-local/">Instalar</a>
+        <button class="menu-toggle" type="button" aria-label="Abrir menu" id="menuOpen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="drawer" id="drawer" hidden>
+      <div class="drawer-panel">
+        <button class="drawer-close" type="button" id="menuClose">Fechar</button>
+        <a href="/">Início</a>
+        <a href="/introducao/o-que-e/">Documentação</a>
+        <a href="/apps/">Apps</a>
+        <a href="/api/">API</a>
+        <a href="/instalacao/setup-local/">Instalar</a>
+        <a
+          href="https://github.com/soucannabis/kunksoucannabis-open"
+          target="_blank"
+          rel="noreferrer">GitHub</a
+        >
+      </div>
+    </div>
+
+    <main id="topo">
+      <section class="hero" aria-label="Apresentação">
+        <div class="hero-bg" aria-hidden="true"></div>
+        <div class="hero-inner">
+          <h1 class="hero-brand">Kunk</h1>
+          <p class="hero-lead">Sistema open source para associações de cannabis medicinal</p>
+          <p class="hero-copy">
+            Um produto, uma API e um banco por instância — cadastramento, operação, administração e
+            assinatura de termos em apps claros.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/introducao/o-que-e/">Documentação</a>
+            <a
+              class="btn btn-ghost"
+              href="https://github.com/soucannabis/kunksoucannabis-open"
+              target="_blank"
+              rel="noreferrer">Ver no GitHub</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="produto">
+        <div class="section-inner product-grid">
+          <div>
+            <p class="eyebrow">O produto</p>
+            <h2>Operação completa em uma instância</h2>
+            <p class="section-lead">
+              O Kunk unifica o fluxo da associação: do primeiro cadastro do associado à rotina diária
+              da equipe, com configuração central no admin e termos digitais.
+            </p>
+            <a class="link-arrow" href="/introducao/principios/">Ler a documentação →</a>
+          </div>
+          <div class="surface-map" aria-label="Sistemas da instância">
+            <div class="surface-row">
+              <div>
+                <strong>Cadastro de Associados</strong>
+                <span>Adesão, documentos, dados clínicos e acompanhamento</span>
+              </div>
+            </div>
+            <div class="surface-row">
+              <div>
+                <strong>Assinatura de termos</strong>
+                <span>Documentos digitais e trilha de assinatura auditável</span>
+              </div>
+            </div>
+            <div class="surface-row">
+              <div>
+                <strong>Kunk</strong>
+                <span>Acolhimento, triagem, serviços, pedidos e relatórios</span>
+              </div>
+            </div>
+            <div class="surface-row">
+              <div>
+                <strong>Área Admin</strong>
+                <span>Configurações, profissionais, serviços e permissões</span>
+              </div>
+            </div>
+            <div class="surface-row">
+              <div>
+                <strong>API</strong>
+                <span>Dados, autenticação, regras de negócio e integrações</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section apps" id="apps">
+        <div class="section-inner">
+          <p class="eyebrow">Sistemas</p>
+          <h2>Uma plataforma para toda a associação</h2>
+          <p class="section-lead">
+            Quatro aplicações atendem cada papel da associação, conectadas por uma API que centraliza
+            dados, autenticação, regras de negócio e integrações.
+          </p>
+          <div class="apps-list">
+            <article class="app-item">
+              <h3>Cadastro de Associados</h3>
+              <p>Jornada pública de adesão com dados pessoais e clínicos, envio de documentos, termos e acompanhamento do cadastro.</p>
+              <a class="link-arrow" href="/frontend/cadastramento/">Documentação →</a>
+            </article>
+            <article class="app-item">
+              <h3>Assinatura de termos</h3>
+              <p>Cria, apresenta e registra assinaturas de termos e documentos, preservando uma trilha auditável para associados e equipe.</p>
+              <a class="link-arrow" href="/frontend/doc-sign/">Documentação →</a>
+            </article>
+            <article class="app-item">
+              <h3>Kunk</h3>
+              <p>Painel interno para acolhimento, triagem, pedidos, pagamentos e relatórios.</p>
+              <a class="link-arrow" href="/frontend/kunk/">Documentação →</a>
+            </article>
+            <article class="app-item">
+              <h3>Área Admin</h3>
+              <p>Configura a instância: serviços, profissionais, usuários, permissões, integrações e parâmetros operacionais.</p>
+              <a class="link-arrow" href="/frontend/admin/">Documentação →</a>
+            </article>
+            <article class="app-item">
+              <h3>API</h3>
+              <p>Camada central que oferece autenticação, dados, regras de negócio, arquivos e integrações para todos os aplicativos.</p>
+              <a class="link-arrow" href="/api/">Documentação →</a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="para-quem">
+        <div class="section-inner">
+          <p class="eyebrow">Para quem</p>
+          <h2>Feito para o dia a dia da associação</h2>
+          <p class="section-lead">
+            Papéis distintos no mesmo produto — sem fragmentar em sistemas paralelos.
+          </p>
+          <ol class="audience-list">
+            <li>
+              <span class="n">01</span>
+              <div>
+                <strong>Associados</strong>
+                <span>Cadastro, termos e acompanhamento do vínculo com a associação.</span>
+              </div>
+            </li>
+            <li>
+              <span class="n">02</span>
+              <div>
+                <strong>Operadores</strong>
+                <span>Acolhimento, triagem, serviços, pedidos e rotinas do painel Kunk.</span>
+              </div>
+            </li>
+            <li>
+              <span class="n">03</span>
+              <div>
+                <strong>Administradores</strong>
+                <span>Configuração da instância, papéis, tipos e integrações.</span>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section start" id="comecar">
+        <div class="section-inner">
+          <p class="eyebrow">Começar</p>
+          <h2>Do repositório à instância</h2>
+          <p class="section-lead">
+            Três passos para subir o ambiente. A documentação completa cobre requisitos, variáveis e
+            deploy.
+          </p>
+          <div class="steps">
+            <div class="step">
+              <p class="step-n">01</p>
+              <h3>Clonar</h3>
+              <p>Obtenha o monorepo e as dependências do workspace.</p>
+            </div>
+            <div class="step">
+              <p class="step-n">02</p>
+              <h3>Configurar</h3>
+              <p>Defina banco, secrets e variáveis por app.</p>
+            </div>
+            <div class="step">
+              <p class="step-n">03</p>
+              <h3>Subir</h3>
+              <p>API e frontends locais — ou o stack de deploy.</p>
+            </div>
+          </div>
+          <a class="btn btn-primary" href="/instalacao/setup-local/">Abrir guia de instalação</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div>
+          <p class="footer-brand">Kunk</p>
+          <p class="footer-meta">Open source · SouCannabis</p>
+        </div>
+        <nav class="footer-links" aria-label="Rodapé">
+          <a href="/introducao/o-que-e/">Documentação</a>
+          <a href="/apps/">Apps</a>
+          <a href="/instalacao/setup-local/">Instalação</a>
+          <a
+            href="https://github.com/soucannabis/kunksoucannabis-open"
+            target="_blank"
+            rel="noreferrer">GitHub</a
+          >
+        </nav>
+      </div>
+    </footer>
+
+    <script is:inline>
+      const header = document.getElementById("header");
+      const hero = document.querySelector(".hero");
+      const drawer = document.getElementById("drawer");
+
+      function updateHeader() {
+        const overHero = window.scrollY < hero.offsetHeight - 64;
+        header.classList.toggle("is-over-hero", overHero);
+        header.classList.toggle("is-scrolled", window.scrollY > 12);
+      }
+
+      updateHeader();
+      window.addEventListener("scroll", updateHeader, { passive: true });
+
+      const open = () => {
+        drawer.hidden = false;
+        drawer.classList.add("open");
+        document.body.style.overflow = "hidden";
+      };
+      const close = () => {
+        drawer.classList.remove("open");
+        drawer.hidden = true;
+        document.body.style.overflow = "";
+      };
+
+      document.getElementById("menuOpen").addEventListener("click", open);
+      document.getElementById("menuClose").addEventListener("click", close);
+      drawer.addEventListener("click", (e) => {
+        if (e.target === drawer) close();
+      });
+      drawer.querySelectorAll("a").forEach((a) => a.addEventListener("click", close));
+    </script>
+  </body>
+</html>

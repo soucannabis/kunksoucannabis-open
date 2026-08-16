@@ -65,6 +65,8 @@ describe('contract/api-structure', () => {
       'term_contracts',
       'term_signatures',
       'term_events',
+      'webhook_endpoints',
+      'webhook_deliveries',
     ]);
     const fromSqlItems = fromSql.filter((t) => !NON_ITEMS_TABLES.has(t));
     assert.deepEqual([...COLLECTIONS].sort(), [...fromSqlItems].sort());

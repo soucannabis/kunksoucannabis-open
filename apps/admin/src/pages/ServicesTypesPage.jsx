@@ -30,6 +30,15 @@ function uniqueTypeId(desired, existingIds) {
   return `${desired}_${n}`;
 }
 
+const EMPTY_BULK = {
+  association_fee: '',
+  default_consultation_price: '',
+  touch_fee: false,
+  touch_price: false,
+  active: true,
+  touch_active: false,
+};
+
 export function ServicesTypesPage({ api }) {
   const [types, setTypes] = useState([]);
   const [settings, setSettings] = useState({ deduct_donation_from_payable: false });
@@ -40,6 +49,9 @@ export function ServicesTypesPage({ api }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_TYPE);
   const [isNew, setIsNew] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkForm, setBulkForm] = useState(EMPTY_BULK);
 
   async function reload() {
     const [typesRes, settingsRes] = await Promise.all([
@@ -74,6 +86,87 @@ export function ServicesTypesPage({ api }) {
       ),
     [types]
   );
+
+  const selectedCount = selectedIds.length;
+  const allSelected = sorted.length > 0 && selectedCount === sorted.length;
+  const someSelected = selectedCount > 0 && !allSelected;
+
+  function toggleSelect(id) {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedIds([]);
+      return;
+    }
+    setSelectedIds(sorted.map((t) => t.id));
+  }
+
+  function clearSelection() {
+    setSelectedIds([]);
+  }
+
+  function openBulkEdit() {
+    setBulkForm(EMPTY_BULK);
+    setBulkOpen(true);
+    setError('');
+    setMessage('');
+  }
+
+  function closeBulkEdit() {
+    setBulkOpen(false);
+    setBulkForm(EMPTY_BULK);
+  }
+
+  async function applyBulkActive(active) {
+    if (!selectedIds.length) return;
+    const selected = new Set(selectedIds);
+    const next = types.map((t) => (selected.has(t.id) ? { ...t, active } : t));
+    const ok = await saveTypes(next);
+    if (!ok) return;
+    setMessage(
+      active
+        ? `${selectedIds.length} tipo(s) ativado(s).`
+        : `${selectedIds.length} tipo(s) desativado(s).`
+    );
+    clearSelection();
+  }
+
+  async function onSubmitBulk(e) {
+    e.preventDefault();
+    if (!selectedIds.length) return;
+    if (!bulkForm.touch_fee && !bulkForm.touch_price && !bulkForm.touch_active) {
+      setError('Marque ao menos um campo para alterar.');
+      return;
+    }
+    const selected = new Set(selectedIds);
+    const next = types.map((t) => {
+      if (!selected.has(t.id)) return t;
+      const row = { ...t };
+      if (bulkForm.touch_fee) {
+        row.association_fee = Number(bulkForm.association_fee) || 0;
+      }
+      if (bulkForm.touch_price) {
+        row.default_consultation_price =
+          bulkForm.default_consultation_price === '' ||
+          bulkForm.default_consultation_price == null
+            ? null
+            : Number(bulkForm.default_consultation_price);
+      }
+      if (bulkForm.touch_active) {
+        row.active = Boolean(bulkForm.active);
+      }
+      return row;
+    });
+    const ok = await saveTypes(next);
+    if (!ok) return;
+    setMessage(`${selectedIds.length} tipo(s) atualizado(s).`);
+    closeBulkEdit();
+    clearSelection();
+  }
 
   function openNew() {
     setIsNew(true);
@@ -113,8 +206,10 @@ export function ServicesTypesPage({ api }) {
       setTypes(Array.isArray(res.data) ? res.data : nextTypes);
       setMessage('Tipos salvos.');
       closeForm();
+      return true;
     } catch (err) {
       setError(err.message || 'Falha ao salvar tipos');
+      return false;
     } finally {
       setSaving(false);
     }
@@ -188,7 +283,7 @@ export function ServicesTypesPage({ api }) {
         </p>
       </div>
 
-      {error && !editing ? (
+      {error && !editing && !bulkOpen ? (
         <p style={{ color: 'var(--admin-danger)', margin: 0 }}>{error}</p>
       ) : null}
       {message ? <p style={{ color: 'var(--admin-success, #2e7d32)', margin: 0 }}>{message}</p> : null}
@@ -219,15 +314,70 @@ export function ServicesTypesPage({ api }) {
       </form>
 
       <div className="card" style={{ padding: '1.25rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
           <h3 style={{ margin: 0 }}>Tipos</h3>
           <button type="button" className="btn btn-primary" onClick={openNew}>
             Novo tipo
           </button>
         </div>
+
+        {selectedCount > 0 ? (
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              marginTop: '1rem',
+              paddingTop: '0.75rem',
+              paddingBottom: '0.75rem',
+            }}
+            data-testid="types-bulk-bar"
+          >
+            <span style={{ marginRight: '0.25rem', color: '#fff' }}>
+              {selectedCount} selecionado{selectedCount === 1 ? '' : 's'}
+            </span>
+            <button
+              type="button"
+              className="btn"
+              disabled={saving}
+              onClick={() => applyBulkActive(true)}
+            >
+              Ativar
+            </button>
+            <button
+              type="button"
+              className="btn"
+              disabled={saving}
+              onClick={() => applyBulkActive(false)}
+            >
+              Desativar
+            </button>
+            <button type="button" className="btn btn-primary" disabled={saving} onClick={openBulkEdit}>
+              Alterar campos…
+            </button>
+            <button type="button" className="btn" disabled={saving} onClick={clearSelection}>
+              Limpar seleção
+            </button>
+          </div>
+        ) : null}
+
         <table className="data-table" style={{ width: '100%', marginTop: '1rem' }}>
           <thead>
             <tr>
+              <th style={{ width: 40, textAlign: 'left', verticalAlign: 'middle', paddingLeft: '0.65rem' }}>
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = someSelected;
+                  }}
+                  onChange={toggleSelectAll}
+                  aria-label="Selecionar todos os tipos"
+                  data-testid="types-select-all"
+                />
+              </th>
               <th>Label</th>
               <th>Taxa (R$)</th>
               <th>Preço padrão</th>
@@ -238,6 +388,15 @@ export function ServicesTypesPage({ api }) {
           <tbody>
             {sorted.map((row) => (
               <tr key={row.id}>
+                <td style={{ textAlign: 'left', verticalAlign: 'middle', paddingLeft: '0.65rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(row.id)}
+                    onChange={() => toggleSelect(row.id)}
+                    aria-label={`Selecionar ${row.label}`}
+                    data-testid={`type-select-${row.id}`}
+                  />
+                </td>
                 <td>{row.label}</td>
                 <td>{Number(row.association_fee || 0).toFixed(2)}</td>
                 <td>
@@ -334,6 +493,128 @@ export function ServicesTypesPage({ api }) {
               </button>
               <button type="submit" className="btn btn-primary" disabled={saving}>
                 {saving ? 'Salvando…' : 'Salvar tipo'}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+
+      {bulkOpen ? (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Alterar tipos em massa"
+          onClick={() => !saving && closeBulkEdit()}
+        >
+          <form
+            className="modal-card"
+            style={{ display: 'grid', gap: '0.75rem' }}
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={onSubmitBulk}
+            data-testid="types-bulk-modal"
+          >
+            <h3 style={{ margin: 0 }}>
+              Alterar {selectedCount} tipo{selectedCount === 1 ? '' : 's'}
+            </h3>
+            <p className="muted" style={{ margin: 0 }}>
+              Marque os campos que deseja aplicar aos selecionados. Os demais permanecem iguais.
+            </p>
+            {error ? <p style={{ color: 'var(--admin-danger)', margin: 0 }}>{error}</p> : null}
+
+            <label
+              className={`ext-flag${bulkForm.touch_fee ? ' ext-flag--active' : ''}`}
+              data-testid="bulk-touch-fee"
+            >
+              <input
+                type="checkbox"
+                checked={bulkForm.touch_fee}
+                onChange={(e) => setBulkForm((f) => ({ ...f, touch_fee: e.target.checked }))}
+              />
+              <span className="ext-flag-body">
+                <strong>Taxa da associação (R$)</strong>
+              </span>
+            </label>
+            <label className="field">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={bulkForm.association_fee}
+                disabled={!bulkForm.touch_fee}
+                onChange={(e) =>
+                  setBulkForm((f) => ({ ...f, association_fee: e.target.value, touch_fee: true }))
+                }
+              />
+            </label>
+
+            <label
+              className={`ext-flag${bulkForm.touch_price ? ' ext-flag--active' : ''}`}
+              data-testid="bulk-touch-price"
+            >
+              <input
+                type="checkbox"
+                checked={bulkForm.touch_price}
+                onChange={(e) => setBulkForm((f) => ({ ...f, touch_price: e.target.checked }))}
+              />
+              <span className="ext-flag-body">
+                <strong>Preço padrão da consulta</strong>
+                <span className="muted">Vazio = usa o do profissional</span>
+              </span>
+            </label>
+            <label className="field">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={bulkForm.default_consultation_price}
+                disabled={!bulkForm.touch_price}
+                onChange={(e) =>
+                  setBulkForm((f) => ({
+                    ...f,
+                    default_consultation_price: e.target.value,
+                    touch_price: true,
+                  }))
+                }
+              />
+            </label>
+
+            <label
+              className={`ext-flag${bulkForm.touch_active ? ' ext-flag--active' : ''}`}
+              data-testid="bulk-touch-active"
+            >
+              <input
+                type="checkbox"
+                checked={bulkForm.touch_active}
+                onChange={(e) => setBulkForm((f) => ({ ...f, touch_active: e.target.checked }))}
+              />
+              <span className="ext-flag-body">
+                <strong>Status ativo</strong>
+              </span>
+            </label>
+            <label
+              className={`ext-flag${bulkForm.active ? ' ext-flag--active' : ''}`}
+              style={{ opacity: bulkForm.touch_active ? 1 : 0.5 }}
+            >
+              <input
+                type="checkbox"
+                checked={Boolean(bulkForm.active)}
+                disabled={!bulkForm.touch_active}
+                onChange={(e) =>
+                  setBulkForm((f) => ({ ...f, active: e.target.checked, touch_active: true }))
+                }
+              />
+              <span className="ext-flag-body">
+                <strong>Ativo</strong>
+              </span>
+            </label>
+
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn" onClick={closeBulkEdit} disabled={saving}>
+                Cancelar
+              </button>
+              <button type="submit" className="btn btn-primary" disabled={saving}>
+                {saving ? 'Salvando…' : 'Aplicar aos selecionados'}
               </button>
             </div>
           </form>

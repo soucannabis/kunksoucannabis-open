@@ -10,6 +10,7 @@
     "dev:admin": "npm run dev -w @kunk/admin",
     "dev:kunk": "npm run dev -w @kunk/kunk",
     "dev:doc-sign": "npm run dev -w @kunk/doc-sign",
+    "dev:website": "npm run dev -w @kunk/website",
     "test:api": "npm test --prefix kunk-api",
     "seed:load": "npm run seed:load --prefix kunk-api",
     "clean:local-files": "npm run clean:local-files --prefix kunk-api",

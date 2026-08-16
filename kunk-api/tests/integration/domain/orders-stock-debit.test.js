@@ -162,4 +162,59 @@ describe('domain/orders stock debit on payment', () => {
     const after = await query(`SELECT amount FROM products WHERE id = $1`, [productId]);
     assert.equal(Number(after.rows[0].amount), 8);
   });
+
+  it('DELETE paid order restores stock and removes stock movements', async () => {
+    const before = await query(`SELECT amount FROM products WHERE id = $1`, [productId]);
+    const amountBefore = Number(before.rows[0].amount);
+
+    const orderRes = await request(app)
+      .post('/api/v1/orders')
+      .set('Cookie', cookie)
+      .send({
+        associate_name: 'Cliente Delete',
+        user_code: uuidv4(),
+        status: 'Aguardando pagamento',
+        items: [
+          {
+            product_id: productId,
+            code: sku,
+            name: `Produto Debito ${sku}`,
+            amount: 40,
+            quantity: 2,
+          },
+        ],
+        total: 80,
+        delivery_price: 0,
+        discount: 0,
+        donation: 0,
+        address: ADDRESS,
+      });
+    assert.equal(orderRes.status, 201, JSON.stringify(orderRes.body));
+    const orderId = orderRes.body.data.id;
+
+    const paid = await request(app)
+      .patch(`/api/v1/orders/${orderId}/status`)
+      .set('Cookie', cookie)
+      .send({ status: 'Pagamento concluído' });
+    assert.equal(paid.status, 200, JSON.stringify(paid.body));
+    assert.ok(paid.body.data.stock_debited_at);
+
+    const mid = await query(`SELECT amount FROM products WHERE id = $1`, [productId]);
+    assert.equal(Number(mid.rows[0].amount), amountBefore - 2);
+
+    const del = await request(app).delete(`/api/v1/orders/${orderId}`).set('Cookie', cookie);
+    assert.equal(del.status, 200, JSON.stringify(del.body));
+
+    const mov = await query(
+      `SELECT COUNT(*)::int AS c FROM product_stock_movements WHERE order_id = $1`,
+      [orderId]
+    );
+    assert.equal(mov.rows[0].c, 0);
+
+    const restored = await query(`SELECT amount FROM products WHERE id = $1`, [productId]);
+    assert.equal(Number(restored.rows[0].amount), amountBefore);
+
+    const gone = await request(app).get(`/api/v1/orders/${orderId}`).set('Cookie', cookie);
+    assert.equal(gone.status, 404);
+  });
 });

@@ -165,7 +165,7 @@ Usado quando o teste não precisa repetir o funil inteiro na UI. Cookie comparti
 
 | | |
 |---|---|
-| **Objetivo** | CNH (só frente) completa identidade e vai à fase 4 |
+| **Objetivo** | CNH (aberta) completa identidade e vai à fase 4 |
 | **Pré-condição** | Seed fase 3 |
 | **Entrada (UI)** | Modo CNH; upload `#responsible-front` (JPEG mínimo); “Avançar para assinatura” |
 | **API** | `POST /files` multipart (`doc_type=cnh`, `side=front`, `subject=responsible`, `doc_kind=identity`) **201**; `GET /users/me/documents/status` → `complete=true`, `mode=cnh`; `POST /users/me/advance` → fase **4** |

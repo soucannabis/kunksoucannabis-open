@@ -54,6 +54,7 @@ const ERROR_CODES = [
   'GOOGLE_API_ERROR',
   'GOOGLE_VALIDATION_ERROR',
   'GOOGLE_CONFLICT',
+  'WEBHOOK_TEST_FAILED',
 ];
 
 const AUTH_ROUTES = [
@@ -143,6 +144,14 @@ const DOMAIN_ROUTES = [
   ['GET', '/admin/cache'],
   ['PATCH', '/admin/cache'],
   ['POST', '/admin/cache/clear'],
+  ['GET', '/admin/webhooks/catalog'],
+  ['GET', '/admin/webhooks'],
+  ['POST', '/admin/webhooks'],
+  ['PATCH', '/admin/webhooks/:id'],
+  ['POST', '/admin/webhooks/:id/rotate-secret'],
+  ['DELETE', '/admin/webhooks/:id'],
+  ['POST', '/admin/webhooks/:id/test'],
+  ['GET', '/admin/webhooks/:id/deliveries'],
   ['GET', '/cache/status'],
   ['POST', '/cache/clear'],
   ['POST', '/web-vitals'],

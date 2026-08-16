@@ -29,8 +29,8 @@ Base: `/api/v1`
   "delta": 2430.5,
   "navigation_type": "navigate",
   "app": "kunk",
-  "url": "https://app.example/recepcao",
-  "path": "/recepcao",
+  "url": "https://app.example/acolhimento",
+  "path": "/acolhimento",
   "id": "v4-..."
 }
 ```

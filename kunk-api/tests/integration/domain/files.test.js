@@ -52,6 +52,18 @@ describe('domain/files', () => {
     assert.equal(del.status, 200);
   });
 
+  it('operator upload succeeds even with stale associate_session cookie', async () => {
+    const staleAssociate = 'associate_session=stale-or-expired-token';
+    const upload = await request(app)
+      .post('/api/v1/files')
+      .set('Cookie', `${cookie}; ${staleAssociate}`)
+      .set('X-Kunk-App', 'admin')
+      .attach('file', Buffer.from('comprovante'), 'comprovante.pdf');
+    assert.equal(upload.status, 201, JSON.stringify(upload.body));
+    assert.ok(upload.body.data?.id);
+    await request(app).delete(`/api/v1/files/${upload.body.data.id}`).set('Cookie', cookie);
+  });
+
   it('operator upload with user_id + doc_kind and list by user', async () => {
     const user = await request(app)
       .post('/api/v1/items/users')

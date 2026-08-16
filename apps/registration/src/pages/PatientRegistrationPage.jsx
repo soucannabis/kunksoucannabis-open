@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAssociateAuth } from '@kunk/auth-session';
 import { Ciap2Select, CpfInput, GenderSelect } from '@kunk/forms';
 import { AlertError } from '@kunk/ui';
+import { Icon } from '../components/Icon.jsx';
 import { buildValidationAlert } from '../lib/fieldLabels.js';
 
 const EMPTY = {
@@ -163,7 +164,8 @@ export function PatientRegistrationPage({ api }) {
         message={error}
         emptyFields={invalid.length ? buildValidationAlert(invalid, form).missingLabels : []}
       />
-      <button className="btn btn-success mt-3" type="submit" disabled={busy}>
+      <button className="btn btn-success mt-3 btn-with-icon" type="submit" disabled={busy}>
+        <Icon name="save" size={18} />
         Salvar e continuar
       </button>
     </form>

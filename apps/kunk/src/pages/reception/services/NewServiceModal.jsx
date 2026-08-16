@@ -15,8 +15,10 @@ import {
   RadioGroup,
   TextField,
   Chip,
+  Typography,
 } from '@mui/material';
 import { associateDisplayName, defaultPriceForType, typeLabel } from './servicesUtils.js';
+import { formatPhoneBr } from '../associates/associatesStatus.js';
 import { useCacheConfig } from '../../../lib/cache/CacheConfigProvider.jsx';
 import {
   fetchAssociateUser,
@@ -38,6 +40,36 @@ function patientLabel(p) {
   );
 }
 
+function PersonDataBlock({ title, name, email, phone }) {
+  return (
+    <Box
+      sx={{
+        mb: 1.5,
+        p: 1.5,
+        borderRadius: 2,
+        bgcolor: 'rgba(90, 122, 91, 0.06)',
+        border: '1px solid',
+        borderColor: 'divider',
+      }}
+    >
+      {title ? (
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+          {title}
+        </Typography>
+      ) : null}
+      <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.3 }}>
+        {name || '—'}
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        {email || '—'}
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        {formatPhoneBr(phone)}
+      </Typography>
+    </Box>
+  );
+}
+
 export default function NewServiceModal({
   open,
   onClose,
@@ -46,8 +78,7 @@ export default function NewServiceModal({
   onCreated,
 }) {
   const [associate, setAssociate] = useState(null);
-  const [associateQ, setAssociateQ] = useState('');
-  const [associateOpts, setAssociateOpts] = useState([]);
+  const [paymentModuleActive, setPaymentModuleActive] = useState(false);
   const [googleCalendarEnabled, setGoogleCalendarEnabled] = useState(false);
   const [patients, setPatients] = useState([]);
   const [beneficiary, setBeneficiary] = useState('responsible');
@@ -60,24 +91,41 @@ export default function NewServiceModal({
   const [tagOpts, setTagOpts] = useState([]);
   const [existingServices, setExistingServices] = useState([]);
   const [linkService, setLinkService] = useState(null);
+  const [linkExistingOpen, setLinkExistingOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const { enabled: cacheEnabled } = useCacheConfig();
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setAssociate(null);
+      setPatients([]);
+      setBeneficiary('responsible');
+      setSelectedPros([]);
+      setRows({});
+      setObservations('');
+      setTags([]);
+      setLinkService(null);
+      setLinkExistingOpen(false);
+      setError('');
+      return;
+    }
     (async () => {
       try {
-        const [pros, tagList, typesRes, gcStatus] = await Promise.all([
+        const [pros, tagList, typesRes, gcStatus, pagarmeStatus] = await Promise.all([
           fetchCollaboratorProfessionals(api, cacheEnabled),
           fetchTags(api, cacheEnabled),
           api.getProfessionalTypes().catch(() => ({ data: [] })),
           api.getGoogleCalendarStatus().catch(() => ({ data: {} })),
+          api.getPagarmeStatus().catch(() => ({ data: {} })),
         ]);
         setProfessionals(pros);
         setTagOpts(tagList.map((t) => t.tag).filter(Boolean));
         setProfessionalTypes(Array.isArray(typesRes.data) ? typesRes.data : []);
         setGoogleCalendarEnabled(Boolean(gcStatus.data?.enabled));
+        setPaymentModuleActive(
+          Boolean(pagarmeStatus.data?.enabled && pagarmeStatus.data?.use_for_services)
+        );
       } catch {
         /* ignore */
       }
@@ -97,20 +145,10 @@ export default function NewServiceModal({
   }, [open, initialUserCode, api, cacheEnabled]);
 
   useEffect(() => {
-    if (!associateQ || associateQ.length < 2) return;
-    const t = setTimeout(async () => {
-      try {
-        const res = await api.searchUsers(associateQ);
-        setAssociateOpts(res.data || []);
-      } catch {
-        setAssociateOpts([]);
-      }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [associateQ, api]);
-
-  useEffect(() => {
-    if (!open) return;
+    if (!open || !paymentModuleActive) {
+      setExistingServices([]);
+      return;
+    }
     (async () => {
       try {
         const res = await api.listServices('limit=100');
@@ -119,7 +157,7 @@ export default function NewServiceModal({
         setExistingServices([]);
       }
     })();
-  }, [open, api]);
+  }, [open, api, paymentModuleActive]);
 
   useEffect(() => {
     if (!associate?.id && !associate?.user_code) {
@@ -135,6 +173,10 @@ export default function NewServiceModal({
           list = res.data || [];
         }
         setPatients(list);
+        if (!list.length) {
+          setBeneficiary('responsible');
+          return;
+        }
         const funnelCode = associate.patient_user_code;
         const match = list.find((p) => String(p.user_code) === String(funnelCode));
         setBeneficiary(match ? String(match.user_code) : 'responsible');
@@ -151,10 +193,11 @@ export default function NewServiceModal({
       for (const p of selectedPros) {
         const key = String(p.id);
         if (!next[key]) {
+          const price = defaultPriceForType(p.type, p, professionalTypes);
           next[key] = {
-            price: defaultPriceForType(p.type, p, professionalTypes),
+            price,
             donation: 0,
-            price_paid: 0,
+            price_paid: Number(price) || 0,
             consultation_date: '',
             create_calendar_event: false,
           };
@@ -169,8 +212,13 @@ export default function NewServiceModal({
       const key = String(proId);
       const cur = prev[key] || {};
       const next = { ...cur, ...patch };
-      if (googleCalendarEnabled && patch.consultation_date !== undefined && patch.consultation_date) {
-        next.create_calendar_event = true;
+      if (patch.price !== undefined || patch.donation !== undefined) {
+        const price = Number(patch.price !== undefined ? patch.price : cur.price) || 0;
+        const donation = Number(patch.donation !== undefined ? patch.donation : cur.donation) || 0;
+        next.price_paid = Math.max(0, price - donation);
+      }
+      if (googleCalendarEnabled && patch.consultation_date !== undefined && !patch.consultation_date) {
+        next.create_calendar_event = false;
       }
       if (!googleCalendarEnabled) next.create_calendar_event = false;
       return { ...prev, [key]: next };
@@ -182,7 +230,7 @@ export default function NewServiceModal({
     setError('');
     try {
       if (!associate?.user_code) {
-        throw new Error('Selecione o associado');
+        throw new Error('Associado não identificado');
       }
       if (!selectedPros.length) throw new Error('Selecione ao menos um profissional');
       const patient =
@@ -197,7 +245,10 @@ export default function NewServiceModal({
         patient_name: patient ? patientLabel(patient) : null,
         observations,
         tags: tags.map((t) => (typeof t === 'string' ? t : t?.tag || t?.name || String(t))),
-        booking_group_code: linkService?.booking_group_code || null,
+        booking_group_code:
+          paymentModuleActive && linkService?.booking_group_code
+            ? linkService.booking_group_code
+            : null,
         items: selectedPros.map((p) => {
           const r = rows[String(p.id)] || {};
           return {
@@ -231,42 +282,40 @@ export default function NewServiceModal({
     });
   }, [existingServices]);
 
+  const selectedPatient =
+    beneficiary !== 'responsible'
+      ? patients.find((p) => String(p.user_code) === String(beneficiary)) || null
+      : null;
+  const hasPatients = patients.length > 0;
+
   return (
     <Dialog
       open={open}
       onClose={() => {}}
       maxWidth="md"
       fullWidth
-      PaperProps={{ sx: { borderRadius: '20px' } }}
+      PaperProps={{ sx: { borderRadius: '20px', maxWidth: 720 } }}
       {...contentAreaDialogProps}
     >
-      <DialogTitle>Novo Serviço</DialogTitle>
+      <DialogTitle>Novo Atendimento</DialogTitle>
       <DialogContent sx={{ pt: 1 }}>
         {error && <Box sx={{ color: '#b00020', mb: 1 }}>{error}</Box>}
-        <Autocomplete
-          options={associateOpts}
-          getOptionLabel={(o) => associateDisplayName(o) || ''}
-          isOptionEqualToValue={(a, b) =>
-            String(a?.user_code || a?.id) === String(b?.user_code || b?.id)
-          }
-          value={associate}
-          onChange={(_, v) => setAssociate(v)}
-          onInputChange={(_, v, reason) => {
-            if (reason === 'input') setAssociateQ(v);
-          }}
-          slotProps={contentAreaAutocompleteSlotProps}
-          renderOption={(props, option) => (
-            <li {...props} key={option.user_code || option.id}>
-              {associateDisplayName(option)}
-            </li>
-          )}
-          renderInput={(params) => (
-            <TextField {...params} label="Associado responsável" margin="dense" fullWidth />
-          )}
-        />
 
         {associate ? (
-          <FormControl sx={{ mt: 1, mb: 1 }} fullWidth>
+          <PersonDataBlock
+            title="Associado responsável"
+            name={associateDisplayName(associate)}
+            email={associate.email_account}
+            phone={associate.mobile_number}
+          />
+        ) : (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            Carregando associado…
+          </Typography>
+        )}
+
+        {associate && hasPatients ? (
+          <FormControl sx={{ mt: 0.5, mb: 1 }} fullWidth>
             <FormLabel>Beneficiário do atendimento</FormLabel>
             <RadioGroup value={beneficiary} onChange={(e) => setBeneficiary(e.target.value)}>
               <FormControlLabel
@@ -286,23 +335,60 @@ export default function NewServiceModal({
           </FormControl>
         ) : null}
 
-        <Autocomplete
-          options={uniqueExisting}
-          getOptionLabel={(o) =>
-            `${o.associate_name || ''} · ${o.professional_name || ''} · ${o.booking_group_code?.slice(0, 8) || ''}`
-          }
-          value={linkService}
-          onChange={(_, v) => setLinkService(v)}
-          slotProps={contentAreaAutocompleteSlotProps}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Relacionar a serviço existente (opcional)"
-              margin="dense"
-              fullWidth
+        {selectedPatient ? (
+          <PersonDataBlock
+            title="Paciente beneficiário"
+            name={patientLabel(selectedPatient)}
+            email={selectedPatient.email_account}
+            phone={selectedPatient.mobile_number}
+          />
+        ) : null}
+
+        {paymentModuleActive ? (
+          linkExistingOpen ? (
+            <Autocomplete
+              options={uniqueExisting}
+              getOptionLabel={(o) =>
+                `${o.associate_name || ''} · ${o.professional_name || ''} · ${o.booking_group_code?.slice(0, 8) || ''}`
+              }
+              value={linkService}
+              onChange={(_, v) => setLinkService(v)}
+              slotProps={contentAreaAutocompleteSlotProps}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Relacionar a um serviço existente"
+                  margin="dense"
+                  fullWidth
+                />
+              )}
             />
-          )}
-        />
+          ) : (
+            <Typography
+              component="button"
+              type="button"
+              onClick={() => setLinkExistingOpen(true)}
+              sx={{
+                display: 'block',
+                mt: 0.5,
+                mb: 1,
+                p: 0,
+                border: 0,
+                background: 'none',
+                cursor: 'pointer',
+                color: '#5a7a5b',
+                font: 'inherit',
+                fontSize: 14,
+                textDecoration: 'underline',
+                textAlign: 'left',
+                '&:hover': { color: '#303B30' },
+              }}
+            >
+              Relacionar a um serviço existente
+            </Typography>
+          )
+        ) : null}
+
         <Autocomplete
           multiple
           options={professionals}
@@ -342,7 +428,7 @@ export default function NewServiceModal({
                   type="number"
                   size="small"
                   value={r.price ?? ''}
-                  InputProps={{ readOnly: true }}
+                  onChange={(e) => updateRow(p.id, { price: e.target.value })}
                   sx={{ minWidth: 120, flex: 1 }}
                 />
                 <TextField
@@ -371,7 +457,7 @@ export default function NewServiceModal({
                     value={r.consultation_date || ''}
                     onChange={(e) => updateRow(p.id, { consultation_date: e.target.value })}
                   />
-                  {googleCalendarEnabled ? (
+                  {googleCalendarEnabled && r.consultation_date ? (
                     <FormControlLabel
                       control={
                         <Checkbox
@@ -379,7 +465,7 @@ export default function NewServiceModal({
                           onChange={(e) => updateRow(p.id, { create_calendar_event: e.target.checked })}
                         />
                       }
-                      label="Criar evento no calendário"
+                      label="Criar na agenda"
                     />
                   ) : null}
                 </Box>

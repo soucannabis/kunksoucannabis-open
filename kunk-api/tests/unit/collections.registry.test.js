@@ -20,6 +20,8 @@ const NON_ITEMS_TABLES = new Set([
   'term_contracts',
   'term_signatures',
   'term_events',
+  'webhook_endpoints',
+  'webhook_deliveries',
 ]);
 
 describe('collections.registry', () => {

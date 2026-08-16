@@ -100,12 +100,11 @@ function pickAssociateStatusKind(i) {
 }
 
 const PRODUCT_BASE = [
-  { name: 'Spectrum Oil 10ml', sku: 'KNK-OIL-100', type: 'oil', unit: 'ml', concentration: 100, price: 189.9, category: 'wellness' },
-  { name: 'Spectrum Oil 30ml', sku: 'KNK-OIL-300', type: 'oil', unit: 'ml', concentration: 300, price: 349.9, category: 'wellness' },
-  { name: 'Calm Caps 30ct', sku: 'KNK-CAP-25', type: 'capsule', unit: 'unit', concentration: 25, price: 159.9, category: 'sleep' },
-  { name: 'Focus Softgel 30ct', sku: 'KNK-SFT-15', type: 'softgel', unit: 'unit', concentration: 15, price: 129.9, category: 'focus' },
-  { name: 'Recovery Balm 50g', sku: 'KNK-BAL-50', type: 'topical', unit: 'g', concentration: 50, price: 99.9, category: 'recovery' },
-  { name: 'Night Drops 15ml', sku: 'KNK-DRP-150', type: 'oil', unit: 'ml', concentration: 150, price: 219.9, category: 'sleep' },
+  { name: 'Linha CBD', sku: 'KNK-CBD', type: 'oil', unit: 'ml', concentration: 300, price: 247.9, category: 'cbd' },
+  { name: 'Linha THC', sku: 'KNK-THC', type: 'oil', unit: 'ml', concentration: 100, price: 389.5, category: 'thc' },
+  { name: 'Linha CBG', sku: 'KNK-CBG', type: 'oil', unit: 'ml', concentration: 200, price: 198.0, category: 'cbg' },
+  { name: 'Linha CBC', sku: 'KNK-CBC', type: 'oil', unit: 'ml', concentration: 150, price: 312.4, category: 'cbc' },
+  { name: 'Linha CBN', sku: 'KNK-CBN', type: 'oil', unit: 'ml', concentration: 250, price: 165.9, category: 'cbn' },
 ];
 
 function uuid() {
@@ -257,7 +256,7 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
       ...base,
       sku,
       name: variant === 1 ? base.name : `${base.name} v${variant}`,
-      amount: 20 + (i % 80),
+      amount: 10 + (i % 6),
       batch: `LOAD-${1000 + i}`,
     };
   });
@@ -600,10 +599,10 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
           prescriber_code: String(professionalCodes[i % professionalCodes.length]),
           payment_date: paid ? daysAgo(40 - (i % 30)) : null,
           custom_payment: { method: paid ? 'pix' : 'pending', gateway: 'demo' },
-          production_owner: ['Em produção', 'Produção Finalizada'].includes(status) ? 'Pedro Produção' : null,
+          production_owner: null,
           tracking_code_date: shipped ? daysAgo(10 - (i % 8)) : null,
           last_tracking_date: shipped ? daysAgo(5 - (i % 4)) : null,
-          address_validation: pick(['valid', 'pending', 'corrected'], i),
+          address_validation: null,
           created_by_user_code: 'KNK-ADMIN',
           is_sample: true,
         };

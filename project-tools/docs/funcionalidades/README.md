@@ -14,14 +14,14 @@
 | **Descrição** | O que faz, em poucas palavras |
 | **Testes** | `Sim` · `Parcial` · `Não` — npm (unit/integration/Vitest) e/ou Playwright e2e |
 
-## Apps
+## Sistemas
 
-| Superfície | Pasta | Porta dev | Documento |
+| Sistema | Pasta | Porta dev | Documento |
 |---|---|---|---|
-| **Cadastramento** | `apps/registration` | 4255 | [registration.md](./registration.md) |
-| **Admin** | `apps/admin` | 4256 | [admin.md](./admin.md) |
+| **Cadastro de Associados** | `apps/registration` | 4255 | [registration.md](./registration.md) |
+| **Assinatura de termos** | `apps/doc-sign` | 4258 | [doc-sign.md](./doc-sign.md) |
 | **Kunk** (operacional) | `apps/kunk` | 4257 | [kunk.md](./kunk.md) |
-| **Doc-sign** | `apps/doc-sign` | 4258 | [doc-sign.md](./doc-sign.md) |
+| **Área Admin** | `apps/admin` | 4256 | [admin.md](./admin.md) |
 | **API** (backend) | `kunk-api` | 4250 | [kunk-api.md](./kunk-api.md) |
 
 ## Resumo de cobertura de testes

@@ -27,6 +27,9 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SaveIcon from '@mui/icons-material/Save';
+import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
+import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
+import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
 import { normalizeCiapCodes, serializeCiapCodes } from '@kunk/forms';
 import PhoneField from '../../../components/PhoneField.jsx';
 import Ciap2Field from '../../../components/ciap2/Ciap2Field.jsx';
@@ -822,7 +825,16 @@ function PatientPersonForm({ form, setForm, responsible, busy, ciap2Enabled }) {
   );
 }
 
-export function PersonalDataTab({ user, onSave, onDelete, busy, ciap2Enabled = true }) {
+export function PersonalDataTab({
+  user,
+  onSave,
+  onDelete,
+  busy,
+  ciap2Enabled = true,
+  onSendTriage,
+  onGoOrder,
+  onGoService,
+}) {
   const [form, setForm] = useState(() => emptyPersonForm());
   useEffect(() => {
     setForm(personFormFromRecord(user));
@@ -860,7 +872,7 @@ export function PersonalDataTab({ user, onSave, onDelete, busy, ciap2Enabled = t
       </Box>
       <Stack
         direction="row"
-        justifyContent="flex-end"
+        justifyContent="space-between"
         alignItems="center"
         spacing={1.5}
         sx={{
@@ -871,20 +883,48 @@ export function PersonalDataTab({ user, onSave, onDelete, busy, ciap2Enabled = t
           flexShrink: 0,
         }}
       >
-        {!formComplete ? (
-          <Typography variant="caption" color="text.secondary">
-            Preencha: {formMissing.join(', ')}.
-          </Typography>
-        ) : null}
-        <Button
-          variant="contained"
-          disabled={busy || !formComplete}
-          startIcon={<SaveIcon />}
-          onClick={() => onSave(personPayload(form, { ciap2Enabled, includeDelivery: true }))}
-          sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#303B30' } }}
-        >
-          Salvar
-        </Button>
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+          <Button
+            variant="outlined"
+            disabled={busy || !user?.user_code}
+            onClick={onSendTriage}
+            startIcon={<AccessTimeFilledIcon />}
+          >
+            Triagem
+          </Button>
+          <Button
+            variant="outlined"
+            disabled={busy || !user?.user_code}
+            onClick={onGoOrder}
+            startIcon={<ShoppingCartRoundedIcon />}
+          >
+            Pedidos
+          </Button>
+          <Button
+            variant="outlined"
+            disabled={busy || !user?.user_code}
+            onClick={onGoService}
+            startIcon={<CalendarMonthRoundedIcon />}
+          >
+            Atendimentos
+          </Button>
+        </Stack>
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          {!formComplete ? (
+            <Typography variant="caption" color="text.secondary">
+              Preencha: {formMissing.join(', ')}.
+            </Typography>
+          ) : null}
+          <Button
+            variant="contained"
+            disabled={busy || !formComplete}
+            startIcon={<SaveIcon />}
+            onClick={() => onSave(personPayload(form, { ciap2Enabled, includeDelivery: true }))}
+            sx={{ bgcolor: GREEN, '&:hover': { bgcolor: '#303B30' } }}
+          >
+            Salvar
+          </Button>
+        </Stack>
       </Stack>
     </Box>
   );
@@ -1226,14 +1266,19 @@ export function PrescriberTab({ user, onSave, busy, FileUpload, api }) {
 export function AnnotationsTab({ annotations, onAdd, onRemove, busy, operatorName }) {
   const [text, setText] = useState('');
   return (
-    <Box>
-      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+    <Box sx={{ pt: 1.5 }}>
+      <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ mb: 2 }}>
         <TextField
           fullWidth
           size="small"
           label="Nova anotação"
+          multiline
+          minRows={3}
+          maxRows={8}
           value={text}
           onChange={(e) => setText(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          sx={{ mt: 1 }}
         />
         <Button
           variant="contained"
@@ -1247,14 +1292,16 @@ export function AnnotationsTab({ annotations, onAdd, onRemove, busy, operatorNam
             });
             setText('');
           }}
-          sx={{ bgcolor: GREEN }}
+          sx={{ bgcolor: GREEN, mt: 1, flexShrink: 0 }}
         >
           Adicionar
         </Button>
       </Stack>
       {(annotations || []).map((a) => (
         <Box key={a.id} sx={{ borderBottom: '1px solid #eee', py: 1 }}>
-          <Typography variant="body2">{a.text}</Typography>
+          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+            {a.text}
+          </Typography>
           <Typography variant="caption" color="text.secondary">
             {a.userName} · {a.date_created ? new Date(a.date_created).toLocaleString('pt-BR') : ''}
           </Typography>
@@ -1325,11 +1372,11 @@ export function HistoryTab({ history }) {
 
       <Box>
         <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-          Serviços
+          Atendimentos
         </Typography>
         {services.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
-            Nenhum serviço
+            Nenhum atendimento
           </Typography>
         ) : (
           <TableContainer sx={{ border: '1px solid #e0e0e0', borderRadius: 1, maxHeight: 280 }}>

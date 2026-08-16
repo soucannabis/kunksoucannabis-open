@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAssociateAuth } from '@kunk/auth-session';
 import { AuthLoginLayout, Loader, ProgressSidebar } from '@kunk/ui';
 import { usePublicConfig } from '../config/PublicConfigProvider.jsx';
+import { Icon } from '../components/Icon.jsx';
 import {
   PHASE,
   normalizePhase,
@@ -13,10 +14,10 @@ import {
 import authPublicBg from '../assets/registration-login-bg.jpg';
 
 const STEPS = [
-  { id: 1, label: 'Cadastro', phases: [PHASE.CADASTRO_CRIADO, PHASE.DADOS_PESSOAIS] },
-  { id: 2, label: 'Documentos', phases: [PHASE.DOCUMENTOS, PHASE.ASSINATURA_TERMO] },
-  { id: 3, label: 'Finalizar', phases: [] },
-  { id: 4, label: 'Concluído', phases: [PHASE.CONCLUIDO] },
+  { id: 1, label: 'Cadastro', icon: 'clipboard', phases: [PHASE.CADASTRO_CRIADO, PHASE.DADOS_PESSOAIS] },
+  { id: 2, label: 'Documentos', icon: 'idCard', phases: [PHASE.DOCUMENTOS, PHASE.ASSINATURA_TERMO] },
+  { id: 3, label: 'Finalizar', icon: 'flag', phases: [] },
+  { id: 4, label: 'Concluído', icon: 'checkCircle', phases: [PHASE.CONCLUIDO] },
 ];
 
 const PUBLIC_AUTH_PATH = '/cadastro';
@@ -70,6 +71,7 @@ export function AppShell() {
     const phase = normalizePhase(user?.associate_status);
     return STEPS.map((s) => ({
       ...s,
+      icon: <Icon name={s.icon} size={18} />,
       state: stepState(s, phase, user),
     }));
   }, [user]);
@@ -99,13 +101,22 @@ export function AppShell() {
           ) : null}
           {fullName ? <span className="app-navbar-title">{fullName}</span> : null}
         </div>
-        <button type="button" className="btn btn-sm btn-outline-light" onClick={() => logout()}>
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-light btn-with-icon"
+          onClick={() => logout()}
+        >
+          <Icon name="logOut" size={16} />
           Sair
         </button>
       </nav>
       <div className="app-body">
         <div className="app-sidebar-col d-none d-md-flex">
-          <ProgressSidebar steps={steps} contactUrl={cfg.contactUrl} />
+          <ProgressSidebar
+            steps={steps}
+            contactUrl={cfg.contactUrl}
+            contactIcon={<Icon name="phone" size={16} />}
+          />
         </div>
         <main className="content">
           <Outlet />

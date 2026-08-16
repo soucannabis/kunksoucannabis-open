@@ -36,7 +36,7 @@ export function Loader({ text = 'carregando...' }) {
   );
 }
 
-export function ProgressSidebar({ steps, contactUrl }) {
+export function ProgressSidebar({ steps, contactUrl, contactIcon = null }) {
   return (
     <aside className="sidebar p-3">
       <ul className="list-unstyled sidebar-steps mb-0">
@@ -55,13 +55,15 @@ export function ProgressSidebar({ steps, contactUrl }) {
                 isLocked ? 'locked' : '',
               ].filter(Boolean).join(' ')}
             >
-              {step.label}
+              {step.icon ? <span className="progress-step-icon">{step.icon}</span> : null}
+              <span className="progress-step-label">{step.label}</span>
             </li>
           );
         })}
       </ul>
       {contactUrl ? (
-        <a className="btn btn-sm btn-contact mt-auto" href={contactUrl} target="_blank" rel="noreferrer">
+        <a className="btn btn-sm btn-contact mt-auto btn-with-icon" href={contactUrl} target="_blank" rel="noreferrer">
+          {contactIcon}
           Solicitar contato
         </a>
       ) : null}
@@ -121,7 +123,12 @@ export function PasswordInput({
         className={className}
         value={value}
         onChange={onChange}
-        style={{ ...(rest.style || {}), paddingRight: '2.75rem' }}
+        style={{
+          ...(rest.style || {}),
+          paddingRight: '2.75rem',
+          // Edge/Chrome: esconde o reveal nativo (evita 2º olho)
+          WebkitAppearance: 'none',
+        }}
       />
       <button
         type="button"

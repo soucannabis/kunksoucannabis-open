@@ -36,7 +36,7 @@ export const MENU_SECTIONS = [
     label: 'Acolhimento',
     items: [
       { id: 'associados', label: 'Associados', path: PATHS.registration },
-      { id: 'servicos', label: 'Serviços', path: PATHS.services },
+      { id: 'servicos', label: 'Atendimentos', path: PATHS.services },
       { id: 'triagem', label: 'Triagem', path: PATHS.triage },
       {
         id: 'institutional-clients',
@@ -63,7 +63,7 @@ export const MENU_SECTIONS = [
     label: 'Relatórios',
     items: [
       { id: 'relatorios-dashboard', label: 'Dashboard', path: PATHS.analyticsDashboard },
-      { id: 'relatorios-servicos', label: 'Serviços', path: PATHS.servicesReport },
+      { id: 'relatorios-servicos', label: 'Atendimentos', path: PATHS.servicesReport },
     ],
   },
   {

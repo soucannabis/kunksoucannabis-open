@@ -13,9 +13,11 @@ import {
 } from '@mui/material';
 
 import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
+import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import { contentAreaDialogProps } from '../../../layout/contentAreaOverlay.js';
 
 const GREEN = '#5a7a5b';
+const GREEN_HOVER = '#48624a';
 const PURPLE = '#7A5B7A';
 const PURPLE_HOVER = '#4d2d4d';
 
@@ -26,6 +28,7 @@ export default function OrdersBulkActions({
   onBulkStatus,
   onBulkTags,
   onBulkLabel,
+  onProductionReport,
   onShowOnlySelected,
 }) {
   const [anchor, setAnchor] = useState(null);
@@ -37,7 +40,7 @@ export default function OrdersBulkActions({
   if (!selectedCount) return null;
 
   return (
-    <>
+    <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
       <Button
         variant="contained"
         startIcon={<PlaylistAddCheckIcon />}
@@ -46,6 +49,15 @@ export default function OrdersBulkActions({
         data-testid="bulk-actions"
       >
         Ação em massa ({selectedCount})
+      </Button>
+      <Button
+        variant="contained"
+        startIcon={<PictureAsPdfOutlinedIcon />}
+        onClick={() => onProductionReport?.()}
+        sx={{ bgcolor: GREEN, '&:hover': { bgcolor: GREEN_HOVER } }}
+        data-testid="production-report"
+      >
+        Relatório de produção ({selectedCount})
       </Button>
       <Menu open={Boolean(anchor)} anchorEl={anchor} onClose={() => setAnchor(null)}>
         <MenuItem
@@ -178,7 +190,7 @@ export default function OrdersBulkActions({
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </Stack>
   );
 }
 

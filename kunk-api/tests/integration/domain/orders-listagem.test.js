@@ -27,6 +27,7 @@ describe('domain/orders listagem', () => {
         sku: productSku,
         price: 10,
         amount: 100,
+        batch: 'LOT-LIST-001',
       });
     assert.equal(product.status, 201, JSON.stringify(product.body));
 
@@ -82,13 +83,16 @@ describe('domain/orders listagem', () => {
     assert.ok(facets.body.data.statusCounts);
   });
 
-  it('PATCH status sets and clears payment_date', async () => {
+  it('PATCH status sets payment_date and stamps product batch on items', async () => {
     const paid = await request(app)
       .patch(`/api/v1/orders/${orderId}/status`)
       .set('Cookie', cookie)
       .send({ status: 'Pagamento concluído' });
     assert.equal(paid.status, 200, JSON.stringify(paid.body));
     assert.ok(paid.body.data.payment_date);
+    const items = paid.body.data.items;
+    assert.ok(Array.isArray(items) && items.length >= 1);
+    assert.equal(items[0].batch, 'LOT-LIST-001');
 
     const back = await request(app)
       .patch(`/api/v1/orders/${orderId}/status`)
@@ -98,13 +102,14 @@ describe('domain/orders listagem', () => {
     assert.equal(back.body.data.payment_date, null);
   });
 
-  it('POST /orders/bulk status', async () => {
+  it('POST /orders/bulk status also stamps batch', async () => {
     const res = await request(app)
       .post('/api/v1/orders/bulk')
       .set('Cookie', cookie)
       .send({ ids: [orderId], action: 'status', status: 'Pagamento concluído' });
     assert.equal(res.status, 200, JSON.stringify(res.body));
     assert.equal(res.body.data.results[0].ok, true);
+    assert.equal(res.body.data.results[0].data.items[0].batch, 'LOT-LIST-001');
   });
 
   it('POST /orders/bulk tags_add', async () => {

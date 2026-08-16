@@ -17,21 +17,21 @@ test.describe('páginas operacionais', () => {
     await expect(page.getByText(/Filtrar Associados/i)).toBeVisible({ timeout: 20_000 });
   });
 
-  test('serviços carrega listagem', async ({ page }) => {
+  test('atendimentos carrega listagem', async ({ page }) => {
     await page.goto('/app/acolhimento/servicos');
-    await expect(page.getByRole('button', { name: /Novo Serviço/i })).toBeVisible({
+    await expect(page.getByRole('button', { name: /Novo Atendimento/i })).toBeVisible({
       timeout: 20_000,
     });
   });
 
-  test('triagem carrega abas de status', async ({ page }) => {
+  test('triagem carrega seletor de status', async ({ page }) => {
     await page.goto('/app/acolhimento/triagem');
-    await expect(page.getByRole('tab').first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByLabel('Status')).toBeVisible({ timeout: 20_000 });
   });
 
   test('clientes institucionais carrega', async ({ page }) => {
     await page.goto('/app/acolhimento/clientesinstitucionais');
-    await expect(page.getByRole('button', { name: /Criar Cliente Institucional/i })).toBeVisible({
+    await expect(page.getByRole('button', { name: /Novo cliente/i })).toBeVisible({
       timeout: 20_000,
     });
   });

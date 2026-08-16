@@ -1,0 +1,20 @@
+{/* Tema light fixo — script + CSS crítico anti-FOUC */}
+<style is:inline>
+  html {
+    background-color: #f4f6f2;
+    color: #1c2416;
+  }
+</style>
+<script is:inline>
+  window.StarlightThemeProvider = (() => {
+    document.documentElement.dataset.theme = "light";
+    try {
+      localStorage.setItem("starlight-theme", "light");
+    } catch (_) {
+      /* ignore */
+    }
+    return {
+      updatePickers() {},
+    };
+  })();
+</script>

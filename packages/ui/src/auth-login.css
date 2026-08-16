@@ -187,6 +187,23 @@
   color: var(--auth-login-ink);
 }
 
+/* Esconde o olho nativo do navegador — o PasswordInput já tem o toggle */
+.auth-login-card input[type="password"]::-ms-reveal,
+.auth-login-card input[type="password"]::-ms-clear,
+.auth-login-field input[type="password"]::-ms-reveal,
+.auth-login-field input[type="password"]::-ms-clear {
+  display: none;
+}
+
+.auth-login-card input[type="password"]::-webkit-credentials-auto-fill-button,
+.auth-login-card input[type="password"]::-webkit-strong-password-auto-fill-button,
+.auth-login-field input[type="password"]::-webkit-credentials-auto-fill-button,
+.auth-login-field input[type="password"]::-webkit-strong-password-auto-fill-button {
+  display: none !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .auth-login-field input:focus,
 .auth-login-card input:focus,
 .auth-login-card .form-control:focus {
@@ -204,10 +221,14 @@
 
 .auth-login-submit {
   appearance: none;
+  align-items: center;
   width: 100%;
   border: 1px solid var(--auth-login-accent);
   background: var(--auth-login-accent);
   color: #fff;
+  display: inline-flex;
+  gap: 0.45rem;
+  justify-content: center;
   padding: 0.65rem 0.9rem;
   border-radius: 8px;
   cursor: pointer;
@@ -229,7 +250,10 @@
 }
 
 .auth-login-link {
-  display: block;
+  align-items: center;
+  display: inline-flex;
+  gap: 0.4rem;
+  justify-content: center;
   text-align: center;
   color: #2f5d3a;
   text-decoration: none;
@@ -239,6 +263,7 @@
   padding: 0.25rem;
   cursor: pointer;
   font: inherit;
+  width: 100%;
 }
 
 .auth-login-link:hover,
@@ -249,7 +274,10 @@
 
 .auth-login-secondary {
   appearance: none;
-  display: block;
+  align-items: center;
+  display: inline-flex;
+  gap: 0.45rem;
+  justify-content: center;
   width: 100%;
   box-sizing: border-box;
   text-align: center;

@@ -225,6 +225,8 @@ function pathMatches(pathname, prefixes = []) {
 }
 
 const EXTERNOS_ALSO_OPEN = ['transportadoras'];
+const EMPTY_ALSO_OPEN = [];
+const EMPTY_MATCH = [];
 
 /** Seções / grupos / subgrupos — todos fechados por padrão. */
 function NavFold({
@@ -234,20 +236,25 @@ function NavFold({
   icon,
   openMap,
   setOpenMap,
-  match = [],
+  match = EMPTY_MATCH,
   /** Prefixos que forçam abertura (default = match). Separado do destaque is-active. */
   openMatch,
   /** Ao abrir este fold, também abre estes ids (ex.: Transportadoras dentro de Serviços externos). */
-  alsoOpen = [],
+  alsoOpen = EMPTY_ALSO_OPEN,
   children,
 }) {
   const location = useLocation();
   const open = Boolean(openMap[id]);
   const active = pathMatches(location.pathname, match);
   const shouldOpen = pathMatches(location.pathname, openMatch ?? match);
+  const prevShouldOpenRef = React.useRef(false);
 
+  // Só auto-abre ao entrar na rota (false → true). Se o usuário fechar manualmente
+  // enquanto ainda está na seção, não força reabrir a cada re-render.
   React.useEffect(() => {
-    if (!shouldOpen) return;
+    const entered = shouldOpen && !prevShouldOpenRef.current;
+    prevShouldOpenRef.current = shouldOpen;
+    if (!entered) return;
     setOpenMap((prev) => {
       const next = { ...prev };
       let changed = false;
@@ -558,18 +565,34 @@ export function AdminShell({ api }) {
                   </NavLink>
                 </div>
               </NavFold>
-              <NavLink to="/kunk/permissoes" className={({ isActive }) => (isActive ? 'active' : '')}>
-                Permissões de acesso
-              </NavLink>
-              <NavLink to="/kunk/ciap2" className={({ isActive }) => (isActive ? 'active' : '')}>
-                CIAP-2
-              </NavLink>
-              <NavLink to="/kunk/aparencia" className={({ isActive }) => (isActive ? 'active' : '')}>
-                Aparência
-              </NavLink>
-              <NavLink to="/kunk/importacao" className={({ isActive }) => (isActive ? 'active' : '')}>
-                Importação de dados
-              </NavLink>
+              <NavFold
+                id="kunk-configuracoes"
+                label="Configurações"
+                level="subgroup"
+                openMap={navOpen}
+                setOpenMap={setNavOpen}
+                match={[
+                  '/kunk/permissoes',
+                  '/kunk/ciap2',
+                  '/kunk/aparencia',
+                  '/kunk/importacao',
+                ]}
+              >
+                <div className="admin-nav-nested">
+                  <NavLink to="/kunk/permissoes" className={({ isActive }) => (isActive ? 'active' : '')}>
+                    Permissões de acesso
+                  </NavLink>
+                  <NavLink to="/kunk/ciap2" className={({ isActive }) => (isActive ? 'active' : '')}>
+                    CIAP-2
+                  </NavLink>
+                  <NavLink to="/kunk/aparencia" className={({ isActive }) => (isActive ? 'active' : '')}>
+                    Aparência
+                  </NavLink>
+                  <NavLink to="/kunk/importacao" className={({ isActive }) => (isActive ? 'active' : '')}>
+                    Importação de dados
+                  </NavLink>
+                </div>
+              </NavFold>
             </div>
           </NavFold>
           <NavFold
@@ -655,7 +678,7 @@ export function AdminShell({ api }) {
           icon="wrench"
           openMap={navOpen}
           setOpenMap={setNavOpen}
-          match={['/usuarios', '/credenciais-suporte', '/acesso-api', '/erros-sistema', '/web-vitals']}
+          match={['/usuarios', '/credenciais-suporte', '/acesso-api', '/webhooks', '/erros-sistema', '/web-vitals']}
         >
           <NavLink to="/usuarios" className={({ isActive }) => (isActive ? 'active' : '')}>
             Usuários
@@ -665,6 +688,9 @@ export function AdminShell({ api }) {
           </NavLink>
           <NavLink to="/acesso-api" className={({ isActive }) => (isActive ? 'active' : '')}>
             API
+          </NavLink>
+          <NavLink to="/webhooks" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Webhooks
           </NavLink>
           <NavLink to="/erros-sistema" className={({ isActive }) => (isActive ? 'active' : '')}>
             Erros do sistema

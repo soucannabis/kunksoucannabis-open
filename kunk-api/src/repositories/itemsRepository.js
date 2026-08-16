@@ -169,13 +169,39 @@ async function createItem(collectionName, payload) {
     values
   );
 
-  return stripSensitive(collectionName, result.rows[0]);
+  const row = stripSensitive(collectionName, result.rows[0]);
+  try {
+    const { isWebhookTable } = require('../services/webhooks/catalog');
+    if (isWebhookTable(collectionName)) {
+      const { emitWebhookSafe } = require('../services/webhooks/emit');
+      const pk = collection.pk.name;
+      emitWebhookSafe({
+        table: collectionName,
+        action: 'create',
+        recordId: row?.[pk],
+        data: row,
+      });
+    }
+  } catch {
+    /* fail-soft */
+  }
+  return row;
 }
 
 async function updateItem(collectionName, id, payload, { scopeFilter } = {}) {
   const collection = getCollection(collectionName);
   if (!collection) {
     throw new AppError(404, 'UNKNOWN_COLLECTION', `Collection desconhecida: ${collectionName}`);
+  }
+
+  let before = null;
+  try {
+    const { isWebhookTable } = require('../services/webhooks/catalog');
+    if (isWebhookTable(collectionName)) {
+      before = await getItem(collectionName, id, {}, { scopeFilter });
+    }
+  } catch {
+    before = null;
   }
 
   const data = sanitizeWritePayload(collectionName, payload, { isCreate: false });
@@ -211,13 +237,43 @@ async function updateItem(collectionName, id, payload, { scopeFilter } = {}) {
     throw new AppError(404, 'NOT_FOUND', 'Recurso não encontrado');
   }
 
-  return stripSensitive(collectionName, result.rows[0]);
+  const row = stripSensitive(collectionName, result.rows[0]);
+  try {
+    const { isWebhookTable } = require('../services/webhooks/catalog');
+    if (isWebhookTable(collectionName)) {
+      const { emitWebhookSafe } = require('../services/webhooks/emit');
+      const { diffChangedFields, hasMeaningfulChanges } = require('../services/webhooks/diff');
+      const pk = collection.pk.name;
+      const changed = diffChangedFields(before, row, { alwaysInclude: [pk] });
+      if (hasMeaningfulChanges(changed, [pk])) {
+        emitWebhookSafe({
+          table: collectionName,
+          action: 'update',
+          recordId: row?.[pk],
+          data: changed,
+        });
+      }
+    }
+  } catch {
+    /* fail-soft */
+  }
+  return row;
 }
 
 async function deleteItem(collectionName, id, { scopeFilter } = {}) {
   const collection = getCollection(collectionName);
   if (!collection) {
     throw new AppError(404, 'UNKNOWN_COLLECTION', `Collection desconhecida: ${collectionName}`);
+  }
+
+  let before = null;
+  try {
+    const { isWebhookTable } = require('../services/webhooks/catalog');
+    if (isWebhookTable(collectionName)) {
+      before = await getItem(collectionName, id, {}, { scopeFilter });
+    }
+  } catch {
+    before = null;
   }
 
   const values = [id];
@@ -236,7 +292,23 @@ async function deleteItem(collectionName, id, { scopeFilter } = {}) {
     throw new AppError(404, 'NOT_FOUND', 'Recurso não encontrado');
   }
 
-  return { id: result.rows[0][collection.pk.name] };
+  const deletedId = result.rows[0][collection.pk.name];
+  try {
+    const { isWebhookTable } = require('../services/webhooks/catalog');
+    if (isWebhookTable(collectionName)) {
+      const { emitWebhookSafe } = require('../services/webhooks/emit');
+      emitWebhookSafe({
+        table: collectionName,
+        action: 'delete',
+        recordId: deletedId,
+        data: before || { [collection.pk.name]: deletedId },
+      });
+    }
+  } catch {
+    /* fail-soft */
+  }
+
+  return { id: deletedId };
 }
 
 module.exports = {

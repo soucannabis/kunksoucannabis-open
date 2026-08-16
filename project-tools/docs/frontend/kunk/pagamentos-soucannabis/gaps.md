@@ -48,10 +48,13 @@ A **SouCannabis** opera como PSP. A **associação** (conta Pagarme desta instal
 | Verificação | No teste de credentials Pagarme e ao enable SC: probe PSP (ex.: capacidade de recebedores/split na conta; ver `pagarme.md`) |
 | Conta não PSP | Bloquear enable SC e qualquer cobrança com split → `400 PAGARME_NOT_PSP` + mensagem no Admin |
 
-**Checkout + split (mecanismo):**
+**Cobrança (mecanismo):**
 
-| Preferência | `POST /orders` + `payment_method: "checkout"` + `payments[].split` + `code = order_code` |
-| Fallback (só se homologar falha) | Payment Link com `split_settings` (split do link, por ora, só cartão) |
+| Modo | Preferência |
+|---|---|
+| Standalone / onboarding / serviços | `POST /paymentlinks` com `order_code` (= `order_code`/`service_code` local), `max_paid_sessions: 1` |
+| `split_mode` SC (pedido total > 0, conta PSP) | `POST /orders` + `payment_method: "checkout"` + `payments[].split` + `code = order_code` |
+| Fallback split (só se homologar falha do checkout) | Payment Link com `split_settings` (por ora, só cartão) |
 
 Conta PSP + checkout + split precisarão homologação, mas **sem probe PSP ok o módulo SC nem liga**.
 

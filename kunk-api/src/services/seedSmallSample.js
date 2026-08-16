@@ -12,7 +12,7 @@ const SMALL_COUNTS = {
   users: 12,
   institutional_clients: 2,
   professionals: 3,
-  products: 6,
+  products: 5,
   tags: 4,
   orders: 8,
   services: 5,

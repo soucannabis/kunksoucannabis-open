@@ -100,7 +100,7 @@ INSERT INTO system_configs (
     false,
     false,
     true,
-    '#000000',
+    '#2a3b2b',
     'Cor do texto/ícone no hover do menu'
   ),
   (

@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
+  CircularProgress,
+  InputAdornment,
   MenuItem,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -13,9 +16,11 @@ import {
   TableRow,
   TextField,
   Typography,
-  CircularProgress,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { createApiClient } from '@kunk/api-client';
 import { useErrorModal } from '../components/errors/ErrorModalProvider.jsx';
 import { getKunkPublicConfig } from '@kunk/config';
@@ -23,10 +28,30 @@ import { PATHS } from '../app/menuConfig.js';
 
 const materialTheme = createTheme({
   palette: {
-    primary: { main: '#5a7a5b' },
-    secondary: { main: '#7A5B7A' },
+    primary: { main: '#496b4c' },
+    secondary: { main: '#705372' },
   },
+  typography: { fontFamily: 'inherit' },
+  shape: { borderRadius: 12 },
 });
+
+const GREEN = '#496b4c';
+const PURPLE = '#705372';
+const PURPLE_HOVER = '#5e4460';
+
+const fieldSx = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 2.5,
+    bgcolor: '#f8faf8',
+    transition: 'background-color 160ms ease, box-shadow 160ms ease',
+    '& fieldset': { borderColor: 'rgba(49, 67, 51, 0.14)' },
+    '&:hover fieldset': { borderColor: 'rgba(73, 107, 76, 0.38)' },
+    '&.Mui-focused': {
+      bgcolor: '#fff',
+      boxShadow: '0 0 0 3px rgba(73, 107, 76, 0.1)',
+    },
+  },
+};
 
 const ACTION_OPTIONS = [
   { value: '', label: 'Todas as ações' },
@@ -99,98 +124,234 @@ export default function SystemHistoryPage() {
 
   return (
     <ThemeProvider theme={materialTheme}>
-      <Box sx={{ width: '100%', mb: 2 }}>
+      <Box sx={{ width: '100%', maxWidth: 1600, mx: 'auto', pb: 2 }}>
+        <Box
+          sx={{
+            position: 'relative',
+            overflow: 'hidden',
+            mb: 2,
+            p: { xs: 2.5, md: 3.25 },
+            color: '#fff',
+            borderRadius: 3,
+            background: 'linear-gradient(120deg, #314a34 0%, #496b4c 58%, #5d735e 100%)',
+            boxShadow: '0 14px 36px rgba(27, 46, 30, 0.2)',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              width: 230,
+              height: 230,
+              right: -55,
+              top: -110,
+              borderRadius: '50%',
+              border: '42px solid rgba(255,255,255,0.06)',
+            },
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
+            <Box
+              sx={{
+                width: 52,
+                height: 52,
+                flex: '0 0 auto',
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: 2.5,
+                bgcolor: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.16)',
+              }}
+            >
+              <HistoryRoundedIcon sx={{ fontSize: 28 }} />
+            </Box>
+            <Box>
+              <Typography
+                variant="overline"
+                sx={{ color: 'rgba(255,255,255,0.68)', letterSpacing: '0.11em', fontWeight: 700 }}
+              >
+                Sistema
+              </Typography>
+              <Typography variant="h5" component="h1" sx={{ fontWeight: 750, lineHeight: 1.15 }}>
+                Histórico do sistema
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.65, color: 'rgba(255,255,255,0.76)' }}>
+                Acompanhe ações recentes de triagem e demais eventos registrados.
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
+
         <Paper
           elevation={0}
           sx={{
-            backgroundColor: '#f5f5f5',
-            borderRadius: '30px',
-            p: '20px 24px',
+            bgcolor: '#fff',
+            border: '1px solid rgba(49, 67, 51, 0.1)',
+            borderRadius: 3,
+            p: { xs: 2, md: 2.5 },
             mb: 2,
-            display: 'flex',
-            gap: 2,
-            flexWrap: 'wrap',
-            alignItems: 'center',
+            boxShadow: '0 8px 30px rgba(34, 53, 36, 0.07)',
           }}
         >
-          <TextField
-            select
-            size="small"
-            label="Ação"
-            value={action}
-            onChange={(e) => setAction(e.target.value)}
-            sx={{ minWidth: 220 }}
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={2}
+            alignItems={{ xs: 'stretch', md: 'center' }}
+            justifyContent="space-between"
           >
-            {ACTION_OPTIONS.map((opt) => (
-              <MenuItem key={opt.value || 'all'} value={opt.value}>{opt.label}</MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            size="small"
-            label="Código do ator"
-            value={actor}
-            onChange={(e) => setActor(e.target.value)}
-            sx={{ minWidth: 220 }}
-          />
-          <Button variant="contained" onClick={load} sx={{ bgcolor: '#7A5B7A', '&:hover': { bgcolor: '#4d2d4d' } }}>
-            Filtrar
-          </Button>
-          <Typography variant="body2" sx={{ color: '#5a7a5b', fontWeight: 700 }}>
-            {total} registro{total === 1 ? '' : 's'}
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1.5}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              sx={{ flex: 1 }}
+            >
+              <TextField
+                select
+                size="small"
+                label="Ação"
+                value={action}
+                onChange={(e) => setAction(e.target.value)}
+                sx={{ ...fieldSx, minWidth: 220 }}
+              >
+                {ACTION_OPTIONS.map((opt) => (
+                  <MenuItem key={opt.value || 'all'} value={opt.value}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                size="small"
+                label="Código do ator"
+                value={actor}
+                onChange={(e) => setActor(e.target.value)}
+                sx={{ ...fieldSx, minWidth: 220 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchRoundedIcon sx={{ color: '#708172', fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Stack>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Button
+                variant="contained"
+                startIcon={<FilterAltIcon />}
+                onClick={load}
+                sx={{
+                  bgcolor: PURPLE,
+                  borderRadius: 2.5,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  boxShadow: '0 7px 18px rgba(112, 83, 114, 0.22)',
+                  '&:hover': { bgcolor: PURPLE_HOVER },
+                }}
+              >
+                Filtrar
+              </Button>
+            </Stack>
+          </Stack>
+          <Typography variant="body2" sx={{ mt: 2, color: '#657167' }}>
+            {loading
+              ? 'Carregando registros…'
+              : `${total} registro${total === 1 ? '' : 's'}`}
           </Typography>
         </Paper>
 
-        <TableContainer
-          component={Paper}
-          elevation={0}
-          sx={{ backgroundColor: '#f5f5f5', borderRadius: '30px', overflow: 'hidden' }}
-        >
-          <Table>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: '#5a7a5b' }}>
-                <TableCell sx={{ color: 'white' }}>Data / hora</TableCell>
-                <TableCell sx={{ color: 'white' }}>Usuário</TableCell>
-                <TableCell sx={{ color: 'white' }}>Ação</TableCell>
-                <TableCell sx={{ color: 'white' }}>Entidade</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
-                    <CircularProgress size={28} />
-                  </TableCell>
+        {loading ? (
+          <Box
+            sx={{
+              py: 10,
+              display: 'flex',
+              justifyContent: 'center',
+              bgcolor: '#fff',
+              borderRadius: 3,
+              border: '1px solid rgba(49, 67, 51, 0.1)',
+            }}
+          >
+            <CircularProgress size={30} sx={{ color: GREEN }} />
+          </Box>
+        ) : (
+          <TableContainer
+            component={Paper}
+            elevation={0}
+            sx={{
+              borderRadius: 3,
+              border: '1px solid rgba(49, 67, 51, 0.1)',
+              boxShadow: '0 8px 30px rgba(34, 53, 36, 0.07)',
+              overflow: 'hidden',
+            }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: '#f4f7f4' }}>
+                  {['Data / hora', 'Usuário', 'Ação'].map((h) => (
+                    <TableCell
+                      key={h}
+                      sx={{
+                        color: '#627064',
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        borderBottomColor: 'rgba(49, 67, 51, 0.1)',
+                        py: 1.5,
+                      }}
+                    >
+                      {h}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ) : null}
-              {!loading && rows.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 3, color: '#5a7a5b' }}>
-                    Nenhuma ação registrada.
-                  </TableCell>
-                </TableRow>
-              ) : null}
-              {!loading && rows.map((row, index) => (
-                <TableRow
-                  key={row.id}
-                  hover
-                  onClick={() => navigate(pathForRow(row))}
-                  sx={{
-                    cursor: 'pointer',
-                    backgroundColor: index % 2 === 0 ? '#e8ede9ab' : 'transparent',
-                  }}
-                >
-                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatWhen(row.date_created)}</TableCell>
-                  <TableCell>{row.actor_name || '—'}</TableCell>
-                  <TableCell>{row.summary}</TableCell>
-                  <TableCell>
-                    {row.entity_type}
-                    {row.entity_code ? ` · ${String(row.entity_code).slice(0, 8)}…` : ''}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} sx={{ py: 8, borderBottom: 0 }}>
+                      <Stack alignItems="center" spacing={1.25}>
+                        <Box
+                          sx={{
+                            width: 52,
+                            height: 52,
+                            display: 'grid',
+                            placeItems: 'center',
+                            borderRadius: '50%',
+                            bgcolor: 'rgba(73, 107, 76, 0.1)',
+                            color: GREEN,
+                          }}
+                        >
+                          <HistoryRoundedIcon />
+                        </Box>
+                        <Typography fontWeight={700} color="#334235">
+                          Nenhuma ação registrada
+                        </Typography>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      hover
+                      onClick={() => navigate(pathForRow(row))}
+                      sx={{
+                        cursor: 'pointer',
+                        '& td': { borderBottomColor: 'rgba(49, 67, 51, 0.08)', py: 1.55 },
+                        '&:last-of-type td': { borderBottom: 0 },
+                        '&:hover': { bgcolor: 'rgba(73, 107, 76, 0.035)' },
+                      }}
+                    >
+                      <TableCell sx={{ whiteSpace: 'nowrap', color: '#536056' }}>
+                        {formatWhen(row.date_created)}
+                      </TableCell>
+                      <TableCell sx={{ color: '#2f3d31', fontWeight: 650 }}>
+                        {row.actor_name || '—'}
+                      </TableCell>
+                      <TableCell sx={{ color: '#465348' }}>{row.summary}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Box>
     </ThemeProvider>
   );

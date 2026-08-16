@@ -20,7 +20,7 @@ const NAV_ITEMS = [
     icon: ShoppingCartRoundedIcon,
   },
   {
-    label: 'Serviços',
+    label: 'Atendimentos',
     path: PATHS.services,
     match: 'acolhimento/servicos',
     icon: CalendarMonthRoundedIcon,
@@ -66,13 +66,26 @@ export default function QuickNavMenu() {
             <Button
               key={path}
               onClick={() => navigate(path)}
-              startDecorator={<Icon sx={{ fontSize: 18 }} />}
+              startDecorator={
+                <Icon
+                  sx={{
+                    fontSize: 18,
+                    color: isActive ? '#fff' : 'inherit',
+                  }}
+                />
+              }
               sx={{
                 color: isActive ? '#fff' : 'var(--kunk-accent)',
                 bgcolor: isActive ? 'var(--kunk-accent)' : 'transparent',
+                '& .MuiButton-startDecorator': {
+                  color: isActive ? '#fff' : 'inherit',
+                },
                 '&:hover': {
                   bgcolor: isActive ? 'var(--kunk-accent-hover)' : 'color-mix(in srgb, var(--kunk-accent) 12%, transparent)',
                   color: isActive ? '#fff' : 'var(--kunk-accent)',
+                  '& .MuiButton-startDecorator': {
+                    color: isActive ? '#fff' : 'inherit',
+                  },
                 },
               }}
             >

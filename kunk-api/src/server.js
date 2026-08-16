@@ -71,6 +71,14 @@ async function main() {
   }
 
   try {
+    const { ensureWebhooks } = require('./db/ensureWebhooks');
+    await ensureWebhooks();
+    console.log('Schema: webhook_endpoints / webhook_deliveries ok');
+  } catch (err) {
+    console.warn('Schema: não foi possível garantir webhooks:', err.message);
+  }
+
+  try {
     const docSignService = require('./services/docSignService');
     const ensured = await docSignService.ensureDefaultTemplates();
     if (ensured.created?.length) {
@@ -92,6 +100,11 @@ async function main() {
     void require('./services/backupCron')
       .rescheduleBackupCron()
       .catch((err) => console.warn('[backup-cron] init falhou:', err.message));
+    try {
+      require('./services/webhooks').startWebhookWorker();
+    } catch (err) {
+      console.warn('[webhooks] worker init falhou:', err.message);
+    }
   });
 }
 

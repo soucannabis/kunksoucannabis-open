@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { REGISTRATION_SYSTEM_DEFAULTS } from '@kunk/config';
 import { usePublicConfig } from '../config/PublicConfigProvider.jsx';
+import { Icon } from '../components/Icon.jsx';
 
 /** Quebra o texto em parágrafos a cada ponto final. */
 function paragraphsFromWelcomeText(text) {
@@ -45,6 +46,7 @@ export function WelcomePage() {
               ))}
             </div>
             <Link className="btn btn-success docs-primary-btn welcome-cta" to="/cadastro-associado">
+              <Icon name="arrowRight" size={18} />
               Iniciar cadastro
             </Link>
           </section>

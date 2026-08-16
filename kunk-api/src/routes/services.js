@@ -20,7 +20,8 @@ router.get('/reports', authorize('services', 'read'), async (req, res, next) => 
   }
 });
 
-router.post('/reports/validate', authorize('services', 'update'), async (req, res, next) => {
+// read: staff (update via serviço) e profissional (só os próprios atendimentos)
+router.post('/reports/validate', authorize('services', 'read'), async (req, res, next) => {
   try {
     const data = await servicesReportsService.validateBatch(req.body || {}, req.user);
     res.json(ok(data));

@@ -46,7 +46,7 @@ INSERT INTO system_configs (
     false,
     false,
     NULL,
-    'Módulo Melhor Envio habilitado'
+    'Módulo Melhor Envio habilitado para uso no sistema (auth/OAuth funciona com off)'
   ),
   (
     'modules',

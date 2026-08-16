@@ -12,20 +12,23 @@ import {
   MenuItem,
   Modal,
   Paper,
-  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Tabs,
   TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CachedIcon from '@mui/icons-material/Cached';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import AccessTimeFilledOutlinedIcon from '@mui/icons-material/AccessTimeFilledOutlined';
+import InputAdornment from '@mui/material/InputAdornment';
+import Stack from '@mui/material/Stack';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import LinkIcon from '@mui/icons-material/Link';
 import Fab from '@mui/material/Fab';
@@ -53,20 +56,23 @@ import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import BoyIcon from '@mui/icons-material/Boy';
 import PersonIcon from '@mui/icons-material/Person';
-import NextPlanIcon from '@mui/icons-material/NextPlan';
+import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import LinkOffIcon from '@mui/icons-material/LinkOff';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import GroupIcon from '@mui/icons-material/Group';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
+import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 import AvatarGroup from '@mui/material/AvatarGroup';
 import { useOperatorAuth } from '@kunk/auth-session';
 import { createApiClient } from '@kunk/api-client';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
 import { useCacheConfig } from '../../lib/cache/CacheConfigProvider.jsx';
 import { fetchAttendants } from '../../lib/cache/fetchers.js';
-import { contentAreaModalSx } from '../../layout/contentAreaOverlay.js';
+import { contentAreaModalProps } from '../../layout/contentAreaOverlay.js';
 import {
   getEntryStatusValue,
   getKunkPublicConfig,
@@ -178,13 +184,16 @@ function customFieldEntries(row, triageConfig) {
   });
 }
 
+const GREEN = '#496b4c';
+const GREEN_HOVER = '#385a3c';
+const PURPLE = '#705372';
+const PURPLE_HOVER = '#5e4460';
+
 const paperSx = {
-  backgroundColor: '#f5f5f5',
-  borderRadius: '30px !important',
-  boxShadow: 'none',
-  width: 'calc(100% - 20px)',
-  maxWidth: 'calc(100% - 20px)',
-  marginLeft: '20px',
+  backgroundColor: '#fff',
+  borderRadius: 3,
+  border: '1px solid rgba(49, 67, 51, 0.1)',
+  boxShadow: '0 8px 30px rgba(34, 53, 36, 0.07)',
   boxSizing: 'border-box',
 };
 
@@ -201,10 +210,30 @@ function myAttendantCode(user) {
 /** Material theme — TriagePage uses @mui/material inside Joy CssVarsProvider. */
 const materialTheme = createTheme({
   palette: {
-    primary: { main: '#5a7a5b' },
-    secondary: { main: '#7A5B7A' },
+    primary: { main: GREEN },
+    secondary: { main: PURPLE },
+  },
+  typography: {
+    fontFamily: 'inherit',
+  },
+  shape: {
+    borderRadius: 12,
   },
 });
+
+const fieldSx = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 2.5,
+    bgcolor: '#f8faf8',
+    transition: 'background-color 160ms ease, box-shadow 160ms ease',
+    '& fieldset': { borderColor: 'rgba(49, 67, 51, 0.14)' },
+    '&:hover fieldset': { borderColor: 'rgba(73, 107, 76, 0.38)' },
+    '&.Mui-focused': {
+      bgcolor: '#fff',
+      boxShadow: '0 0 0 3px rgba(73, 107, 76, 0.1)',
+    },
+  },
+};
 
 export default function TriagePage() {
   const navigate = useNavigate();
@@ -220,7 +249,7 @@ export default function TriagePage() {
   }, []);
 
   const [triageConfig, setTriageConfig] = useState(getTriageDefaults());
-  const [tab, setTab] = useState(0);
+  const [statusFilter, setStatusFilter] = useState(() => getEntryStatusValue());
   const [counts, setCounts] = useState({});
   const [rows, setRows] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -232,8 +261,8 @@ export default function TriagePage() {
   const [attendants, setAttendants] = useState([]);
   const [selectedAttendantFilters, setSelectedAttendantFilters] = useState([]);
 
-  const [avatarMenu, setAvatarMenu] = useState({ anchor: null, row: null });
   const [actionMenu, setActionMenu] = useState({ anchor: null, row: null });
+  const [statusSubMenu, setStatusSubMenu] = useState(null);
   const [transferMenu, setTransferMenu] = useState({ anchor: null, row: null });
 
   const [linkRow, setLinkRow] = useState(null);
@@ -257,7 +286,9 @@ export default function TriagePage() {
     [triageConfig.statuses],
   );
 
-  const activeStatus = statuses[tab]?.value || getEntryStatusValue(statuses);
+  const activeStatus = statuses.some((s) => s.value === statusFilter)
+    ? statusFilter
+    : getEntryStatusValue(statuses);
 
   const attendantsByCode = useMemo(() => {
     const map = {};
@@ -297,9 +328,10 @@ export default function TriagePage() {
         publicFormEnabled: schema.data?.enabled !== false,
       };
       setTriageConfig(next);
-      setTab((prev) => {
+      setStatusFilter((prev) => {
         const list = next.statuses || [];
-        return prev < list.length ? prev : 0;
+        if (list.some((s) => s.value === prev)) return prev;
+        return getEntryStatusValue(list);
       });
     } catch {
       /* keep defaults */
@@ -379,7 +411,8 @@ export default function TriagePage() {
   }, [refresh]);
 
   async function changeStatus(row, status) {
-    setAvatarMenu({ anchor: null, row: null });
+    setStatusSubMenu(null);
+    setActionMenu({ anchor: null, row: null });
     setBusyId(row.id);
     try {
       await api.updateReceptionStatus(row.id, status);
@@ -389,6 +422,11 @@ export default function TriagePage() {
     } finally {
       setBusyId(null);
     }
+  }
+
+  function closeActionMenus() {
+    setStatusSubMenu(null);
+    setActionMenu({ anchor: null, row: null });
   }
 
   async function assumeContact(row) {
@@ -502,7 +540,7 @@ export default function TriagePage() {
   }
 
   async function goToOrderOrService(row, kind) {
-    setActionMenu({ anchor: null, row: null });
+    closeActionMenus();
     if (!row.associate_code) return;
     setBusyId(row.id);
     try {
@@ -610,57 +648,62 @@ export default function TriagePage() {
 
   return (
     <ThemeProvider theme={materialTheme}>
-    <Box sx={{ width: '100%', mb: 2, display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
-      <Tabs
-        orientation="vertical"
-        value={tab}
-        onChange={(_, v) => setTab(v)}
-        TabIndicatorProps={{ style: { backgroundColor: '#7A5B7A', width: 4, right: 0, left: 'unset' } }}
+    <Box sx={{ width: '100%', maxWidth: 1600, mx: 'auto', pb: 2 }}>
+      <Box
         sx={{
-          borderRight: 1,
-          borderColor: 'divider',
-          minWidth: 160,
-          maxWidth: 220,
-          position: 'sticky',
-          top: 0,
-          height: '100vh',
-          overflowY: 'auto',
-          background: '#fff',
-          zIndex: 2,
-          borderRadius: '30px',
+          position: 'relative',
+          overflow: 'hidden',
+          mb: 2,
+          p: { xs: 2.5, md: 3.25 },
+          color: '#fff',
+          borderRadius: 3,
+          background: 'linear-gradient(120deg, #314a34 0%, #496b4c 58%, #5d735e 100%)',
+          boxShadow: '0 14px 36px rgba(27, 46, 30, 0.2)',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            width: 230,
+            height: 230,
+            right: -55,
+            top: -110,
+            borderRadius: '50%',
+            border: '42px solid rgba(255,255,255,0.06)',
+          },
         }}
       >
-        {statuses.map((s, idx) => (
-          <Tab
-            key={s.id || s.value}
-            value={idx}
-            label={(
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', width: '100%' }}>
-                {statusIcon(s)}
-                <span style={{ textAlign: 'left', textTransform: 'none', fontWeight: 400, fontSize: 11 }}>
-                  {s.label}
-                </span>
-                <Chip
-                  label={counts[s.value] ?? 0}
-                  size="small"
-                  sx={{ ml: 1, height: 20, fontSize: 12, bgcolor: '#e0e0e0' }}
-                />
-              </Box>
-            )}
+        <Stack direction="row" spacing={2} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
+          <Box
             sx={{
-              '&.Mui-selected': { color: '#7A5B7A' },
-              textAlign: 'left',
-              alignItems: 'flex-start',
-              minHeight: 48,
-              justifyContent: 'flex-start',
-              pl: 1,
-              pr: 1,
+              width: 52,
+              height: 52,
+              flex: '0 0 auto',
+              display: 'grid',
+              placeItems: 'center',
+              borderRadius: 2.5,
+              bgcolor: 'rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.16)',
             }}
-          />
-        ))}
-      </Tabs>
+          >
+            <AccessTimeFilledOutlinedIcon sx={{ fontSize: 28 }} />
+          </Box>
+          <Box>
+            <Typography
+              variant="overline"
+              sx={{ color: 'rgba(255,255,255,0.68)', letterSpacing: '0.11em', fontWeight: 700 }}
+            >
+              Acolhimento
+            </Typography>
+            <Typography variant="h5" component="h1" sx={{ fontWeight: 750, lineHeight: 1.15 }}>
+              Gestão de triagem
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 0.65, color: 'rgba(255,255,255,0.76)' }}>
+              Organize a fila de contatos, assuma atendimentos e avance cada jornada.
+            </Typography>
+          </Box>
+        </Stack>
+      </Box>
 
-      <Box sx={{ flex: 1, minWidth: 0 }}>
+    <Box sx={{ width: '100%', minWidth: 0 }}>
         {deepLinkCode ? (
           <Paper
             elevation={0}
@@ -671,12 +714,14 @@ export default function TriagePage() {
               justifyContent: 'space-between',
               flexWrap: 'wrap',
               gap: 1.5,
-              marginBottom: '12px',
-              padding: '12px 20px',
-              bgcolor: 'rgba(122, 91, 122, 0.12)',
+              mb: 2,
+              px: 2.5,
+              py: 1.5,
+              bgcolor: 'rgba(112, 83, 114, 0.1)',
+              borderColor: 'rgba(112, 83, 114, 0.2)',
             }}
           >
-            <Typography variant="body2" sx={{ color: '#4d2d4d', fontWeight: 600 }}>
+            <Typography variant="body2" sx={{ color: PURPLE_HOVER, fontWeight: 600 }}>
               Exibindo 1 contato (filtro por código)
             </Typography>
             <Button
@@ -687,115 +732,231 @@ export default function TriagePage() {
                 next.delete('t');
                 setSearchParams(next, { replace: true });
               }}
-              sx={{ bgcolor: '#7A5B7A', '&:hover': { bgcolor: '#4d2d4d' }, textTransform: 'none' }}
+              sx={{
+                bgcolor: PURPLE,
+                borderRadius: 2.5,
+                textTransform: 'none',
+                fontWeight: 700,
+                '&:hover': { bgcolor: PURPLE_HOVER },
+              }}
             >
               Ver todas
             </Button>
           </Paper>
         ) : null}
-        <Paper
-          elevation={0}
-          sx={{
-            ...paperSx,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 2,
-            marginBottom: '20px',
-            padding: '24px 25px',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 260 }}>
-            <TextField
-              className="searchInput"
-              label="Filtrar resultados"
-              variant="filled"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') refresh();
-              }}
-              sx={{ minWidth: 300, flex: 1, maxWidth: 420 }}
-              size="small"
-            />
-            <AvatarGroup max={10}>
-              {uniqueRowAttendants.map((att) => {
-                const code = String(att.code);
-                const selected = selectedAttendantFilters.includes(code);
-                return (
-                  <Tooltip key={code} title={attendantDisplayName(att)}>
-                    <Avatar
-                      src={att.avatar_url || undefined}
-                      alt={attendantDisplayName(att)}
-                      onClick={() => toggleAttendantFilter(code)}
-                      sx={{
-                        width: 36,
-                        height: 36,
-                        cursor: 'pointer',
-                        border: selected ? '2px solid #5a7a5b' : '2px solid transparent',
-                        opacity: selectedAttendantFilters.length === 0 || selected ? 1 : 0.4,
-                      }}
-                    />
-                  </Tooltip>
-                );
-              })}
-            </AvatarGroup>
-            {selectedAttendantFilters.length > 0 ? (
-              <IconButton onClick={() => setSelectedAttendantFilters([])} size="small" aria-label="Limpar filtro de atendentes">
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            ) : null}
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography
-              variant="subtitle2"
-              sx={{
-                background: '#e0e0e0',
-                color: '#5a7a5b',
-                borderRadius: '12px',
-                px: 2,
-                py: 0.5,
-                fontWeight: 'bold',
-                fontSize: '15px',
-              }}
+
+        <Paper elevation={0} sx={{ ...paperSx, p: { xs: 2, md: 2.5 }, mb: 2 }}>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={2}
+            alignItems={{ xs: 'stretch', md: 'center' }}
+            justifyContent="space-between"
+          >
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1.5}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              sx={{ flex: 1, minWidth: 0 }}
             >
-              {filteredRows.length} contato{filteredRows.length === 1 ? '' : 's'} na fila
-            </Typography>
-            <Button
-              onClick={refresh}
-              startIcon={loading ? <CircularProgress size={20} style={{ color: 'white' }} /> : <CachedIcon />}
-              sx={{
-                bgcolor: '#7A5B7A',
-                color: 'white',
-                '&:hover': { bgcolor: '#4d2d4d' },
-                textTransform: 'none',
-              }}
-            >
-              {loading ? 'Carregando...' : 'Atualizar'}
-            </Button>
-          </Box>
+              <TextField
+                size="small"
+                fullWidth
+                placeholder="Nome, e-mail ou telefone"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') refresh();
+                }}
+                sx={{ ...fieldSx, maxWidth: 420 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchRoundedIcon sx={{ color: '#708172', fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Button
+                        size="small"
+                        onClick={refresh}
+                        sx={{ color: GREEN, minWidth: 0, fontWeight: 700, textTransform: 'none' }}
+                      >
+                        Buscar
+                      </Button>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <TextField
+                select
+                size="small"
+                label="Status"
+                value={activeStatus}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                sx={{ ...fieldSx, minWidth: 180 }}
+              >
+                {statuses.map((st) => (
+                  <MenuItem key={st.value} value={st.value}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                      {statusIcon(st)}
+                      <span style={{ flex: 1 }}>{st.label}</span>
+                      <Chip
+                        label={counts[st.value] ?? 0}
+                        size="small"
+                        sx={{
+                          ml: 1,
+                          height: 20,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          bgcolor: activeStatus === st.value ? 'rgba(112, 83, 114, 0.14)' : '#eef2ef',
+                          color: activeStatus === st.value ? PURPLE : '#526354',
+                        }}
+                      />
+                    </Box>
+                  </MenuItem>
+                ))}
+              </TextField>
+              <AvatarGroup max={10} sx={{ '& .MuiAvatar-root': { width: 36, height: 36, fontSize: 13 } }}>
+                {uniqueRowAttendants.map((att) => {
+                  const code = String(att.code);
+                  const selected = selectedAttendantFilters.includes(code);
+                  return (
+                    <Tooltip key={code} title={attendantDisplayName(att)}>
+                      <Avatar
+                        src={att.avatar_url || undefined}
+                        alt={attendantDisplayName(att)}
+                        onClick={() => toggleAttendantFilter(code)}
+                        sx={{
+                          cursor: 'pointer',
+                          border: selected ? `2px solid ${GREEN}` : '2px solid transparent',
+                          opacity: selectedAttendantFilters.length === 0 || selected ? 1 : 0.4,
+                        }}
+                      />
+                    </Tooltip>
+                  );
+                })}
+              </AvatarGroup>
+              {selectedAttendantFilters.length > 0 ? (
+                <IconButton
+                  onClick={() => setSelectedAttendantFilters([])}
+                  size="small"
+                  aria-label="Limpar filtro de atendentes"
+                  sx={{
+                    border: '1px solid rgba(49, 67, 51, 0.14)',
+                    borderRadius: 2.5,
+                    color: '#526354',
+                  }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              ) : null}
+            </Stack>
+
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+              <Chip
+                label={`${filteredRows.length} contato${filteredRows.length === 1 ? '' : 's'} na fila`}
+                sx={{
+                  bgcolor: 'rgba(73, 107, 76, 0.1)',
+                  color: GREEN,
+                  fontWeight: 700,
+                }}
+              />
+              <Tooltip title="Atualizar lista">
+                <IconButton
+                  onClick={refresh}
+                  disabled={loading}
+                  sx={{
+                    color: '#526354',
+                    border: '1px solid rgba(49, 67, 51, 0.14)',
+                    borderRadius: 2.5,
+                    '&:hover': { bgcolor: 'rgba(73, 107, 76, 0.08)' },
+                  }}
+                >
+                  {loading ? <CircularProgress size={18} sx={{ color: GREEN }} /> : <RefreshRoundedIcon />}
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </Stack>
         </Paper>
 
         <TableContainer
           component={Paper}
           elevation={0}
-          sx={{ ...paperSx, overflow: 'hidden' }}
+          sx={{
+            bgcolor: 'transparent',
+            backgroundImage: 'none',
+            boxShadow: 'none',
+            border: 'none',
+            borderRadius: 0,
+            px: 0,
+            pt: 0.5,
+            pb: 1.5,
+            overflowX: { xs: 'auto', md: 'visible' },
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            '&::-webkit-scrollbar': { display: 'none' },
+          }}
         >
-          <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
+          <Table
+            sx={{
+              tableLayout: 'fixed',
+              width: '100%',
+              borderCollapse: 'separate',
+              borderSpacing: '0 12px',
+            }}
+          >
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#5a7a5b' }}>
-                <TableCell sx={{ color: 'white', width: '40%', pl: '28px' }}>Contato</TableCell>
-                <TableCell sx={{ color: 'white', width: '60%' }}>Mensagem</TableCell>
+              <TableRow sx={{ bgcolor: '#f4f7f4' }}>
+                <TableCell
+                  sx={{
+                    color: '#627064',
+                    width: '38%',
+                    pl: 3,
+                    py: 1.5,
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    borderBottom: 0,
+                    borderTopLeftRadius: 12,
+                    borderBottomLeftRadius: 12,
+                  }}
+                >
+                  Contato
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: '#627064',
+                    width: '62%',
+                    py: 1.5,
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    borderBottom: 0,
+                    borderTopRightRadius: 12,
+                    borderBottomRightRadius: 12,
+                  }}
+                >
+                  Mensagem
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading && filteredRows.length === 0 ? (
                 <TableRow>
-                  <TableCell align="center" colSpan={2} sx={{ padding: '20px' }}>
-                    <Box sx={{ width: '100%' }}>
-                      <LinearProgress color="success" sx={{ height: 6, borderRadius: 3 }} />
-                      <Typography variant="body2" sx={{ mt: 1, color: '#5a7a5b' }}>
+                  <TableCell align="center" colSpan={2} sx={{ py: 8, borderBottom: 0 }}>
+                    <Box sx={{ width: '100%', maxWidth: 360, mx: 'auto' }}>
+                      <LinearProgress
+                        sx={{
+                          height: 6,
+                          borderRadius: 3,
+                          bgcolor: 'rgba(255, 255, 255, 0.3)',
+                          '& .MuiLinearProgress-bar': { bgcolor: '#fff' },
+                        }}
+                      />
+                      <Typography variant="body2" sx={{ mt: 1.5, color: '#fff', fontWeight: 600 }}>
                         Carregando dados...
                       </Typography>
                     </Box>
@@ -805,13 +966,33 @@ export default function TriagePage() {
 
               {!loading && filteredRows.length === 0 ? (
                 <TableRow>
-                  <TableCell align="center" colSpan={2} sx={{ padding: '28px', color: '#5a7a5b' }}>
-                    Nenhum contato neste status.
+                  <TableCell align="center" colSpan={2} sx={{ py: 8, borderBottom: 0 }}>
+                    <Stack alignItems="center" spacing={1.25}>
+                      <Box
+                        sx={{
+                          width: 52,
+                          height: 52,
+                          display: 'grid',
+                          placeItems: 'center',
+                          borderRadius: '50%',
+                          bgcolor: 'rgba(73, 107, 76, 0.1)',
+                          color: GREEN,
+                        }}
+                      >
+                        <InboxIcon />
+                      </Box>
+                      <Typography fontWeight={700} color="#334235">
+                        Nenhum contato neste status
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Ajuste os filtros ou aguarde novos contatos na fila.
+                      </Typography>
+                    </Stack>
                   </TableCell>
                 </TableRow>
               ) : null}
 
-              {filteredRows.map((row, index) => {
+              {filteredRows.map((row) => {
                 const linked = Boolean(row.associate_code);
                 const customs = customFieldEntries(row, triageConfig);
                 const busy = busyId === row.id;
@@ -826,53 +1007,59 @@ export default function TriagePage() {
                     <TableRow
                       id={row.code ? `reception-row-code-${row.code}` : undefined}
                       sx={{
-                        height: '180px',
-                        backgroundColor: highlighted
-                          ? 'rgba(122, 91, 122, 0.22) !important'
-                          : index % 2 === 0
-                            ? '#e8ede9ab'
-                            : 'transparent',
-                        outline: highlighted ? '2px solid #7A5B7A' : undefined,
-                        '&:last-child td, &:last-child th': {
-                          borderBottom: '10px solid #2e442f !important',
+                        bgcolor: highlighted ? 'rgba(112, 83, 114, 0.1)' : '#fff',
+                        boxShadow: '0 4px 18px rgba(34, 53, 36, 0.06)',
+                        outline: highlighted ? `2px solid ${PURPLE}` : '1px solid rgba(49, 67, 51, 0.1)',
+                        outlineOffset: -1,
+                        '&:hover': {
+                          bgcolor: highlighted
+                            ? 'rgba(112, 83, 114, 0.14)'
+                            : '#f7faf7',
+                        },
+                        '& td': {
+                          borderBottom: 0,
+                          verticalAlign: 'top',
+                          bgcolor: 'inherit',
+                        },
+                        '& td:first-of-type': {
+                          borderTopLeftRadius: 12,
+                          borderBottomLeftRadius: 12,
+                        },
+                        '& td:last-of-type': {
+                          borderTopRightRadius: 12,
+                          borderBottomRightRadius: 12,
                         },
                       }}
                     >
                       <TableCell
                         sx={{
-                          width: '40%',
-                          paddingTop: '20px',
-                          paddingBottom: '20px',
-                          paddingLeft: '28px',
-                          borderBottom: '10px solid #2e442f !important',
-                          verticalAlign: 'top',
+                          width: '38%',
+                          py: 2.5,
+                          pl: 3,
+                          pr: 2,
                         }}
                       >
                         <Box
-                          onClick={(e) => setAvatarMenu({ anchor: e.currentTarget, row })}
                           sx={{
-                            cursor: busy ? 'wait' : 'pointer',
                             display: 'flex',
                             flexDirection: 'row',
                             alignItems: 'baseline',
                             gap: 1,
                             mb: 1,
                             width: 'fit-content',
-                            '&:hover': { color: '#7A5B7A' },
                           }}
-                          title="Alterar status"
                         >
                           <Typography variant="body2" sx={{ fontWeight: 700, m: 0 }}>
                             {calculateTime(row.date_created)}
                           </Typography>
-                          <Typography variant="caption" sx={{ color: '#5a7a5b', m: 0 }}>
+                          <Typography variant="caption" sx={{ color: GREEN, m: 0 }}>
                             {formatDateTo(row.date_created)}
                           </Typography>
                         </Box>
 
                         <Typography
                           component="div"
-                          sx={{ fontSize: 12, fontWeight: 400, color: '#666', mb: 0.35 }}
+                          sx={{ fontSize: 12, fontWeight: 400, color: '#829084', mb: 0.35 }}
                         >
                           Nome
                         </Typography>
@@ -881,13 +1068,13 @@ export default function TriagePage() {
                         </Typography>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                            <MailIcon sx={{ fontSize: 16, color: '#5a7a5b', flexShrink: 0 }} />
+                            <MailIcon sx={{ fontSize: 16, color: GREEN, flexShrink: 0 }} />
                             <Typography sx={{ fontSize: 14, wordBreak: 'break-word' }}>
                               {row.email || '—'}
                             </Typography>
                           </Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                            <PhoneIcon sx={{ fontSize: 16, color: '#5a7a5b', flexShrink: 0 }} />
+                            <PhoneIcon sx={{ fontSize: 16, color: GREEN, flexShrink: 0 }} />
                             <Typography sx={{ fontSize: 14 }}>
                               {formatPhoneNumber(row.phone) || '—'}
                             </Typography>
@@ -926,7 +1113,7 @@ export default function TriagePage() {
                           <Box sx={{ mt: 1.25 }}>
                             <Typography
                               component="div"
-                              sx={{ fontSize: 12, fontWeight: 400, color: '#666', mb: 0.35 }}
+                              sx={{ fontSize: 12, fontWeight: 400, color: '#829084', mb: 0.35 }}
                             >
                               Paciente
                             </Typography>
@@ -939,12 +1126,9 @@ export default function TriagePage() {
 
                       <TableCell
                         sx={{
-                          width: '60%',
-                          paddingTop: '20px',
-                          paddingBottom: '20px',
-                          paddingRight: '72px',
-                          borderBottom: '10px solid #2e442f !important',
-                          verticalAlign: 'top',
+                          width: '62%',
+                          py: 2.5,
+                          pr: 8,
                           position: 'relative',
                         }}
                       >
@@ -953,7 +1137,7 @@ export default function TriagePage() {
                             <Box>
                               <Typography
                                 component="div"
-                                sx={{ fontSize: 12, fontWeight: 400, color: '#666', mb: 0.35 }}
+                                sx={{ fontSize: 12, fontWeight: 400, color: '#829084', mb: 0.35 }}
                               >
                                 Como podemos ajudar?
                               </Typography>
@@ -963,7 +1147,7 @@ export default function TriagePage() {
                           <Box>
                             <Typography
                               component="div"
-                              sx={{ fontSize: 12, fontWeight: 400, color: '#666', mb: 0.35 }}
+                              sx={{ fontSize: 12, fontWeight: 400, color: '#829084', mb: 0.35 }}
                             >
                               Motivo
                             </Typography>
@@ -973,7 +1157,7 @@ export default function TriagePage() {
 
                         {customs.length ? (
                           <Box sx={{ mt: 1.5, display: 'grid', gap: 0.25 }}>
-                            <Typography variant="caption" sx={{ color: '#666', fontWeight: 700 }}>
+                            <Typography variant="caption" sx={{ color: '#829084', fontWeight: 700 }}>
                               Campos personalizados
                             </Typography>
                             {customs.map((c) => (
@@ -987,8 +1171,8 @@ export default function TriagePage() {
                         <Box
                           sx={{
                             display: 'flex',
-                            alignItems: 'flex-end',
-                            marginTop: '40px',
+                            alignItems: 'center',
+                            marginTop: '32px',
                             gap: 1,
                             flexWrap: 'wrap',
                             pr: 1,
@@ -1088,6 +1272,8 @@ export default function TriagePage() {
                                   onDelete={attendantBusy ? undefined : () => clearAttendant(row)}
                                   deleteIcon={<DeleteIcon />}
                                   sx={{
+                                    alignSelf: 'center',
+                                    height: 32,
                                     backgroundColor: '#1976d2',
                                     color: 'white',
                                     fontSize: '12px',
@@ -1101,49 +1287,63 @@ export default function TriagePage() {
                                 <Chip
                                   label="Sem atendente"
                                   size="small"
-                                  sx={{ bgcolor: '#f5f5f5', border: '1px solid #e0e0e0', fontSize: 12 }}
+                                  sx={{
+                                    alignSelf: 'center',
+                                    height: 32,
+                                    bgcolor: '#f5f5f5',
+                                    border: '1px solid #e0e0e0',
+                                    fontSize: 12,
+                                  }}
                                 />
                               )}
                             </>
                           )}
                           {triageConfig.associateDocs && linked ? (
                             <Tooltip title="Documentos / dados">
-                              <IconButton size="small" onClick={() => openDocs(row)} sx={{ color: '#7A5B7A' }}>
+                              <IconButton size="small" onClick={() => openDocs(row)} sx={{ color: PURPLE }}>
                                 <DescriptionOutlinedIcon />
                               </IconButton>
                             </Tooltip>
                           ) : null}
                         </Box>
 
-                        <Tooltip title="Pedido / Serviço / Linkar">
-                          <IconButton
+                        <Button
                             onClick={(e) => setActionMenu({ anchor: e.currentTarget, row })}
                             disabled={busy}
-                            aria-label="Ações de pedido e serviço"
+                            aria-label="Ações de pedido e atendimento"
+                            endIcon={<KeyboardArrowDownRoundedIcon sx={{ fontSize: 18 }} />}
+                            startIcon={<MoreHorizRoundedIcon sx={{ fontSize: 18 }} />}
                             sx={{
                               position: 'absolute',
-                              right: 12,
+                              right: 16,
                               bottom: 16,
-                              width: 44,
-                              height: 44,
-                              borderRadius: 0,
-                              border: '2px solid #7A5B7A',
-                              bgcolor: '#7A5B7A',
+                              minWidth: 0,
+                              px: 1.5,
+                              py: 0.75,
+                              borderRadius: 999,
+                              textTransform: 'none',
+                              fontWeight: 700,
+                              fontSize: '0.8125rem',
+                              letterSpacing: '0.01em',
                               color: '#fff',
-                              boxShadow: '0 2px 8px rgba(122,91,122,0.35)',
+                              bgcolor: GREEN,
+                              border: '1px solid rgba(255,255,255,0.12)',
+                              boxShadow: '0 8px 20px rgba(73, 107, 76, 0.28)',
+                              backdropFilter: 'blur(6px)',
+                              transition: 'transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease',
                               '&:hover': {
-                                bgcolor: '#4d2d4d',
-                                borderColor: '#4d2d4d',
+                                bgcolor: GREEN_HOVER,
+                                boxShadow: '0 10px 24px rgba(73, 107, 76, 0.34)',
+                                transform: 'translateY(-1px)',
                               },
                               '&.Mui-disabled': {
-                                bgcolor: 'rgba(122,91,122,0.4)',
-                                color: 'rgba(255,255,255,0.7)',
+                                bgcolor: 'rgba(73, 107, 76, 0.35)',
+                                color: 'rgba(255,255,255,0.75)',
                               },
                             }}
                           >
-                            <NextPlanIcon sx={{ fontSize: 26, color: '#fff' }} />
-                          </IconButton>
-                        </Tooltip>
+                            Ações
+                          </Button>
                       </TableCell>
                     </TableRow>
                   </React.Fragment>
@@ -1152,24 +1352,112 @@ export default function TriagePage() {
             </TableBody>
           </Table>
         </TableContainer>
-      </Box>
+    </Box>
 
       <Menu
-        anchorEl={avatarMenu.anchor}
-        open={Boolean(avatarMenu.anchor)}
-        onClose={() => setAvatarMenu({ anchor: null, row: null })}
+        anchorEl={actionMenu.anchor}
+        open={Boolean(actionMenu.anchor)}
+        onClose={closeActionMenus}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        PaperProps={{
+          sx: {
+            mt: -0.5,
+            minWidth: 220,
+            borderRadius: 2.5,
+            border: '1px solid rgba(49, 67, 51, 0.1)',
+            boxShadow: '0 16px 40px rgba(31, 44, 33, 0.16)',
+            overflow: 'hidden',
+            '& .MuiMenuItem-root': {
+              py: 1.1,
+              px: 1.5,
+              gap: 1.25,
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: '#2f3d31',
+              '&:hover': { bgcolor: 'rgba(73, 107, 76, 0.08)' },
+            },
+          },
+        }}
+      >
+        <MenuItem
+          onClick={(e) => setStatusSubMenu(e.currentTarget)}
+          sx={{ justifyContent: 'space-between' }}
+        >
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1.25 }}>
+            <FlagOutlinedIcon fontSize="small" sx={{ color: PURPLE }} />
+            Status
+          </Box>
+          <ChevronRightRoundedIcon sx={{ fontSize: 18, color: '#829084' }} />
+        </MenuItem>
+        {actionMenu.row?.associate_code ? (
+          [
+            <MenuItem
+              key="service"
+              onClick={() => goToOrderOrService(actionMenu.row, 'service')}
+            >
+              <CalendarMonthIcon fontSize="small" sx={{ color: GREEN }} />
+              Atendimento
+            </MenuItem>,
+            <MenuItem
+              key="order"
+              onClick={() => goToOrderOrService(actionMenu.row, 'order')}
+            >
+              <ShoppingCartCheckoutIcon fontSize="small" sx={{ color: GREEN }} />
+              Pedido
+            </MenuItem>,
+            <MenuItem
+              key="unlink"
+              onClick={() => {
+                const row = actionMenu.row;
+                closeActionMenus();
+                if (row) unlink(row);
+              }}
+            >
+              <LinkOffIcon fontSize="small" sx={{ color: '#8a5a5a' }} />
+              Desvincular associado
+            </MenuItem>,
+          ]
+        ) : (
+          <MenuItem
+            onClick={() => {
+              setLinkRow(actionMenu.row);
+              closeActionMenus();
+            }}
+          >
+            <BoyIcon fontSize="small" sx={{ color: PURPLE }} />
+            Linkar a um Associado
+          </MenuItem>
+        )}
+      </Menu>
+
+      <Menu
+        anchorEl={statusSubMenu}
+        open={Boolean(statusSubMenu)}
+        onClose={() => setStatusSubMenu(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        PaperProps={{
+          sx: {
+            ml: 0.5,
+            minWidth: 200,
+            borderRadius: 2.5,
+            border: '1px solid rgba(49, 67, 51, 0.1)',
+            boxShadow: '0 16px 40px rgba(31, 44, 33, 0.16)',
+          },
+        }}
       >
         {statuses.map((s) => (
           <MenuItem
             key={s.value}
-            selected={avatarMenu.row?.status === s.value}
-            onClick={() => avatarMenu.row && changeStatus(avatarMenu.row, s.value)}
+            selected={actionMenu.row?.status === s.value}
+            onClick={() => actionMenu.row && changeStatus(actionMenu.row, s.value)}
             sx={{
               display: 'flex',
               alignItems: 'center',
               gap: 1,
-              color: avatarMenu.row?.status === s.value ? '#7A5B7A' : 'inherit',
-              fontWeight: avatarMenu.row?.status === s.value ? 'bold' : 'normal',
+              color: actionMenu.row?.status === s.value ? '#7A5B7A' : 'inherit',
+              fontWeight: actionMenu.row?.status === s.value ? 'bold' : 'normal',
             }}
           >
             {statusIcon(s)}
@@ -1212,57 +1500,7 @@ export default function TriagePage() {
         )}
       </Menu>
 
-      <Menu
-        anchorEl={actionMenu.anchor}
-        open={Boolean(actionMenu.anchor)}
-        onClose={() => setActionMenu({ anchor: null, row: null })}
-      >
-        {actionMenu.row?.associate_code ? (
-          [
-            <MenuItem
-              key="service"
-              onClick={() => goToOrderOrService(actionMenu.row, 'service')}
-              sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
-            >
-              <CalendarMonthIcon fontSize="small" />
-              Serviço
-            </MenuItem>,
-            <MenuItem
-              key="order"
-              onClick={() => goToOrderOrService(actionMenu.row, 'order')}
-              sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
-            >
-              <ShoppingCartCheckoutIcon fontSize="small" />
-              Pedido
-            </MenuItem>,
-            <MenuItem
-              key="unlink"
-              onClick={() => {
-                const row = actionMenu.row;
-                setActionMenu({ anchor: null, row: null });
-                if (row) unlink(row);
-              }}
-              sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
-            >
-              <LinkOffIcon fontSize="small" />
-              Desvincular associado
-            </MenuItem>,
-          ]
-        ) : (
-          <MenuItem
-            onClick={() => {
-              setLinkRow(actionMenu.row);
-              setActionMenu({ anchor: null, row: null });
-            }}
-            sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
-          >
-            <BoyIcon fontSize="small" />
-            Linkar a um Associado
-          </MenuItem>
-        )}
-      </Menu>
-
-      <Modal open={Boolean(linkRow)} onClose={() => setLinkRow(null)} sx={contentAreaModalSx}>
+      <Modal open={Boolean(linkRow)} onClose={() => setLinkRow(null)} {...contentAreaModalProps}>
         <Box
           sx={{
             position: 'absolute',
@@ -1324,7 +1562,7 @@ export default function TriagePage() {
         </Box>
       </Modal>
 
-      <Modal open={Boolean(docsRow)} onClose={() => setDocsRow(null)} sx={contentAreaModalSx}>
+      <Modal open={Boolean(docsRow)} onClose={() => setDocsRow(null)} {...contentAreaModalProps}>
         <Box
           sx={{
             position: 'absolute',
@@ -1376,7 +1614,7 @@ export default function TriagePage() {
       <Modal
         open={chatModal.open}
         onClose={() => !chatBusy && setChatModal({ open: false, row: null, value: '' })}
-        sx={contentAreaModalSx}
+        {...contentAreaModalProps}
       >
         <Box
           sx={{

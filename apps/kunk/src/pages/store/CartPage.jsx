@@ -30,13 +30,14 @@ import EditIcon from '@mui/icons-material/Edit';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonIcon from '@mui/icons-material/Person';
 import SaveIcon from '@mui/icons-material/Save';
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { PATHS } from '../../app/menuConfig.js';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
 import { useCacheConfig } from '../../lib/cache/CacheConfigProvider.jsx';
-import { contentAreaModalSx } from '../../layout/contentAreaOverlay.js';
+import { contentAreaModalProps } from '../../layout/contentAreaOverlay.js';
 import {
   fetchLocalProducts,
   fetchPrescribers,
@@ -486,6 +487,7 @@ export default function CartPage() {
           name: product.name,
           amount: Number(product.price) || 0,
           quantity: qty,
+          batch: product.batch || null,
           stock_at_order: Number.isFinite(stock) ? stock : null,
         },
       ];
@@ -619,8 +621,7 @@ export default function CartPage() {
     setShowCustomPayment(false);
   }
 
-  const freightReady = !freightQuoteEnabled || Boolean(selectedFreight);
-  const canSubmitOrder = items.length > 0 && freightReady && !submitting;
+  const canSubmitOrder = items.length > 0 && !submitting;
 
   async function submitOrder({ forceWrongTotal = false } = {}) {
     setSuccess('');
@@ -630,10 +631,6 @@ export default function CartPage() {
     }
     if (!items.length) {
       showError('Adicione itens');
-      return;
-    }
-    if (freightQuoteEnabled && !selectedFreight) {
-      showError('Calcule e selecione o frete antes de criar o pedido');
       return;
     }
     if (catalogSource !== 'soucannabis' && zeroStockItems.length > 0) {
@@ -787,7 +784,7 @@ export default function CartPage() {
         </Box>
 
         {/* Modal novo prescritor */}
-        <Modal open={showPrescriberModal} onClose={() => setShowPrescriberModal(false)} sx={contentAreaModalSx}>
+        <Modal open={showPrescriberModal} onClose={() => setShowPrescriberModal(false)} {...contentAreaModalProps}>
           <Box
             data-testid="prescriber-modal"
             sx={{
@@ -841,8 +838,8 @@ export default function CartPage() {
 
         {loadingAssociate && !associate && (
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5, py: 4 }}>
-            <CircularProgress size={36} sx={{ color: GREEN }} />
-            <Typography variant="body2" sx={{ color: GREEN, fontWeight: 600 }}>
+            <CircularProgress size={36} sx={{ color: '#fff' }} />
+            <Typography variant="body2" sx={{ color: '#fff', fontWeight: 600 }}>
               Carregando dados do pedido...
             </Typography>
           </Box>
@@ -1068,7 +1065,7 @@ export default function CartPage() {
                           inputProps={{ min: 1, style: { textAlign: 'center', width: 56 } }}
                         />
                       </TableCell>
-                      <TableCell align="center" sx={{ fontSize: 18 }}>
+                      <TableCell align="center" sx={{ fontSize: 18, whiteSpace: 'nowrap' }}>
                         R${Number(it.amount).toFixed(2)}
                       </TableCell>
                       <TableCell align="center">
@@ -1111,11 +1108,12 @@ export default function CartPage() {
                   {/* Frete — botão + opções no fim da tabela, acima do total */}
                   {freightQuoteEnabled && (
                     <TableRow data-testid="freight-simulation">
-                      <TableCell colSpan={6} sx={{ py: 1.5 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1 }}>
+                      <TableCell colSpan={6} align="center" sx={{ py: 1.5 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
                           <Button
                             size="small"
                             variant="outlined"
+                            startIcon={<LocalShippingOutlinedIcon />}
                             data-testid="quote-freight"
                             onClick={quoteFreight}
                             disabled={freightLoading || items.length === 0}
@@ -1125,7 +1123,7 @@ export default function CartPage() {
                           </Button>
                           {freightLoading && (
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <CircularProgress size={18} sx={{ color: GREEN }} />
+                              <CircularProgress size={18} sx={{ color: '#fff' }} />
                               <Typography variant="body2">Consultando modalidades…</Typography>
                             </Box>
                           )}
@@ -1137,7 +1135,7 @@ export default function CartPage() {
                                 const opt = freightOptions.find((o) => o.option_key === e.target.value);
                                 setSelectedFreight(opt || null);
                               }}
-                              sx={{ width: '100%' }}
+                              sx={{ width: '100%', maxWidth: 720, textAlign: 'left' }}
                             >
                               {freightOptions.map((o) => {
                                 const providerLabel =
@@ -1176,7 +1174,7 @@ export default function CartPage() {
 
                   {/* Total */}
                   <TableRow>
-                    <TableCell colSpan={3} />
+                    <TableCell colSpan={4} />
                     <TableCell
                       colSpan={2}
                       sx={{ bgcolor: GREEN, textAlign: 'center', color: '#fff' }}
@@ -1493,7 +1491,8 @@ export default function CartPage() {
                 className="pageContainerOptions"
                 sx={{
                   height: 600,
-                  overflow: 'auto',
+                  overflowX: 'hidden',
+                  overflowY: 'auto',
                   ml: '20px',
                   mr: 2,
                   mb: '20px',
@@ -1512,7 +1511,7 @@ export default function CartPage() {
                       minHeight: 280,
                     }}
                   >
-                    <CircularProgress size={40} sx={{ color: GREEN }} />
+                    <CircularProgress size={40} sx={{ color: '#fff' }} />
                     <Typography variant="body2" sx={{ color: GREEN, fontWeight: 600 }}>
                       Carregando produtos...
                     </Typography>
@@ -1536,58 +1535,170 @@ export default function CartPage() {
                       onChange={(e) => setProductFilter(e.target.value)}
                       sx={{ mb: 2 }}
                     />
-                    <Table>
+                    <Table
+                      size="small"
+                      sx={{
+                        width: '100%',
+                        tableLayout: 'fixed',
+                        borderCollapse: 'separate',
+                        borderSpacing: 0,
+                        '& .MuiTableCell-root': {
+                          borderColor: 'rgba(49, 67, 51, 0.08)',
+                          py: 1.1,
+                          px: 1,
+                        },
+                      }}
+                    >
                       <TableHead>
-                        <TableRow sx={{ bgcolor: GREEN }}>
+                        <TableRow
+                          sx={{
+                            bgcolor: GREEN,
+                            '& .MuiTableCell-root': {
+                              borderBottom: 'none',
+                              py: 1.25,
+                            },
+                          }}
+                        >
                           {(catalogSource === 'soucannabis'
-                            ? ['Nome', 'Qnt', 'Carrinho']
-                            : ['Nome', 'Estoque', 'Qnt', 'Carrinho']
+                            ? [
+                                { key: 'nome', label: 'Produto', align: 'left' },
+                                { key: 'preco', label: 'Preço', align: 'right' },
+                                { key: 'qnt', label: 'Qtd', align: 'center' },
+                                { key: 'add', label: '', align: 'center' },
+                              ]
+                            : [
+                                { key: 'nome', label: 'Produto', align: 'left' },
+                                { key: 'preco', label: 'Preço', align: 'right' },
+                                { key: 'estoque', label: 'Estoque', align: 'center' },
+                                { key: 'qnt', label: 'Qtd', align: 'center' },
+                                { key: 'add', label: '', align: 'center' },
+                              ]
                           ).map((h) => (
-                            <TableCell key={h} sx={headCell}>
-                              {h}
+                            <TableCell
+                              key={h.key}
+                              align={h.align}
+                              sx={{
+                                ...headCell,
+                                textAlign: h.align,
+                                fontSize: 13,
+                                letterSpacing: '0.04em',
+                                textTransform: 'uppercase',
+                                borderBottom: 'none',
+                                width:
+                                  h.key === 'nome'
+                                    ? 'auto'
+                                    : h.key === 'preco'
+                                      ? '22%'
+                                      : h.key === 'estoque'
+                                        ? '16%'
+                                        : h.key === 'qnt'
+                                          ? '14%'
+                                          : '12%',
+                              }}
+                            >
+                              {h.label}
                             </TableCell>
                           ))}
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {filteredProducts.map((p) => {
+                        {filteredProducts.map((p, idx) => {
                           const key = p.sku || String(p.id);
                           const stock = Number(p.amount);
                           const zero =
                             catalogSource !== 'soucannabis' &&
                             Number.isFinite(stock) &&
                             stock <= 0;
+                          const sku = p.sku || p.code || '';
                           return (
-                            <TableRow key={p.id} sx={{ '&:hover': { bgcolor: '#e0e0e0' } }}>
-                              <TableCell sx={{ maxWidth: 120, fontSize: '0.9em', textAlign: 'left' }}>
-                                <strong>{p.name}</strong>
-                                <br />
-                                <br />
-                                Preço: <strong>R${Number(p.price || 0).toFixed(2)}</strong>
-                                {zero ? (
-                                  <>
-                                    <br />
-                                    <Typography
-                                      component="span"
-                                      sx={{ color: '#c62828', fontWeight: 700, fontSize: '0.85em' }}
-                                    >
-                                      Estoque 0
-                                    </Typography>
-                                  </>
-                                ) : null}
-                              </TableCell>
-                              {catalogSource !== 'soucannabis' && (
+                            <TableRow
+                              key={p.id}
+                              sx={{
+                                bgcolor: idx % 2 === 0 ? '#fff' : 'rgba(243, 243, 243, 0.85)',
+                                transition: 'background-color 0.15s ease',
+                                '&:hover': { bgcolor: 'rgba(90, 122, 91, 0.08)' },
+                              }}
+                            >
                               <TableCell
                                 sx={{
-                                  textAlign: 'center',
-                                  fontWeight: 700,
-                                  color: zero ? '#c62828' : 'inherit',
+                                  textAlign: 'left',
+                                  verticalAlign: 'middle',
+                                  overflow: 'hidden',
                                 }}
                               >
-                                {Number.isFinite(stock) ? stock : '—'}
+                                <Typography
+                                  component="div"
+                                  sx={{
+                                    fontWeight: 650,
+                                    fontSize: 14,
+                                    lineHeight: 1.3,
+                                    color: '#243126',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                  title={p.name}
+                                >
+                                  {p.name}
+                                </Typography>
+                                {sku ? (
+                                  <Typography
+                                    component="div"
+                                    sx={{
+                                      mt: 0.25,
+                                      fontSize: 11.5,
+                                      color: '#6b7a6d',
+                                      letterSpacing: '0.02em',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                    title={sku}
+                                  >
+                                    {sku}
+                                  </Typography>
+                                ) : null}
                               </TableCell>
+                              <TableCell
+                                align="right"
+                                sx={{
+                                  verticalAlign: 'middle',
+                                  whiteSpace: 'nowrap',
+                                  fontVariantNumeric: 'tabular-nums',
+                                  fontWeight: 700,
+                                  fontSize: 14,
+                                  color: '#314a34',
+                                }}
+                              >
+                                R$&nbsp;{Number(p.price || 0).toFixed(2)}
+                              </TableCell>
+                              {catalogSource !== 'soucannabis' && (
+                                <TableCell
+                                  align="center"
+                                  sx={{ verticalAlign: 'middle' }}
+                                >
+                                  <Box
+                                    component="span"
+                                    sx={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      minWidth: 36,
+                                      px: 1,
+                                      py: 0.35,
+                                      borderRadius: 999,
+                                      fontSize: 12.5,
+                                      fontWeight: 700,
+                                      fontVariantNumeric: 'tabular-nums',
+                                      bgcolor: zero ? 'rgba(198, 40, 40, 0.1)' : 'rgba(90, 122, 91, 0.12)',
+                                      color: zero ? '#c62828' : '#314a34',
+                                    }}
+                                  >
+                                    {Number.isFinite(stock) ? stock : '—'}
+                                  </Box>
+                                </TableCell>
                               )}
-                              <TableCell sx={{ textAlign: 'center' }}>
+                              <TableCell align="center" sx={{ verticalAlign: 'middle' }}>
                                 <input
                                   type="number"
                                   min={1}
@@ -1599,23 +1710,39 @@ export default function CartPage() {
                                       [key]: e.target.value,
                                     }))
                                   }
+                                  aria-label={`Quantidade ${p.name}`}
                                   style={{
-                                    padding: '4px 8px',
-                                    borderRadius: 4,
-                                    border: '1px solid #ccc',
-                                    width: 70,
+                                    padding: '6px 4px',
+                                    borderRadius: 8,
+                                    border: '1px solid rgba(49, 67, 51, 0.18)',
+                                    width: '100%',
+                                    maxWidth: 52,
+                                    boxSizing: 'border-box',
                                     textAlign: 'center',
+                                    fontSize: 14,
+                                    fontWeight: 600,
+                                    background: '#fff',
                                   }}
                                 />
                               </TableCell>
-                              <TableCell sx={{ textAlign: 'center' }}>
+                              <TableCell align="center" sx={{ verticalAlign: 'middle' }}>
                                 <Button
                                   variant="contained"
                                   data-testid={`product-${p.id}`}
                                   onClick={() => addProduct(p)}
+                                  aria-label={`Adicionar ${p.name}`}
                                   sx={{
                                     bgcolor: zero ? '#c62828' : GREEN,
-                                    '&:hover': { bgcolor: PURPLE_HOVER },
+                                    minWidth: 40,
+                                    width: 40,
+                                    height: 40,
+                                    p: 0,
+                                    borderRadius: 2,
+                                    boxShadow: 'none',
+                                    '&:hover': {
+                                      bgcolor: zero ? '#a31f1f' : PURPLE_HOVER,
+                                      boxShadow: 'none',
+                                    },
                                   }}
                                 >
                                   <AddShoppingCartOutlinedIcon sx={{ fontSize: 20 }} />

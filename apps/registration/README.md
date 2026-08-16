@@ -51,3 +51,95 @@ npx playwright test --ui
 Specs em `e2e/`: auth, forms do funil, documentos RG/CNH, fase 4 stub, fase 5, guards.
 
 Documentação escrita de cada caso (dados, APIs, asserts): [`e2e/VALIDATION.md`](./e2e/VALIDATION.md).
+
+## Demos gravadas (Playwright + Edge)
+
+Grava `.webm` com Microsoft Edge (perfil limpo), em desktop (1366×768) e mobile.
+
+Pré-requisitos comuns: API `:4250`, Microsoft Edge instalado.
+
+### Cadastro (`demo:cadastro`)
+
+Funil completo (conta → dados → docs → termo → finalizar).
+
+Também precisa: registration `:4255`, doc-sign `:4258`.
+
+```bash
+cd apps/registration
+npm run demo:cadastro          # só desktop
+npm run demo:cadastro:mobile   # só mobile
+npm run demo:cadastro:all      # desktop depois mobile
+```
+
+Saída: `demos/output/cadastro/desktop-*.webm` e `mobile-*.webm`.
+
+### Triagem (`demo:triagem`)
+
+Formulário público `/contato` → login operador → `/app/acolhimento/triagem`.
+
+Também precisa: kunk `:4257`.
+
+```bash
+cd apps/registration
+npm run demo:triagem
+npm run demo:triagem:mobile
+```
+
+Saída: `demos/output/triagem/desktop-*.webm` e `mobile-*.webm`.
+
+Operador default: `acolhimento@kunk-api.test` / `TestAcol123!` (criado automaticamente se o banco estiver disponível).
+
+O formulário usa um **Associado já existente** (seed `@demo.kunk.local` ou `DEMO_ASSOCIATE_EMAIL`) para a triagem já nascer linkada.
+
+### Triagem → Pedido (`demo:triagem-pedido`)
+
+Login → triagem (1º item) → **Pedido** → cria pedido no carrinho → marca **Pagamento concluído** → filtra pelo chip desse status.
+
+```bash
+cd apps/registration
+npm run demo:triagem-pedido
+```
+
+Saída: `demos/output/triagem-pedido/*.webm`.
+
+### Triagem → Serviço (`demo:triagem-servico`)
+
+Login → triagem (1º item) → **Serviço** → cria serviço → marca **Pagamento Concluído** → filtro **Somente pagos**.
+
+```bash
+cd apps/registration
+npm run demo:triagem-servico
+```
+
+Saída: `demos/output/triagem-servico/*.webm`.
+
+### Dashboard analytics (`demo:dashboard`)
+
+Login → `/app/relatorios/dashboard` → percorre as abas **Associados**, **Atendimentos**, **Pedidos** e **Triagem** (cada uma com scroll fim↔topo em 10s) → hold final 15s.
+
+Também precisa: kunk `:4257`.
+
+```bash
+cd apps/registration
+npm run demo:dashboard
+```
+
+Saída: `demos/output/dashboard/*.webm`.
+
+### Projeto Shotcut (`kunk-demos.mlt`)
+
+Projeto principal da timeline: `demos/output/kunk-demos.mlt`.
+
+Após gravar uma demo, anexe o vídeo mais recente (ou um arquivo) no fim da trilha V1:
+
+```bash
+cd apps/registration
+npm run shotcut:add -- demos/output/cadastro
+npm run shotcut:add -- demos/output/triagem/desktop-....webm
+```
+
+Se o Shotcut estiver com o projeto aberto, recarregue pelo menu recente depois do append.
+
+### Variáveis
+
+`DEMO_KUNK_URL`, `DEMO_ASSOCIATE_EMAIL`, `DEMO_OPERATOR_EMAIL`, `DEMO_OPERATOR_PASSWORD`, `DEMO_SLOW_MO`, `DEMO_HOLD_MS`, `DEMO_CHANNEL`, `DEMO_APP_URL`, `DEMO_PASSWORD`, `DEMO_CLEANUP=1` (só cadastro).

@@ -13,10 +13,10 @@ O legado (`src/` painel, `cadastramento/`) permanece como **referência funciona
 
 | App | Pasta alvo (proposta) | Subdomínio | Porta dev | Prioridade |
 |---|---|---|---|---|
-| **Cadastramento** | `apps/registration/` | `cad.` | 4255 | **1 — primeiro frontend** |
-| **Admin** | `apps/admin/` | `admin.` | 4256 | **2 — admin da instância** |
-| **Kunk** | `apps/kunk/` | `app.` | 4257 | **3 — app operacional** ([kunk/](./kunk/)) |
-| **Doc-sign** | `apps/doc-sign/` | `termos.` | 4258 | 4 — termos/assinaturas nativos ([doc-sign/](./doc-sign/)) |
+| **Cadastro de Associados** | `apps/registration/` | `cad.` | 4255 | **1 — primeiro frontend** |
+| **Assinatura de termos** | `apps/doc-sign/` | `termos.` | 4258 | Termos e assinaturas nativos ([doc-sign/](./doc-sign/)) |
+| **Kunk** | `apps/kunk/` | `app.` | 4257 | App operacional ([kunk/](./kunk/)) |
+| **Área Admin** | `apps/admin/` | `admin.` | 4256 | Administração da instância |
 
 Cada app é um **entrypoint** independente (build/deploy próprio), mas compartilha pacotes do monorepo. Não são produtos nem APIs separados.
 

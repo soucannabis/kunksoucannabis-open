@@ -1,5 +1,8 @@
 import { PATHS } from '../app/menuConfig.js';
 
+/** Landing padrão pós-login (admin / fallback). */
+const HOME_ASSOCIADOS = PATHS.registration; // /app/acolhimento/associados
+
 /**
  * Default landing path after login / `/app` by role (legacy Theme redirect).
  * Priority: Produção > Acolhimento > Administrador.
@@ -11,8 +14,8 @@ export function roleHomePath(roles = []) {
   }
   if (list.includes('Produção')) return PATHS.orders;
   if (list.includes('Acolhimento')) return PATHS.triage;
-  if (list.includes('Administrador')) return PATHS.registration;
-  return PATHS.registration;
+  if (list.includes('Administrador')) return HOME_ASSOCIADOS;
+  return HOME_ASSOCIADOS;
 }
 
 export function isProfessionalOnly(roles = []) {
@@ -32,7 +35,7 @@ export function pageTitleFromPath(pathname = '') {
   const part = pathname.split('/').filter(Boolean).pop() || '';
   const map = {
     associados: 'Associados',
-    servicos: 'Serviços',
+    servicos: 'Atendimentos',
     triagem: 'Triagem',
     clientesinstitucionais: 'Clientes Institucionais',
     pedidos: 'Pedidos',
@@ -42,10 +45,9 @@ export function pageTitleFromPath(pathname = '') {
     profissionais: 'Profissionais',
     historico: 'Histórico do sistema',
     tags: 'Tags',
-    servicos: 'Serviços',
   };
   if (pathname.includes('/relatorios/servicos') || pathname.includes('/relatorio/servicos')) {
-    return 'Relatório de serviços';
+    return 'Relatório de atendimentos';
   }
   return map[part] || part;
 }

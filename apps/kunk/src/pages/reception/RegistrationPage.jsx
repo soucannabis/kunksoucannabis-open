@@ -4,18 +4,20 @@ import {
   Button,
   CircularProgress,
   FormControl,
+  IconButton,
   MenuItem,
   Select,
+  Stack,
   Typography,
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import Diversity1OutlinedIcon from '@mui/icons-material/Diversity1Outlined';
+import { useSearchParams } from 'react-router-dom';
 import { createApiClient } from '@kunk/api-client';
 import { getKunkPublicConfig } from '@kunk/config';
 import { useErrorModal } from '../../components/errors/ErrorModalProvider.jsx';
-import { PATHS } from '../../app/menuConfig.js';
 import AssociatesFilters, { PAGE_SIZE_OPTIONS } from './associates/AssociatesFilters.jsx';
 import AssociatesTable from './associates/AssociatesTable.jsx';
 import CreateAssociateModal from './associates/CreateAssociateModal.jsx';
@@ -25,17 +27,26 @@ import {
   displayName,
 } from './associates/associatesStatus.js';
 
-const muiTheme = createTheme();
-const GREEN = '#5a7a5b';
-const GREEN_HOVER = '#4a684b';
-const PURPLE = '#7a5b7a';
+const muiTheme = createTheme({
+  palette: {
+    primary: { main: '#496b4c' },
+    secondary: { main: '#705372' },
+  },
+  typography: {
+    fontFamily: 'inherit',
+  },
+  shape: {
+    borderRadius: 12,
+  },
+});
+const GREEN = '#496b4c';
+const GREEN_HOVER = '#385a3c';
 const DEFAULT_PAGE_SIZE = 30;
 
 export default function RegistrationPage() {
   const bootstrap = getKunkPublicConfig();
   const api = useMemo(() => createApiClient({ baseUrl: bootstrap.apiUrl, app: 'kunk' }), [bootstrap.apiUrl]);
   const { showError } = useErrorModal();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -147,26 +158,6 @@ export default function RegistrationPage() {
     setFilter(nextFilter);
   }
 
-  async function sendTriage(u) {
-    try {
-      const name = u.associate_name || displayName(u).split(' ')[0] || 'Associado';
-      const last = u.associate_last_name || '';
-      const created = await api.createReception({
-        name,
-        last_name: last,
-        email: u.email_account || null,
-        phone: u.mobile_number || null,
-        is_associate: true,
-        associate_code: u.user_code,
-        associate_name: displayName(u),
-      });
-      const code = created?.data?.code;
-      navigate(code ? `${PATHS.triage}?t=${encodeURIComponent(code)}` : PATHS.triage);
-    } catch (err) {
-      showError(err.message || 'Falha ao enviar para triagem');
-    }
-  }
-
   function openUser(u) {
     setSelected(u);
     if (u?.user_code) {
@@ -191,7 +182,61 @@ export default function RegistrationPage() {
 
   return (
     <ThemeProvider theme={muiTheme}>
-      <Box>
+      <Box sx={{ width: '100%', maxWidth: 1600, mx: 'auto', pb: 2 }}>
+        <Box
+          sx={{
+            position: 'relative',
+            overflow: 'hidden',
+            mb: 2,
+            p: { xs: 2.5, md: 3.25 },
+            color: '#fff',
+            borderRadius: 3,
+            background: 'linear-gradient(120deg, #314a34 0%, #496b4c 58%, #5d735e 100%)',
+            boxShadow: '0 14px 36px rgba(27, 46, 30, 0.2)',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              width: 230,
+              height: 230,
+              right: -55,
+              top: -110,
+              borderRadius: '50%',
+              border: '42px solid rgba(255,255,255,0.06)',
+            },
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
+            <Box
+              sx={{
+                width: 52,
+                height: 52,
+                flex: '0 0 auto',
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: 2.5,
+                bgcolor: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.16)',
+              }}
+            >
+              <Diversity1OutlinedIcon sx={{ fontSize: 28 }} />
+            </Box>
+            <Box>
+              <Typography
+                variant="overline"
+                sx={{ color: 'rgba(255,255,255,0.68)', letterSpacing: '0.11em', fontWeight: 700 }}
+              >
+                Acolhimento
+              </Typography>
+              <Typography variant="h5" component="h1" sx={{ fontWeight: 750, lineHeight: 1.15 }}>
+                Gestão de associados
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.65, color: 'rgba(255,255,255,0.76)' }}>
+                Consulte cadastros, acompanhe jornadas e mantenha os dados atualizados.
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
+
         <AssociatesFilters
           filter={filter}
           onFilterChange={handleFilterChange}
@@ -206,15 +251,24 @@ export default function RegistrationPage() {
         />
 
         {loading ? (
-          <Box sx={{ py: 4, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <CircularProgress size={28} sx={{ color: GREEN }} />
+          <Box
+            sx={{
+              py: 10,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              bgcolor: '#fff',
+              borderRadius: 3,
+              border: '1px solid rgba(49, 67, 51, 0.1)',
+            }}
+          >
+            <CircularProgress size={30} sx={{ color: GREEN }} />
           </Box>
         ) : (
           <>
             <AssociatesTable
               rows={rows}
               onOpen={openUser}
-              onSendTriage={sendTriage}
               patientNames={patientNames}
             />
             {showPager ? (
@@ -222,32 +276,31 @@ export default function RegistrationPage() {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 2,
+                  justifyContent: { xs: 'center', sm: 'space-between' },
+                  gap: 1.5,
                   flexWrap: 'wrap',
-                  mx: 'auto',
                   mt: 2,
-                  mb: 3,
-                  px: 2,
+                  px: { xs: 1.5, sm: 2 },
                   py: 1.25,
-                  maxWidth: 640,
-                  backgroundColor: PURPLE,
-                  borderRadius: '30px',
-                  boxShadow: '0 4px 14px rgba(74, 45, 74, 0.35)',
-                  color: '#fff',
+                  bgcolor: 'rgba(255,255,255,0.92)',
+                  border: '1px solid rgba(49, 67, 51, 0.1)',
+                  borderRadius: 2.5,
+                  boxShadow: '0 6px 22px rgba(34, 53, 36, 0.05)',
                 }}
               >
-                <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="caption" sx={{ color: '#6a766c' }}>
+                    Itens por página
+                  </Typography>
+                  <FormControl size="small" sx={{ minWidth: 72 }}>
                   <Select
                     value={pageSize}
                     onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                    disableUnderline
                     sx={{
-                      color: '#fff',
                       fontWeight: 600,
-                      fontSize: '0.875rem',
-                      '& .MuiSelect-icon': { color: '#fff' },
-                      '& .MuiSelect-select': { py: 0.5, pr: 3 },
+                      fontSize: '0.82rem',
+                      borderRadius: 2,
+                      '& .MuiSelect-select': { py: 0.75 },
                     }}
                     MenuProps={{
                       PaperProps: { sx: { maxHeight: 280 } },
@@ -255,48 +308,52 @@ export default function RegistrationPage() {
                   >
                     {PAGE_SIZE_OPTIONS.map((n) => (
                       <MenuItem key={n} value={n}>
-                        {n} / página
+                        {n}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
-                <Button
-                  size="small"
-                  startIcon={<ChevronLeftIcon />}
-                  disabled={page <= 1}
-                  onClick={() => {
-                    setPage((p) => Math.max(1, p - 1));
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  sx={{
-                    color: '#fff',
-                    bgcolor: GREEN,
-                    '&:hover': { bgcolor: GREEN_HOVER },
-                    '&.Mui-disabled': { color: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(0,0,0,0.15)' },
-                  }}
-                >
-                  Anterior
-                </Button>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Página {page} de {totalPages}
-                </Typography>
-                <Button
-                  size="small"
-                  endIcon={<ChevronRightIcon />}
-                  disabled={page >= totalPages || totalCount === 0}
-                  onClick={() => {
-                    setPage((p) => p + 1);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  sx={{
-                    color: '#fff',
-                    bgcolor: GREEN,
-                    '&:hover': { bgcolor: GREEN_HOVER },
-                    '&.Mui-disabled': { color: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(0,0,0,0.15)' },
-                  }}
-                >
-                  Próxima
-                </Button>
+                </Stack>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <IconButton
+                    size="small"
+                    aria-label="Página anterior"
+                    disabled={page <= 1}
+                    onClick={() => {
+                      setPage((p) => Math.max(1, p - 1));
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    sx={{
+                      border: '1px solid rgba(49, 67, 51, 0.14)',
+                      borderRadius: 2,
+                      color: GREEN,
+                      '&:hover': { bgcolor: 'rgba(73, 107, 76, 0.08)' },
+                    }}
+                  >
+                    <ChevronLeftRoundedIcon />
+                  </IconButton>
+                  <Typography variant="body2" sx={{ minWidth: 105, textAlign: 'center', color: '#465348' }}>
+                    Página <strong>{page}</strong> de {totalPages}
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    aria-label="Próxima página"
+                    disabled={page >= totalPages || totalCount === 0}
+                    onClick={() => {
+                      setPage((p) => p + 1);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    sx={{
+                      borderRadius: 2,
+                      color: '#fff',
+                      bgcolor: GREEN,
+                      '&:hover': { bgcolor: GREEN_HOVER },
+                      '&.Mui-disabled': { color: '#aab3ab', bgcolor: '#edf0ed' },
+                    }}
+                  >
+                    <ChevronRightRoundedIcon />
+                  </IconButton>
+                </Stack>
               </Box>
             ) : null}
           </>

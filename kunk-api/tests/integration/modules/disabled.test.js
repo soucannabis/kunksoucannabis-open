@@ -22,16 +22,26 @@ describe('modules/disabled', () => {
     assert.ok(res.body.data.every((m) => typeof m.enabled === 'boolean'));
   });
 
-  it('returns 503 MODULE_DISABLED when off', async () => {
+  it('returns 503 MODULE_DISABLED for usage routes when off', async () => {
     const res = await request(app).get('/api/v1/modules/loggi').set('Cookie', cookie);
     assert.equal(res.status, 503);
     assert.equal(res.body.errors[0].code, 'MODULE_DISABLED');
   });
 
-  it('returns 503 for melhorenvio when off', async () => {
-    const res = await request(app).get('/api/v1/modules/melhorenvio').set('Cookie', cookie);
-    assert.equal(res.status, 503);
-    assert.equal(res.body.errors[0].code, 'MODULE_DISABLED');
+  it('allows oauth/status setup without module enabled', async () => {
+    const res = await request(app)
+      .get('/api/v1/modules/google_calendar/oauth/status')
+      .set('Cookie', cookie);
+    assert.notEqual(res.status, 503);
+    assert.notEqual(res.body?.errors?.[0]?.code, 'MODULE_DISABLED');
+  });
+
+  it('allows melhorenvio oauth/status without module enabled', async () => {
+    const res = await request(app)
+      .get('/api/v1/modules/melhorenvio/oauth/status')
+      .set('Cookie', cookie);
+    assert.notEqual(res.status, 503);
+    assert.notEqual(res.body?.errors?.[0]?.code, 'MODULE_DISABLED');
   });
 
   it('returns 503 for loggi quote when off', async () => {
