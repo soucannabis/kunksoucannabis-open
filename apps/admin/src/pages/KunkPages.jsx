@@ -29,7 +29,7 @@ export function KunkShell() {
           Permissões de acesso
         </NavLink>
         <Link className="btn" to="/usuarios/novo">
-          Convidar operador
+          Convidar usuário
         </Link>
         <NavLink
           to="/kunk/ciap2"

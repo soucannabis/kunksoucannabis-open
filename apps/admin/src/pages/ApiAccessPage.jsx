@@ -271,34 +271,46 @@ export function ApiAccessPage({ api }) {
                 />
               </label>
 
-              <p className="muted" style={{ marginBottom: '0.5rem' }}>
-                Permissões por tabela (Ler / Escrever / Excluir). Escrever cobre criar e atualizar.
-              </p>
+              <div className="api-scope-block">
+                <p className="api-scope-block__hint muted">
+                  Permissões por tabela (Ler / Escrever / Excluir). Escrever cobre criar e atualizar.
+                </p>
 
-              <div className="api-scope-matrix" data-testid="api-scope-matrix">
-                <div className="api-scope-matrix__head">
-                  <span>Tabela</span>
-                  {API_TOKEN_ACTIONS.map((a) => (
-                    <span key={a.key}>{a.label}</span>
-                  ))}
+                <div className="api-scope-matrix" data-testid="api-scope-matrix">
+                  <table className="api-scope-matrix__table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Tabela</th>
+                        {API_TOKEN_ACTIONS.map((a) => (
+                          <th key={a.key} scope="col">
+                            {a.label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {API_TOKEN_COLLECTIONS.map((collection) => (
+                        <tr key={collection}>
+                          <th scope="row" className="api-scope-matrix__label">
+                            {API_TOKEN_COLLECTION_LABELS[collection] || collection}
+                          </th>
+                          {API_TOKEN_ACTIONS.map((a) => (
+                            <td key={a.key} className="api-scope-matrix__cell">
+                              <label className="api-scope-matrix__check">
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(matrix[collection]?.[a.key])}
+                                  onChange={(e) => setAction(collection, a.key, e.target.checked)}
+                                  aria-label={`${API_TOKEN_COLLECTION_LABELS[collection] || collection} ${a.label}`}
+                                />
+                              </label>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                {API_TOKEN_COLLECTIONS.map((collection) => (
-                  <div key={collection} className="api-scope-matrix__row">
-                    <span className="api-scope-matrix__label">
-                      {API_TOKEN_COLLECTION_LABELS[collection] || collection}
-                    </span>
-                    {API_TOKEN_ACTIONS.map((a) => (
-                      <label key={a.key} className="api-scope-matrix__cell">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(matrix[collection]?.[a.key])}
-                          onChange={(e) => setAction(collection, a.key, e.target.checked)}
-                          aria-label={`${API_TOKEN_COLLECTION_LABELS[collection] || collection} ${a.label}`}
-                        />
-                      </label>
-                    ))}
-                  </div>
-                ))}
               </div>
 
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>

@@ -5,9 +5,9 @@ const WEBHOOK_TABLES = ['users', 'orders', 'services', 'reception'];
 const WEBHOOK_ACTIONS = ['create', 'update', 'delete'];
 
 const WEBHOOK_TABLE_LABELS = {
-  users: 'Associados (users)',
+  users: 'Associados',
   orders: 'Pedidos',
-  services: 'Serviços',
+  services: 'Atendimentos',
   reception: 'Triagem',
 };
 

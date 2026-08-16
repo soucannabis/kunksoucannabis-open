@@ -25,6 +25,13 @@
     "demo:check-menu": "node scripts/demo-check-menu.mjs",
     "demo:acolhimento-triagem": "node scripts/demo-record-acolhimento-triagem.mjs",
     "demo:dashboard": "node scripts/demo-record-dashboard.mjs",
+    "demo:admin:part1": "node scripts/demo-record-admin-part1.mjs",
+    "demo:admin:part2": "node scripts/demo-record-admin-part2.mjs",
+    "demo:admin:part1-2": "node scripts/demo-record-admin-part1-2.mjs",
+    "demo:admin:part3": "node scripts/demo-record-admin-part3.mjs",
+    "demo:admin:part4": "node scripts/demo-record-admin-part4.mjs",
+    "demo:admin:part3-4": "node scripts/demo-record-admin-part3-4.mjs",
+    "demo:admin:all": "node scripts/demo-record-admin-all.mjs",
     "demo:triagem-servico": "node scripts/demo-record-triagem-servico.mjs",
     "shotcut:add": "node scripts/shotcut-append.mjs",
     "openshot:add": "flatpak run --command=python3 org.openshot.OpenShot scripts/openshot-append.py"

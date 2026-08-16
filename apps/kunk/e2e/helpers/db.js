@@ -118,6 +118,99 @@ export async function ensureDemoAdminUser() {
   });
 }
 
+/** Garante tema claro do formulário público de triagem (para demos que clicam em Padrão escuro). */
+export async function ensureTriageFormThemeLight() {
+  const p = getPool();
+  const system = 'triage';
+  const key = 'triage.form.theme';
+  const existing = await p.query(
+    `SELECT id, value FROM system_configs WHERE system = $1 AND key = $2 LIMIT 1`,
+    [system, key]
+  );
+  if (existing.rows[0]?.id) {
+    if (String(existing.rows[0].value || '').toLowerCase() !== 'light') {
+      await p.query(
+        `UPDATE system_configs SET value = 'light', date_updated = NOW() WHERE id = $1`,
+        [existing.rows[0].id]
+      );
+    }
+    return;
+  }
+  await p.query(
+    `INSERT INTO system_configs
+      (system, key, value, value_type, is_sensitive, is_required, allow_hardcoded, hardcoded_default, description, date_created)
+     VALUES ($1, $2, 'light', 'string', false, false, true, 'dark',
+             'Tema visual do formulário público de triagem (dark|light)', NOW())`,
+    [system, key]
+  );
+}
+
+/** Snapshot JSON dos tipos de profissional em system_configs. */
+export async function snapshotProfessionalTypes() {
+  const p = getPool();
+  const { rows } = await p.query(
+    `SELECT value FROM system_configs WHERE system = 'services' AND key = 'professional_types' LIMIT 1`
+  );
+  const raw = rows[0]?.value;
+  if (raw == null || raw === '') return null;
+  try {
+    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+  } catch {
+    return null;
+  }
+}
+
+/** Restaura o catálogo de tipos (ex.: taxas aplicadas na demo). */
+export async function restoreProfessionalTypes(types) {
+  if (!Array.isArray(types)) return;
+  const p = getPool();
+  const serialized = JSON.stringify(types);
+  const existing = await p.query(
+    `SELECT id FROM system_configs WHERE system = 'services' AND key = 'professional_types' LIMIT 1`
+  );
+  if (existing.rows[0]?.id) {
+    await p.query(
+      `UPDATE system_configs SET value = $1, date_updated = NOW() WHERE id = $2`,
+      [serialized, existing.rows[0].id]
+    );
+    return;
+  }
+  await p.query(
+    `INSERT INTO system_configs
+      (system, key, value, value_type, is_sensitive, is_required, allow_hardcoded, description, date_created)
+     VALUES ('services', 'professional_types', $1, 'json', false, false, false,
+             'Catálogo de tipos de profissional (taxa / preço padrão)', NOW())`,
+    [serialized]
+  );
+}
+
+/** Garante api.enabled = false (para demos que clicam em Habilitar + Salvar). */
+export async function ensureApiAccessDisabled() {
+  const p = getPool();
+  const system = 'api';
+  const key = 'api.enabled';
+  const existing = await p.query(
+    `SELECT id, value FROM system_configs WHERE system = $1 AND key = $2 LIMIT 1`,
+    [system, key]
+  );
+  if (existing.rows[0]?.id) {
+    if (String(existing.rows[0].value || '').toLowerCase() !== 'false') {
+      await p.query(
+        `UPDATE system_configs SET value = 'false', date_updated = NOW() WHERE id = $1`,
+        [existing.rows[0].id]
+      );
+    }
+    return;
+  }
+  await p.query(
+    `INSERT INTO system_configs
+      (system, key, value, value_type, is_sensitive, is_required, allow_hardcoded, hardcoded_default, description, date_created)
+     VALUES ($1, $2, 'false', 'boolean', false, false, true, 'false',
+             'Habilita autenticação Bearer e gestão de tokens de API no Admin', NOW())`,
+    [system, key]
+  );
+}
+
 export async function ensureAcolhimentoUser() {
   return upsertUser({
     email: 'acolhimento@kunk-api.test',

@@ -155,7 +155,7 @@ export function RolePagesPage({ api }) {
         </div>
         <div className="admin-top-actions">
           <Link className="btn" to="/usuarios/novo">
-            Convidar operador
+            Convidar usuário
           </Link>
           <button type="button" className="btn btn-primary" disabled={saving} onClick={onSave}>
             {saving ? 'Salvando…' : 'Salvar'}

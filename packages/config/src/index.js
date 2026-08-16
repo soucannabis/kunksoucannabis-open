@@ -304,10 +304,10 @@ export const API_TOKEN_ACTIONS = [
 
 /** Human labels for API token collections in Admin. */
 export const API_TOKEN_COLLECTION_LABELS = {
-  users: 'Associados (users)',
+  users: 'Associados',
   system_users: 'Usuários do sistema',
   orders: 'Pedidos',
-  services: 'Serviços',
+  services: 'Atendimentos',
   products: 'Produtos',
   institutional_clients: 'Clientes institucionais',
   professionals: 'Profissionais',
@@ -331,9 +331,9 @@ export const WEBHOOK_ACTIONS = [
 ];
 
 export const WEBHOOK_TABLE_LABELS = {
-  users: 'Associados (users)',
+  users: 'Associados',
   orders: 'Pedidos',
-  services: 'Serviços',
+  services: 'Atendimentos',
   reception: 'Triagem',
 };
 

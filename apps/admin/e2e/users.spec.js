@@ -13,7 +13,7 @@ test.describe('users', () => {
     await page.getByRole('link', { name: 'Usuários' }).click();
     await expect(page.getByRole('heading', { name: 'Usuários' })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Convidar operador' }).click();
+    await page.getByRole('link', { name: 'Convidar usuário' }).click();
     const email = uniqueEmail('ui');
     await page.getByRole('textbox', { name: 'Nome', exact: true }).fill('Oper');
     await page.getByRole('textbox', { name: 'Sobrenome' }).fill('E2E');

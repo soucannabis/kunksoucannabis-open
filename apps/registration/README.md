@@ -126,6 +126,22 @@ npm run demo:dashboard
 
 Saída: `demos/output/dashboard/*.webm`.
 
+### Admin em 4 partes (`demo:admin:part1` … `part4`)
+
+Tour do painel Admin (`:4256`) com login `admin@soucannabis.ong.br` (criado automaticamente). Cada parte: login → navegação no menu → scroll suave por página (sem mutar configs).
+
+| Comando | Conteúdo | Saída |
+|---|---|---|
+| `npm run demo:admin:part1` | Associação, banco de dados, triagem | `demos/output/admin-part1/` |
+| `npm run demo:admin:part2` | Profissionais, loja, permissões | `demos/output/admin-part2/` |
+| `npm run demo:admin:part1-2` | Partes 1+2 em **um** vídeo | `demos/output/admin-part1-2/` |
+| `npm run demo:admin:part3` | CIAP, aparência, importação, sistema | `demos/output/admin-part3/` |
+| `npm run demo:admin:part4` | Usuários, API, webhooks, externos | `demos/output/admin-part4/` |
+| `npm run demo:admin:part3-4` | Partes 3+4 em **um** vídeo | `demos/output/admin-part3-4/` |
+| `npm run demo:admin:all` | As 4 partes em sequência | — |
+
+Também precisa: API `:4250` + admin `:4256`. Variável opcional: `DEMO_ADMIN_URL`.
+
 ### Projeto Shotcut (`kunk-demos.mlt`)
 
 Projeto principal da timeline: `demos/output/kunk-demos.mlt`.
@@ -142,4 +158,4 @@ Se o Shotcut estiver com o projeto aberto, recarregue pelo menu recente depois d
 
 ### Variáveis
 
-`DEMO_KUNK_URL`, `DEMO_ASSOCIATE_EMAIL`, `DEMO_OPERATOR_EMAIL`, `DEMO_OPERATOR_PASSWORD`, `DEMO_SLOW_MO`, `DEMO_HOLD_MS`, `DEMO_CHANNEL`, `DEMO_APP_URL`, `DEMO_PASSWORD`, `DEMO_CLEANUP=1` (só cadastro).
+`DEMO_KUNK_URL`, `DEMO_ADMIN_URL`, `DEMO_ASSOCIATE_EMAIL`, `DEMO_OPERATOR_EMAIL`, `DEMO_OPERATOR_PASSWORD`, `DEMO_SLOW_MO`, `DEMO_HOLD_MS`, `DEMO_CHANNEL`, `DEMO_APP_URL`, `DEMO_PASSWORD`, `DEMO_CLEANUP=1` (só cadastro).

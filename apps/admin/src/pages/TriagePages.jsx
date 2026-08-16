@@ -100,8 +100,21 @@ function useTriageForm(api) {
   return { values, setValues, baseline, itemsByKey, error, setError, saving, loaded, save };
 }
 
+function coerceSelectOptionsForEdit(options) {
+  return (Array.isArray(options) ? options : []).map((o) => {
+    if (o && typeof o === 'object' && !Array.isArray(o)) {
+      return {
+        label: String(o.label ?? o.value ?? ''),
+        enabled: o.enabled !== false,
+      };
+    }
+    return { label: String(o ?? ''), enabled: true };
+  });
+}
+
 function SelectOptionsEditor({ options, onChange, min = 2 }) {
-  const list = normalizeTriageSelectOptions(options);
+  // Não usar normalizeTriageSelectOptions aqui: o .trim() impede digitar espaços.
+  const list = coerceSelectOptionsForEdit(options);
 
   function setOptionLabel(index, label) {
     onChange(list.map((opt, i) => (i === index ? { ...opt, label } : opt)));

@@ -44,11 +44,11 @@ export function UsersPage({ api }) {
       <div className="admin-top">
         <div>
           <h1>Usuários</h1>
-          <p className="muted">Operadores (`system_users`) — cadastro por convite por e-mail.</p>
+          <p className="muted">Cadastro por convite por e-mail.</p>
         </div>
         <div className="admin-top-actions">
           <Link className="btn btn-primary" to="/usuarios/novo">
-            Convidar operador
+            Convidar usuário
           </Link>
           <Link className="btn" to="/kunk/permissoes">
             Permissões de acesso
@@ -277,7 +277,7 @@ export function UserFormPage({ api, isNew = false }) {
     <div>
       <div className="admin-top">
         <div>
-          <h1>{isNew ? 'Convidar operador' : `Operador #${id}`}</h1>
+          <h1>{isNew ? 'Convidar usuário' : `Operador #${id}`}</h1>
           <p className="muted">
             <Link to="/usuarios">← Voltar</Link>
           </p>
