@@ -1,0 +1,374 @@
+{
+  "version": 1,
+  "description": "Conteúdo das capas. O layout é único; cada entrada troca somente textos, ícones, tema e fundo opcional.",
+  "covers": [
+    {
+      "id": "cadastro",
+      "title": "CADASTRO DE ASSOCIADOS",
+      "titleSize": 96,
+      "theme": "paper",
+      "heroIcon": "hero-registration",
+      "left": {
+        "title": "O QUE O MÓDULO FAZ",
+        "items": [
+          {
+            "icon": "user",
+            "text": "Criação de conta do associado"
+          },
+          {
+            "icon": "document",
+            "text": "Upload de documentos"
+          },
+          {
+            "icon": "document",
+            "text": "Assinatura de termo"
+          },
+          {
+            "icon": "checklist",
+            "text": "Status do cadastro"
+          }
+        ]
+      },
+      "right": {
+        "title": "PARA A ASSOCIAÇÃO",
+        "items": [
+          {
+            "icon": "users",
+            "text": "Gerenciamento de associados"
+          },
+          {
+            "icon": "lock",
+            "text": "Dados seguros"
+          },
+          {
+            "icon": "gear",
+            "text": "Controle do processo de cadastro"
+          }
+        ]
+      },
+      "footer": "Conta → Dados pessoais → Documentos → Termo → Conclusão",
+      "backgroundImage": "./backgrounds/bg-cadastro.png"
+    },
+    {
+      "id": "triagem",
+      "title": "TRIAGEM DE CONTATOS",
+      "titleSize": 96,
+      "theme": "contact",
+      "heroIcon": "hero-triage",
+      "left": {
+        "title": "O QUE O MÓDULO FAZ",
+        "items": [
+          {
+            "icon": "envelope",
+            "text": "Recebe solicitações de contato"
+          },
+          {
+            "icon": "user",
+            "text": "Identifica associado e paciente"
+          },
+          {
+            "icon": "checklist",
+            "text": "Registra o motivo do atendimento"
+          },
+          {
+            "icon": "list",
+            "text": "Organiza contatos por status"
+          }
+        ]
+      },
+      "right": {
+        "title": "PARA A ASSOCIAÇÃO",
+        "items": [
+          {
+            "icon": "users",
+            "text": "Acolhimento centralizado"
+          },
+          {
+            "icon": "document",
+            "text": "Histórico dos contatos"
+          },
+          {
+            "icon": "target",
+            "text": "Encaminhamento para a equipe Kunk"
+          }
+        ]
+      },
+      "footer": "Contato → Identificação → Motivo → Fila de atendimento",
+      "backgroundImage": "./backgrounds/bg-triagem.png"
+    },
+    {
+      "id": "pedidos",
+      "title": "PEDIDOS",
+      "titleSize": 96,
+      "theme": "orders",
+      "heroIcon": "hero-orders",
+      "left": {
+        "title": "O QUE O MÓDULO FAZ",
+        "items": [
+          {
+            "icon": "checklist",
+            "text": "Cria pedido a partir da triagem"
+          },
+          {
+            "icon": "box",
+            "text": "Define produtos e quantidades"
+          },
+          {
+            "icon": "card",
+            "text": "Registra pagamento do pedido"
+          },
+          {
+            "icon": "truck",
+            "text": "Acompanha status até a entrega"
+          }
+        ]
+      },
+      "right": {
+        "title": "PARA A ASSOCIAÇÃO",
+        "items": [
+          {
+            "icon": "users",
+            "text": "Pedidos organizados em fila"
+          },
+          {
+            "icon": "target",
+            "text": "Rastreio do fluxo operacional"
+          },
+          {
+            "icon": "chart",
+            "text": "Menos retrabalho na equipe"
+          }
+        ]
+      },
+      "footer": "Contato → Pedido → Pagamento → Produção",
+      "backgroundImage": "./backgrounds/bg-pedidos.png"
+    },
+    {
+      "id": "atendimentos",
+      "title": "ATENDIMENTOS",
+      "titleSize": 96,
+      "theme": "care",
+      "heroIcon": "hero-care",
+      "left": {
+        "title": "O QUE O MÓDULO FAZ",
+        "items": [
+          {
+            "icon": "filter",
+            "text": "Abre atendimento pela triagem"
+          },
+          {
+            "icon": "calendar",
+            "text": "Agenda serviço com profissional"
+          },
+          {
+            "icon": "chart",
+            "text": "Relatório de atendimentos mensais"
+          }
+        ]
+      },
+      "right": {
+        "title": "PARA A ASSOCIAÇÃO",
+        "items": [
+          {
+            "icon": "users",
+            "text": "Agenda clara da equipe"
+          },
+          {
+            "icon": "history",
+            "text": "Histórico por associado"
+          },
+          {
+            "icon": "gear",
+            "text": "Controle do fluxo de cuidado"
+          }
+        ]
+      },
+      "footer": "Contato → Atendimento → Serviço → Conclusão",
+      "backgroundImage": "./backgrounds/bg-atendimentos.png"
+    },
+    {
+      "id": "associados",
+      "title": "ASSOCIADOS",
+      "titleSize": 96,
+      "theme": "rose",
+      "heroIcon": "hero-associates",
+      "left": {
+        "title": "O QUE O MÓDULO FAZ",
+        "items": [
+          {
+            "icon": "search",
+            "text": "Consulta dados pessoais"
+          },
+          {
+            "icon": "users",
+            "text": "Gerencia pacientes vinculados"
+          },
+          {
+            "icon": "document",
+            "text": "Organiza receitas e documentos"
+          },
+          {
+            "icon": "checklist",
+            "text": "Registra anotações e histórico"
+          }
+        ]
+      },
+      "right": {
+        "title": "PARA A ASSOCIAÇÃO",
+        "items": [
+          {
+            "icon": "database",
+            "text": "Cadastro centralizado"
+          },
+          {
+            "icon": "history",
+            "text": "Histórico completo do associado"
+          },
+          {
+            "icon": "heart",
+            "text": "Informações para o acolhimento"
+          }
+        ]
+      },
+      "footer": "Cadastro → Pacientes → Documentos → Histórico",
+      "backgroundImage": "./backgrounds/bg-associados.png"
+    },
+    {
+      "id": "dashboard",
+      "title": "DASHBOARD",
+      "titleSize": 96,
+      "theme": "forest",
+      "heroIcon": "hero-dashboard",
+      "left": {
+        "title": "O QUE O MÓDULO FAZ",
+        "items": [
+          {
+            "icon": "user",
+            "text": "Indicadores de associados"
+          },
+          {
+            "icon": "checklist",
+            "text": "Métricas de atendimentos"
+          },
+          {
+            "icon": "box",
+            "text": "Desempenho dos pedidos"
+          },
+          {
+            "icon": "filter",
+            "text": "Resultados da triagem"
+          }
+        ]
+      },
+      "right": {
+        "title": "PARA A ASSOCIAÇÃO",
+        "items": [
+          {
+            "icon": "eye",
+            "text": "Visão integrada da operação"
+          },
+          {
+            "icon": "chart",
+            "text": "Decisões baseadas em dados"
+          },
+          {
+            "icon": "target",
+            "text": "Acompanhamento de resultados"
+          }
+        ]
+      },
+      "footer": "Associados → Atendimentos → Pedidos → Triagem",
+      "backgroundImage": "./backgrounds/bg-dashboard.png"
+    },
+    {
+      "id": "relatorio-atendimentos",
+      "title": "RELATÓRIO DE ATENDIMENTOS",
+      "titleSize": 96,
+      "theme": "data",
+      "heroIcon": "hero-report",
+      "left": {
+        "title": "O QUE O MÓDULO FAZ",
+        "items": [
+          {
+            "icon": "filter",
+            "text": "Agrupa atendimentos por mês"
+          },
+          {
+            "icon": "calendar",
+            "text": "Organiza dados por profissional"
+          },
+          {
+            "icon": "checklist",
+            "text": "Permite validar pagamentos"
+          },
+          {
+            "icon": "list",
+            "text": "Registra e resolve contestações"
+          }
+        ]
+      },
+      "right": {
+        "title": "PARA A ASSOCIAÇÃO",
+        "items": [
+          {
+            "icon": "users",
+            "text": "Transparência nos pagamentos"
+          },
+          {
+            "icon": "checklist",
+            "text": "Conferência dos atendimentos"
+          },
+          {
+            "icon": "history",
+            "text": "Histórico mensal auditável"
+          }
+        ]
+      },
+      "footer": "Mês → Profissional → Validação → Pagamento",
+      "backgroundImage": "./backgrounds/bg-relatorio-atendimentos.png"
+    },
+    {
+      "id": "api-kunk",
+      "title": "API KUNK",
+      "titleSize": 96,
+      "theme": "api",
+      "heroIcon": "hero-api",
+      "left": {
+        "title": "O QUE O MÓDULO FAZ",
+        "items": [
+          {
+            "icon": "user",
+            "text": "Autentica operadores e associados"
+          },
+          {
+            "icon": "checklist",
+            "text": "Acesso a triagem, pedidos e atendimentos"
+          },
+          {
+            "icon": "plug",
+            "text": "Conecta com serviços externos"
+          }
+        ]
+      },
+      "right": {
+        "title": "PARA A ASSOCIAÇÃO",
+        "items": [
+          {
+            "icon": "api",
+            "text": "API própria da associação"
+          },
+          {
+            "icon": "plug",
+            "text": "Integrações sob controle"
+          },
+          {
+            "icon": "database",
+            "text": "Dados únicos em todos os portais"
+          }
+        ]
+      },
+      "footer": "Auth → Recursos → Integração → Operação",
+      "backgroundImage": "./backgrounds/bg-api-kunk.png"
+    }
+  ]
+}

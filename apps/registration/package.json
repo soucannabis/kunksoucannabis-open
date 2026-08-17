@@ -32,6 +32,8 @@
     "demo:admin:part4": "node scripts/demo-record-admin-part4.mjs",
     "demo:admin:part3-4": "node scripts/demo-record-admin-part3-4.mjs",
     "demo:admin:all": "node scripts/demo-record-admin-all.mjs",
+    "covers:render": "node scripts/render-covers.mjs",
+    "covers:preview": "node scripts/render-covers.mjs --preview",
     "demo:triagem-servico": "node scripts/demo-record-triagem-servico.mjs",
     "shotcut:add": "node scripts/shotcut-append.mjs",
     "openshot:add": "flatpak run --command=python3 org.openshot.OpenShot scripts/openshot-append.py"

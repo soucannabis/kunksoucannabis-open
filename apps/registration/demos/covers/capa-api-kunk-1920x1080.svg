@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-label="API KUNK">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#021428"/>
+      <stop offset="45%" stop-color="#03314f"/>
+      <stop offset="100%" stop-color="#012018"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#1ec8ff" stop-opacity="0.28"/>
+      <stop offset="55%" stop-color="#0a6a8a" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="leafShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00140a" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <!-- Fundo -->
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <rect width="1920" height="1080" fill="url(#glow)"/>
+
+  <!-- Rede neural decorativa -->
+  <g fill="none" stroke="#5fe0ff" stroke-width="1.2" opacity="0.55" filter="url(#softGlow)">
+    <path d="M120 180 L280 240 L420 160 L560 260 L700 190 L820 300 L960 220 L1100 310 L1240 200 L1380 290 L1520 180 L1680 250 L1800 160"/>
+    <path d="M80 420 L220 480 L360 400 L500 520 L640 430 L780 540 L920 450 L1060 560 L1200 460 L1340 550 L1480 440 L1620 530 L1840 470"/>
+    <path d="M140 720 L300 780 L440 690 L580 820 L720 730 L860 840 L1000 750 L1140 860 L1280 740 L1420 850 L1560 760 L1720 830"/>
+    <path d="M200 120 L260 320 L340 520 L400 700 L480 900"/>
+    <path d="M1720 140 L1660 340 L1580 540 L1520 720 L1440 920"/>
+    <path d="M960 80 L900 280 L820 460 L760 650 L700 860"/>
+    <path d="M960 80 L1020 280 L1100 460 L1160 650 L1220 860"/>
+  </g>
+  <g fill="#8ff0ff" opacity="0.85" filter="url(#softGlow)">
+    <circle cx="120" cy="180" r="3.5"/><circle cx="280" cy="240" r="2.8"/><circle cx="420" cy="160" r="3.2"/>
+    <circle cx="560" cy="260" r="2.6"/><circle cx="700" cy="190" r="3"/><circle cx="820" cy="300" r="2.5"/>
+    <circle cx="960" cy="220" r="3.4"/><circle cx="1100" cy="310" r="2.7"/><circle cx="1240" cy="200" r="3"/>
+    <circle cx="1380" cy="290" r="2.6"/><circle cx="1520" cy="180" r="3.1"/><circle cx="1680" cy="250" r="2.8"/>
+    <circle cx="220" cy="480" r="3"/><circle cx="500" cy="520" r="2.7"/><circle cx="780" cy="540" r="3.2"/>
+    <circle cx="1060" cy="560" r="2.8"/><circle cx="1340" cy="550" r="3"/><circle cx="1620" cy="530" r="2.6"/>
+    <circle cx="300" cy="780" r="2.9"/><circle cx="580" cy="820" r="3.1"/><circle cx="860" cy="840" r="2.7"/>
+    <circle cx="1140" cy="860" r="3"/><circle cx="1420" cy="850" r="2.8"/><circle cx="1720" cy="830" r="3.2"/>
+  </g>
+
+  <!-- Folhas cannabis (esquerda) -->
+  <g filter="url(#leafShadow)" opacity="0.92">
+    <g transform="translate(40,320) rotate(-18)">
+      <ellipse cx="0" cy="0" rx="42" ry="110" fill="#2f7a3a"/>
+      <ellipse cx="-38" cy="-20" rx="28" ry="78" fill="#3b9146" transform="rotate(-35)"/>
+      <ellipse cx="38" cy="-20" rx="28" ry="78" fill="#3b9146" transform="rotate(35)"/>
+      <ellipse cx="-55" cy="25" rx="22" ry="60" fill="#256b32" transform="rotate(-55)"/>
+      <ellipse cx="55" cy="25" rx="22" ry="60" fill="#256b32" transform="rotate(55)"/>
+      <ellipse cx="-28" cy="55" rx="18" ry="48" fill="#1e5a2a" transform="rotate(-20)"/>
+      <ellipse cx="28" cy="55" rx="18" ry="48" fill="#1e5a2a" transform="rotate(20)"/>
+      <path d="M0 -100 L0 70" stroke="#174820" stroke-width="3"/>
+    </g>
+    <g transform="translate(95,620) rotate(12) scale(0.85)">
+      <ellipse cx="0" cy="0" rx="36" ry="95" fill="#348640"/>
+      <ellipse cx="-32" cy="-16" rx="24" ry="68" fill="#2f7a3a" transform="rotate(-35)"/>
+      <ellipse cx="32" cy="-16" rx="24" ry="68" fill="#2f7a3a" transform="rotate(35)"/>
+      <ellipse cx="-48" cy="22" rx="18" ry="52" fill="#256b32" transform="rotate(-55)"/>
+      <ellipse cx="48" cy="22" rx="18" ry="52" fill="#256b32" transform="rotate(55)"/>
+      <path d="M0 -88 L0 60" stroke="#174820" stroke-width="2.5"/>
+    </g>
+  </g>
+
+  <!-- Folhas cannabis (direita) -->
+  <g filter="url(#leafShadow)" opacity="0.92">
+    <g transform="translate(1840,300) rotate(22)">
+      <ellipse cx="0" cy="0" rx="42" ry="110" fill="#2f7a3a"/>
+      <ellipse cx="-38" cy="-20" rx="28" ry="78" fill="#3b9146" transform="rotate(-35)"/>
+      <ellipse cx="38" cy="-20" rx="28" ry="78" fill="#3b9146" transform="rotate(35)"/>
+      <ellipse cx="-55" cy="25" rx="22" ry="60" fill="#256b32" transform="rotate(-55)"/>
+      <ellipse cx="55" cy="25" rx="22" ry="60" fill="#256b32" transform="rotate(55)"/>
+      <path d="M0 -100 L0 70" stroke="#174820" stroke-width="3"/>
+    </g>
+    <g transform="translate(1765,650) rotate(-14) scale(0.9)">
+      <ellipse cx="0" cy="0" rx="38" ry="100" fill="#348640"/>
+      <ellipse cx="-34" cy="-18" rx="25" ry="70" fill="#2f7a3a" transform="rotate(-35)"/>
+      <ellipse cx="34" cy="-18" rx="25" ry="70" fill="#2f7a3a" transform="rotate(35)"/>
+      <ellipse cx="-50" cy="24" rx="19" ry="54" fill="#256b32" transform="rotate(-55)"/>
+      <ellipse cx="50" cy="24" rx="19" ry="54" fill="#256b32" transform="rotate(55)"/>
+      <path d="M0 -92 L0 64" stroke="#174820" stroke-width="2.5"/>
+    </g>
+  </g>
+
+  <!-- Snippet JSON (esquerda do título) -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#b7e9ff">
+    <rect x="250" y="48" width="280" height="168" rx="10" fill="#02182a" fill-opacity="0.72" stroke="#3aa7c8" stroke-opacity="0.45"/>
+    <text x="270" y="78">"endpoint": "/api/v1",</text>
+    <text x="270" y="100">"method": "GET",</text>
+    <text x="270" y="122">"status": "ok",</text>
+    <text x="270" y="144">"data": {</text>
+    <text x="286" y="166">"items": [{ "id": 123 }]</text>
+    <text x="270" y="188">}</text>
+  </g>
+
+  <!-- Ícone {} (direita do título) -->
+  <g transform="translate(1520,70)" fill="none" stroke="#7fe9ff" stroke-width="4" stroke-linecap="round" filter="url(#softGlow)">
+    <rect x="0" y="0" width="90" height="90" rx="10" opacity="0.9"/>
+    <path d="M32 22 C18 28 18 62 32 68"/>
+    <path d="M58 22 C72 28 72 62 58 68"/>
+  </g>
+
+  <!-- Título -->
+  <text x="960" y="118" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="78" font-weight="900" fill="#f7efdf" letter-spacing="4">API KUNK</text>
+
+  <!-- Painel esquerdo -->
+  <g>
+    <rect x="210" y="290" width="420" height="520" rx="28" fill="#fdf4e5" stroke="#c9a24a" stroke-width="3"/>
+    <text x="420" y="345" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" fill="#111">O QUE O MÓDULO FAZ</text>
+    <line x1="250" y1="365" x2="590" y2="365" stroke="#111" stroke-width="2"/>
+
+    <!-- item 1 -->
+    <circle cx="290" cy="430" r="28" fill="#111"/>
+    <g fill="#fff" transform="translate(290,430)">
+      <circle cx="0" cy="-8" r="8"/>
+      <path d="M-14 18 C-14 6 14 6 14 18 Z"/>
+    </g>
+    <text x="340" y="426" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#111">
+      <tspan x="340" dy="0">Autentica operadores</tspan>
+      <tspan x="340" dy="26">e associados</tspan>
+    </text>
+
+    <!-- item 2 -->
+    <circle cx="290" cy="530" r="28" fill="#111"/>
+    <g fill="none" stroke="#fff" stroke-width="2.4" transform="translate(290,530)">
+      <rect x="-10" y="-12" width="20" height="24" rx="2"/>
+      <path d="M-5 -4 H5 M-5 2 H5 M-5 8 H2"/>
+    </g>
+    <text x="340" y="522" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#111">
+      <tspan x="340" dy="0">Acesso a triagem,</tspan>
+      <tspan x="340" dy="26">pedidos, atendimentos</tspan>
+    </text>
+
+    <!-- item 3 -->
+    <circle cx="290" cy="630" r="28" fill="#111"/>
+    <g fill="none" stroke="#fff" stroke-width="2.4" transform="translate(290,630)">
+      <rect x="-14" y="-6" width="10" height="12" rx="2"/>
+      <rect x="4" y="-6" width="10" height="12" rx="2"/>
+      <path d="M-4 0 H4"/>
+    </g>
+    <text x="340" y="626" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#111">
+      <tspan x="340" dy="0">Conecta com</tspan>
+      <tspan x="340" dy="26">serviços externos</tspan>
+    </text>
+  </g>
+
+  <!-- Emblema central -->
+  <g transform="translate(960,550)">
+    <circle r="168" fill="#003528" stroke="#d4af57" stroke-width="5"/>
+    <circle r="148" fill="none" stroke="#0e5a45" stroke-width="2" opacity="0.7"/>
+    <!-- wireframe / rede -->
+    <g fill="none" stroke="#fff" stroke-width="3.2" stroke-linejoin="round" opacity="0.95">
+      <polygon points="0,-78 68,-40 68,40 0,78 -68,40 -68,-40"/>
+      <polygon points="0,-42 38,-22 38,22 0,42 -38,22 -38,-22"/>
+      <path d="M0 -78 L0 -42 M68 -40 L38 -22 M68 40 L38 22 M0 78 L0 42 M-68 40 L-38 22 M-68 -40 L-38 -22"/>
+      <path d="M-68 -40 L0 0 L68 -40 M-68 40 L0 0 L68 40"/>
+    </g>
+    <text y="8" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="34" font-weight="900" fill="#fff">API</text>
+    <!-- cadeado -->
+    <g transform="translate(0,42)" fill="none" stroke="#fff" stroke-width="2.6">
+      <rect x="-10" y="0" width="20" height="16" rx="2" fill="#fff" stroke="none"/>
+      <path d="M-6 0 V-8 A6 6 0 0 1 6 -8 V0" stroke="#fff"/>
+      <circle cx="0" cy="8" r="2" fill="#003528" stroke="none"/>
+    </g>
+  </g>
+
+  <!-- Painel direito -->
+  <g>
+    <rect x="1290" y="290" width="420" height="520" rx="28" fill="#fdf4e5" stroke="#c9a24a" stroke-width="3"/>
+    <text x="1500" y="345" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" fill="#111">PARA A ASSOCIAÇÃO</text>
+    <line x1="1330" y1="365" x2="1670" y2="365" stroke="#111" stroke-width="2"/>
+
+    <!-- item 1 -->
+    <circle cx="1370" cy="430" r="28" fill="#111"/>
+    <text x="1370" y="437" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="16" fill="#fff">API</text>
+    <text x="1420" y="426" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#111">
+      <tspan x="1420" dy="0">API própria da</tspan>
+      <tspan x="1420" dy="26">associação</tspan>
+    </text>
+
+    <!-- item 2 -->
+    <circle cx="1370" cy="530" r="28" fill="#111"/>
+    <g fill="none" stroke="#fff" stroke-width="2.3" transform="translate(1370,530)">
+      <path d="M-10 -8 H2 V2 H-10 Z"/>
+      <path d="M2 -2 H12 V10 H2 Z"/>
+      <path d="M-4 2 V12 H8"/>
+    </g>
+    <text x="1420" y="522" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#111">
+      <tspan x="1420" dy="0">Integrações sob</tspan>
+      <tspan x="1420" dy="26">controle</tspan>
+    </text>
+
+    <!-- item 3 -->
+    <circle cx="1370" cy="630" r="28" fill="#111"/>
+    <g fill="none" stroke="#fff" stroke-width="2.2" transform="translate(1370,630)">
+      <ellipse cx="0" cy="-8" rx="12" ry="5"/>
+      <path d="M-12 -8 V0 C-12 4 12 4 12 0 V-8"/>
+      <path d="M-12 0 V8 C-12 12 12 12 12 8 V0"/>
+    </g>
+    <text x="1420" y="622" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#111">
+      <tspan x="1420" dy="0">Dados únicos em</tspan>
+      <tspan x="1420" dy="26">todos os portais</tspan>
+    </text>
+  </g>
+
+  <!-- Rodapé -->
+  <g>
+    <rect x="560" y="980" width="800" height="54" rx="12" fill="#fdf4e5"/>
+    <text x="960" y="1015" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#111">Auth ’ Recursos ’ Integração ’ Operação</text>
+  </g>
+</svg>

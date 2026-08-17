@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kunk — Capa</title>
+    <link rel="stylesheet" href="./cover-layout.css" />
+  </head>
+  <body>
+    <main id="cover" class="cover" aria-label="Capa de vídeo">
+      <div class="cover__background" aria-hidden="true"></div>
+      <div class="cover__grid" aria-hidden="true"></div>
+      <div class="foliage foliage--left" aria-hidden="true"></div>
+      <div class="foliage foliage--right" aria-hidden="true"></div>
+
+      <header class="cover__header">
+        <p id="eyebrow" class="cover__eyebrow"></p>
+        <h1 id="title" class="cover__title"></h1>
+      </header>
+
+      <section class="cover__content">
+        <article class="panel panel--left">
+          <h2 id="left-title"></h2>
+          <div id="left-items" class="panel__items"></div>
+        </article>
+
+        <section class="hero" aria-label="Símbolo principal">
+          <div id="hero-icon" class="hero__icon"></div>
+        </section>
+
+        <article class="panel panel--right">
+          <h2 id="right-title"></h2>
+          <div id="right-items" class="panel__items"></div>
+        </article>
+      </section>
+
+      <footer id="footer" class="cover__footer"></footer>
+    </main>
+
+    <svg class="svg-library" aria-hidden="true">
+      <defs>
+        <symbol id="i-user" viewBox="0 0 64 64">
+          <circle cx="32" cy="20" r="12" />
+          <path d="M11 58c1-17 10-25 21-25s20 8 21 25z" />
+        </symbol>
+        <symbol id="i-users" viewBox="0 0 64 64">
+          <circle cx="32" cy="18" r="10" /><circle cx="12" cy="25" r="7" /><circle cx="52" cy="25" r="7" />
+          <path d="M17 57c1-17 7-25 15-25s14 8 15 25zM1 57c1-13 5-20 12-20 3 0 6 2 8 5M63 57c-1-13-5-20-12-20-3 0-6 2-8 5" />
+        </symbol>
+        <symbol id="i-document" viewBox="0 0 64 64">
+          <path d="M15 5h24l12 12v42H15zM39 5v13h12M23 29h20M23 39h20M23 49h14" />
+        </symbol>
+        <symbol id="i-checklist" viewBox="0 0 64 64">
+          <rect x="12" y="8" width="40" height="50" rx="4" />
+          <path d="m20 23 4 4 8-9M35 24h10M20 39l4 4 8-9M35 40h10" />
+        </symbol>
+        <symbol id="i-lock" viewBox="0 0 64 64">
+          <rect x="12" y="27" width="40" height="31" rx="5" />
+          <path d="M20 27V18a12 12 0 0 1 24 0v9M32 39v8" />
+        </symbol>
+        <symbol id="i-gear" viewBox="0 0 64 64">
+          <path d="m28 5 8 0 2 8 7 3 7-4 6 6-4 7 3 7 8 2v8l-8 2-3 7 4 7-6 6-7-4-7 3-2 8h-8l-2-8-7-3-7 4-6-6 4-7-3-7-8-2v-8l8-2 3-7-4-7 6-6 7 4 7-3z" />
+          <circle cx="32" cy="38" r="10" />
+        </symbol>
+        <symbol id="i-envelope" viewBox="0 0 64 64">
+          <rect x="6" y="13" width="52" height="38" rx="5" />
+          <path d="m8 17 24 20 24-20" />
+        </symbol>
+        <symbol id="i-list" viewBox="0 0 64 64">
+          <circle cx="12" cy="16" r="3" /><circle cx="12" cy="32" r="3" /><circle cx="12" cy="48" r="3" />
+          <path d="M23 16h35M23 32h35M23 48h35" />
+        </symbol>
+        <symbol id="i-box" viewBox="0 0 64 64">
+          <path d="m8 18 24-12 24 12-24 13zM8 18v29l24 12 24-12V18M32 31v28" />
+        </symbol>
+        <symbol id="i-card" viewBox="0 0 64 64">
+          <rect x="5" y="13" width="54" height="38" rx="6" />
+          <path d="M5 25h54M13 41h17" />
+        </symbol>
+        <symbol id="i-truck" viewBox="0 0 64 64">
+          <path d="M4 15h35v31H4zM39 27h12l9 10v9H39z" />
+          <circle cx="17" cy="49" r="6" /><circle cx="50" cy="49" r="6" />
+        </symbol>
+        <symbol id="i-calendar" viewBox="0 0 64 64">
+          <rect x="7" y="11" width="50" height="47" rx="5" />
+          <path d="M7 23h50M20 5v12M44 5v12M18 34h7M31 34h7M44 34h7M18 46h7M31 46h7" />
+        </symbol>
+        <symbol id="i-chart" viewBox="0 0 64 64">
+          <path d="M7 57V8M7 57h52M17 49V36h8v13M31 49V25h8v24M45 49V14h8v35" />
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 64 64">
+          <circle cx="27" cy="27" r="18" /><path d="m40 40 17 17M20 27h14M27 20v14" />
+        </symbol>
+        <symbol id="i-history" viewBox="0 0 64 64">
+          <path d="M12 19H3V10M5 18a27 27 0 1 1 2 32M32 17v17l12 8" />
+        </symbol>
+        <symbol id="i-heart" viewBox="0 0 64 64">
+          <path d="M32 56 8 34C-6 17 18 1 32 18 46 1 70 17 56 34z" />
+        </symbol>
+        <symbol id="i-eye" viewBox="0 0 64 64">
+          <path d="M3 32s11-19 29-19 29 19 29 19-11 19-29 19S3 32 3 32z" /><circle cx="32" cy="32" r="9" />
+        </symbol>
+        <symbol id="i-target" viewBox="0 0 64 64">
+          <circle cx="29" cy="35" r="24" /><circle cx="29" cy="35" r="14" /><circle cx="29" cy="35" r="5" />
+          <path d="M29 35 57 7M46 7h11v11" />
+        </symbol>
+        <symbol id="i-filter" viewBox="0 0 64 64">
+          <path d="M5 9h54L39 33v20l-14 7V33z" />
+        </symbol>
+        <symbol id="i-database" viewBox="0 0 64 64">
+          <ellipse cx="32" cy="13" rx="24" ry="9" /><path d="M8 13v18c0 12 48 12 48 0V13M8 31v18c0 12 48 12 48 0V31" />
+        </symbol>
+        <symbol id="i-plug" viewBox="0 0 64 64">
+          <path d="M20 6v16M44 6v16M13 22h38v7a19 19 0 0 1-38 0zM32 48v11" />
+        </symbol>
+        <symbol id="i-api" viewBox="0 0 64 64">
+          <path d="M17 9H8v46h9M47 9h9v46h-9" />
+          <text x="32" y="39" text-anchor="middle" font-size="20" font-family="Arial" font-weight="900" fill="currentColor" stroke="none">API</text>
+        </symbol>
+        <symbol id="i-dashboard" viewBox="0 0 64 64">
+          <rect x="5" y="7" width="54" height="50" rx="5" />
+          <path d="M32 7v50M5 32h54M13 25V18h7v7M38 25V15h6v10M47 25V11h6v14M14 49l6-7 6 4M39 48h14" />
+        </symbol>
+        <symbol id="i-headset" viewBox="0 0 64 64">
+          <path d="M9 34a23 23 0 0 1 46 0v15H43V34h12M9 34h12v15H9zM43 54c-3 5-8 6-14 6" />
+        </symbol>
+
+        <!-- Ícones centrais exclusivos: composições mais detalhadas -->
+        <symbol id="i-hero-registration" viewBox="0 0 96 96">
+          <rect x="8" y="24" width="62" height="58" rx="10" fill="currentColor" fill-opacity=".07"/>
+          <path d="M30 24v-4a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v4"/>
+          <circle cx="28" cy="45" r="9"/>
+          <path d="M15 69c1-9 6-15 13-15s12 6 13 15"/>
+          <path d="M50 41h12M50 52h12M50 63h8"/>
+          <circle cx="80" cy="20" r="12" fill="currentColor" fill-opacity=".14"/>
+          <path d="m74 20 4 4 8-9"/>
+        </symbol>
+        <symbol id="i-hero-triage" viewBox="0 0 96 96">
+          <circle cx="33" cy="34" r="12"/>
+          <path d="M15 37v-3a18 18 0 0 1 36 0v3"/>
+          <rect x="9" y="34" width="10" height="17" rx="5" fill="currentColor" fill-opacity=".14"/>
+          <rect x="47" y="34" width="10" height="17" rx="5" fill="currentColor" fill-opacity=".14"/>
+          <path d="M52 49v3a7 7 0 0 1-7 7h-3"/>
+          <path d="M11 84c1-17 9-26 22-26s21 9 22 26"/>
+          <rect x="58" y="10" width="34" height="28" rx="9" fill="currentColor" fill-opacity=".1"/>
+          <path d="M69 38v9l11-9"/>
+          <circle cx="68" cy="24" r="2" fill="currentColor" stroke="none"/>
+          <circle cx="75" cy="24" r="2" fill="currentColor" stroke="none"/>
+          <circle cx="82" cy="24" r="2" fill="currentColor" stroke="none"/>
+        </symbol>
+        <symbol id="i-hero-orders" viewBox="0 0 96 96">
+          <path d="m46 12 26 14-26 14-26-14z" fill="currentColor" fill-opacity=".12"/>
+          <path d="M20 26v30l26 14 26-14V26"/>
+          <path d="M46 40v30"/>
+          <path d="m33 19 26 14"/>
+          <circle cx="78" cy="74" r="13" fill="currentColor" fill-opacity=".14"/>
+          <path d="m72 74 4 5 9-11"/>
+        </symbol>
+        <symbol id="i-hero-care" viewBox="0 0 96 96">
+          <rect x="8" y="18" width="54" height="58" rx="10" fill="currentColor" fill-opacity=".07"/>
+          <path d="M8 34h54M22 10v14M48 10v14"/>
+          <path d="M35 46v20M25 56h20"/>
+          <circle cx="80" cy="72" r="14" fill="currentColor" fill-opacity=".14"/>
+          <path d="M80 63v9l6 4"/>
+        </symbol>
+        <symbol id="i-hero-associates" viewBox="0 0 96 96">
+          <circle cx="15" cy="39" r="9" fill="currentColor" fill-opacity=".12"/>
+          <path d="M2 78c1-15 6-23 14-23 3 0 6 1 8 3"/>
+          <circle cx="81" cy="39" r="9" fill="currentColor" fill-opacity=".12"/>
+          <path d="M94 78c-1-15-6-23-14-23-3 0-6 1-8 3"/>
+          <circle cx="48" cy="24" r="14"/>
+          <path d="M25 78c1-20 10-30 23-30s22 10 23 30"/>
+        </symbol>
+        <symbol id="i-hero-dashboard" viewBox="0 0 96 96">
+          <rect x="6" y="12" width="84" height="62" rx="9" fill="currentColor" fill-opacity=".07"/>
+          <path d="M6 26h84"/>
+          <circle cx="15" cy="19" r="2" fill="currentColor" stroke="none"/>
+          <circle cx="22" cy="19" r="2" fill="currentColor" stroke="none"/>
+          <circle cx="29" cy="19" r="2" fill="currentColor" stroke="none"/>
+          <path d="M18 64V48h8v16M32 64V38h8v26M46 64V54h8v10M16 64h40"/>
+          <path d="m62 46 7-8 6 5 9-12M78 31h6v6"/>
+          <path d="M62 58h22M62 66h14"/>
+          <path d="M40 74v9M56 74v9M32 85h32"/>
+        </symbol>
+        <symbol id="i-hero-report" viewBox="0 0 96 96">
+          <path d="M10 12a6 6 0 0 1 6-6h24l14 14v52a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6z" fill="currentColor" fill-opacity=".07"/>
+          <path d="M40 6v8a6 6 0 0 0 6 6h8"/>
+          <path d="M20 32h18M20 40h24"/>
+          <path d="M22 64V52h6v12M34 64V44h6v20M46 64V36h6v28M18 64h36"/>
+          <circle cx="76" cy="66" r="15"/>
+          <path d="m87 77 6 6"/>
+          <path d="m70 66 4 5 9-11"/>
+        </symbol>
+        <symbol id="i-hero-api" viewBox="0 0 96 96">
+          <polygon points="48,8 82,28 82,68 48,88 14,68 14,28" fill="currentColor" fill-opacity=".06"/>
+          <path d="M48 15v11M76 32 66 37M76 64 66 59M48 81V70M20 64l10-5M20 32l10 5"/>
+          <circle cx="48" cy="8" r="3.5" fill="currentColor" stroke="none"/>
+          <circle cx="82" cy="28" r="3.5" fill="currentColor" stroke="none"/>
+          <circle cx="82" cy="68" r="3.5" fill="currentColor" stroke="none"/>
+          <circle cx="48" cy="88" r="3.5" fill="currentColor" stroke="none"/>
+          <circle cx="14" cy="68" r="3.5" fill="currentColor" stroke="none"/>
+          <circle cx="14" cy="28" r="3.5" fill="currentColor" stroke="none"/>
+          <path d="M27 38c-5 3-5 17 0 20M69 38c5 3 5 17 0 20"/>
+          <text x="48" y="54" text-anchor="middle" font-size="16" font-family="Arial" font-weight="900" fill="currentColor" stroke="none">API</text>
+        </symbol>
+      </defs>
+    </svg>
+
+    <script type="module" src="./cover-layout.js"></script>
+  </body>
+</html>

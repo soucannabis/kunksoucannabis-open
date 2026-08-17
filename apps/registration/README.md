@@ -142,6 +142,22 @@ Tour do painel Admin (`:4256`) com login `admin@soucannabis.ong.br` (criado auto
 
 Também precisa: API `:4250` + admin `:4256`. Variável opcional: `DEMO_ADMIN_URL`.
 
+### Capas reutilizáveis (`covers:render`)
+
+As capas usam um único layout HTML/CSS em `demos/covers/cover-layout.*`. Textos,
+ícones e temas ficam em `demos/covers/covers.json`; para uma nova capa, basta
+adicionar outra entrada. `backgroundImage` é opcional e permite trocar somente
+o fundo sem duplicar o layout.
+
+```bash
+cd apps/registration
+npm run covers:render                         # todas
+npm run covers:render -- api-kunk dashboard  # IDs específicos
+npm run covers:preview                        # preview HTML local
+```
+
+Saída: `demos/covers/generated/capa-<id>-1920x1080.png`.
+
 ### Projeto Shotcut (`kunk-demos.mlt`)
 
 Projeto principal da timeline: `demos/output/kunk-demos.mlt`.
