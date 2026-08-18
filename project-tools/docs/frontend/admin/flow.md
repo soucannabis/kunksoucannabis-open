@@ -206,7 +206,7 @@ Campo `system_users.permissions` — JSON array de roles, alinhado a [`../../api
 | `Acolhimento` | Painel operacional |
 | `Produção` | Painel operacional |
 | `Financeiro` | Painel operacional |
-| `Prescritor` | Escopo próprio |
+| `Profissional` | Portal do relatório de atendimentos (exclusivo; exige profissional no código interno) |
 | `api` | Reservado a tokens |
 
 UI: multi-select / chips das roles conhecidas. Pelo menos um operador `Administrador` deve permanecer ativo (guard no server ao remover a própria role ou ao deletar o último admin).

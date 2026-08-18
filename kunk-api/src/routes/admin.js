@@ -10,6 +10,7 @@ const {
   PK,
   SENSITIVE_FIELDS,
   READONLY_FIELDS,
+  READONLY_ON_UPDATE,
   SEARCHABLE,
 } = require('../schema/collections');
 const { MATRIX } = require('../schema/rbac');
@@ -41,8 +42,7 @@ const ROLE_DESCRIPTIONS = {
   Acolhimento: 'Painel operacional (acolhimento)',
   Produção: 'Painel operacional (produção)',
   Financeiro: 'Painel operacional (financeiro)',
-  Prescritor: 'Escopo do próprio prescritor',
-  Profissional: 'Portal do relatório de serviços (próprios dados)',
+  Profissional: 'Portal do relatório de atendimentos (próprios dados)',
   api: 'Reservado a tokens de integração',
 };
 
@@ -75,6 +75,7 @@ router.get('/schema', (req, res) => {
     columns: COLUMNS[name] || [],
     sensitive: SENSITIVE_FIELDS[name] || [],
     readonly: READONLY_FIELDS[name] || [],
+    readonlyOnUpdate: READONLY_ON_UPDATE[name] || [],
     searchable: SEARCHABLE[name] || [],
     relations: RELATIONS[name] || [],
   }));

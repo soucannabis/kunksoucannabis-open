@@ -1,5 +1,5 @@
 /**
- * Demo Admin parte 1: login + associação + banco de dados + triagem.
+ * Demo Admin parte 1: login + associação + triagem (pula Banco de dados).
  *
  * Uso: npm run demo:admin:part1
  */

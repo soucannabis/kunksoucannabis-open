@@ -15,12 +15,12 @@
  *
  * Env úteis:
  *   DEMO_APP_URL       (default http://localhost:4255)
- *   DEMO_EMAIL         (default e-mail único demo-cadastro-…)
+ *   DEMO_EMAIL         (default associado@soucannabis.ong.br)
  *   DEMO_PASSWORD      (default senha123)
  *   DEMO_SLOW_MO       (default 350)
  *   DEMO_HOLD_MS       (pausa final — bem-vindo se --until-welcome, senão contato; default 15000)
  *   DEMO_CHANNEL       (default msedge)
- *   DEMO_CLEANUP=1     (apaga o associado criado via DB, se DATABASE_URL disponível)
+ *   DEMO_CLEANUP=0     (mantém o associado; por padrão o funil completo apaga ao final)
  *   DEMO_STOP_AT=welcome | flag --until-welcome
  *                      para o vídeo na tela /bem-vindo (após criar a conta)
  *   --from-welcome-until-signature
@@ -29,7 +29,7 @@
  *                      faz login, assina o termo e termina na página /contato
  *
  * No fim (funil completo): após cadastro concluído, clica em “Abrir uma solicitação de contato”,
- * aguarda /contato e mantém a tela por DEMO_HOLD_MS.
+ * aguarda /contato e mantém a tela por DEMO_HOLD_MS. Depois exclui o associado do banco.
  */
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -52,7 +52,6 @@ import {
   selectOptionWithCursor,
   typeInto,
   typeOverDuration,
-  uniqueEmail,
 } from './demo-lib.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -61,6 +60,7 @@ const FIXTURE_CNH = join(__dirname, '..', 'demos', 'fixtures', 'cnh-aberta.jpg')
 const FIXTURE_RECEITA = join(__dirname, '..', 'demos', 'fixtures', 'receita.jpg');
 
 const VALID_CPF = '52998224725';
+const DEFAULT_DEMO_EMAIL = 'associado@soucannabis.ong.br';
 
 /** Cursor rápido entre campos do formulário (a digitação continua no ritmo normal). */
 const FAST_CURSOR = { durationMs: 110, settleMs: 15, pulseMs: 60 };
@@ -73,7 +73,7 @@ const DEMO_PERSON = {
   associate_cpf: VALID_CPF,
   associate_rg: '1234567',
   associate_rg_issuer: 'SSP/SP',
-  marital_status: 'Solteiro',
+  marital_status: 'Solteiro(a)',
   mobile_number: '11999999999',
   street: 'Rua das Flores',
   street_number: '100',
@@ -292,61 +292,87 @@ async function uploadDemoJpeg(page, inputId, filePath = FIXTURE_JPEG) {
 async function ensureDocSignTemplates(context, appUrl) {
   const apiUrl = env('E2E_API_URL', `${appUrl}/api/v1`).replace(/\/$/, '');
   log('templates', `garantir templates em ${apiUrl}`);
-  const request = context.request;
-  const login = await request.post(`${apiUrl}/auth/login`, {
-    data: { email: 'admin@kunk-api.test', password: 'TestAdmin123!' },
-    headers: { 'X-Kunk-App': 'admin' },
-    failOnStatusCode: false,
-  });
-  if (login.status() !== 200) {
-    log(
-      'templates',
-      `login admin falhou (HTTP ${login.status()}) — seguindo (templates podem já estar ok)`
-    );
-    return;
-  }
-  log('templates', 'login admin OK');
-  const setCookie = login.headers()['set-cookie'];
-  const cookie = Array.isArray(setCookie)
-    ? setCookie.map((c) => String(c).split(';')[0]).join('; ')
-    : String(setCookie || '').split(';')[0];
 
-  for (const kind of ['self', 'with_patient']) {
-    const tpl = await request.get(`${apiUrl}/doc-sign/templates/${kind}`, {
-      headers: { Cookie: cookie },
+  // Request isolado: NÃO usar context.request — o login admin gravaria
+  // kunk_oss_session_admin no jar do browser e, no localhost, a API ignora
+  // associate_session quando há cookie de operador (upload vira arquivo órfão).
+  const { request: playwrightRequest } = await import('@playwright/test');
+  const api = await playwrightRequest.newContext({
+    baseURL: apiUrl,
+    extraHTTPHeaders: { 'X-Kunk-App': 'admin' },
+  });
+
+  try {
+    const login = await api.post('/auth/login', {
+      data: { email: 'admin@kunk-api.test', password: 'TestAdmin123!' },
       failOnStatusCode: false,
     });
-    if (tpl.status() !== 200) {
-      log('templates', `${kind} GET → HTTP ${tpl.status()} (ignorado)`);
-      continue;
-    }
-    const body = await tpl.json().catch(() => ({}));
-    if (body.data?.current_version_id) {
+    if (login.status() !== 200) {
       log(
         'templates',
-        `${kind} já publicado (version=${body.data.current_version_id})`
+        `login admin falhou (HTTP ${login.status()}) — seguindo (templates podem já estar ok)`
       );
-      continue;
+      return;
     }
-    const res = await request.post(`${apiUrl}/doc-sign/templates/${kind}/publish`, {
-      headers: { Cookie: cookie },
-      data: { notes: 'demo auto-publish' },
-      failOnStatusCode: false,
-    });
-    log('templates', `${kind} publish → HTTP ${res.status()}`);
+    log('templates', 'login admin OK (jar isolado)');
+
+    for (const kind of ['self', 'with_patient']) {
+      const tpl = await api.get(`/doc-sign/templates/${kind}`, {
+        failOnStatusCode: false,
+      });
+      if (tpl.status() !== 200) {
+        log('templates', `${kind} GET → HTTP ${tpl.status()} (ignorado)`);
+        continue;
+      }
+      const body = await tpl.json().catch(() => ({}));
+      if (body.data?.current_version_id) {
+        log(
+          'templates',
+          `${kind} já publicado (version=${body.data.current_version_id})`
+        );
+        continue;
+      }
+      const res = await api.post(`/doc-sign/templates/${kind}/publish`, {
+        data: { notes: 'demo auto-publish' },
+        failOnStatusCode: false,
+      });
+      log('templates', `${kind} publish → HTTP ${res.status()}`);
+    }
+  } finally {
+    await api.dispose();
+    // Cinto de segurança: remove cookies de operador que possam ter sobrado no browser.
+    // Neste ponto o associado ainda não autenticou no funil completo.
+    const cookies = await context.cookies();
+    const operatorNames = new Set([
+      'kunk_oss_session',
+      'kunk_oss_session_admin',
+      'kunk_oss_session_kunk',
+      'kunk_oss_session_doc_sign',
+    ]);
+    const polluted = cookies.filter((c) => operatorNames.has(c.name));
+    if (polluted.length) {
+      await context.clearCookies();
+      log(
+        'templates',
+        `removidos cookies de operador do browser: ${polluted.map((c) => c.name).join(', ')}`
+      );
+    }
   }
 }
 
-async function maybeCleanup(email) {
-  if (env('DEMO_CLEANUP', '') !== '1') {
-    log('cleanup', 'pulado (DEMO_CLEANUP≠1)');
+async function maybeCleanup(email, { enabled }) {
+  if (!enabled) {
+    log('cleanup', 'pulado (conta preservada para clipe seguinte ou DEMO_CLEANUP=0)');
     return;
   }
   try {
     const { deleteAssociateByEmail } = await import('../e2e/helpers/db.js');
     log('cleanup', `apagando associado ${email}`);
-    await deleteAssociateByEmail(email);
-    log('cleanup', `associado removido: ${email}`);
+    const result = await deleteAssociateByEmail(email);
+    log(
+      'cleanup',
+      `associado removido: ${email} (deletedUsers=${result?.deletedUsers ?? '?'})`
+    );
   } catch (err) {
     log('warn', `cleanup falhou: ${err?.message || err}`);
   }
@@ -383,12 +409,19 @@ async function main() {
   const fromSignatureUntilContact = process.argv.includes(
     '--from-signature-until-contact'
   );
-  const email = env('DEMO_EMAIL', '') || uniqueEmail('demo-cadastro');
+  const isFullFunnel =
+    !stopAtWelcome &&
+    !fromWelcomeUntilSignature &&
+    !fromSignatureUntilContact;
+  const email = env('DEMO_EMAIL', '') || DEFAULT_DEMO_EMAIL;
   const password = cfg.password;
   const person = DEMO_PERSON;
   const holdMs = stopAtWelcome || fromWelcomeUntilSignature
     ? Number(env('DEMO_HOLD_MS', '5000'))
     : cfg.holdMs;
+  // Funil completo apaga o associado ao final; clipes encadeados preservam a conta.
+  const shouldCleanup =
+    isFullFunnel && env('DEMO_CLEANUP', '1') !== '0';
 
   log('start', '══════════════════════════════════════');
   log(
@@ -413,11 +446,7 @@ async function main() {
   log('start', `outDir=${outDir}`);
   log('start', '══════════════════════════════════════');
 
-  if (
-    env('DEMO_EMAIL', '') &&
-    !fromWelcomeUntilSignature &&
-    !fromSignatureUntilContact
-  ) {
+  if (!fromWelcomeUntilSignature && !fromSignatureUntilContact) {
     await ensureEmailAvailable(email);
   }
   if (fromSignatureUntilContact) {
@@ -747,7 +776,7 @@ async function main() {
   } finally {
     log('browser', 'fechando e salvando vídeo…');
     await closeAndSave();
-    await maybeCleanup(email);
+    await maybeCleanup(email, { enabled: shouldCleanup });
   }
 }
 

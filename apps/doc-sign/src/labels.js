@@ -13,8 +13,10 @@ export const KIND_LABEL = {
 
 export const EVENT_LABEL = {
   'contract.created': 'Termo criado',
-  'email.sent': 'E-mail enviado',
-  'form.viewed': 'Formulário visualizado',
+  'contract.voided': 'Termo anulado',
+  'email.sent': 'E-mail de assinatura enviado',
+  'email.confirmation_sent': 'E-mail de confirmação enviado',
+  'form.viewed': 'Termo visualizado',
   'submission.started': 'Assinatura iniciada',
   'submission.completed': 'Assinatura concluída',
 };
@@ -55,7 +57,14 @@ export function kindLabel(kind) {
 }
 
 export function eventLabel(type) {
-  return EVENT_LABEL[type] || type || '—';
+  const key = String(type || '').trim();
+  if (!key) return '—';
+  if (EVENT_LABEL[key]) return EVENT_LABEL[key];
+  if (key.startsWith('email.')) return 'E-mail enviado';
+  if (key.startsWith('submission.')) return 'Assinatura';
+  if (key.startsWith('form.')) return 'Termo visualizado';
+  if (key.startsWith('contract.')) return 'Ação no termo';
+  return 'Ação do termo';
 }
 
 export function variableLabel(name) {
@@ -65,4 +74,9 @@ export function variableLabel(name) {
 export function formatValue(value) {
   if (value == null || String(value).trim() === '') return '—';
   return String(value);
+}
+
+export function eventActionLabel(event) {
+  if (!event) return '—';
+  return event.label || eventLabel(event.event_type);
 }

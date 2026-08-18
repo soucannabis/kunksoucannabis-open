@@ -12,16 +12,13 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const bcrypt = require('bcrypt');
 const { Pool } = require('pg');
 
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const manifest = require('./manifest.json');
 const FIXTURES_DIR = path.join(__dirname, 'fixtures');
-/** Senha das contas de associado no sample (não cria operadores). */
-const SAMPLE_ASSOCIATE_PASSWORD = 'DemoAssociate123!';
-const SALT_ROUNDS = 8;
+/** Sample preenche listas; associado e token de API ficam sem senha/credencial. */
 const SAMPLE_CREATED_BY = 'sample-seed';
 
 const FIRST_NAMES = [
@@ -142,7 +139,7 @@ function serializeValue(v) {
   return v;
 }
 
-async function buildDataset(passwordHash, countsOverride = null) {
+async function buildDataset(countsOverride = null) {
   const counts = { ...manifest.counts, ...(countsOverride || {}) };
 
   const files = Array.from({ length: counts.files }, (_, i) => ({
@@ -248,7 +245,7 @@ async function buildDataset(passwordHash, countsOverride = null) {
       state,
       cep: fakeCep(i + 1),
       email_account: `associate${String(i + 1).padStart(3, '0')}@demo.kunk.local`,
-      account_password: passwordHash,
+      account_password: null,
       user_code: userCode,
       rg_proof: `rg-proof-${i + 1}.pdf`,
       associate_cpf: fakeCpf(i + 1),
@@ -278,8 +275,8 @@ async function buildDataset(passwordHash, countsOverride = null) {
         country: 'BR',
       },
       prescriber_code: String(pro.professional_code),
-      session_token: `inactive-demo-token-${i + 1}`,
-      session_expires: daysAgo(-1),
+      session_token: null,
+      session_expires: null,
       last_activity: daysAgo(i % 14),
       is_session_active: false,
       fullname: `${first} ${last}`,
@@ -506,12 +503,7 @@ async function buildDataset(passwordHash, countsOverride = null) {
     },
   ].slice(0, counts.reports);
 
-  const users_api = [
-    {
-      email: JSON.stringify({ label: 'demo-integration', scopes: ['*'] }),
-      token: await bcrypt.hash('kunk_live_demo_sample_token_do_not_use_prod', SALT_ROUNDS),
-    },
-  ];
+  const users_api = [];
 
   const icFixturePath = path.join(FIXTURES_DIR, 'institutional_clients.json');
   const institutional_clients = (
@@ -759,7 +751,7 @@ const SMALL_COUNTS = {
   users_files: 3,
   orders_files: 2,
   services_files: 2,
-  users_api: 1,
+  users_api: 0,
 };
 
 /**
@@ -776,8 +768,7 @@ async function main() {
   const noTruncate = args.includes('--no-truncate');
 
   console.log('Building full-field fictional sample dataset…');
-  const passwordHash = await bcrypt.hash(SAMPLE_ASSOCIATE_PASSWORD, SALT_ROUNDS);
-  const dataset = await buildDataset(passwordHash);
+  const dataset = await buildDataset();
 
   ensureDir(FIXTURES_DIR);
   writeFixtures(dataset);
@@ -795,8 +786,7 @@ async function main() {
   }
 
   await seedDatabase(dataset, { truncate: !noTruncate, writeFixtures: true });
-  console.log('\nSample data completo instalado (sem operadores).');
-  console.log(`Senha das contas de associado sample: ${SAMPLE_ASSOCIATE_PASSWORD}`);
+  console.log('\nSample data completo instalado (sem operadores, sem senha de associado, sem token de API).');
 }
 
 if (require.main === module) {
@@ -811,7 +801,6 @@ module.exports = {
   seedDatabase,
   seedSmallSample,
   SMALL_COUNTS,
-  SAMPLE_ASSOCIATE_PASSWORD,
   ASSOCIATE_STATUS_KINDS,
   pickAssociateStatusKind,
 };

@@ -29,7 +29,7 @@ function authorizeCollection(action) {
           throw new AppError(403, 'FORBIDDEN', `Sem permissão para ${action} em ${collection}`);
         }
       }
-      req.scopeFilter = scopeFilterFor(req.user.roles || req.user.permissions, req.user);
+      req.scopeFilter = scopeFilterFor(req.user.roles || req.user.permissions, req.user, collection);
       next();
     } catch (err) {
       next(err);

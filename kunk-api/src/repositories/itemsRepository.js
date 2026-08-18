@@ -99,12 +99,13 @@ async function getItem(collectionName, id, queryParams = {}, { scopeFilter } = {
   return stripSensitive(collectionName, result.rows[0]);
 }
 
-function sanitizeWritePayload(collectionName, payload, { isCreate } = {}) {
+function sanitizeWritePayload(collectionName, payload, { isCreate, skipReadonly } = {}) {
   const collection = getCollection(collectionName);
   if (!collection) {
     throw new AppError(404, 'UNKNOWN_COLLECTION', `Collection desconhecida: ${collectionName}`);
   }
 
+  const skip = new Set(Array.isArray(skipReadonly) ? skipReadonly : []);
   const unknown = [];
   const out = {};
   for (const [key, value] of Object.entries(payload || {})) {
@@ -112,11 +113,14 @@ function sanitizeWritePayload(collectionName, payload, { isCreate } = {}) {
       unknown.push(key);
       continue;
     }
-    if (collection.readonly.includes(key) && !(isCreate && collection.pk.type === 'uuid' && key === 'id')) {
+    const createUuidPk = isCreate && collection.pk.type === 'uuid' && key === 'id';
+    const alwaysReadonly = collection.readonly.includes(key) && !createUuidPk;
+    const updateReadonly = !isCreate && (collection.readonlyOnUpdate || []).includes(key);
+    if ((alwaysReadonly || updateReadonly) && !skip.has(key)) {
       if (key === collection.pk.name) continue;
       continue;
     }
-    if (collection.sensitive.includes(key) && key !== 'password' && key !== 'account_password' && key !== 'token') {
+    if (collection.sensitive.includes(key)) {
       continue;
     }
     if (value === undefined) continue;
@@ -188,7 +192,7 @@ async function createItem(collectionName, payload) {
   return row;
 }
 
-async function updateItem(collectionName, id, payload, { scopeFilter } = {}) {
+async function updateItem(collectionName, id, payload, { scopeFilter, skipReadonly } = {}) {
   const collection = getCollection(collectionName);
   if (!collection) {
     throw new AppError(404, 'UNKNOWN_COLLECTION', `Collection desconhecida: ${collectionName}`);
@@ -204,7 +208,7 @@ async function updateItem(collectionName, id, payload, { scopeFilter } = {}) {
     before = null;
   }
 
-  const data = sanitizeWritePayload(collectionName, payload, { isCreate: false });
+  const data = sanitizeWritePayload(collectionName, payload, { isCreate: false, skipReadonly });
   if (collection.columns.includes('date_updated')) {
     data.date_updated = new Date().toISOString();
   }

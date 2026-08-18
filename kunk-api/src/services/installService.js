@@ -5,6 +5,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { withClient, query } = require('../db/pool');
 const { AppError } = require('../utils/response');
+const { detectMimeFromBuffer } = require('../utils/fileType');
 const authRepository = require('../repositories/authRepository');
 const filesRepository = require('../repositories/filesRepository');
 const { memoryCache, keys } = require('../cache');
@@ -207,14 +208,18 @@ function decodeLogo(logoBase64, logoMime) {
   if (buffer.length > MAX_LOGO_BYTES) {
     throw new AppError(400, 'VALIDATION_ERROR', 'Logo deve ter no máximo 2 MB');
   }
-  const ext = mime.includes('png')
+  const detected = detectMimeFromBuffer(buffer);
+  if (!detected || !ALLOWED_LOGO_MIMES.has(detected)) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Logo deve ser PNG, JPEG, WebP ou GIF');
+  }
+  const ext = detected.includes('png')
     ? 'png'
-    : mime.includes('webp')
+    : detected.includes('webp')
       ? 'webp'
-      : mime.includes('gif')
+      : detected.includes('gif')
         ? 'gif'
         : 'jpg';
-  return { buffer, mime, filename: `install-logo.${ext}` };
+  return { buffer, mime: detected, filename: `install-logo.${ext}` };
 }
 
 function validateAssociation(association) {

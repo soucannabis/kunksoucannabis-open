@@ -68,18 +68,10 @@ const MATRIX = {
     services_files: expand('R'),
     users_files: expand('R'),
   },
-  Prescritor: {
-    orders: expand('R'),
-    services: expand('R'),
-    professionals: expand('R'),
-    reports: expand('R'),
-  },
-  /** Portal do relatório de serviços — escopo via internal_code = professional_code */
+  /** Portal do relatório de serviços — escopo via internal_code = professional_code. Sem files. */
   Profissional: {
     services: expand('R'),
     professionals: expand('RU'),
-    services_files: expand('R'),
-    files: expand('R'),
   },
   api: Object.fromEntries(
     [
@@ -91,11 +83,25 @@ const MATRIX = {
   ),
 };
 
+const STAFF_ROLES = ['Administrador', 'Acolhimento', 'Produção', 'Financeiro'];
+
 const SCOPED_ROLES = {
-  Prescritor: { field: 'prescriber_code', fromUser: 'internal_code' },
   // services.professional_id = professionals.professional_code
   Profissional: { field: 'professional_id', fromUser: 'internal_code' },
 };
+
+/** Campos que o portal (só Profissional) não pode gravar no próprio cadastro. */
+const PORTAL_PROFESSIONAL_DENIED_FIELDS = new Set([
+  'donation_balance',
+  'recipient_id',
+  'is_collaborator',
+  'is_prescriber',
+  'active',
+  'professional_code',
+  'calendar_id',
+  'consultation_price',
+  'contest_reports',
+]);
 
 function parseRoles(permissions) {
   if (!permissions) return [];
@@ -123,18 +129,43 @@ function can(roles, collection, action) {
   return false;
 }
 
-function scopeFilterFor(roles, user) {
+function isStaffRoles(roles) {
+  const list = Array.isArray(roles) ? roles : parseRoles(roles);
+  return list.some((r) => STAFF_ROLES.includes(r));
+}
+
+function isProfessionalRole(roles) {
+  return (Array.isArray(roles) ? roles : parseRoles(roles)).includes('Profissional');
+}
+
+/** Portal-only: tem Profissional e nenhum papel de staff. */
+function isPortalProfessional(roles) {
+  return isProfessionalRole(roles) && !isStaffRoles(roles);
+}
+
+/**
+ * @param {string|string[]} roles
+ * @param {object} [user]
+ * @param {string} [collection] professionals → professional_code; services (default) → professional_id
+ */
+function scopeFilterFor(roles, user, collection) {
   const list = Array.isArray(roles) ? roles : parseRoles(roles);
   if (list.includes('Administrador') || list.includes('api') || list.includes('Acolhimento')) {
     return null;
   }
   for (const role of list) {
     const cfg = SCOPED_ROLES[role];
-    if (cfg && user?.[cfg.fromUser]) {
-      return { field: cfg.field, value: user[cfg.fromUser] };
-    }
+    if (!cfg || !user?.[cfg.fromUser]) continue;
+    const field =
+      role === 'Profissional' && collection === 'professionals' ? 'professional_code' : cfg.field;
+    return { field, value: user[cfg.fromUser] };
   }
   return null;
+}
+
+function portalProfessionalDeniedFields(roles, body) {
+  if (!isPortalProfessional(roles)) return [];
+  return Object.keys(body || {}).filter((k) => PORTAL_PROFESSIONAL_DENIED_FIELDS.has(k));
 }
 
 function hasScope(scopes, collection, action) {
@@ -212,10 +243,16 @@ module.exports = {
   ACTIONS,
   MATRIX,
   SCOPED_ROLES,
+  STAFF_ROLES,
+  PORTAL_PROFESSIONAL_DENIED_FIELDS,
   API_TOKEN_COLLECTIONS,
   parseRoles,
   can,
+  isStaffRoles,
+  isProfessionalRole,
+  isPortalProfessional,
   scopeFilterFor,
+  portalProfessionalDeniedFields,
   hasScope,
   normalizeApiTokenScopes,
 };

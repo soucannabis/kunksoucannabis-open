@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const PdfPrinter = require('pdfmake');
 const { PDFDocument } = require('pdf-lib');
 const { VARIABLE_LABELS } = require('./docSignVariables');
+const { eventLabel } = require('./docSignEventLabels');
 
 const vfsFonts = require('pdfmake/build/vfs_fonts.js');
 const vfs = vfsFonts.pdfMake ? vfsFonts.pdfMake.vfs : vfsFonts;
@@ -237,29 +238,32 @@ async function renderAuditPdf({
       { text: v == null ? '' : String(v), fontSize: 9 },
     ]);
 
-  const eventLines = (events || []).map((e) => ({
-    text: `${new Date(e.occurred_at).toLocaleString('pt-BR')} — ${e.event_type}${
-      e.actor_name ? ` by ${e.actor_name}` : ''
-    }`,
-    fontSize: 9,
-    margin: [0, 2, 0, 2],
-  }));
+  const eventLines = (events || []).map((e) => {
+    const actor = e.actor_name || e.actor_email;
+    return {
+      text: `${new Date(e.occurred_at).toLocaleString('pt-BR')} — ${eventLabel(e.event_type)}${
+        actor ? ` por ${actor}` : ''
+      }`,
+      fontSize: 9,
+      margin: [0, 2, 0, 2],
+    };
+  });
 
   const def = {
     pageSize: 'A4',
     pageMargins: [40, 40, 40, 40],
     defaultStyle: { font: 'Roboto', fontSize: 10 },
     content: [
-      { text: 'Audit Log', style: 'h1' },
-      { text: `Envelope ID: ${contractId}`, margin: [0, 0, 0, 4] },
-      { text: `Original SHA256:\n${originalSha256 || '—'}`, margin: [0, 0, 0, 4] },
-      { text: `Result SHA256:\n${resultSha256 || '—'}`, margin: [0, 0, 0, 4] },
-      { text: `Generated at: ${generatedAt}`, margin: [0, 0, 0, 12] },
+      { text: 'Histórico de auditoria', style: 'h1' },
+      { text: `ID do termo: ${contractId}`, margin: [0, 0, 0, 4] },
+      { text: `Hash preenchido:\n${originalSha256 || '—'}`, margin: [0, 0, 0, 4] },
+      { text: `Hash assinado:\n${resultSha256 || '—'}`, margin: [0, 0, 0, 4] },
+      { text: `Gerado em: ${generatedAt}`, margin: [0, 0, 0, 12] },
       { text: signerEmail || '', margin: [0, 0, 0, 2] },
       { text: signerName || '', margin: [0, 0, 0, 2] },
       { text: `IP: ${ip || '—'}`, margin: [0, 0, 0, 2] },
-      { text: `User agent: ${userAgent || '—'}`, margin: [0, 0, 0, 2] },
-      { text: `Time zone: ${timezone || '—'}`, margin: [0, 0, 0, 12] },
+      { text: `Navegador: ${userAgent || '—'}`, margin: [0, 0, 0, 2] },
+      { text: `Fuso horário: ${timezone || '—'}`, margin: [0, 0, 0, 12] },
       { text: 'Dados preenchidos', style: 'h2' },
       {
         table: {
@@ -269,7 +273,7 @@ async function renderAuditPdf({
         layout: 'lightHorizontalLines',
         margin: [0, 0, 0, 12],
       },
-      { text: 'Event Log', style: 'h2' },
+      { text: 'Linha do tempo', style: 'h2' },
       ...eventLines,
     ],
     styles: {

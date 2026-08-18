@@ -2,8 +2,10 @@
 
 const { Router } = require('express');
 const { requireModule } = require('./requireModule');
+const { authorizeAdmin } = require('../../middleware/authorize');
 const { ok } = require('../../utils/response');
 const auth = require('../../services/google_calendar/auth');
+const { createOAuthState } = require('../../services/oauthState');
 const calendars = require('../../services/google_calendar/calendars');
 const events = require('../../services/google_calendar/events');
 const credentialsService = require('../../services/credentialsService');
@@ -14,16 +16,16 @@ const router = Router();
  * Setup / OAuth / teste / listagem de calendários ficam FORA do requireModule.
  * Senão: módulo off → 503 → impossível autenticar para depois ativar.
  */
-router.get('/oauth/authorize', async (req, res, next) => {
+router.get('/oauth/authorize', authorizeAdmin, async (req, res, next) => {
   try {
     const { oauthRedirectUri } = require('../../utils/publicApiUrl');
     await auth.ensureCredentialRows();
     await credentialsService.putCredentials(
       'google_calendar',
-      { redirect_uri: oauthRedirectUri('google_calendar', req) },
+      { redirect_uri: oauthRedirectUri('google_calendar') },
       { runTest: false }
     );
-    const url = await auth.getAuthorizeUrl();
+    const url = await auth.getAuthorizeUrl(createOAuthState('google_calendar'));
     if (req.query.redirect === '0') {
       return res.json(ok({ url }));
     }
@@ -33,7 +35,7 @@ router.get('/oauth/authorize', async (req, res, next) => {
   }
 });
 
-router.get('/oauth/status', async (req, res, next) => {
+router.get('/oauth/status', authorizeAdmin, async (req, res, next) => {
   try {
     const data = await auth.oauthStatus();
     res.json(ok(data));
@@ -73,7 +75,7 @@ router.get('/calendars', async (req, res, next) => {
   }
 });
 
-router.post('/test', async (req, res, next) => {
+router.post('/test', authorizeAdmin, async (req, res, next) => {
   try {
     const creds = await credentialsService.resolveAll('google_calendar');
     await auth.testConnection(creds);

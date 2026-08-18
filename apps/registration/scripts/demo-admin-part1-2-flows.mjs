@@ -192,11 +192,6 @@ export async function runAdminPart1Tour(page) {
     href: '/dados-associacao',
     heading: 'Dados da associação',
   });
-  await visitAndScroll(page, {
-    name: 'Banco de dados',
-    href: '/dados',
-    heading: 'Banco de dados',
-  });
 
   await openNavFold(page, 'Aplicativos');
   await openNavFold(page, 'Kunk');

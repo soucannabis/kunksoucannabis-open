@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const { query } = require('../../db/pool');
 const orderStatuses = require('../orderStatusesService');
 const ordersService = require('../ordersService');
@@ -28,48 +29,54 @@ function extractPaidPayload(hook) {
   return { type: String(type), code: code ? String(code) : null, paymentMethod, orderId, chargeIds, raw: hook };
 }
 
+function timingSafeEqualString(left, right) {
+  const a = Buffer.from(String(left));
+  const b = Buffer.from(String(right));
+  const max = Math.max(a.length, b.length, 1);
+  const padA = Buffer.alloc(max);
+  const padB = Buffer.alloc(max);
+  a.copy(padA);
+  b.copy(padB);
+  return crypto.timingSafeEqual(padA, padB) && a.length === b.length;
+}
+
+function webhookAuthConfigured(user, pass) {
+  return Boolean(String(user || '').trim() && String(pass || '').trim());
+}
+
+function parseBasicAuth(header) {
+  const raw = String(header || '');
+  if (!raw.startsWith('Basic ')) return null;
+  let decoded;
+  try {
+    decoded = Buffer.from(raw.slice(6), 'base64').toString('utf8');
+  } catch {
+    return null;
+  }
+  const sep = decoded.indexOf(':');
+  if (sep < 0) return null;
+  return { user: decoded.slice(0, sep), pass: decoded.slice(sep + 1) };
+}
+
 async function verifyBasicAuth(req) {
   const creds = await credentialsService.resolveAll('pagarme');
   const user = String(creds.webhook_user || '').trim();
   const pass = String(creds.webhook_pass || '').trim();
-  if (!user && !pass) return true;
-  const header = req.headers.authorization || '';
-  if (!header.startsWith('Basic ')) return false;
-  const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8');
-  const sep = decoded.indexOf(':');
-  if (sep < 0) return false;
-  const u = decoded.slice(0, sep);
-  const p = decoded.slice(sep + 1);
-  return u === user && p === pass;
+  if (!webhookAuthConfigured(user, pass)) return false;
+  const parsed = parseBasicAuth(req.headers.authorization || '');
+  if (!parsed) return false;
+  return timingSafeEqualString(parsed.user, user) && timingSafeEqualString(parsed.pass, pass);
 }
 
-/** Diagnóstico seguro (não revela senha). */
+/** Diagnóstico para log interno — nunca incluir na resposta HTTP. */
 async function basicAuthDebug(req) {
   const creds = await credentialsService.resolveAll('pagarme');
-  const expectedUser = String(creds.webhook_user || '').trim();
-  const expectedPass = String(creds.webhook_pass || '').trim();
+  const configured = webhookAuthConfigured(creds.webhook_user, creds.webhook_pass);
   const header = req.headers.authorization || '';
-  if (!expectedUser && !expectedPass) {
-    return { configured: false, header_present: Boolean(header) };
-  }
-  if (!header.startsWith('Basic ')) {
-    return {
-      configured: true,
-      expected_user: expectedUser,
-      header_present: Boolean(header),
-      header_is_basic: false,
-    };
-  }
-  const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8');
-  const sep = decoded.indexOf(':');
-  const receivedUser = sep >= 0 ? decoded.slice(0, sep) : decoded;
   return {
-    configured: true,
-    expected_user: expectedUser,
-    received_user: receivedUser,
-    user_match: receivedUser === expectedUser,
-    pass_match:
-      sep >= 0 && decoded.slice(sep + 1) === expectedPass,
+    configured,
+    header_present: Boolean(header),
+    header_is_basic: String(header).startsWith('Basic '),
   };
 }
 

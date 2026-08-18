@@ -5,7 +5,7 @@ const { requireModule } = require('./requireModule');
 const { ok, AppError } = require('../../utils/response');
 const utalkClient = require('../../services/utalk/client');
 const credentialsService = require('../../services/credentialsService');
-const { authorize } = require('../../middleware/authorize');
+const { authorize, authorizeAdmin } = require('../../middleware/authorize');
 
 const router = Router();
 
@@ -31,7 +31,7 @@ router.get('/status', async (req, res, next) => {
   }
 });
 
-router.post('/test', async (req, res, next) => {
+router.post('/test', authorizeAdmin, async (req, res, next) => {
   try {
     const creds = await credentialsService.resolveAll('utalk');
     const result = await utalkClient.testConnection(creds);

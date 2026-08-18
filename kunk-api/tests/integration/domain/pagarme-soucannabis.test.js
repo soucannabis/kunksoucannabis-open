@@ -91,14 +91,33 @@ describe('domain/pagarme + soucannabis_orders admin gates', () => {
     assert.equal(errCode(res), 'PAYMENT_LOCK');
   });
 
-  it('webhook order.paid without auth when webhook creds empty returns handled false or not found', async () => {
+  it('PAYMENT_LOCK skip flags work only in NODE_ENV=test', async () => {
+    const orderIns = await query(
+      `INSERT INTO orders (status, total, order_code, associate_name, items, date_created)
+       VALUES ('Aguardando pagamento', 150, $1, 'Teste', '[]'::jsonb, NOW())
+       RETURNING id`,
+      [randomUUID()]
+    );
+    const orderId = orderIns.rows[0].id;
+
+    const res = await request(app)
+      .patch(`/api/v1/orders/${orderId}/status`)
+      .set('Cookie', cookie)
+      .send({ status: 'Pagamento concluído', skip_payment_lock: true, force_test_paid: true });
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body.data.status, 'Pagamento concluído');
+  });
+
+  it('webhook order.paid without auth is rejected even when webhook creds are empty', async () => {
     const res = await request(app)
       .post('/api/v1/modules/pagarme/webhook')
       .send({ type: 'order.paid', data: { code: randomUUID() } });
-    assert.ok([200, 400, 401].includes(res.status));
-    if (res.status === 200) {
-      assert.equal(res.body?.data?.handled, false);
-    }
+    assert.equal(res.status, 401, JSON.stringify(res.body));
+    assert.equal(errCode(res), 'UNAUTHORIZED');
+    const details = res.body?.errors?.[0]?.details;
+    assert.equal(details?.pass_match, undefined);
+    assert.equal(details?.expected_user, undefined);
+    assert.equal(details?.user_match, undefined);
   });
 
   it('GET /outbound/audit exporta registros com Bearer outbound', async () => {

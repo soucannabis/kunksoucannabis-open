@@ -18,7 +18,7 @@ Ver `kunk-api/src/routes/reception.js` + `receptionService.js`.
 
 ### 1. Criação pública / form
 
-**Opção A (preferida):** `POST /reception/public` (sem role operacional; rate-limit + honeypot/captcha futuro)
+**Opção A (preferida):** `POST /reception/public` (sem role operacional; 429 `RATE_LIMITED` após 5 / 15 min / IP; honeypot/captcha futuro)
 
 Body: campos do schema do form + `custom_fields: { [id]: value }`.
 

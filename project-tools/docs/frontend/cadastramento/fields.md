@@ -74,7 +74,7 @@ Form completo (`invalid_fields` vazio) → segue na fase 2 (paciente se `another
 
 **`responsible_type`:** `himself` | `another` | `pet` (no filho: `patient`)
 
-**`marital_status`:** `Solteiro` | `Casado` | `União-Estável` | `Viúvo` | `Divorciado`
+**`marital_status`:** `Solteiro(a)` | `Casado(a)` | `União-Estável` | `Viúvo(a)` | `Divorciado(a)`
 
 **`gender`:** `homem-cis` | `mulher-cis` | `homem-trans` | `mulher-trans` | `travesti` | `nao-binario` | texto livre (`outro`)
 

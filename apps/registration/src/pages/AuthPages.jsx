@@ -43,7 +43,10 @@ export function SignupPage() {
   }
 
   return (
-    <AuthLoginCard onSubmit={onSubmit} heading="Cadastro de associado">
+    <AuthLoginCard onSubmit={onSubmit} heading="Cadastro de Associado">
+      <p className="auth-login-card-lead">
+        Para iniciar seu cadastro, preencha seu e-mail e defina uma senha.
+      </p>
       <AlertError message={error} />
       <div className="auth-login-field">
         <label htmlFor="signup-email">E-mail</label>

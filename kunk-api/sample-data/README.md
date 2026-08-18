@@ -16,7 +16,7 @@ Dados **fictícios** para popular o schema alvo em demos e instalação com samp
 | tags | 8 |
 | reports | 3 |
 | files + junctions | 5 / 5 / 5 / 3 |
-| users_api | 1 |
+| users_api | 0 (sem token de API) |
 
 **Operadores (`system_users`) não entram no sample.** Cadastre pelo Admin ou API. Scripts de seed/`clean:db` não criam operadores.
 
@@ -76,4 +76,5 @@ Preserva `system_users`, `system_configs` e `system_api_credentials`.
 - No admin (**Dados** → Excluir dados de exemplo) é possível remover só as linhas com `is_sample = true`.
 - Produtos: 5 linhas (`Linha CBD`, `THC`, `CBG`, `CBC`, `CBN`) com SKU `KNK-*` e concentrações em **mg**.
 - CPFs/emails/telefones são inventados e claramente de demo.
+- Associados sample **não têm senha**; não há token de API de demonstração.
 - `reception.status` usa os valores OSS da triagem (`waiting` / `done`), alinhados a `triage.statuses`.

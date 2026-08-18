@@ -12,7 +12,8 @@ import { ContractPage } from './pages/ContractPage.jsx';
 import { ContractsPage } from './pages/ContractsPage.jsx';
 import { AuditPage } from './pages/AuditPage.jsx';
 import { SystemErrorBoundary } from './components/errors/SystemErrorBoundary.jsx';
-import { DocSignBrand, DocSignFavicon, useDocSignBranding } from './components/DocSignBrand.jsx';
+import { DocSignFavicon, useDocSignBranding } from './components/DocSignBrand.jsx';
+import { DocSignHeader } from './components/DocSignHeader.jsx';
 import { getMissingAssociationFields } from './lib/associationGate.js';
 
 function RedirectContratoToTermo() {
@@ -85,34 +86,32 @@ function OperatorShell({ api }) {
   } = useDocSignBranding(api);
 
   return (
-    <div className="shell">
-      <div className="topbar">
-        <DocSignBrand
-          logo={menuLogo}
-          logoFormat={menuLogoFormat}
-          logoWidth={menuLogoWidth}
-          variant="shell"
-        />
-        <div className="topbar-nav">
-          <span className="muted">{user?.email}</span>
-          <NavLink
-            className={({ isActive }) => `btn nav-btn${isActive ? ' nav-btn-active' : ''}`}
-            to="/termos"
-          >
-            Termos
-          </NavLink>
-          <NavLink
-            className={({ isActive }) => `btn nav-btn${isActive ? ' nav-btn-active' : ''}`}
-            to="/modelos"
-          >
-            Modelos
-          </NavLink>
-          <button type="button" className="btn" onClick={() => logout()}>
-            Sair
-          </button>
-        </div>
+    <div className="app">
+      <DocSignHeader
+        logo={menuLogo}
+        logoFormat={menuLogoFormat}
+        logoWidth={menuLogoWidth}
+      >
+        <span className="app-header-meta">{user?.email}</span>
+        <NavLink
+          className={({ isActive }) => `btn nav-btn${isActive ? ' nav-btn-active' : ''}`}
+          to="/termos"
+        >
+          Termos
+        </NavLink>
+        <NavLink
+          className={({ isActive }) => `btn nav-btn${isActive ? ' nav-btn-active' : ''}`}
+          to="/modelos"
+        >
+          Modelos
+        </NavLink>
+        <button type="button" className="btn" onClick={() => logout()}>
+          Sair
+        </button>
+      </DocSignHeader>
+      <div className="shell">
+        <Outlet context={{ api }} />
       </div>
-      <Outlet context={{ api }} />
     </div>
   );
 }

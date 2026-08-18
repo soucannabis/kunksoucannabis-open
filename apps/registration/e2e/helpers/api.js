@@ -68,34 +68,60 @@ export function createApi(request) {
 }
 
 /**
- * Ensure both doc-sign templates are published (needed before creating contracts).
+ * Garante templates doc-sign publicados.
+ * Usa APIRequestContext isolado para NÃO gravar cookie de operador no jar do browser
+ * (em localhost isso faz a API ignorar associate_session no upload de identidade).
+ *
+ * @param {import('@playwright/test').BrowserContext | import('@playwright/test').APIRequestContext} [contextOrRequest]
  */
-export async function ensureDocSignTemplatesPublished(request) {
-  const login = await request.post(`${API_URL}/auth/login`, {
-    data: { email: 'admin@kunk-api.test', password: 'TestAdmin123!' },
-    headers: { 'X-Kunk-App': 'admin' },
-    failOnStatusCode: false,
-  });
-  if (login.status() !== 200) {
-    // fallback: templates may already be published by another process
-    return;
-  }
-  const setCookie = login.headers()['set-cookie'];
-  const cookie = Array.isArray(setCookie) ? setCookie.map((c) => String(c).split(';')[0]).join('; ') : String(setCookie || '').split(';')[0];
+export async function ensureDocSignTemplatesPublished(contextOrRequest) {
+  const { request: playwrightRequest } = await import('@playwright/test');
+  const browserContext =
+    contextOrRequest && typeof contextOrRequest.cookies === 'function'
+      ? contextOrRequest
+      : null;
 
-  for (const kind of ['self', 'with_patient']) {
-    const tpl = await request.get(`${API_URL}/doc-sign/templates/${kind}`, {
-      headers: { Cookie: cookie },
+  const api = await playwrightRequest.newContext({
+    baseURL: API_URL,
+    extraHTTPHeaders: { 'X-Kunk-App': 'admin' },
+  });
+
+  try {
+    const login = await api.post('/auth/login', {
+      data: { email: 'admin@kunk-api.test', password: 'TestAdmin123!' },
       failOnStatusCode: false,
     });
-    if (tpl.status() !== 200) continue;
-    const body = await tpl.json().catch(() => ({}));
-    if (body.data?.current_version_id) continue;
-    await request.post(`${API_URL}/doc-sign/templates/${kind}/publish`, {
-      headers: { Cookie: cookie },
-      data: { notes: 'e2e auto-publish' },
-      failOnStatusCode: false,
-    });
+    if (login.status() !== 200) {
+      // fallback: templates may already be published by another process
+      return;
+    }
+
+    for (const kind of ['self', 'with_patient']) {
+      const tpl = await api.get(`/doc-sign/templates/${kind}`, {
+        failOnStatusCode: false,
+      });
+      if (tpl.status() !== 200) continue;
+      const body = await tpl.json().catch(() => ({}));
+      if (body.data?.current_version_id) continue;
+      await api.post(`/doc-sign/templates/${kind}/publish`, {
+        data: { notes: 'e2e auto-publish' },
+        failOnStatusCode: false,
+      });
+    }
+  } finally {
+    await api.dispose();
+    if (browserContext) {
+      const cookies = await browserContext.cookies();
+      const operatorNames = new Set([
+        'kunk_oss_session',
+        'kunk_oss_session_admin',
+        'kunk_oss_session_kunk',
+        'kunk_oss_session_doc_sign',
+      ]);
+      if (cookies.some((c) => operatorNames.has(c.name))) {
+        await browserContext.clearCookies();
+      }
+    }
   }
 }
 
@@ -107,7 +133,7 @@ export async function ensureDocSignTemplatesPublished(request) {
 export async function seedAssociate(page, { email, phase = 1, responsibleType = 'himself' } = {}) {
   const targetRank = phaseRank(phase);
   if (targetRank >= 3) {
-    await ensureDocSignTemplatesPublished(page.context().request);
+    await ensureDocSignTemplatesPublished(page.context());
   }
   const api = createApi(page.context().request);
   const reg = await api.registerEmail(email);

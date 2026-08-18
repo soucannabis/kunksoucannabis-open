@@ -2,8 +2,10 @@
 
 const { Router } = require('express');
 const { authenticate } = require('../../middleware/authenticate');
+const { authorizeAdmin } = require('../../middleware/authorize');
 const { ok, AppError } = require('../../utils/response');
 const { requireModule } = require('./requireModule');
+const { assertOAuthState } = require('../../services/oauthState');
 
 const MODULE_NAMES = [
   'pagarme',
@@ -78,27 +80,35 @@ function googleOauthResultHtml(opts) {
   });
 }
 
+const OAUTH_HTML_CSP =
+  "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; frame-ancestors 'none'";
+
+function sendOauthHtml(res, html) {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Content-Security-Policy', OAUTH_HTML_CSP);
+  res.setHeader('X-Frame-Options', 'DENY');
+  return res.status(200).send(html);
+}
+
 /** OAuth callback must be public — Melhor Envio redirects the browser here without our session.
  *  Sem requireModule: auth precisa funcionar com o módulo ainda desligado no Admin. */
 router.get('/melhorenvio/oauth/callback', async (req, res, next) => {
   const asJson = String(req.query.format || '') === 'json';
   try {
+    assertOAuthState('melhorenvio', req.query.state);
     const code = req.query.code;
     if (!code) {
       const tip =
         'code OAuth ausente. Não abra esta URL manualmente — use “Autorizar no Melhor Envio” no admin. Após autorizar, o Melhor Envio redireciona para cá com ?code=…';
       if (asJson) throw new AppError(400, 'VALIDATION_ERROR', tip);
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(200).send(meOauthResultHtml({ ok: false, message: tip }));
+      return sendOauthHtml(res, meOauthResultHtml({ ok: false, message: tip }));
     }
     await meAuth.exchangeCode(code);
     if (asJson) return res.json(ok({ ok: true }));
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(meOauthResultHtml({ ok: true }));
+    return sendOauthHtml(res, meOauthResultHtml({ ok: true }));
   } catch (err) {
     if (asJson) return next(err);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(meOauthResultHtml({ ok: false, message: err.message || 'oauth_failed' }));
+    return sendOauthHtml(res, meOauthResultHtml({ ok: false, message: err.message || 'oauth_failed' }));
   }
 });
 
@@ -108,22 +118,20 @@ const gcAuth = require('../../services/google_calendar/auth');
 router.get('/google_calendar/oauth/callback', async (req, res, next) => {
   const asJson = String(req.query.format || '') === 'json';
   try {
+    assertOAuthState('google_calendar', req.query.state);
     const code = req.query.code;
     if (!code) {
       const tip =
         'code OAuth ausente. Use “Autorizar com Google” no admin. Após autorizar, o Google redireciona para cá com ?code=…';
       if (asJson) throw new AppError(400, 'VALIDATION_ERROR', tip);
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(200).send(googleOauthResultHtml({ ok: false, message: tip }));
+      return sendOauthHtml(res, googleOauthResultHtml({ ok: false, message: tip }));
     }
     await gcAuth.exchangeCode(code);
     if (asJson) return res.json(ok({ ok: true }));
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(googleOauthResultHtml({ ok: true }));
+    return sendOauthHtml(res, googleOauthResultHtml({ ok: true }));
   } catch (err) {
     if (asJson) return next(err);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return res.status(200).send(googleOauthResultHtml({ ok: false, message: err.message || 'oauth_failed' }));
+    return sendOauthHtml(res, googleOauthResultHtml({ ok: false, message: err.message || 'oauth_failed' }));
   }
 });
 
@@ -137,21 +145,30 @@ router.use('/ciap2', ciap2Router);
  */
 const pagarmeSvc = require('../../services/pagarme');
 const scSvc = require('../../services/soucannabis_orders');
+const { checkRateLimit } = require('../../utils/rateLimit');
+
+async function assertPagarmeWebhookAuth(req, body) {
+  const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+  const rl = checkRateLimit(`pagarme-webhook:${ip}`, { limit: 120, windowMs: 60 * 1000 });
+  if (!rl.ok) {
+    throw new AppError(429, 'RATE_LIMITED', 'Muitas tentativas no webhook. Aguarde um momento.');
+  }
+  const authOk = await pagarmeSvc.webhook.verifyBasicAuth(req);
+  if (authOk) return;
+  await pagarmeSvc.hooksSetup.captureValidationEvent(body, { auth_ok: false });
+  const authDebug = await pagarmeSvc.webhook.basicAuthDebug(req);
+  console.warn('[pagarme-webhook] auth rejected', authDebug);
+  throw new AppError(
+    401,
+    'UNAUTHORIZED',
+    'Webhook auth inválida — confira usuário/senha HTTP Basic no Admin e no painel Pagar.me'
+  );
+}
 
 router.post('/pagarme/webhook', async (req, res, next) => {
   try {
     const body = req.body || {};
-    const authOk = await pagarmeSvc.webhook.verifyBasicAuth(req);
-    if (!authOk) {
-      await pagarmeSvc.hooksSetup.captureValidationEvent(body, { auth_ok: false });
-      const authDebug = await pagarmeSvc.webhook.basicAuthDebug(req);
-      throw new AppError(
-        401,
-        'UNAUTHORIZED',
-        'Webhook auth inválida — confira usuário/senha HTTP Basic no Admin e no painel Pagar.me',
-        authDebug
-      );
-    }
+    await assertPagarmeWebhookAuth(req, body);
     const validation_capture = await pagarmeSvc.hooksSetup.captureValidationEvent(body, {
       auth_ok: true,
     });
@@ -165,17 +182,7 @@ router.post('/pagarme/webhook', async (req, res, next) => {
 router.post('/pagarme/webhook-service', async (req, res, next) => {
   try {
     const body = req.body || {};
-    const authOk = await pagarmeSvc.webhook.verifyBasicAuth(req);
-    if (!authOk) {
-      await pagarmeSvc.hooksSetup.captureValidationEvent(body, { auth_ok: false });
-      const authDebug = await pagarmeSvc.webhook.basicAuthDebug(req);
-      throw new AppError(
-        401,
-        'UNAUTHORIZED',
-        'Webhook auth inválida — confira usuário/senha HTTP Basic no Admin e no painel Pagar.me',
-        authDebug
-      );
-    }
+    await assertPagarmeWebhookAuth(req, body);
     const validation_capture = await pagarmeSvc.hooksSetup.captureValidationEvent(body, {
       auth_ok: true,
     });
@@ -368,7 +375,7 @@ router.use('/soucannabis_orders/webhooks', scWebhooksPublic);
 
 router.use(authenticate);
 
-router.get('/', async (req, res, next) => {
+router.get('/', authorizeAdmin, async (req, res, next) => {
   try {
     const { isModuleEnabled } = require('../../services/moduleFlags');
     const list = [];

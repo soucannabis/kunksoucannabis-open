@@ -7,8 +7,9 @@ const { stripSensitive } = require('../schema/collections');
 const { AppError } = require('../utils/response');
 const { env } = require('../config/env');
 const { parseRoles } = require('../schema/rbac');
-
-const SALT_ROUNDS = process.env.NODE_ENV === 'test' ? 4 : 10;
+const { SALT_ROUNDS, hashPassword, verifyPassword } = require('../utils/password');
+const { apiTokenLookupPrefix } = require('../utils/apiToken');
+const { sha256Hex } = require('../utils/tokenHash');
 
 function publicUser(row) {
   if (!row) return null;
@@ -38,12 +39,21 @@ async function ensureSessionsTable() {
   await ensureOperatorSessions();
 }
 
-/**
- * @returns {Promise<{ user: object, session: object }|null>}
- */
-async function findBySessionToken(token) {
-  if (!token) return null;
-  await ensureSessionsTable();
+function mapSessionRow(row) {
+  return {
+    user: row,
+    session: {
+      id: row.session_id,
+      app: row.session_app,
+      session_token: row.session_token_value,
+      session_expires: row.session_expires_at,
+      last_activity: row.session_last_activity,
+      is_active: row.session_is_active,
+    },
+  };
+}
+
+async function loadActiveSessionByToken(storedToken) {
   const result = await query(
     `SELECT u.*,
             s.id AS session_id,
@@ -56,21 +66,29 @@ async function findBySessionToken(token) {
      INNER JOIN system_users u ON u.id = s.user_id
      WHERE s.session_token = $1 AND s.is_active = true
      LIMIT 1`,
-    [token]
+    [storedToken]
   );
-  const row = result.rows[0];
-  if (!row) return null;
-  return {
-    user: row,
-    session: {
-      id: row.session_id,
-      app: row.session_app,
-      session_token: row.session_token_value,
-      session_expires: row.session_expires_at,
-      last_activity: row.session_last_activity,
-      is_active: row.session_is_active,
-    },
-  };
+  return result.rows[0] || null;
+}
+
+/**
+ * @returns {Promise<{ user: object, session: object }|null>}
+ */
+async function findBySessionToken(token) {
+  if (!token) return null;
+  await ensureSessionsTable();
+  const hashed = sha256Hex(token);
+  const hashedRow = await loadActiveSessionByToken(hashed);
+  if (hashedRow) return mapSessionRow(hashedRow);
+
+  const legacyRow = await loadActiveSessionByToken(token);
+  if (!legacyRow) return null;
+  await query(`UPDATE operator_sessions SET session_token = $1 WHERE id = $2`, [
+    hashed,
+    legacyRow.session_id,
+  ]);
+  legacyRow.session_token_value = hashed;
+  return mapSessionRow(legacyRow);
 }
 
 async function login(email, password, app) {
@@ -88,23 +106,13 @@ async function login(email, password, app) {
   }
 
   const user = await findByEmail(email);
-  if (!user) {
+  const valid = await verifyPassword(password, user?.password);
+  if (!user || !valid) {
     throw new AppError(401, 'INVALID_CREDENTIALS', 'Credenciais inválidas');
   }
 
   if (user.status && String(user.status).toLowerCase() === 'inactive') {
     throw new AppError(403, 'USER_INACTIVE', 'Usuário inativo');
-  }
-
-  let valid = false;
-  if (user.password && user.password.startsWith('$2')) {
-    valid = await bcrypt.compare(password, user.password);
-  } else if (user.password) {
-    valid = user.password === password;
-  }
-
-  if (!valid) {
-    throw new AppError(401, 'INVALID_CREDENTIALS', 'Credenciais inválidas');
   }
 
   await ensureSessionsTable();
@@ -120,7 +128,7 @@ async function login(email, password, app) {
        session_expires = EXCLUDED.session_expires,
        last_activity = NOW(),
        is_active = true`,
-    [user.id, appKey, sessionToken, expires]
+    [user.id, appKey, sha256Hex(sessionToken), expires]
   );
 
   const refreshed = await query(`SELECT * FROM system_users WHERE id = $1`, [user.id]);
@@ -131,8 +139,9 @@ async function logout(sessionToken) {
   if (!sessionToken) return;
   await ensureSessionsTable();
   await query(
-    `UPDATE operator_sessions SET is_active = false WHERE session_token = $1`,
-    [sessionToken]
+    `UPDATE operator_sessions SET is_active = false
+     WHERE session_token = $1 OR session_token = $2`,
+    [sha256Hex(sessionToken), sessionToken]
   );
 }
 
@@ -184,6 +193,11 @@ function publicTokenRow(row) {
   return { id: row.id, email: label, label, scopes };
 }
 
+async function ensureApiTokenPrefixColumn() {
+  const { ensureUsersApiTokenPrefix } = require('../db/ensureUsersApiTokenPrefix');
+  await ensureUsersApiTokenPrefix();
+}
+
 async function createApiToken({ email, label: labelIn, scopes = ['*'] }) {
   const { normalizeApiTokenScopes } = require('../schema/rbac');
   let normalizedScopes;
@@ -192,15 +206,17 @@ async function createApiToken({ email, label: labelIn, scopes = ['*'] }) {
   } catch (err) {
     throw new AppError(400, err.code || 'VALIDATION_ERROR', err.message);
   }
+  await ensureApiTokenPrefixColumn();
   const plaintext = `kunk_live_${crypto.randomBytes(24).toString('hex')}`;
+  const tokenPrefix = apiTokenLookupPrefix(plaintext);
   const hash = await bcrypt.hash(plaintext, SALT_ROUNDS);
   const label = String(labelIn || email || 'api-token').trim() || 'api-token';
   // Store scopes in email field as JSON prefix for v1 schema (email + token only)
   const storedEmail = JSON.stringify({ label, scopes: normalizedScopes });
 
   const result = await query(
-    `INSERT INTO users_api (email, token) VALUES ($1, $2) RETURNING id, email`,
-    [storedEmail, hash]
+    `INSERT INTO users_api (email, token, token_prefix) VALUES ($1, $2, $3) RETURNING id, email`,
+    [storedEmail, hash, tokenPrefix]
   );
 
   return {
@@ -254,35 +270,28 @@ async function revokeApiToken(id) {
 
 async function resolveBearer(token) {
   if (!token) return null;
-  // Prefer hashed tokens; fall back to plaintext legacy rows
-  const result = await query(`SELECT id, email, token FROM users_api ORDER BY id DESC LIMIT 100`);
-  for (const row of result.rows) {
-    if (!row.token) continue;
-    let match = false;
-    if (row.token.startsWith('$2')) {
-      match = await bcrypt.compare(token, row.token);
-    } else {
-      match = row.token === token;
-    }
-    if (match) {
-      const { label, scopes } = parseStoredTokenMeta(row.email);
-      return {
-        id: row.id,
-        email: label,
-        scopes,
-        roles: ['api'],
-      };
-    }
-  }
-  return null;
-}
-
-async function hashPassword(password) {
-  return bcrypt.hash(password, SALT_ROUNDS);
+  const prefix = apiTokenLookupPrefix(token);
+  if (!prefix) return null;
+  await ensureApiTokenPrefixColumn();
+  const result = await query(
+    `SELECT id, email, token FROM users_api WHERE token_prefix = $1 LIMIT 1`,
+    [prefix]
+  );
+  const row = result.rows[0];
+  if (!row?.token || !String(row.token).startsWith('$2')) return null;
+  const match = await bcrypt.compare(token, row.token);
+  if (!match) return null;
+  const { label, scopes } = parseStoredTokenMeta(row.email);
+  return {
+    id: row.id,
+    email: label,
+    scopes,
+    roles: ['api'],
+  };
 }
 
 function hashResetToken(token) {
-  return crypto.createHash('sha256').update(token).digest('hex');
+  return sha256Hex(token);
 }
 
 function assertOperatorPassword(password) {

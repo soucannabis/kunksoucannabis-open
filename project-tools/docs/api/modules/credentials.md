@@ -144,6 +144,8 @@ Inserir rows com `encrypted_value=NULL` e `env_fallback` preenchido para o assis
 Tokens ME e Google Calendar são preenchidos só pelo callback OAuth (não pelo form manual, exceto “limpar”).  
 `soucannabis_orders` usa OAuth **client credentials** no server (não popup). Recipient SC do split fica em `modules.pagarme.soucannabis_recipient_id` (config), não em credentials.
 
+`pagarme.webhook_user` / `webhook_pass` são HTTP Basic **obrigatórios** no cadastro do webhook no painel Pagar.me (os mesmos valores). Sem isso a API responde 401.
+
 ## Assistente — regras
 
 1. Schema de campos vem da API (`fields_schema` no GET do serviço).

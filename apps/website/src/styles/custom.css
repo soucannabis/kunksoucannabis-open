@@ -113,6 +113,19 @@ pre {
   border-radius: 0.35rem !important;
 }
 
+.sl-markdown-content a.railway-deploy {
+  display: inline-block;
+  margin: 0.5rem 0 1.25rem;
+  line-height: 0;
+}
+
+.sl-markdown-content a.railway-deploy img {
+  height: 40px;
+  width: auto;
+  max-width: none;
+  border-radius: 999px;
+}
+
 .starlight-aside--note {
   border-inline-start-color: var(--kunk-forest);
 }
@@ -122,11 +135,14 @@ pre {
   border-inline-start-color: var(--kunk-accent-warm);
 }
 
-:root[data-theme="light"] .sl-markdown-content table {
+.sl-markdown-content table:not(:where(.not-content *)) {
+  display: table;
+  width: 100%;
+  max-width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
   background: #ffffff;
   border: 1px solid var(--sl-color-hairline);
-  border-collapse: collapse;
-  width: 100%;
 }
 
 :root[data-theme="light"] .sl-markdown-content th,

@@ -1,11 +1,13 @@
 'use strict';
 
-const { describe, it, before } = require('node:test');
+const { describe, it, before, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const { loginAsAdmin } = require('../../helpers/auth');
+const { env } = require('../../../src/config/env');
+const { resetRateLimits } = require('../../../src/utils/rateLimit');
 
-describe('domain/reception', () => {
+describe('domain/reception', { concurrency: false }, () => {
   let app;
   let cookie;
 
@@ -13,6 +15,10 @@ describe('domain/reception', () => {
     const session = await loginAsAdmin();
     app = session.app;
     cookie = session.cookie;
+  });
+
+  beforeEach(() => {
+    resetRateLimits();
   });
 
   it('form-schema is public', async () => {
@@ -78,5 +84,29 @@ describe('domain/reception', () => {
       .send({ completion_reason: 'ok' });
     assert.equal(done.status, 200);
     assert.equal(done.body.data.status, 'done');
+  });
+
+  it('rate-limits POST /reception/public after 5 hits per IP', async () => {
+    const prev = env.authEnumRateLimit;
+    env.authEnumRateLimit = true;
+    try {
+      for (let i = 0; i < 5; i++) {
+        const res = await request(app).post('/api/v1/reception/public').send({});
+        assert.equal(res.status, 400, JSON.stringify(res.body));
+        assert.equal(res.body.errors[0].code, 'VALIDATION_ERROR');
+      }
+      const limited = await request(app).post('/api/v1/reception/public').send({
+        name: 'Triagem',
+        last_name: 'Limite',
+        email: `triagem-rl-${Date.now()}@example.com`,
+        phone: '11999999999',
+        help_topic: 'Outro',
+        message: 'nao deve criar',
+      });
+      assert.equal(limited.status, 429);
+      assert.equal(limited.body.errors[0].code, 'RATE_LIMITED');
+    } finally {
+      env.authEnumRateLimit = prev;
+    }
   });
 });

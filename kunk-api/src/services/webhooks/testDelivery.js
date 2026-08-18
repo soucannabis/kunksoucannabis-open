@@ -4,6 +4,7 @@ const { AppError } = require('../../utils/response');
 const { query } = require('../../db/pool');
 const repository = require('./repository');
 const { dispatchDelivery } = require('./dispatch');
+const { assertPublicHttpUrl } = require('../../utils/publicHttpUrl');
 
 /**
  * Enfileira um ping e dispara na hora, retornando sucesso/erro legível para o Admin.
@@ -29,15 +30,7 @@ async function runTestDelivery(endpointId) {
     throw new AppError(400, 'VALIDATION_ERROR', 'Webhook sem URL configurada.');
   }
 
-  let parsed;
-  try {
-    parsed = new URL(String(endpoint.url));
-  } catch {
-    throw new AppError(400, 'VALIDATION_ERROR', 'URL do webhook é inválida.');
-  }
-  if (!['http:', 'https:'].includes(parsed.protocol)) {
-    throw new AppError(400, 'VALIDATION_ERROR', 'URL do webhook deve usar http ou https.');
-  }
+  await assertPublicHttpUrl(endpoint.url);
 
   const delivery = await repository.enqueueTestDelivery(id);
   await query(`UPDATE webhook_deliveries SET status = 'processing' WHERE id = $1`, [delivery.id]);
@@ -73,8 +66,7 @@ async function runTestDelivery(endpointId) {
   }
 
   const detail =
-    String(result.error || result.body || '').trim() ||
-    (result.status != null ? `HTTP ${result.status}` : 'sem resposta do destino');
+    result.status != null ? `HTTP ${result.status}` : String(result.error || '').trim() || 'sem resposta do destino';
   const updated = await repository.markRetryOrDead(delivery.id, {
     httpStatus: result.status,
     error: detail,

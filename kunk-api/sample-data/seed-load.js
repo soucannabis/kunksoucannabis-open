@@ -21,17 +21,13 @@
 
 const crypto = require('crypto');
 const path = require('path');
-const bcrypt = require('bcrypt');
 const { Pool } = require('pg');
 
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const manifest = require('./manifest-load.json');
 
-/** Senha das contas de associado no sample de carga (não cria operadores). */
-const SAMPLE_ASSOCIATE_PASSWORD = 'DemoAssociate123!';
 const SAMPLE_CREATED_BY = 'sample-seed';
-const SALT_ROUNDS = 8;
 const QUOTED = new Set(['user']);
 
 const FIRST_NAMES = [
@@ -234,7 +230,7 @@ async function insertBatches(client, table, columns, buildRow, total, batchSize,
   return ids;
 }
 
-async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHash }) {
+async function seedLoad(counts, { truncate, batchSize, patientRatio }) {
   const { resolvePgUrl } = require('../src/config/env');
   const databaseUrl = resolvePgUrl();
   if (!databaseUrl) throw new Error('PG_URL (ou PGHOST/PGUSER/PGPASSWORD/PGDATABASE) is required');
@@ -334,7 +330,7 @@ async function seedLoad(counts, { truncate, batchSize, patientRatio, passwordHas
           state,
           cep: fakeCep(i + 1),
           email_account: `load${String(i + 1).padStart(6, '0')}@load.kunk.local`,
-          account_password: passwordHash,
+          account_password: null,
           user_code: userCodes[i],
           rg_proof: `rg-${i + 1}.pdf`,
           associate_cpf: fakeCpf(i + 1),
@@ -789,16 +785,14 @@ async function main() {
     process.exit(1);
   }
 
-  const passwordHash = await bcrypt.hash(SAMPLE_ASSOCIATE_PASSWORD, SALT_ROUNDS);
   const t0 = Date.now();
   await seedLoad(counts, {
     truncate: !args.noTruncate,
     batchSize: args.batchSize,
     patientRatio: args.patientRatio,
-    passwordHash,
   });
   console.log(`\nConcluído em ${((Date.now() - t0) / 1000).toFixed(1)}s`);
-  console.log(`Sample de carga instalado (sem operadores). Senha associados: ${SAMPLE_ASSOCIATE_PASSWORD}`);
+  console.log('Sample de carga instalado (sem operadores, sem senha de associado).');
 }
 
 main().catch((err) => {

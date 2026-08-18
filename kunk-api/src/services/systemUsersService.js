@@ -12,6 +12,42 @@ function invalidateAttendantsCache() {
   memoryCache.invalidate(keys.ATTENDANTS);
 }
 
+const PORTAL_ROLE = 'Profissional';
+
+async function assertOperatorPermissions(permissions, internalCode) {
+  const roles = parseRoles(permissions).filter(Boolean);
+  if (roles.includes('Prescritor')) {
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'Papel Prescritor não é usado para login. Use Profissional para o relatório de atendimentos.'
+    );
+  }
+  if (!roles.includes(PORTAL_ROLE)) return;
+  if (roles.length !== 1) {
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'A permissão Profissional não pode ser combinada com outras'
+    );
+  }
+  const code = String(internalCode || '').trim();
+  if (!code) {
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'Selecione um profissional para o acesso ao relatório de atendimentos'
+    );
+  }
+  const found = await query(
+    `SELECT id FROM professionals WHERE professional_code::text = $1 LIMIT 1`,
+    [code]
+  );
+  if (!found.rows[0]) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Profissional não encontrado para o código interno');
+  }
+}
+
 function normalizePermissions(value) {
   if (value === undefined) return undefined;
   if (Array.isArray(value)) return JSON.stringify(value);
@@ -78,6 +114,7 @@ async function createSystemUser(payload) {
     body.password = await authRepository.hashPassword(body.password);
   }
   if (body.permissions !== undefined) {
+    await assertOperatorPermissions(body.permissions, body.internal_code);
     body.permissions = normalizePermissions(body.permissions);
   }
   const created = await itemsRepository.createItem('system_users', body);
@@ -100,8 +137,12 @@ async function updateSystemUser(id, payload) {
     delete body.password;
   }
 
+  const nextCode = body.internal_code !== undefined ? body.internal_code : existing.internal_code;
   if (body.permissions !== undefined) {
+    await assertOperatorPermissions(body.permissions, nextCode);
     body.permissions = normalizePermissions(body.permissions);
+  } else if (parseRoles(existing.permissions).includes(PORTAL_ROLE)) {
+    await assertOperatorPermissions(existing.permissions, nextCode);
   }
 
   await assertNotLastAdmin(existing, body.permissions, body.status);
@@ -125,4 +166,5 @@ module.exports = {
   createSystemUser,
   updateSystemUser,
   deleteSystemUser,
+  assertOperatorPermissions,
 };

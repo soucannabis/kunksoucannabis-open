@@ -43,6 +43,10 @@ describe('docSignVariables', () => {
   it('resolves kind and variables', () => {
     assert.equal(resolveKind({ responsible_type: 'pet' }), 'self');
     assert.equal(
+      resolveKind({ responsible_type: 'pet', patient_user_code: 'pet-1' }),
+      'with_patient'
+    );
+    assert.equal(
       resolveKind({ responsible_type: 'another', patient_user_code: 'x' }),
       'with_patient'
     );

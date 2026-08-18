@@ -23,6 +23,10 @@ export const FIELD_LABELS_PT = {
   cep: 'CEP',
   reason_treatment_text: 'Descreva o motivo',
   ciap_codes: 'Motivo principal para o tratamento',
+  pet_name: 'Nome do pet',
+  pet_birth_date: 'Nascimento do pet',
+  pet_gender: 'Sexo',
+  pet_reason_treatment_text: 'Motivo do tratamento do pet',
   email_account: 'E-mail',
 };
 

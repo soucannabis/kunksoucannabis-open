@@ -136,7 +136,9 @@ export function PhaseHomeRedirect() {
   const phase = normalizePhase(user.associate_status);
   if (phase === PHASE.CADASTRO_CRIADO) return <Navigate to="/bem-vindo" replace />;
   if (phase === PHASE.DADOS_PESSOAIS) {
-    if (user.responsible_type === 'another') return <Navigate to="/cadastro-paciente" replace />;
+    if (['another', 'pet'].includes(user.responsible_type)) {
+      return <Navigate to="/cadastro-paciente" replace />;
+    }
     return <Navigate to="/cadastro-associado" replace />;
   }
   if (phase === PHASE.DOCUMENTOS || phase === PHASE.ASSINATURA_TERMO) {

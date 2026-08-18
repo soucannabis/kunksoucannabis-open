@@ -6,7 +6,6 @@
  */
 
 const path = require('path');
-const bcrypt = require('bcrypt');
 
 const SMALL_COUNTS = {
   users: 12,
@@ -22,10 +21,8 @@ const SMALL_COUNTS = {
   users_files: 3,
   orders_files: 2,
   services_files: 2,
-  users_api: 1,
+  users_api: 0,
 };
-
-const SALT_ROUNDS = 8;
 
 function loadSeedModule() {
   const seedPath = path.join(__dirname, '../../sample-data/seed.js');
@@ -43,7 +40,7 @@ function loadSeedModule() {
 
 async function seedSmallSample() {
   const seed = loadSeedModule();
-  const { buildDataset, seedDatabase, SAMPLE_ASSOCIATE_PASSWORD } = seed;
+  const { buildDataset, seedDatabase } = seed;
 
   if (typeof buildDataset !== 'function' || typeof seedDatabase !== 'function') {
     throw new Error(
@@ -51,12 +48,8 @@ async function seedSmallSample() {
         'Atualize o volume sample-data ou reconstrua a imagem da API.'
     );
   }
-  if (!SAMPLE_ASSOCIATE_PASSWORD) {
-    throw new Error('SAMPLE_ASSOCIATE_PASSWORD ausente em sample-data/seed.js');
-  }
 
-  const passwordHash = await bcrypt.hash(SAMPLE_ASSOCIATE_PASSWORD, SALT_ROUNDS);
-  const dataset = await buildDataset(passwordHash, SMALL_COUNTS);
+  const dataset = await buildDataset(SMALL_COUNTS);
   return seedDatabase(dataset, { truncate: false, writeFixtures: false });
 }
 

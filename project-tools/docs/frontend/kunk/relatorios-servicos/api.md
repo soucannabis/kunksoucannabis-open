@@ -9,7 +9,7 @@
 | Role | Capacidade |
 |---|---|
 | Administrador / Acolhimento / Financeiro (e staff com `role_pages`) | Listar todos; PATCH validation; PATCH contest_reports (resolver) |
-| `Profissional` | READ escopado ao `internal_code`; APPEND contestação; **sem** aprovar linhas de outros |
+| `Profissional` | READ escopado ao `internal_code` (`services.professional_id` e `professionals.professional_code`); APPEND contestação no próprio cadastro; **sem** aprovar linhas, **sem** saldo/convite de portal |
 | Produção | Conforme `role_pages` (default pode incluir relatório se `*`) |
 
 ### Escopo obrigatório (role `Profissional`)
@@ -86,7 +86,7 @@ Cada service na resposta deve incluir pelo menos:
 Opção B — composição no front:
 
 - `GET /items/services?filter[status][_eq]=Pagamento Concluído&filter[consultation_date][_gte]=…`
-- `GET /items/professionals`
+- `GET /items/professionals` (portal: só o registro cujo `professional_code` = `internal_code`)
 - `GET /configs/services/professional_types`
 
 Com escopo aplicado no repository para role Profissional. Preferir Opção A se o cálculo e o escopo ficarem espalhados demais.
@@ -113,7 +113,8 @@ RBAC: update em `services`. Role `Profissional` → **403**.
 | ou `PATCH /professionals/:id` | Staff | `{ "contest_reports": [ … ] }` array completo |
 
 Server injeta `date` ISO.  
-Profissional só pode append no próprio registro (`professional_code === internal_code`).
+Profissional só pode append no próprio registro (`professional_code === internal_code`).  
+`GET`/`PATCH /professionals` e `/items/professionals` no portal filtram o mesmo código. O PATCH do portal **não** aceita `donation_balance`, `contest_reports` nem flags de cadastro — contestação só no POST acima.
 
 ---
 
@@ -143,8 +144,9 @@ Caminho principal: a partir de `/app/profissionais`.
 
 | Método | Path | Notas |
 |---|---|---|
-| `POST /professionals/:id/portal-access` | Cria `system_users` (role só `Profissional`) + gera token de convite com **expiração** |
-| `POST /professionals/:id/portal-access/resend` | Novo token; invalida o anterior |
+| `POST /professionals/:id/portal-access` | **Só staff.** Cria `system_users` (role só `Profissional`) + gera token de convite com **expiração** |
+| `POST /professionals/:id/portal-access/resend` | **Só staff.** Novo token; invalida o anterior |
+| `PATCH /professionals/:id/donation-balance` | **Só staff.** Portal (role só `Profissional`) recebe 403, inclusive no próprio cadastro |
 | `GET /system-users?filter[internal_code]=` | Status da conta |
 | `GET/POST` aceite em `/cadastro` | Mesma lógica do convite de operadores (legado `systemUserSign`) |
 

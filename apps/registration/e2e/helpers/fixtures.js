@@ -21,7 +21,7 @@ export function responsiblePayload(overrides = {}) {
     associate_cpf: VALID_CPF,
     associate_rg: '1234567',
     associate_rg_issuer: 'SSP/SP',
-    marital_status: 'Solteiro',
+    marital_status: 'Solteiro(a)',
     mobile_number: '5511999999999',
     street: 'Rua A',
     street_number: '100',

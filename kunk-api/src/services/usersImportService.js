@@ -430,7 +430,8 @@ async function loadExistingKeys(emails, cpfs) {
     const res = await query(
       `SELECT LOWER(email_account) AS email_account
        FROM users
-       WHERE LOWER(email_account) = ANY($1::text[])`,
+       WHERE LOWER(email_account) = ANY($1::text[])
+         AND (status IS NULL OR status <> 'patient')`,
       [emails]
     );
     for (const row of res.rows) {

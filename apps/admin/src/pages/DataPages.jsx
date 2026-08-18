@@ -835,9 +835,12 @@ export function DataItemPage({ api, isNew = false }) {
   const editableCols = useMemo(() => {
     if (!schema) return [];
     const readonly = new Set(schema.readonly || []);
+    if (!isNew) {
+      for (const field of schema.readonlyOnUpdate || []) readonly.add(field);
+    }
     const sensitive = new Set(schema.sensitive || []);
     return (schema.columns || []).filter((c) => !readonly.has(c) && !sensitive.has(c));
-  }, [schema]);
+  }, [schema, isNew]);
 
   const formSections = useMemo(
     () => buildRecordFormSections(collection, editableCols),

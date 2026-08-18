@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { eventLabel, formatValue, kindLabel, statusLabel } from '../labels.js';
+import { eventActionLabel, formatValue, kindLabel, statusLabel } from '../labels.js';
 
 export function AuditPage({ api }) {
   const { id } = useParams();
@@ -28,7 +28,7 @@ export function AuditPage({ api }) {
   );
 
   if (error) return <div className="alert alert-error">{error}</div>;
-  if (!data || !audit) return <p className="muted">Carregando audit log…</p>;
+  if (!data || !audit) return <p className="muted">Carregando histórico…</p>;
 
   return (
     <div>
@@ -37,14 +37,14 @@ export function AuditPage({ api }) {
       </p>
       <div className="page-header">
         <div>
-          <h1 style={{ marginBottom: '0.35rem' }}>Audit log</h1>
+          <h1 style={{ marginBottom: '0.35rem' }}>Histórico de auditoria</h1>
           <p className="muted" style={{ margin: 0 }}>
             {statusLabel(data.status)} · {kindLabel(data.kind)} · {data.signer_email}
           </p>
         </div>
         {data.audit_pdf_url ? (
           <a className="btn btn-primary" href={data.audit_pdf_url} target="_blank" rel="noreferrer">
-            Baixar PDF do audit
+            Baixar PDF da auditoria
           </a>
         ) : null}
       </div>
@@ -75,7 +75,7 @@ export function AuditPage({ api }) {
             <dd>{formatValue(latest?.ip)}</dd>
           </div>
           <div className="var-row">
-            <dt>User-Agent (último)</dt>
+            <dt>Navegador (último)</dt>
             <dd className="ua">{formatValue(latest?.user_agent)}</dd>
           </div>
           <div className="var-row">
@@ -90,7 +90,7 @@ export function AuditPage({ api }) {
         <ol className="event-timeline">
           {events.map((e) => (
             <li key={e.id || `${e.event_type}-${e.occurred_at}`}>
-              <div className="event-title">{eventLabel(e.event_type)}</div>
+              <div className="event-title">{eventActionLabel(e)}</div>
               <div className="muted event-meta">
                 {e.occurred_at ? new Date(e.occurred_at).toLocaleString('pt-BR') : '—'}
                 {e.actor_name || e.actor_email ? ` · ${e.actor_name || e.actor_email}` : ''}

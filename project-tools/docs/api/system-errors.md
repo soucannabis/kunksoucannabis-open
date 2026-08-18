@@ -27,7 +27,7 @@ Base: `/api/v1`
 
 | Método | Path | Auth | Uso |
 |---|---|---|---|
-| POST | `/system-errors` | Público (rate-limit) | Ingestão frontend |
+| POST | `/system-errors` | Público (cookie opcional). 10/min anônimo, 30/min logado. `source` sempre frontend; `user_code` só da sessão |
 | GET | `/admin/system-errors/summary` | Administrador | Totais |
 | GET | `/admin/system-errors/top?period=30d` | Administrador | Grupos |
 | GET | `/admin/system-errors` | Administrador | Eventos |

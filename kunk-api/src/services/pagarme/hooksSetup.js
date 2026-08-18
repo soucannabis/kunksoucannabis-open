@@ -17,7 +17,7 @@ const VALIDATION_ORDER_PREFIX = 'KUNK_WH_';
 /** localhost não recebe webhook da Pagar.me — padrão de túnel para testes locais. */
 const DEFAULT_WEBHOOK_PUBLIC_BASE = 'https://stallion-hot-weasel.ngrok-free.app';
 const DASHBOARD_HINT =
-  'Conta → Configurações → Webhooks → Criar webhook. Eventos: order.created (obrigatório) e order.paid. Basic Auth com usuário/senha abaixo. Crie o link (passo 2), abra-o e gere o boleto sem pagá-lo; no passo 3 a validação confere se o order.created já chegou (pode levar até 1 minuto).';
+  'Obrigatório: no painel da Pagar.me o webhook precisa de autenticação HTTP Basic (usuário e senha iguais aos desta tela). Sem isso a API responde 401 e o pagamento não é confirmado. Conta → Configurações → Webhooks → Criar webhook; cole as URLs abaixo; ative HTTP Basic — não deixe o webhook anônimo. Eventos: order.created (obrigatório) e order.paid. Depois abra o link do passo 2, gere o boleto sem pagá-lo e clique em Validar (o order.created pode levar até 1 minuto).';
 
 function webhookPaths() {
   return {

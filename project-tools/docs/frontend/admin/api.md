@@ -101,7 +101,7 @@ Setup storage: [`../../api/storage-s3-setup.md`](../../api/storage-s3-setup.md),
 | GET | `/admin/system-errors/:errorHash/samples` | Amostras de um grupo |
 | POST | `/admin/system-errors/resolve` | `{ error_hash, status: fixed\|ignored\|open }` |
 
-Ingestão pública (frontends): `POST /system-errors` — ver [`../../api/system-errors.md`](../../api/system-errors.md).
+Ingestão pública (frontends): `POST /system-errors` — cookie opcional; `user_code` só da sessão. Ver [`../../api/system-errors.md`](../../api/system-errors.md).
 
 ### Web Vitals
 
@@ -212,7 +212,7 @@ GET /admin/roles
     { "id": "Acolhimento", "description": "Painel operacional" },
     { "id": "Produção", "description": "…" },
     { "id": "Financeiro", "description": "…" },
-    { "id": "Prescritor", "description": "…" }
+    { "id": "Profissional", "description": "Portal do relatório de atendimentos" }
   ]
 }
 ```

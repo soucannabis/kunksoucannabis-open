@@ -15,7 +15,7 @@
     "users_files": 5,
     "orders_files": 5,
     "services_files": 3,
-    "users_api": 1
+    "users_api": 0
   },
   "seed_order": [
     "files",
@@ -36,6 +36,7 @@
   "notes": [
     "Todos os dados são fictícios — não copiar produção/Directus.",
     "Não cria system_users — operadores só via Admin/API.",
+    "Associados sample sem senha; sem token de API conhecido.",
     "Produtos: 5 linhas canabinoides (CBD, THC, CBG, CBC, CBN) com SKU KNK-*.",
     "Rodar com: npm run seed:sample"
   ]

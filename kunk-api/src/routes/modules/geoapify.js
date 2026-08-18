@@ -2,6 +2,7 @@
 
 const { Router } = require('express');
 const { requireModule } = require('./requireModule');
+const { authorizeAdmin } = require('../../middleware/authorize');
 const { ok } = require('../../utils/response');
 const geoClient = require('../../services/geoapify/client');
 const validateAddress = require('../../services/geoapify/validateAddress');
@@ -22,7 +23,7 @@ router.get('/status', async (req, res, next) => {
   }
 });
 
-router.post('/test', async (req, res, next) => {
+router.post('/test', authorizeAdmin, async (req, res, next) => {
   try {
     const creds = await credentialsService.resolveAll('geoapify');
     await geoClient.testConnection(creds);

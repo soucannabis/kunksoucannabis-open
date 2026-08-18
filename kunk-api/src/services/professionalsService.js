@@ -2,11 +2,11 @@
 
 const { query } = require('../db/pool');
 const itemsRepository = require('../repositories/itemsRepository');
-const { stripSensitive } = require('../schema/collections');
+const { stripSensitive, quoteIdent } = require('../schema/collections');
 const { AppError } = require('../utils/response');
+const { portalProfessionalDeniedFields } = require('../schema/rbac');
 const { isCollaboratorTrue, isPrescriberTrue, normalizeFlagForWrite } = require('../utils/professionalFlags');
 const { v4: uuidv4 } = require('uuid');
-const { env } = require('../config/env');
 const professionalTypesConfig = require('./professionalTypesConfig');
 
 function flagSqlMatch(column, wantTrue) {
@@ -17,9 +17,14 @@ function flagSqlMatch(column, wantTrue) {
   return `(${expr} NOT IN ('true', '1', 'sim', 'yes') OR ${column} IS NULL)`;
 }
 
-async function list(filters = {}) {
+async function list(filters = {}, { scopeFilter } = {}) {
   const params = [];
   const where = [];
+
+  if (scopeFilter?.field && scopeFilter?.value != null) {
+    params.push(scopeFilter.value);
+    where.push(`${quoteIdent(scopeFilter.field)} = $${params.length}`);
+  }
 
   if (filters.active !== undefined && filters.active !== '') {
     params.push(Number(filters.active));
@@ -85,8 +90,14 @@ async function enrichCalendars(rows) {
   }
 }
 
-async function getById(id) {
-  const result = await query(`SELECT * FROM professionals WHERE id = $1 LIMIT 1`, [id]);
+async function getById(id, { scopeFilter } = {}) {
+  const params = [id];
+  let sql = `SELECT * FROM professionals WHERE id = $1`;
+  if (scopeFilter?.field && scopeFilter?.value != null) {
+    params.push(scopeFilter.value);
+    sql += ` AND ${quoteIdent(scopeFilter.field)} = $2`;
+  }
+  const result = await query(`${sql} LIMIT 1`, params);
   const row = result.rows[0];
   if (!row) throw new AppError(404, 'NOT_FOUND', 'Profissional não encontrado');
   const [enriched] = await enrichCalendars([stripSensitive('professionals', row)]);
@@ -127,12 +138,16 @@ async function create(payload) {
   });
 }
 
-async function update(id, payload) {
+async function update(id, payload, { scopeFilter, roles } = {}) {
+  const denied = portalProfessionalDeniedFields(roles, payload || {});
+  if (denied.length) {
+    throw new AppError(403, 'FORBIDDEN', 'Sem permissão para alterar estes campos');
+  }
   const body = normalizePayload(payload);
   if (body.type !== undefined) {
     body.type = await professionalTypesConfig.assertValidProfessionalType(body.type);
   }
-  return itemsRepository.updateItem('professionals', id, body);
+  return itemsRepository.updateItem('professionals', id, body, { scopeFilter });
 }
 
 async function softDelete(id) {

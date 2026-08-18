@@ -14,8 +14,8 @@ Front só fala `/api/v1`. Sessão de **associado** via cookie **`associate_sessi
 
 | Método | Path | Notas |
 |---|---|---|
-| POST | `/auth/associate/register-email` | Body `{ email, password }` → user fase 1 + cookie (senha min. 8) |
-| POST | `/auth/associate/login` | `{ email, password }` |
+| POST | `/auth/associate/register-email` | Body `{ email, password }` → user fase 1 + cookie (senha min. 8). 429 `RATE_LIMITED` após 5 pedidos / 15 min / IP. |
+| POST | `/auth/associate/login` | `{ email, password }`. 429 `RATE_LIMITED` após 5 falhas / 5 min por IP+e-mail (teto 30 falhas / IP). Acertos não contam. |
 | POST | `/auth/associate/logout` | |
 | GET | `/auth/associate/me` | Sem senha; fase, status, invalid_fields, patient link |
 | POST | `/auth/associate/forgot-password` | `{ email }` → 200 genérico |
@@ -29,7 +29,7 @@ Ver [gaps.md](./gaps.md) §1–3 (bcrypt, cookie, reset).
 
 | Método | Path | Função |
 |---|---|---|
-| GET | `/users/exists?email=` | `{ exists, state: "none"\|"in_progress"\|"associado" }` |
+| GET | `/users/exists?email=` | `{ exists, state: "none"\|"in_progress"\|"associado" }`. 429 `RATE_LIMITED` após 5 pedidos / 15 min / IP. |
 | PATCH | `/users/me` | Persistência parcial do responsável |
 | GET | `/users/me/patients` | Pacientes do responsável |
 | POST | `/users/me/patients` | Cria paciente (parcial ou completo) |
@@ -68,6 +68,7 @@ Cookie: associate_session=…
 | Novo | 201 | — |
 | Já Associado | 409 | `ACCOUNT_EXISTS` |
 | Em andamento (fases 1–5) | 409 | `ACCOUNT_IN_PROGRESS` |
+| 5+ pedidos no mesmo IP / 15 min | 429 | `RATE_LIMITED` |
 
 ---
 
@@ -93,7 +94,7 @@ Metadados: ver [gaps.md](./gaps.md) §4.
 | GET | `/terms/status` | `{ status: "module_in_development" }` |
 
 Front: após docs OK, tela da fase 4 com mensagem de módulo em desenvolvimento.  
-Não avançar para fase 5 por webhook. Bypass só com `TERMS_DEV_BYPASS=true` (QA).
+Não avançar para fase 5 por webhook. Sem assinatura do termo (`adhesion_term`) o advance 4→Associado é 400, inclusive em desenvolvimento.
 
 **Spec do módulo nativo:** [`../doc-sign/`](../doc-sign/README.md) — API alvo `/doc-sign/*`, avanço 4→5 na mesma `kunk-api` (sem webhook), `adhesion_term` = UUID do contrato, payload com **`user_code`**.
 

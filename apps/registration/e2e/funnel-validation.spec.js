@@ -259,7 +259,7 @@ test.describe('Funil — validação de dados e uploads', () => {
       test.setTimeout(120_000);
       const email = uniqueEmail('extra-huge');
       try {
-        await ensureDocSignTemplatesPublished(page.context().request);
+        await ensureDocSignTemplatesPublished(page.context());
         await seedAssociate(page, { email, phase: 5 });
         await page.goto('/finalizar');
         await page.getByRole('button', { name: /^Anexar documentos$/i }).click();

@@ -5,13 +5,15 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const { getApp } = require('../../helpers/app');
 const { query, ensureAdminUser, cleanupTestLocalUsers } = require('../../helpers/db');
-const { loginAsAdmin } = require('../../helpers/auth');
+const { loginAsAdmin, extractAssociateCookie } = require('../../helpers/auth');
+const { resetRateLimits } = require('../../../src/utils/rateLimit');
 
 describe('doc-sign integration', () => {
   let app;
 
   before(async () => {
     app = getApp();
+    resetRateLimits();
     await ensureAdminUser();
     await cleanupTestLocalUsers();
   });
@@ -122,6 +124,42 @@ describe('doc-sign integration', () => {
       .set('Cookie', adminCookie)
       .send({ user_code: userCode, regenerate: true });
     assert.equal(staffAgain.status, 409);
+
+    const assocCookie = extractAssociateCookie(cookie);
+    const signedFileId = String(complete.body.data.signed_pdf_url || '').match(/files\/([^/]+)\/download/)?.[1];
+    const auditFileId = String(complete.body.data.audit_pdf_url || '').match(/files\/([^/]+)\/download/)?.[1];
+    assert.ok(signedFileId, JSON.stringify(complete.body.data));
+    assert.ok(auditFileId, JSON.stringify(complete.body.data));
+
+    const signedAsStaff = await request(app)
+      .get(`/api/v1/files/${signedFileId}/download`)
+      .set('Cookie', `${adminCookie}; ${assocCookie}`);
+    assert.equal(signedAsStaff.status, 200, JSON.stringify(signedAsStaff.body));
+
+    const auditAsStaff = await request(app)
+      .get(`/api/v1/files/${auditFileId}/download`)
+      .set('Cookie', `${adminCookie}; ${assocCookie}`);
+    assert.equal(auditAsStaff.status, 200, JSON.stringify(auditAsStaff.body));
+
+    const signedAsOwner = await request(app)
+      .get(`/api/v1/files/${signedFileId}/download`)
+      .set('Cookie', assocCookie);
+    assert.equal(signedAsOwner.status, 200, JSON.stringify(signedAsOwner.body));
+
+    const auditAsOwner = await request(app)
+      .get(`/api/v1/files/${auditFileId}/download`)
+      .set('Cookie', assocCookie);
+    assert.equal(auditAsOwner.status, 200, JSON.stringify(auditAsOwner.body));
+
+    const other = await request(app)
+      .post('/api/v1/auth/associate/register-email')
+      .send({ email: `docsign-other-${Date.now()}@test.local`, password: 'TestPass123!' });
+    assert.equal(other.status, 201);
+    const otherCookie = extractAssociateCookie(other.headers['set-cookie']);
+    const stolen = await request(app)
+      .get(`/api/v1/files/${signedFileId}/download`)
+      .set('Cookie', otherCookie);
+    assert.equal(stolen.status, 403);
 
     await cleanupTestLocalUsers();
   });

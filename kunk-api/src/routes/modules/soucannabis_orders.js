@@ -2,6 +2,7 @@
 
 const { Router } = require('express');
 const { requireModule } = require('./requireModule');
+const { authorizeAdmin } = require('../../middleware/authorize');
 const { ok, AppError } = require('../../utils/response');
 const sc = require('../../services/soucannabis_orders');
 const pagarme = require('../../services/pagarme');
@@ -171,7 +172,7 @@ router.get('/status', async (req, res, next) => {
   }
 });
 
-router.get('/me', async (req, res, next) => {
+router.get('/me', authorizeAdmin, async (req, res, next) => {
   try {
     res.json(ok(await sc.getMeCached()));
   } catch (err) {
@@ -179,7 +180,7 @@ router.get('/me', async (req, res, next) => {
   }
 });
 
-router.post('/test', async (req, res, next) => {
+router.post('/test', authorizeAdmin, async (req, res, next) => {
   try {
     const credentialsService = require('../../services/credentialsService');
     const creds = await credentialsService.resolveAll('soucannabis_orders');
@@ -193,7 +194,7 @@ router.post('/test', async (req, res, next) => {
   }
 });
 
-router.get('/outbound-credentials', async (req, res, next) => {
+router.get('/outbound-credentials', authorizeAdmin, async (req, res, next) => {
   try {
     const reveal = String(req.query.reveal || '') === '1';
     const creds = await sc.outbound.ensureOutboundCredentials();
@@ -206,7 +207,7 @@ router.get('/outbound-credentials', async (req, res, next) => {
     res.json(
       ok({
         client_id: creds.client_id,
-        // Admin precisa colar o secret na SC; reveal=1 retorna o valor (apenas operadores autenticados).
+        // Admin precisa colar o secret na SC; reveal=1 retorna o valor (somente Administrador).
         client_secret: reveal ? creds.client_secret : undefined,
         has_secret: Boolean(creds.client_secret),
         credentials: publicMeta,
@@ -231,7 +232,7 @@ router.get('/outbound-credentials', async (req, res, next) => {
   }
 });
 
-router.get('/webhook-info', async (req, res, next) => {
+router.get('/webhook-info', authorizeAdmin, async (req, res, next) => {
   try {
     const { publicApiBase } = require('../../utils/publicApiUrl');
     const baseUrl = publicApiBase(req);

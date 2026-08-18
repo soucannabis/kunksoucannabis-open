@@ -25,6 +25,7 @@
     "demo:check-menu": "node scripts/demo-check-menu.mjs",
     "demo:acolhimento-triagem": "node scripts/demo-record-acolhimento-triagem.mjs",
     "demo:dashboard": "node scripts/demo-record-dashboard.mjs",
+    "demo:assinatura": "node scripts/demo-record-assinatura.mjs",
     "demo:admin:part1": "node scripts/demo-record-admin-part1.mjs",
     "demo:admin:part2": "node scripts/demo-record-admin-part2.mjs",
     "demo:admin:part1-2": "node scripts/demo-record-admin-part1-2.mjs",

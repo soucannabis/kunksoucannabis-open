@@ -2,9 +2,16 @@
 
 const { query } = require('../db/pool');
 const { AppError } = require('../utils/response');
-const { stripSensitive } = require('../schema/collections');
+const { stripSensitive, quoteIdent } = require('../schema/collections');
 
 const ENTITIES = new Set(['users', 'orders', 'services', 'reception']);
+
+const SCOPE_COLUMNS = {
+  users: new Set(),
+  orders: new Set(),
+  services: new Set(['professional_id']),
+  reception: new Set(),
+};
 
 const SORT_WHITELIST = {
   users: [
@@ -39,6 +46,18 @@ function displayName(row) {
     .filter(Boolean)
     .join(' ')
     .trim();
+}
+
+function applyScope(where, params, scopeFilter, entity) {
+  const allowed = SCOPE_COLUMNS[entity];
+  if (!scopeFilter?.field || scopeFilter.value == null || !allowed?.has(scopeFilter.field)) {
+    return { where, params };
+  }
+  const next = [...params, scopeFilter.value];
+  return {
+    where: `(${where}) AND ${quoteIdent(scopeFilter.field)} = $${next.length}`,
+    params: next,
+  };
 }
 
 function clampLimit(raw) {
@@ -103,11 +122,11 @@ async function enrichUsersGsMeta(rows) {
   return out;
 }
 
-async function searchUsers(q, { page, limit, sortField, sortDir }) {
+async function searchUsers(q, { page, limit, sortField, sortDir, scopeFilter }) {
   const t = q.trim();
   const { field, dir } = resolveSort('users', sortField, sortDir);
   const offset = (page - 1) * limit;
-  const params = [];
+  let params = [];
   let where;
 
   if (t.includes('@')) {
@@ -122,6 +141,8 @@ async function searchUsers(q, { page, limit, sortField, sortDir }) {
       OR CONCAT(COALESCE(associate_name,''), ' ', COALESCE(associate_last_name,'')) ILIKE $1)`;
   }
 
+  ({ where, params } = applyScope(where, params, scopeFilter, 'users'));
+
   const countRes = await query(`SELECT COUNT(*)::int AS n FROM users WHERE ${where}`, params);
   const total = countRes.rows[0]?.n || 0;
   params.push(limit, offset);
@@ -135,13 +156,13 @@ async function searchUsers(q, { page, limit, sortField, sortDir }) {
   return { data, meta: { page, limit, total } };
 }
 
-async function searchOrders(q, { page, limit, sortField, sortDir, ordersMode }) {
+async function searchOrders(q, { page, limit, sortField, sortDir, ordersMode, scopeFilter }) {
   const t = q.trim();
   const { field, dir } = resolveSort('orders', sortField, sortDir);
   const offset = (page - 1) * limit;
   const mode = ordersMode === 'tracking' ? 'tracking' : 'name';
   let where;
-  const params = [];
+  let params = [];
 
   if (mode === 'tracking') {
     const alnum = t.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
@@ -151,6 +172,8 @@ async function searchOrders(q, { page, limit, sortField, sortDir, ordersMode }) 
     params.push(`%${t}%`);
     where = `(associate_name ILIKE $1 OR receiver_name ILIKE $1)`;
   }
+
+  ({ where, params } = applyScope(where, params, scopeFilter, 'orders'));
 
   const countRes = await query(`SELECT COUNT(*)::int AS n FROM orders WHERE ${where}`, params);
   const total = countRes.rows[0]?.n || 0;
@@ -166,12 +189,13 @@ async function searchOrders(q, { page, limit, sortField, sortDir, ordersMode }) 
   return { data: dataRes.rows, meta: { page, limit, total } };
 }
 
-async function searchServices(q, { page, limit, sortField, sortDir }) {
+async function searchServices(q, { page, limit, sortField, sortDir, scopeFilter }) {
   const t = q.trim();
   const { field, dir } = resolveSort('services', sortField, sortDir);
   const offset = (page - 1) * limit;
-  const params = [`%${t}%`];
-  const where = `(associate_name ILIKE $1 OR patient_name ILIKE $1 OR professional_name ILIKE $1)`;
+  let params = [`%${t}%`];
+  let where = `(associate_name ILIKE $1 OR patient_name ILIKE $1 OR professional_name ILIKE $1)`;
+  ({ where, params } = applyScope(where, params, scopeFilter, 'services'));
   const countRes = await query(`SELECT COUNT(*)::int AS n FROM services WHERE ${where}`, params);
   const total = countRes.rows[0]?.n || 0;
   params.push(limit, offset);
@@ -187,12 +211,13 @@ async function searchServices(q, { page, limit, sortField, sortDir }) {
   return { data: dataRes.rows, meta: { page, limit, total } };
 }
 
-async function searchReception(q, { page, limit, sortField, sortDir }) {
+async function searchReception(q, { page, limit, sortField, sortDir, scopeFilter }) {
   const t = q.trim();
   const { field, dir } = resolveSort('reception', sortField, sortDir);
   const offset = (page - 1) * limit;
-  const params = [`%${t}%`];
-  const where = `(name ILIKE $1 OR last_name ILIKE $1 OR full_name ILIKE $1 OR associate_name ILIKE $1)`;
+  let params = [`%${t}%`];
+  let where = `(name ILIKE $1 OR last_name ILIKE $1 OR full_name ILIKE $1 OR associate_name ILIKE $1)`;
+  ({ where, params } = applyScope(where, params, scopeFilter, 'reception'));
   const countRes = await query(`SELECT COUNT(*)::int AS n FROM reception WHERE ${where}`, params);
   const total = countRes.rows[0]?.n || 0;
   params.push(limit, offset);
@@ -207,7 +232,7 @@ async function searchReception(q, { page, limit, sortField, sortDir }) {
   return { data: dataRes.rows, meta: { page, limit, total } };
 }
 
-async function globalSearch(queryParams = {}) {
+async function globalSearch(queryParams = {}, { scopeFilter } = {}) {
   const q = String(queryParams.q || '').trim();
   if (!q) {
     throw new AppError(400, 'VALIDATION_ERROR', 'q é obrigatório');
@@ -229,6 +254,7 @@ async function globalSearch(queryParams = {}) {
     sortField: queryParams.sortField,
     sortDir: queryParams.sortDir,
     ordersMode: queryParams.ordersMode,
+    scopeFilter,
   };
 
   if (entity === 'users') return searchUsers(q, opts);

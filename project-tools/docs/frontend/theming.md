@@ -32,7 +32,7 @@ O cadastramento (`apps/registration`) e o Kunk (`apps/kunk`) usam Vite só para 
 | Token / env | Uso | Exemplo |
 |---|---|---|
 | `VITE_URL` | URL pública do app | `https://cad.…` / `https://kunk.…` |
-| `VITE_API_URL` | Base da kunk-api (dev: `/api/v1` via proxy Vite) | `/api/v1` ou `https://api.…/api/v1` |
+| `VITE_API_URL` | Path da API no **mesmo host** do app (Vite/nginx fazem proxy). Não use a URL pública da kunk-api. | `/api/v1` |
 
 ### Branding (seed em `system_configs` com `system = registration`)
 

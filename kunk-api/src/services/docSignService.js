@@ -27,6 +27,7 @@ const {
   decodeDataUrl,
   emptyPngBuffer,
 } = require('./docSignPdf');
+const { withEventLabel } = require('./docSignEventLabels');
 
 function hashToken(token) {
   return crypto.createHash('sha256').update(String(token)).digest('hex');
@@ -281,6 +282,8 @@ function publicContract(row, { token = null } = {}) {
     id: row.id,
     status: row.status,
     kind: row.kind,
+    kind_display_name: row.kind_display_name || kindDisplayFallback(row.kind),
+    title: String(row.title || '').trim() || row.kind_display_name || kindDisplayFallback(row.kind),
     user_code: row.user_code,
     signer_email: row.signer_email,
     associate_full_name:
@@ -936,7 +939,6 @@ async function listContracts(opts = {}) {
       ...publicContract(r),
       associate_full_name: (r.associate_full_name || '').trim() || null,
       associate_cpf: r.associate_cpf || null,
-      kind_display_name: r.kind_display_name || kindDisplayFallback(r.kind),
     })),
     total,
     limit,
@@ -1193,7 +1195,7 @@ async function verify(contractId) {
 async function getAudit(contractId) {
   const row = await repo.getContractById(contractId);
   if (!row) throw new AppError(404, 'NOT_FOUND', 'Contrato não encontrado');
-  const events = await repo.listEvents(contractId);
+  const events = (await repo.listEvents(contractId)).map(withEventLabel);
   return {
     contract: publicContract(row),
     events,

@@ -7,6 +7,7 @@ const { authenticate } = require('../middleware/authenticate');
 const { authorizeAdmin } = require('../middleware/authorize');
 const { ok } = require('../utils/response');
 const { env } = require('../config/env');
+const { assertLoginRateLimit, recordLoginFailure, checkRateLimit, requestIp } = require('../utils/rateLimit');
 const {
   LEGACY_OPERATOR_SESSION_COOKIE,
   operatorCookieName,
@@ -33,8 +34,10 @@ function clearLegacyOperatorCookie(res) {
 router.use('/associate', authAssociate);
 
 router.post('/login', async (req, res, next) => {
+  const email = String(req.body?.email || '').trim().toLowerCase();
   try {
-    const { email, password } = req.body || {};
+    assertLoginRateLimit(req, 'op-login', email);
+    const { password } = req.body || {};
     const app = resolveOperatorApp(req, { required: true });
     const { user, sessionToken, expires } = await authRepository.login(email, password, app);
     const cookieName = operatorCookieName(app);
@@ -45,15 +48,17 @@ router.post('/login', async (req, res, next) => {
     clearLegacyOperatorCookie(res);
     res.json(ok({ user }));
   } catch (err) {
+    if (err.code === 'INVALID_CREDENTIALS') {
+      recordLoginFailure(req, 'op-login', email);
+    }
     next(err);
   }
 });
 
 router.post('/forgot-password', async (req, res, next) => {
   try {
-    const { checkRateLimit } = require('../utils/rateLimit');
     const email = String(req.body?.email || '').trim().toLowerCase();
-    const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const ip = requestIp(req);
     const limited = checkRateLimit(`op-forgot:${ip}:${email}`, { limit: 5, windowMs: 15 * 60 * 1000 });
     if (!limited.ok) {
       const { AppError } = require('../utils/response');

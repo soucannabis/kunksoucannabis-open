@@ -32,7 +32,7 @@ function createPayload(collection) {
     case 'orders':
       return { status: 'Novo', associate_name: 'A', order_code: uuidv4(), total: 10 };
     case 'users_api':
-      return { email: `api${Date.now()}@t.com`, token: 'hashed-placeholder' };
+      return { email: `api${Date.now()}@t.com` };
     case 'orders_files':
     case 'services_files':
     case 'users_files':

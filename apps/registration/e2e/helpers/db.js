@@ -50,6 +50,73 @@ function loadDatabaseUrl() {
   throw new Error('PG_URL (ou PGHOST/PGUSER/PGPASSWORD/PGDATABASE) not found');
 }
 
+/** Endereço padrão SP para demos de frete (Loggi / Melhor Envio). */
+const DEMO_SHIPPING_ADDRESS = {
+  street: 'Rua das Flores',
+  street_number: '100',
+  neighborhood: 'Centro',
+  city: 'São Paulo',
+  state: 'SP',
+  cep: '01310100',
+  complement: '',
+};
+
+/**
+ * Garante CEP e endereço cadastral no associado (necessário para cotar frete no carrinho).
+ */
+export async function ensureDemoAssociateShippingAddress(
+  email,
+  address = DEMO_SHIPPING_ADDRESS
+) {
+  if (!email) throw new Error('ensureDemoAssociateShippingAddress exige email');
+  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  try {
+    const cepDigits = String(address.cep || '').replace(/\D/g, '');
+    if (cepDigits.length !== 8) {
+      throw new Error(`CEP inválido para demo: ${address.cep}`);
+    }
+    const delivery = {
+      street: address.street,
+      number: address.street_number,
+      neighborhood: address.neighborhood,
+      city: address.city,
+      state: address.state,
+      cep: cepDigits,
+      complement: address.complement || '',
+    };
+    const { rows } = await pool.query(
+      `UPDATE users
+       SET street = $2,
+           street_number = $3,
+           neighborhood = $4,
+           city = $5,
+           state = $6,
+           cep = $7,
+           complement = $8,
+           delivery_address = $9::jsonb,
+           date_updated = NOW()
+       WHERE lower(email_account) = lower($1)
+         AND (status IS NULL OR status <> 'patient')
+       RETURNING id, email_account, cep, city, state`,
+      [
+        email,
+        address.street,
+        address.street_number,
+        address.neighborhood,
+        address.city,
+        address.state,
+        cepDigits,
+        address.complement || '',
+        JSON.stringify(delivery),
+      ]
+    );
+    if (!rows[0]) throw new Error(`Associado não encontrado para endereço: ${email}`);
+    return { ...rows[0], address: delivery };
+  } finally {
+    await pool.end();
+  }
+}
+
 /** Force status/fase for E2E pós-termo (QA only). */
 export async function forceAssociateStatus(email, { status = 'Associado', associate_status = 'assinatura_termo' } = {}) {
   const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
@@ -222,19 +289,26 @@ export async function resetAssociateTermByEmail(email) {
 /**
  * Remove o associado (e pacientes vinculados) criados no E2E, mais arquivos e termos.
  * Usa e-mail exato — não apaga sample data.
+ * Também remove pedidos/serviços/reception vinculados (FK em orders.user).
  */
 export async function deleteAssociateByEmail(email) {
   if (!email) return { deletedUsers: 0 };
   const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const client = await pool.connect();
   try {
-    const { rows: roots } = await pool.query(
+    await client.query('BEGIN');
+
+    const { rows: roots } = await client.query(
       `SELECT id, user_code FROM users WHERE lower(email_account) = lower($1)`,
       [email]
     );
-    if (!roots.length) return { deletedUsers: 0 };
+    if (!roots.length) {
+      await client.query('COMMIT');
+      return { deletedUsers: 0 };
+    }
 
     const rootCodes = roots.map((r) => r.user_code).filter(Boolean);
-    const { rows: patients } = await pool.query(
+    const { rows: patients } = await client.query(
       `SELECT id, user_code FROM users
        WHERE responsible_code = ANY($1::uuid[])
           OR user_code::text IN (
@@ -249,21 +323,62 @@ export async function deleteAssociateByEmail(email) {
     const allUsers = [...roots, ...patients];
     const userIds = [...new Set(allUsers.map((u) => u.id))];
     const userCodes = [...new Set(allUsers.map((u) => u.user_code).filter(Boolean))];
+    const userCodesText = userCodes.map(String);
 
-    await pool.query(
+    const { rows: orders } = await client.query(
+      `SELECT id FROM orders
+       WHERE "user" = ANY($1::int[])
+          OR user_code = ANY($2::text[])`,
+      [userIds, userCodesText]
+    );
+    const orderIds = orders.map((o) => o.id);
+    if (orderIds.length) {
+      await client.query(
+        `DELETE FROM product_stock_movements WHERE order_id = ANY($1::int[])`,
+        [orderIds]
+      );
+      await client.query(
+        `DELETE FROM orders_files WHERE order_id = ANY($1::int[])`,
+        [orderIds]
+      );
+      await client.query(`DELETE FROM orders WHERE id = ANY($1::int[])`, [orderIds]);
+    }
+
+    const { rows: services } = await client.query(
+      `SELECT id FROM services
+       WHERE associate_user_code = ANY($1::uuid[])
+          OR patient_user_code = ANY($1::uuid[])
+          OR associate_user_code::text = ANY($2::text[])`,
+      [userCodes, userCodesText]
+    );
+    const serviceIds = services.map((s) => s.id);
+    if (serviceIds.length) {
+      await client.query(
+        `DELETE FROM services_files WHERE service_id = ANY($1::int[])`,
+        [serviceIds]
+      );
+      await client.query(`DELETE FROM services WHERE id = ANY($1::int[])`, [serviceIds]);
+    }
+
+    await client.query(`DELETE FROM reception WHERE associate_code = ANY($1::text[])`, [
+      userCodesText,
+    ]);
+    await client.query(`DELETE FROM reception WHERE lower(email) = lower($1)`, [email]);
+
+    await client.query(
       `DELETE FROM term_events WHERE contract_id IN (
          SELECT id FROM term_contracts WHERE user_code = ANY($1::uuid[])
        )`,
       [userCodes]
     );
-    await pool.query(
+    await client.query(
       `DELETE FROM term_signatures WHERE contract_id IN (
          SELECT id FROM term_contracts WHERE user_code = ANY($1::uuid[])
        )`,
       [userCodes]
     );
 
-    const { rows: contractFiles } = await pool.query(
+    const { rows: contractFiles } = await client.query(
       `SELECT filled_pdf_file_id AS id FROM term_contracts WHERE user_code = ANY($1::uuid[])
        UNION
        SELECT signed_pdf_file_id FROM term_contracts WHERE user_code = ANY($1::uuid[])
@@ -271,46 +386,59 @@ export async function deleteAssociateByEmail(email) {
        SELECT audit_pdf_file_id FROM term_contracts WHERE user_code = ANY($1::uuid[])`,
       [userCodes]
     );
-    await pool.query(`DELETE FROM term_contracts WHERE user_code = ANY($1::uuid[])`, [userCodes]);
+    await client.query(`DELETE FROM term_contracts WHERE user_code = ANY($1::uuid[])`, [
+      userCodes,
+    ]);
 
-    const { rows: ufFiles } = await pool.query(
+    const { rows: ufFiles } = await client.query(
       `SELECT file_id AS id FROM users_files WHERE user_id = ANY($1::int[])`,
       [userIds]
     );
-    await pool.query(`DELETE FROM users_files WHERE user_id = ANY($1::int[])`, [userIds]);
+    await client.query(`DELETE FROM users_files WHERE user_id = ANY($1::int[])`, [userIds]);
 
     const fileIds = [...contractFiles, ...ufFiles]
       .map((r) => r.id)
       .filter(Boolean);
 
     if (fileIds.length) {
-      await pool.query(
+      await client.query(
         `UPDATE term_signatures SET image_file_id = NULL WHERE image_file_id = ANY($1::uuid[])`,
         [fileIds]
       );
-      await pool.query(`DELETE FROM files WHERE id = ANY($1::uuid[])`, [fileIds]);
+      await client.query(`DELETE FROM files WHERE id = ANY($1::uuid[])`, [fileIds]);
     }
 
-    await pool.query(
+    await client.query(
       `UPDATE users SET patient_user_code = NULL
        WHERE user_code = ANY($1::uuid[])`,
       [userCodes]
     );
-    await pool.query(
+    await client.query(
       `UPDATE users SET responsible_code = NULL
        WHERE responsible_code = ANY($1::uuid[])`,
       [userCodes]
     );
 
-    // Pacientes primeiro (FK responsible_code ON DELETE SET NULL, mas ordem segura)
     const patientIds = patients.map((p) => p.id);
     if (patientIds.length) {
-      await pool.query(`DELETE FROM users WHERE id = ANY($1::int[])`, [patientIds]);
+      await client.query(`DELETE FROM users WHERE id = ANY($1::int[])`, [patientIds]);
     }
-    await pool.query(`DELETE FROM users WHERE id = ANY($1::int[])`, [roots.map((r) => r.id)]);
+    await client.query(`DELETE FROM users WHERE id = ANY($1::int[])`, [
+      roots.map((r) => r.id),
+    ]);
 
-    return { deletedUsers: userIds.length, fileIds: fileIds.length };
+    await client.query('COMMIT');
+    return {
+      deletedUsers: userIds.length,
+      deletedOrders: orderIds.length,
+      deletedServices: serviceIds.length,
+      fileIds: fileIds.length,
+    };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
   } finally {
+    client.release();
     await pool.end();
   }
 }

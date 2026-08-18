@@ -2,6 +2,7 @@
 
 const { DELIVERY_TIMEOUT_MS } = require('./catalog');
 const { buildHeaders } = require('./sign');
+const { assertPublicHttpUrl } = require('../../utils/publicHttpUrl');
 
 async function postJson(url, body, headers, timeoutMs = DELIVERY_TIMEOUT_MS) {
   const controller = new AbortController();
@@ -11,13 +12,13 @@ async function postJson(url, body, headers, timeoutMs = DELIVERY_TIMEOUT_MS) {
       method: 'POST',
       headers,
       body,
+      redirect: 'manual',
       signal: controller.signal,
     });
-    const text = await res.text().catch(() => '');
+    await res.text().catch(() => '');
     return {
       ok: res.status >= 200 && res.status < 300,
       status: res.status,
-      body: text.slice(0, 1000),
     };
   } finally {
     clearTimeout(timer);
@@ -25,6 +26,15 @@ async function postJson(url, body, headers, timeoutMs = DELIVERY_TIMEOUT_MS) {
 }
 
 async function dispatchDelivery(delivery, { url, secret }) {
+  try {
+    await assertPublicHttpUrl(url);
+  } catch (err) {
+    return {
+      ok: false,
+      status: null,
+      error: err.message || 'URL interna não é permitida',
+    };
+  }
   const body = JSON.stringify(delivery.payload);
   const timestamp = Math.floor(Date.now() / 1000);
   const headers = buildHeaders({
@@ -44,7 +54,6 @@ async function dispatchDelivery(delivery, { url, secret }) {
     return {
       ok: false,
       status: null,
-      body: '',
       error: aborted ? 'timeout' : err.message || String(err),
     };
   }

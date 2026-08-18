@@ -4,6 +4,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { query } = require('../db/pool');
 const { AppError } = require('../utils/response');
+const { assertAllowedUpload } = require('../utils/fileType');
 const {
   getActiveStorageDriver,
   getDriverForFile,
@@ -24,12 +25,12 @@ function withUrl(row) {
   return { ...row, url: fileUrl(row.id) };
 }
 
-async function createFile({ buffer, filename, mimeType }) {
+async function createFile({ buffer, filename, mimeType: _mimeType }) {
+  const mime = assertAllowedUpload(buffer);
   const { driver, config } = await getActiveStorageDriver();
   const id = uuidv4();
   const safeName = (filename || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
   const displayName = filename || safeName;
-  const mime = mimeType || 'application/octet-stream';
 
   let storageKey;
   let storagePath = null;

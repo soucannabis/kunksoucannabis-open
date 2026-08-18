@@ -36,6 +36,10 @@ const EMPTY = {
   cep: '',
   reason_treatment_text: '',
   ciap_codes: [],
+  pet_name: '',
+  pet_birth_date: '',
+  pet_gender: '',
+  pet_reason_treatment_text: '',
 };
 
 function FieldLabel({ children, hint }) {
@@ -55,6 +59,7 @@ export function AssociateRegistrationPage({ api }) {
   const [invalid, setInvalid] = useState([]);
   const [busy, setBusy] = useState(false);
   const [ciap2Enabled, setCiap2Enabled] = useState(true);
+  const isPet = form.responsible_type === 'pet';
 
   useEffect(() => {
     let cancelled = false;
@@ -120,9 +125,32 @@ export function AssociateRegistrationPage({ api }) {
     const localInvalid = validateAssociateForm(
       { ...form, account_password: user?.account_password ? '********' : '' },
       { ciap2Enabled },
-    ).filter((k) => k !== 'account_password');
+    ).filter(
+      (k) =>
+        k !== 'account_password' &&
+        (!isPet || (k !== 'reason_treatment_text' && k !== 'ciap_codes'))
+    );
+    if (isPet) {
+      if (!form.pet_name.trim()) localInvalid.push('pet_name');
+      if (!form.pet_birth_date) localInvalid.push('pet_birth_date');
+      if (!form.pet_gender) localInvalid.push('pet_gender');
+      if (!form.pet_reason_treatment_text.trim()) {
+        localInvalid.push('pet_reason_treatment_text');
+      }
+    }
 
-    const body = { ...form };
+    const {
+      pet_name,
+      pet_birth_date,
+      pet_gender,
+      pet_reason_treatment_text,
+      reason_treatment_text,
+      ciap_codes,
+      ...responsibleFields
+    } = form;
+    const body = isPet
+      ? responsibleFields
+      : { ...responsibleFields, reason_treatment_text, ciap_codes };
     try {
       const res = await api.patchMe(body);
       await refresh();
@@ -133,7 +161,19 @@ export function AssociateRegistrationPage({ api }) {
         setError(alert.message || 'Há campos pendentes no cadastro.');
         return;
       }
-      if (res.data.responsible_type === 'another') {
+      if (res.data.responsible_type === 'pet') {
+        const patients = await api.listMyPatients();
+        const existing = patients.data?.[0];
+        const pet = {
+          associate_name: pet_name.trim(),
+          associate_birth_date: pet_birth_date,
+          gender: pet_gender,
+          reason_treatment_text: pet_reason_treatment_text.trim(),
+        };
+        if (existing?.id) await api.patchMyPatient(existing.id, pet);
+        else await api.createMyPatient(pet);
+        navigate('/cadastro-paciente');
+      } else if (res.data.responsible_type === 'another') {
         navigate('/cadastro-paciente');
       } else {
         await api.advance();
@@ -297,7 +337,7 @@ export function AssociateRegistrationPage({ api }) {
         </div>
       </div>
 
-      {ciap2Enabled ? (
+      {!isPet && ciap2Enabled ? (
         <section className="ciap2-block">
           <h2 className="ciap2-block-title">Motivo principal para o tratamento</h2>
           <p className="ciap2-help">
@@ -329,12 +369,64 @@ export function AssociateRegistrationPage({ api }) {
         </section>
       ) : null}
 
-      <div className="form-section">
-        <FieldLabel hint="informe com suas palavras">
-          Descreva com suas palavras o motivo do seu tratamento
-        </FieldLabel>
-        <textarea className={fieldClass('reason_treatment_text')} required rows={3} value={form.reason_treatment_text} onChange={(e) => setField('reason_treatment_text', e.target.value)} />
-      </div>
+      {isPet ? (
+        <section className="form-section">
+          <h2 className="ciap2-block-title">Dados do pet</h2>
+          <div className="row g-4">
+            <div className="col-md-4">
+              <FieldLabel hint="nome do paciente pet">Nome do pet</FieldLabel>
+              <input
+                className={fieldClass('pet_name')}
+                required
+                value={form.pet_name}
+                onChange={(e) => setField('pet_name', e.target.value)}
+              />
+            </div>
+            <div className="col-md-4">
+              <FieldLabel hint="data de nascimento">Nascimento do pet</FieldLabel>
+              <input
+                type="date"
+                className={fieldClass('pet_birth_date')}
+                required
+                value={form.pet_birth_date}
+                onChange={(e) => setField('pet_birth_date', e.target.value)}
+              />
+            </div>
+            <div className="col-md-4">
+              <FieldLabel hint="macho ou fêmea">Sexo</FieldLabel>
+              <select
+                className={fieldClass('pet_gender')}
+                required
+                value={form.pet_gender}
+                onChange={(e) => setField('pet_gender', e.target.value)}
+              >
+                <option value="">Selecione</option>
+                <option value="macho">Macho</option>
+                <option value="femea">Fêmea</option>
+              </select>
+            </div>
+          </div>
+          <div className="mt-4">
+            <FieldLabel hint="informe com suas palavras">
+              Descreva com suas palavras o motivo do tratamento
+            </FieldLabel>
+            <textarea
+              className={fieldClass('pet_reason_treatment_text')}
+              required
+              rows={3}
+              value={form.pet_reason_treatment_text}
+              onChange={(e) => setField('pet_reason_treatment_text', e.target.value)}
+            />
+          </div>
+        </section>
+      ) : (
+        <div className="form-section">
+          <FieldLabel hint="informe com suas palavras">
+            Descreva com suas palavras o motivo do seu tratamento
+          </FieldLabel>
+          <textarea className={fieldClass('reason_treatment_text')} required rows={3} value={form.reason_treatment_text} onChange={(e) => setField('reason_treatment_text', e.target.value)} />
+        </div>
+      )}
 
       <AlertError
         className="mt-4"

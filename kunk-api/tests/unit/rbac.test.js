@@ -20,6 +20,40 @@ describe('rbac', () => {
     assert.deepEqual(scope, { field: 'professional_id', value: 'uuid-pro-1' });
     assert.equal(can(['Profissional'], 'services', 'read'), true);
     assert.equal(can(['Profissional'], 'services', 'update'), false);
+    assert.equal(can(['Profissional'], 'files', 'read'), false);
+    assert.equal(can(['Profissional'], 'services_files', 'read'), false);
+  });
+
+  it('Profissional scopes professionals by professional_code', () => {
+    const {
+      isStaffRoles,
+      isProfessionalRole,
+      isPortalProfessional,
+      portalProfessionalDeniedFields,
+    } = require('../../src/schema/rbac');
+    const user = { internal_code: 'uuid-pro-1' };
+    assert.deepEqual(scopeFilterFor(['Profissional'], user, 'services'), {
+      field: 'professional_id',
+      value: 'uuid-pro-1',
+    });
+    assert.deepEqual(scopeFilterFor(['Profissional'], user, 'professionals'), {
+      field: 'professional_code',
+      value: 'uuid-pro-1',
+    });
+    assert.equal(isStaffRoles(['Profissional']), false);
+    assert.equal(isProfessionalRole(['Profissional']), true);
+    assert.equal(isPortalProfessional(['Profissional']), true);
+    assert.equal(isPortalProfessional(['Acolhimento', 'Profissional']), false);
+    assert.deepEqual(
+      portalProfessionalDeniedFields(['Profissional'], { donation_balance: 10, name: 'X' }),
+      ['donation_balance']
+    );
+    assert.deepEqual(portalProfessionalDeniedFields(['Acolhimento'], { donation_balance: 10 }), []);
+  });
+
+  it('Prescritor is not a login role', () => {
+    assert.equal(can(['Prescritor'], 'orders', 'read'), false);
+    assert.equal(scopeFilterFor(['Prescritor'], { internal_code: 'x' }), null);
   });
 
   it('parses permissions JSON and CSV', () => {

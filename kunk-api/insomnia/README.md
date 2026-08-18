@@ -16,9 +16,9 @@ Collection para testes manuais da API em `http://localhost:4250/api/v1`.
 | `base_url` | `http://localhost:4250/api/v1` |
 | `email` | *(operador criado no Admin — não há seed de system_users)* |
 | `password` | *(senha do operador)* |
-| `bearer_token` | `kunk_live_demo_sample_token_do_not_use_prod` |
+| `bearer_token` | *(token criado no Admin; o sample não inclui token de API)* |
 
-O `bearer_token` é o token fixo do sample-data (`users_api`). **Não precisa fazer login** para as rotas autenticadas — elas já usam `Authorization: Bearer`.
+O sample data **não** cria token Bearer. Para rotas autenticadas por API key, gere um token no Admin e cole em `bearer_token`.
 
 Para login por cookie, cadastre um operador no Admin e preencha `email` / `password` no ambiente.
 

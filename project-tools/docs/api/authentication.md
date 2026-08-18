@@ -64,7 +64,7 @@ Autentica operador interno (`system_users`).
 
 Seta cookie `kunk_oss_session`. Senha com bcrypt. Nunca retornar `password` / `session_token` no body.
 
-**Erros:** 400 `VALIDATION_ERROR` · 401 `INVALID_CREDENTIALS` · 403 `USER_INACTIVE`
+**Erros:** 400 `VALIDATION_ERROR` · 401 `INVALID_CREDENTIALS` · 403 `USER_INACTIVE` · 429 `RATE_LIMITED` (5 falhas / 5 min por IP+e-mail; teto 30 falhas / 5 min por IP. Acertos não contam.)
 
 #### `POST /auth/logout`
 

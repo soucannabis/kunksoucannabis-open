@@ -122,12 +122,9 @@ export default function FileUpload({
   }, [fixedKind]);
 
   async function openPreview(file) {
-    if (!api?.fileDownloadUrl) return;
+    if (!api?.fileDownload) return;
     try {
-      const url = api.fileDownloadUrl(file.id);
-      const res = await fetch(url, { credentials: 'include' });
-      if (!res.ok) throw new Error('Não foi possível abrir o arquivo');
-      const blob = await res.blob();
+      const blob = await api.fileDownload(file.id);
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewMime(file.mime_type || blob.type || '');
       setPreviewUrl(URL.createObjectURL(blob));

@@ -94,4 +94,83 @@ describe('domain/users', () => {
       .send({ annotations: 'x' });
     assert.equal(u.status, 200);
   });
+
+  it('rejects duplicate login email on create and patch; normalizes case', async () => {
+    const stamp = Date.now();
+    const taken = `panel-taken-${stamp}@test.local`;
+    const first = await request(app)
+      .post('/api/v1/users')
+      .set('Cookie', cookie)
+      .send({ associate_name: 'Um', email_account: taken });
+    assert.equal(first.status, 201, JSON.stringify(first.body));
+
+    const dup = await request(app)
+      .post('/api/v1/users')
+      .set('Cookie', cookie)
+      .send({ associate_name: 'Dois', email_account: taken.toUpperCase() });
+    assert.equal(dup.status, 409);
+    assert.equal(dup.body.errors[0].code, 'ACCOUNT_IN_PROGRESS');
+
+    const second = await request(app)
+      .post('/api/v1/users')
+      .set('Cookie', cookie)
+      .send({ associate_name: 'Dois', email_account: `panel-free-${stamp}@test.local` });
+    assert.equal(second.status, 201, JSON.stringify(second.body));
+
+    const steal = await request(app)
+      .patch(`/api/v1/users/${second.body.data.id}`)
+      .set('Cookie', cookie)
+      .send({ email_account: taken });
+    assert.equal(steal.status, 409);
+    assert.ok(['ACCOUNT_EXISTS', 'ACCOUNT_IN_PROGRESS'].includes(steal.body.errors[0].code));
+
+    const mixed = `Panel-Case-${stamp}@Test.Local`;
+    const renamed = await request(app)
+      .patch(`/api/v1/users/${second.body.data.id}`)
+      .set('Cookie', cookie)
+      .send({ email_account: mixed });
+    assert.equal(renamed.status, 200, JSON.stringify(renamed.body));
+    assert.equal(renamed.body.data.email_account, mixed.trim().toLowerCase());
+  });
+
+  it('PATCH rejects funnel and identity fields; make-associate still works', async () => {
+    const before = await request(app).get(`/api/v1/items/users/${userId}`).set('Cookie', cookie);
+    assert.equal(before.status, 200);
+    const prevStatus = before.body.data.status;
+    const prevPhase = before.body.data.associate_status;
+    const prevCode = before.body.data.user_code;
+
+    const blocked = await request(app)
+      .patch(`/api/v1/users/${userId}`)
+      .set('Cookie', cookie)
+      .send({ associate_status: 'concluido', status: 'Associado', user_code: uuidv4() });
+    assert.equal(blocked.status, 400, JSON.stringify(blocked.body));
+    assert.equal(blocked.body.errors[0].code, 'VALIDATION_ERROR');
+
+    const mixed = await request(app)
+      .patch(`/api/v1/users/${userId}`)
+      .set('Cookie', cookie)
+      .send({ annotations: 'keep-me', associate_status: 'concluido', user_code: uuidv4() });
+    assert.equal(mixed.status, 200, JSON.stringify(mixed.body));
+    assert.equal(mixed.body.data.annotations, 'keep-me');
+    assert.equal(mixed.body.data.associate_status, prevPhase);
+    assert.equal(mixed.body.data.user_code, prevCode);
+    assert.equal(mixed.body.data.status, prevStatus);
+
+    const made = await request(app)
+      .post(`/api/v1/users/${userId}/make-associate`)
+      .set('Cookie', cookie)
+      .send({});
+    assert.equal(made.status, 200, JSON.stringify(made.body));
+    assert.equal(made.body.data.status, 'Associado');
+    assert.equal(made.body.data.associate_status, 'assinatura_termo');
+    assert.equal(made.body.data.user_code, prevCode);
+
+    const handbook = await request(app)
+      .post(`/api/v1/users/${userId}/handbook`)
+      .set('Cookie', cookie)
+      .send({ handbook: 'still-ok' });
+    assert.equal(handbook.status, 200, JSON.stringify(handbook.body));
+    assert.equal(handbook.body.data.handbook, 'still-ok');
+  });
 });

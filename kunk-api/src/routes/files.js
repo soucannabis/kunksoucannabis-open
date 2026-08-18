@@ -8,37 +8,94 @@ const registrationService = require('../services/registrationService');
 const { authenticate, extractBearer } = require('../middleware/authenticate');
 const { authorize } = require('../middleware/authorize');
 const { ok, AppError } = require('../utils/response');
+const { applyFileDownloadHeaders } = require('../utils/fileType');
 const { query } = require('../db/pool');
 const {
   PHASE,
   normalizePhase,
   phaseEquals,
 } = require('../constants/associatePhases');
+const {
+  extractOperatorCookieToken,
+  hasAnyOperatorCookie,
+  resolveOperatorApp,
+} = require('../constants/authCookies');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 const router = Router();
 
+function runMiddleware(mw, req, res) {
+  return new Promise((resolve, reject) => {
+    mw(req, res, (err) => (err ? reject(err) : resolve()));
+  });
+}
+
 /**
  * Sessão de associado no cookie (cadastramento).
- * Em localhost o jar é compartilhado: se houver sessão de operador (cookie app ou Bearer),
- * ignora associate_session — inclusive expirada — para não bloquear upload do Kunk/Admin.
+ * Em localhost o jar é compartilhado entre portas, com cookies distintos por app
+ * (kunk_oss_session_admin | _kunk | _doc_sign + associate_session).
+ *
+ * Upload no cadastro precisa do cookie de associado mesmo com sessão de operador
+ * no jar (o request do cadastro não manda X-Kunk-App).
+ * GET/download/DELETE no Kunk/Admin/Doc-sign: se houver cookie de operador,
+ * a sessão de staff ganha — senão o PDF do termo/audit (fora de users_files)
+ * cai no ownership do associado e devolve 403.
  */
-async function resolveAssociateFromCookie(req) {
+async function resolveAssociateFromCookie(req, { preferOperatorCookie = false } = {}) {
   const token = req.cookies?.associate_session;
   if (!token) return null;
+  if (extractBearer(req)) return null;
 
-  const {
-    resolveOperatorApp,
-    extractOperatorCookieToken,
-  } = require('../constants/authCookies');
+  if (preferOperatorCookie && hasAnyOperatorCookie(req)) return null;
+
   const app = resolveOperatorApp(req);
-  if (extractBearer(req) || extractOperatorCookieToken(req, app)) {
+  if (app && extractOperatorCookieToken(req, app)) {
     return null;
   }
 
   const row = await associateAuthRepository.resolveSessionRow(token);
   // Cookie associado inválido/expirado: não falha aqui — deixa o authenticate do operador decidir.
   return row || null;
+}
+
+async function associateOwnsFile(associateRow, fileId) {
+  const owned = await query(
+    `SELECT 1 FROM users_files uf
+     WHERE uf.file_id = $1 AND uf.user_id IN (
+       SELECT id FROM users WHERE id = $2 OR responsible_code = $3
+     ) LIMIT 1`,
+    [fileId, associateRow.id, associateRow.user_code]
+  );
+  if (owned.rows[0]) return true;
+
+  const term = await query(
+    `SELECT 1 FROM term_contracts tc
+     WHERE (
+         tc.signed_pdf_file_id = $1
+         OR tc.audit_pdf_file_id = $1
+         OR tc.filled_pdf_file_id = $1
+       )
+       AND tc.user_code IN (
+         SELECT user_code FROM users WHERE id = $2 OR responsible_code = $3
+       )
+     LIMIT 1`,
+    [fileId, associateRow.id, associateRow.user_code]
+  );
+  return Boolean(term.rows[0]);
+}
+
+async function authenticateOperatorFileAccess(req, res, action) {
+  await runMiddleware(authenticate, req, res);
+  await runMiddleware(authorize('files', action), req, res);
+}
+
+async function assertFileAccess(req, res, fileId, action) {
+  const associateRow = await resolveAssociateFromCookie(req, { preferOperatorCookie: true }).catch(() => null);
+  if (associateRow) {
+    if (await associateOwnsFile(associateRow, fileId)) return;
+    throw new AppError(403, 'FORBIDDEN', 'Arquivo não pertence ao associado');
+  }
+  await authenticateOperatorFileAccess(req, res, action);
 }
 
 router.get('/', authenticate, authorize('files', 'read'), async (req, res, next) => {
@@ -143,26 +200,7 @@ router.post('/', upload.single('file'), async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const associateRow = await resolveAssociateFromCookie(req).catch(() => null);
-    if (associateRow) {
-      const owned = await query(
-        `SELECT 1 FROM users_files uf
-         WHERE uf.file_id = $1 AND uf.user_id IN (
-           SELECT id FROM users WHERE id = $2 OR responsible_code = $3
-         ) LIMIT 1`,
-        [req.params.id, associateRow.id, associateRow.user_code]
-      );
-      if (!owned.rows[0]) throw new AppError(403, 'FORBIDDEN', 'Arquivo não pertence ao associado');
-      const data = await filesRepository.getFile(req.params.id);
-      return res.json(ok(data));
-    }
-
-    await new Promise((resolve, reject) => {
-      authenticate(req, res, (err) => (err ? reject(err) : resolve()));
-    });
-    await new Promise((resolve, reject) => {
-      authorize('files', 'read')(req, res, (err) => (err ? reject(err) : resolve()));
-    });
+    await assertFileAccess(req, res, req.params.id, 'read');
     const data = await filesRepository.getFile(req.params.id);
     res.json(ok(data));
   } catch (err) {
@@ -202,35 +240,12 @@ router.get('/:id/download', async (req, res, next) => {
   try {
     const publicBranding = await isPubliclyReadableFile(req.params.id);
     if (!publicBranding) {
-      const associateRow = await resolveAssociateFromCookie(req).catch(() => null);
-      if (associateRow) {
-        const owned = await query(
-          `SELECT 1 FROM users_files uf
-           WHERE uf.file_id = $1 AND uf.user_id IN (
-             SELECT id FROM users WHERE id = $2 OR responsible_code = $3
-           ) LIMIT 1`,
-          [req.params.id, associateRow.id, associateRow.user_code]
-        );
-        if (!owned.rows[0]) throw new AppError(403, 'FORBIDDEN', 'Arquivo não pertence ao associado');
-      } else {
-        await new Promise((resolve, reject) => {
-          authenticate(req, res, (err) => (err ? reject(err) : resolve()));
-        });
-        await new Promise((resolve, reject) => {
-          authorize('files', 'read')(req, res, (err) => (err ? reject(err) : resolve()));
-        });
-      }
+      await assertFileAccess(req, res, req.params.id, 'read');
     }
 
     const file = await filesRepository.getFile(req.params.id);
     const stream = await filesRepository.openFileStream(file);
-    const mime = file.mime_type || 'application/octet-stream';
-    const inline = String(mime).startsWith('image/') || mime === 'application/pdf';
-    res.setHeader('Content-Type', mime);
-    res.setHeader(
-      'Content-Disposition',
-      `${inline ? 'inline' : 'attachment'}; filename="${file.filename}"`
-    );
+    applyFileDownloadHeaders(res, file);
     stream.on('error', (err) => next(err));
     stream.pipe(res);
   } catch (err) {
@@ -240,30 +255,20 @@ router.get('/:id/download', async (req, res, next) => {
 
 router.delete('/:id', async (req, res, next) => {
   try {
-    const associateRow = await resolveAssociateFromCookie(req);
+    const associateRow = await resolveAssociateFromCookie(req, { preferOperatorCookie: true });
     if (associateRow) {
       const phase = normalizePhase(associateRow.associate_status);
       if (!phaseEquals(phase, PHASE.DOCUMENTOS)) {
         throw new AppError(403, 'PHASE_LOCKED', 'Remoção de docs só na fase documentos');
       }
-      const owned = await query(
-        `SELECT uf.id FROM users_files uf
-         WHERE uf.file_id = $1 AND uf.user_id IN (
-           SELECT id FROM users WHERE id = $2 OR responsible_code = $3
-         ) LIMIT 1`,
-        [req.params.id, associateRow.id, associateRow.user_code]
-      );
-      if (!owned.rows[0]) throw new AppError(403, 'FORBIDDEN', 'Arquivo não pertence ao associado');
+      if (!(await associateOwnsFile(associateRow, req.params.id))) {
+        throw new AppError(403, 'FORBIDDEN', 'Arquivo não pertence ao associado');
+      }
       const data = await filesRepository.deleteFile(req.params.id);
       return res.json(ok(data));
     }
 
-    await new Promise((resolve, reject) => {
-      authenticate(req, res, (err) => (err ? reject(err) : resolve()));
-    });
-    await new Promise((resolve, reject) => {
-      authorize('files', 'delete')(req, res, (err) => (err ? reject(err) : resolve()));
-    });
+    await authenticateOperatorFileAccess(req, res, 'delete');
     const data = await filesRepository.deleteFile(req.params.id);
     res.json(ok(data));
   } catch (err) {

@@ -4,6 +4,7 @@ const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const { loginAsAdmin } = require('../helpers/auth');
+const { TINY_JPEG } = require('../helpers/fileBuffers');
 
 describe('files list', () => {
   let app;
@@ -19,7 +20,7 @@ describe('files list', () => {
     const created = await request(app)
       .post('/api/v1/files')
       .set('Cookie', cookie)
-      .attach('file', Buffer.from('hello admin file'), 'admin-list.txt');
+      .attach('file', TINY_JPEG, 'admin-list.jpg');
     assert.equal(created.status, 201, JSON.stringify(created.body));
 
     const listed = await request(app)
@@ -28,6 +29,6 @@ describe('files list', () => {
     assert.equal(listed.status, 200, JSON.stringify(listed.body));
     assert.ok(Array.isArray(listed.body.data));
     assert.ok(listed.body.meta);
-    assert.ok(listed.body.data.some((f) => f.filename === 'admin-list.txt'));
+    assert.ok(listed.body.data.some((f) => f.filename === 'admin-list.jpg'));
   });
 });

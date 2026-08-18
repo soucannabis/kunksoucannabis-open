@@ -2,6 +2,7 @@
 
 const { Router } = require('express');
 const { requireModule } = require('./requireModule');
+const { authorizeAdmin } = require('../../middleware/authorize');
 const { ok } = require('../../utils/response');
 const { LOGGI_SERVICE_CATALOG } = require('../../services/freightNormalize');
 const loggiQuote = require('../../services/loggi/quote');
@@ -24,11 +25,11 @@ router.get('/status', async (req, res, next) => {
   }
 });
 
-router.get('/service-options', (req, res) => {
+router.get('/service-options', authorizeAdmin, (req, res) => {
   res.json(ok({ provider: 'loggi', options: LOGGI_SERVICE_CATALOG }));
 });
 
-router.post('/test', async (req, res, next) => {
+router.post('/test', authorizeAdmin, async (req, res, next) => {
   try {
     const creds = await credentialsService.resolveAll('loggi');
     await loggiClient.testConnection(creds);

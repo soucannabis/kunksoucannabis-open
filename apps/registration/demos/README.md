@@ -44,6 +44,7 @@ Override: `DEMO_OUT_DIR=/caminho npm run demo:…`
 | Relatório de atendimentos / contestação | `relatorio-servicos/` | `npm run demo:relatorio-servicos` | `scripts/demo-record-relatorio-servicos.mjs` |
 | Triagem staff (Concluído / linkar) | `acolhimento-triagem/` | `npm run demo:acolhimento-triagem` | `scripts/demo-record-acolhimento-triagem.mjs` |
 | Dashboard analytics | `dashboard/` | `npm run demo:dashboard` | `scripts/demo-record-dashboard.mjs` |
+| Assinatura de termos | `assinatura/` | `npm run demo:assinatura` | `scripts/demo-record-assinatura.mjs` |
 | PDF produção (só visualização) | `pdf-producao/` | `npm run demo:pdf-producao` | `scripts/demo-record-pdf-producao.mjs` |
 | Check menu (diagnóstico) | `check-menu/` | `npm run demo:check-menu` | `scripts/demo-check-menu.mjs` |
 
@@ -152,6 +153,14 @@ npm run demo:acolhimento-triagem
 npm run demo:dashboard
 ```
 
+### Assinatura de termos — `assinatura/`
+
+Login Administrador em `:4258` → Modelos → editar/publicar o primeiro → Termos → olho do primeiro termo → baixar PDF → audit log.
+
+```bash
+npm run demo:assinatura
+```
+
 ### PDF produção — `pdf-producao/`
 
 Só abre um PDF de produção já gerado (Downloads ou `DEMO_PDF_PATH`). Sem login.
@@ -176,6 +185,7 @@ npm run demo:check-menu
 | Variável | Default | Uso |
 |----------|---------|-----|
 | `DEMO_KUNK_URL` | `http://localhost:4257` | App Kunk |
+| `DEMO_DOC_SIGN_URL` | `http://localhost:4258` | Assinatura de termos |
 | `DEMO_APP_URL` | `http://localhost:4255` | Cadastramento |
 | `DEMO_CHANNEL` | `msedge` | Browser Playwright |
 | `DEMO_SLOW_MO` | `350` | Atraso entre ações (ms) |

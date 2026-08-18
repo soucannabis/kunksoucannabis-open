@@ -41,7 +41,7 @@ async function processOnce(limit = 20) {
       } else {
         const updated = await repository.markRetryOrDead(delivery.id, {
           httpStatus: result.status,
-          error: result.error || result.body || `HTTP ${result.status}`,
+          error: result.error || (result.status != null ? `HTTP ${result.status}` : 'falha'),
           attempts: delivery.attempts,
           maxAttempts: delivery.max_attempts,
         });

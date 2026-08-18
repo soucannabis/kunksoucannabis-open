@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { TermDocument } from '../editor/TermDocument.jsx';
+import { useDocSignBranding } from '../components/DocSignBrand.jsx';
+import { DocSignHeader } from '../components/DocSignHeader.jsx';
+import { resolveReturnUrlFromSearch } from '../lib/returnUrl.js';
 
 function useSignatureCanvas(active) {
   const canvasRef = useRef(null);
@@ -128,15 +131,28 @@ function typedNameToDataUrl(name) {
 
 /** Lê return_url da query (enviado pelo registration após “Assinar termo”). */
 function resolveReturnUrl() {
-  try {
-    const raw = new URLSearchParams(window.location.search).get('return_url');
-    if (!raw) return null;
-    const url = new URL(raw);
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
-    return url.href;
-  } catch {
-    return null;
-  }
+  return resolveReturnUrlFromSearch(window.location.search, import.meta.env);
+}
+
+function SignLayout({ api, meta, children }) {
+  const {
+    menuLogo,
+    menuLogoFormat,
+    menuLogoWidth,
+  } = useDocSignBranding(api);
+
+  return (
+    <div className="app">
+      <DocSignHeader
+        logo={menuLogo}
+        logoFormat={menuLogoFormat}
+        logoWidth={menuLogoWidth}
+      >
+        {meta ? <span className="app-header-meta">{meta}</span> : null}
+      </DocSignHeader>
+      <div className="shell sign-page">{children}</div>
+    </div>
+  );
 }
 
 export function SignPage({ api }) {
@@ -209,10 +225,12 @@ export function SignPage({ api }) {
     return () => window.clearTimeout(timer);
   }, [done, returnUrl]);
 
+  const signerName = payload?.variables?.responsible_full_name || '';
+
   if (done) {
-    const name = payload?.variables?.responsible_full_name;
+    const name = signerName;
     return (
-      <div className="shell sign-page">
+      <SignLayout api={api} meta={signerName}>
         <div className="card sign-success">
           <p className="sign-success-kicker">Pronto</p>
           <h1 style={{ marginTop: 0 }}>
@@ -255,34 +273,28 @@ export function SignPage({ api }) {
             </p>
           )}
         </div>
-      </div>
+      </SignLayout>
     );
   }
 
   if (error && !payload) {
     return (
-      <div className="shell sign-page">
+      <SignLayout api={api}>
         <div className="alert alert-error">{error}</div>
-      </div>
+      </SignLayout>
     );
   }
 
   if (!payload) {
     return (
-      <div className="shell sign-page">
+      <SignLayout api={api}>
         <p className="muted">Carregando termo…</p>
-      </div>
+      </SignLayout>
     );
   }
 
   return (
-    <div className="shell sign-page">
-      <header className="sign-header">
-        <p className="muted" style={{ margin: 0 }}>
-          {payload.variables?.responsible_full_name || 'Associado'}
-        </p>
-      </header>
-
+    <SignLayout api={api} meta={signerName}>
       {error && <div className="alert alert-error">{error}</div>}
 
       <article className="card term-sheet">
@@ -370,6 +382,6 @@ export function SignPage({ api }) {
           Voltar
         </button>
       </section>
-    </div>
+    </SignLayout>
   );
 }

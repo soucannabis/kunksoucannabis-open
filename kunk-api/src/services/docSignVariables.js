@@ -143,7 +143,10 @@ function sampleVariables(kind = 'self', overrides = {}, { now = new Date(), asso
 }
 
 function resolveKind(responsible) {
-  if (responsible?.responsible_type === 'another' && responsible?.patient_user_code) {
+  if (
+    ['another', 'pet'].includes(responsible?.responsible_type) &&
+    responsible?.patient_user_code
+  ) {
     return 'with_patient';
   }
   return 'self';

@@ -26,7 +26,7 @@ Há também composes por app em `apps/*/docker-compose.yml` e scripts `npm run d
 
 ## Produção
 
-O caminho de produção depende do provedor (ex.: Railway). Em linhas gerais:
+O caminho de produção mais direto é o [Deploy no Railway](/instalacao/railway/) (template com um clique). Em outro provedor, o desenho é o mesmo:
 
 1. Provisionar PostgreSQL
 2. Publicar `kunk-api` com variáveis de ambiente e `PUBLIC_API_URL`

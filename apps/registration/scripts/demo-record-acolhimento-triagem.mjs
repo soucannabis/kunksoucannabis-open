@@ -5,13 +5,13 @@
  * Ana Silva (não o mais recente) para busca + linkagem ao associado Ana Silva.
  *
  * Fluxo:
- * 1. Abre a página
+ * 1. Abre a página → scroll até embaixo e volta
  * 2. Status → mostra opções → seleciona Concluído
  * 3. Busca por "Ana Silva"
  * 4. Hover 3s no avatar de atendente
  * 5. Assumir o contato → aguarda 4s
- * 6. Transferir contato → outro atendente
- * 7. Ações → Linkar a um Associado → pesquisa Ana Silva e linka
+ * 6. Transferir contato → outro atendente → aguarda 10s
+ * 7. Ações → Linkar a um Associado → aguarda 5s → pesquisa Ana Silva e linka
  * 8. Ações de novo → mostra as opções (sem clicar) → hold 10s e encerra
  *
  * Uso:
@@ -26,6 +26,8 @@ import {
   moveDemoCursorTo,
   openDemoBrowser,
   pause,
+  scrollPageToBottom,
+  scrollPageToTop,
   typeOverDuration,
 } from './demo-lib.mjs';
 import {
@@ -61,6 +63,14 @@ async function openTriagePage(page, kunkUrl) {
   await waitUrl(page, /\/app\/acolhimento\/triagem/, 30_000, 'triagem');
   await waitVisible(page.getByLabel('Status'), 30_000, 'filtro Status');
   await pause(page, 1000, 'página aberta');
+  await scrollPageToBottom(page, {
+    pauseMs: 1200,
+    label: 'triagem — antes do Status',
+  });
+  await scrollPageToTop(page, {
+    pauseMs: 1000,
+    label: 'triagem — volta ao topo',
+  });
 }
 
 async function filterStatusConcluido(page) {
@@ -121,7 +131,7 @@ async function transferContact(page, row, attendantLabel) {
   const option = page.getByRole('menuitem').filter({ hasText: new RegExp(attendantLabel, 'i') }).first();
   await waitVisible(option, 15_000, `atendente ${attendantLabel}`);
   await click(page, option, `transferir → ${attendantLabel}`);
-  await pause(page, 1500, 'após transferir');
+  await pause(page, 10_000, 'após transferir — antes das Ações');
 }
 
 async function showActionsMenu(page, row) {
@@ -147,6 +157,7 @@ async function linkAssociate(page, row, associateSearch) {
 
   const title = page.getByText('Linkar associado', { exact: true });
   await waitVisible(title, 15_000, 'modal Linkar associado');
+  await pause(page, 5_000, 'modal aberto — antes de preencher nome');
 
   const search = page.getByLabel(/Buscar por nome, e-mail, CPF/i);
   await waitVisible(search, 15_000, 'busca associado');

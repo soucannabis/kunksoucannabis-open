@@ -5,7 +5,7 @@
  * 1. Preenche /contato com os dados do associado existente.
  * 2. Login Acolhimento, abre a triagem recém-criada e encaminha para Pedido.
  * 3. Atualiza data/arquivo da prescrição, adiciona o primeiro produto,
- *    calcula frete, seleciona Loggi e cria o pedido.
+ *    preenche informações/tags/prescritor, calcula frete, seleciona Loggi e cria o pedido.
  * 4. Grava tracking_code via API, abre Detalhes do rastreio e do pedido.
  * 5. Marca pagamento concluído, filtra por esse status.
  * 6. Seleciona o pedido criado + #45/#44/#43 e gera o relatório de produção (PDF).
@@ -201,6 +201,8 @@ async function createOrderWithLoggi(page) {
   await click(page, product, 'adicionar primeiro produto');
   await pause(page, 700, 'produto no carrinho');
 
+  await fillCartOrderMeta(page);
+
   await scrollDownABit(page, { ratio: 0.35, pauseMs: 700, label: 'até frete' });
   const quote = page.getByTestId('quote-freight');
   await waitVisible(quote, 30_000, 'Calcular frete');
@@ -217,6 +219,79 @@ async function createOrderWithLoggi(page) {
   await waitVisible(submit, 30_000, 'Criar Pedido');
   await click(page, submit, 'Criar Pedido');
   await waitUrl(page, /\/app\/loja\/pedidos/, 60_000, 'lista de pedidos');
+}
+
+const ORDER_INFO_TEXT =
+  'Aqui vão observações para a equipe de produção, caso necessite';
+
+/** Mostra a lista aberta (scroll se necessário) antes de escolher. */
+async function revealListboxOptions(page, listbox, label) {
+  await waitVisible(listbox, 15_000, label);
+  await listbox.evaluate(async (el) => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const max = Math.max(0, el.scrollHeight - el.clientHeight);
+    if (max < 8) {
+      await sleep(900);
+      return;
+    }
+    const step = Math.max(40, Math.round(el.clientHeight * 0.55));
+    for (let y = 0; y < max; y += step) {
+      el.scrollTop = Math.min(y, max);
+      await sleep(280);
+    }
+    el.scrollTop = max;
+    await sleep(500);
+    el.scrollTop = 0;
+    await sleep(400);
+  });
+  await pause(page, 900, `mostrar todas as opções — ${label}`);
+}
+
+async function fillCartOrderMeta(page) {
+  log('step', 'carrinho — informações, tags e prescritor');
+  await scrollDownABit(page, {
+    ratio: 0.4,
+    pauseMs: 800,
+    label: 'até informações do pedido',
+  });
+
+  const info = page.getByTestId('order-info').locator('input, textarea').first();
+  await waitVisible(info, 20_000, 'Informações do pedido');
+  await click(page, info, 'foco Informações do pedido');
+  await typeOverDuration(
+    info,
+    ORDER_INFO_TEXT,
+    Math.max(2200, ORDER_INFO_TEXT.length * 45),
+    'Informações do pedido'
+  );
+  await pause(page, 600, 'informações preenchidas');
+
+  const tagsField = page.getByTestId('order-tags');
+  const tagsInput = tagsField.locator('input').first();
+  await waitVisible(tagsInput, 20_000, 'Tags do Pedido');
+  await click(page, tagsInput, 'abrir Tags do Pedido');
+  const tagsList = page.getByRole('listbox');
+  await revealListboxOptions(page, tagsList, 'lista de tags');
+  const tagOption = tagsList.getByRole('option').first();
+  await waitVisible(tagOption, 15_000, 'primeira tag');
+  const tagLabel = (await tagOption.innerText()).trim().replace(/\s+/g, ' ');
+  await click(page, tagOption, `selecionar tag ${tagLabel || '(primeira)'}`);
+  await page.keyboard.press('Escape').catch(() => null);
+  await pause(page, 700, 'tag selecionada');
+
+  const presc = page.getByTestId('prescriber-select');
+  await waitVisible(presc, 20_000, 'Prescritor');
+  await click(page, presc, 'abrir Prescritor');
+  const prescList = page.getByRole('listbox');
+  await revealListboxOptions(page, prescList, 'lista de prescritores');
+  const prescOption = prescList
+    .getByRole('option')
+    .filter({ hasNotText: /^—$/ })
+    .first();
+  await waitVisible(prescOption, 15_000, 'primeiro prescritor');
+  const prescLabel = (await prescOption.innerText()).trim().replace(/\s+/g, ' ');
+  await click(page, prescOption, `selecionar prescritor ${prescLabel || '(primeiro)'}`);
+  await pause(page, 700, 'prescritor selecionado');
 }
 
 async function getCreatedOrderId(page) {
@@ -459,6 +534,12 @@ async function main() {
   await ensureOperator();
   const associate = await resolveDemoAssociate();
   log('setup', `associado=${associate.email}`);
+  const { ensureDemoAssociateShippingAddress } = await import('../e2e/helpers/db.js');
+  const shipping = await ensureDemoAssociateShippingAddress(associate.email);
+  log(
+    'setup',
+    `endereço/CEP garantido: ${shipping.cep} — ${shipping.city}/${shipping.state}`
+  );
   await cleanupDemoData(associate.email);
 
   const { context, page, closeAndSave } = await openDemoBrowser({

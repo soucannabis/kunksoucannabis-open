@@ -1,12 +1,17 @@
 'use strict';
 
 const itemsRepository = require('../repositories/itemsRepository');
-const { scopeFilterFor } = require('../schema/rbac');
+const { scopeFilterFor, portalProfessionalDeniedFields } = require('../schema/rbac');
+const { AppError } = require('../utils/response');
 const { assertProfessionalDeletable } = require('./linkGuards');
 const { memoryCache, keys } = require('../cache');
 
 function getScope(req) {
-  return scopeFilterFor(req.user?.roles || req.user?.permissions, req.user);
+  return scopeFilterFor(
+    req.user?.roles || req.user?.permissions,
+    req.user,
+    req.params.collection
+  );
 }
 
 function invalidateCollectionCaches(collection) {
@@ -43,6 +48,15 @@ async function create(req) {
 }
 
 async function update(req) {
+  if (req.params.collection === 'professionals') {
+    const denied = portalProfessionalDeniedFields(
+      req.user?.roles || req.user?.permissions,
+      req.body || {}
+    );
+    if (denied.length) {
+      throw new AppError(403, 'FORBIDDEN', 'Sem permissão para alterar estes campos');
+    }
+  }
   const data = await itemsRepository.updateItem(req.params.collection, req.params.id, req.body, {
     scopeFilter: getScope(req),
   });

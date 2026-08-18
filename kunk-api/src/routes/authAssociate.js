@@ -5,6 +5,7 @@ const associateAuthRepository = require('../repositories/associateAuthRepository
 const { requireAssociate } = require('../middleware/requireAssociate');
 const { ok } = require('../utils/response');
 const { env } = require('../config/env');
+const { assertAuthEnumRateLimit, assertLoginRateLimit, recordLoginFailure, checkRateLimit, requestIp } = require('../utils/rateLimit');
 
 const router = Router();
 
@@ -31,6 +32,7 @@ function clearAssociateCookie(res) {
 
 router.post('/register-email', async (req, res, next) => {
   try {
+    assertAuthEnumRateLimit(req, 'assoc-register');
     const { email, password } = req.body || {};
     const { user, sessionToken, expires } = await associateAuthRepository.registerEmail(email, password);
     setAssociateCookie(res, sessionToken, expires);
@@ -41,12 +43,17 @@ router.post('/register-email', async (req, res, next) => {
 });
 
 router.post('/login', async (req, res, next) => {
+  const email = String(req.body?.email || '').trim().toLowerCase();
   try {
-    const { email, password } = req.body || {};
+    assertLoginRateLimit(req, 'assoc-login', email);
+    const { password } = req.body || {};
     const { user, sessionToken, expires } = await associateAuthRepository.login(email, password);
     setAssociateCookie(res, sessionToken, expires);
     res.json(ok({ user }));
   } catch (err) {
+    if (err.code === 'INVALID_CREDENTIALS') {
+      recordLoginFailure(req, 'assoc-login', email);
+    }
     next(err);
   }
 });
@@ -67,10 +74,9 @@ router.get('/me', requireAssociate, async (req, res) => {
 
 router.post('/forgot-password', async (req, res, next) => {
   try {
-    const { checkRateLimit } = require('../utils/rateLimit');
     const { AppError } = require('../utils/response');
     const email = String(req.body?.email || '').trim().toLowerCase();
-    const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const ip = requestIp(req);
     const limited = checkRateLimit(`assoc-forgot:${ip}:${email}`, {
       limit: 5,
       windowMs: 15 * 60 * 1000,

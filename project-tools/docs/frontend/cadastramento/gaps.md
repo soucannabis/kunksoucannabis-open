@@ -107,9 +107,7 @@ Até lá:
 - Tela da fase 4 informa módulo em desenvolvimento
 - Endpoints stub → **501** `TERMS_MODULE_IN_DEVELOPMENT`
 - **Não** avançar automaticamente para fase **5** (sem webhook falso)
-- `adhesion_term` permanece vazio
-
-Opcional só para QA interno (não produção): env `TERMS_DEV_BYPASS=true` permite ir 4→5 sem assinatura. Default **false**.
+- `adhesion_term` permanece vazio até a assinatura (doc-sign). Sem bypass de QA.
 
 ### 6. PATCH parcial + `invalid_fields`
 

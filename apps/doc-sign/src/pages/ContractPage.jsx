@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { eventLabel, formatValue, kindLabel, statusLabel, variableLabel } from '../labels.js';
+import { eventActionLabel, formatValue, kindLabel, statusLabel, variableLabel } from '../labels.js';
 
 const FIELD_BLOCKS = [
   {
@@ -84,12 +84,11 @@ export function ContractPage({ api }) {
       </p>
       <div className="page-header">
         <div>
-          <h1 style={{ marginBottom: '0.35rem' }}>Termo</h1>
+          <h1 style={{ marginBottom: '0.35rem' }}>
+            {data.title || data.kind_display_name || kindLabel(data.kind)}
+          </h1>
           <p style={{ margin: 0 }}>
             <span className={`status-pill status-${data.status}`}>{statusLabel(data.status)}</span>
-            <span className="muted" style={{ marginLeft: '0.75rem' }}>
-              {kindLabel(data.kind)}
-            </span>
           </p>
         </div>
         <div className="row-actions">
@@ -97,7 +96,7 @@ export function ContractPage({ api }) {
             Baixar termo
           </button>
           <Link className="btn" to={`/termos/${id}/audit`}>
-            Audit log completo
+            Histórico completo
           </Link>
         </div>
       </div>
@@ -131,11 +130,11 @@ export function ContractPage({ api }) {
 
       {audit?.events?.length ? (
         <div className="card">
-          <h2 style={{ marginTop: 0 }}>Eventos</h2>
+          <h2 style={{ marginTop: 0 }}>Linha do tempo</h2>
           <ol className="event-timeline">
             {audit.events.map((e) => (
               <li key={e.id || `${e.event_type}-${e.occurred_at}`}>
-                <div className="event-title">{eventLabel(e.event_type)}</div>
+                <div className="event-title">{eventActionLabel(e)}</div>
                 <div className="muted event-meta">
                   {e.occurred_at ? new Date(e.occurred_at).toLocaleString('pt-BR') : '—'}
                   {e.actor_name || e.actor_email ? ` · ${e.actor_name || e.actor_email}` : ''}

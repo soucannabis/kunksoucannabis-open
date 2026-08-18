@@ -26,8 +26,8 @@ const SENSITIVE_FIELDS = {
 };
 
 const READONLY_FIELDS = {
-  files: ['id', 'created_at', 'is_sample'],
-  users: ['id', 'is_sample'],
+  files: ['id', 'created_at', 'is_sample', 'storage_path', 'storage_driver', 'storage_key'],
+  users: ['id', 'is_sample', 'session_expires', 'last_activity', 'is_session_active', 'password_reset_expires'],
   system_users: ['id', 'is_sample'],
   orders: ['id', 'is_sample'],
   orders_files: ['id', 'is_sample'],
@@ -39,8 +39,21 @@ const READONLY_FIELDS = {
   services: ['id', 'is_sample'],
   services_files: ['id', 'is_sample'],
   tags: ['id', 'is_sample'],
-  users_api: ['id', 'is_sample'],
+  users_api: ['id', 'is_sample', 'token_prefix'],
   users_files: ['id', 'is_sample'],
+};
+
+/** Campos graváveis no create, dropados no PATCH (funil / identidade). */
+const READONLY_ON_UPDATE = {
+  users: [
+    'user_code',
+    'status',
+    'associate_status',
+    'invalid_fields',
+    'responsible_code',
+    'patient_user_code',
+    'adhesion_term',
+  ],
 };
 
 const SEARCHABLE = {
@@ -140,7 +153,7 @@ const COLUMNS = {
   ],
   services_files: ['id', 'service_id', 'file_id', 'is_sample'],
   tags: ['id', 'tag', 'contexts', 'color', 'is_sample'],
-  users_api: ['id', 'email', 'token', 'is_sample'],
+  users_api: ['id', 'email', 'token', 'token_prefix', 'is_sample'],
   users_files: ['id', 'user_id', 'file_id', 'doc_type', 'side', 'subject', 'doc_kind', 'is_sample'],
 };
 
@@ -178,6 +191,7 @@ function getCollection(name) {
     pk: PK[name],
     sensitive: SENSITIVE_FIELDS[name] || [],
     readonly: READONLY_FIELDS[name] || [],
+    readonlyOnUpdate: READONLY_ON_UPDATE[name] || [],
     searchable: SEARCHABLE[name] || [],
   };
 }
@@ -200,6 +214,7 @@ module.exports = {
   TARGET_TABLES,
   SENSITIVE_FIELDS,
   READONLY_FIELDS,
+  READONLY_ON_UPDATE,
   SEARCHABLE,
   COLUMNS,
   PK,

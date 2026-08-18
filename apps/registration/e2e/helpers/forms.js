@@ -80,6 +80,17 @@ export async function fillResponsibleForm(page, data) {
   await fillLabeledInput(page, 'Cidade', data.city);
   await selectLabeled(page, 'UF', data.state);
   await fillLabeledInput(page, 'CEP', data.cep);
+
+  if (data.responsible_type === 'pet') {
+    await fillLabeledInput(page, 'Nome do pet', data.pet_name || 'Bidu');
+    await fillLabeledInput(page, 'Nascimento do pet', data.pet_birth_date || '2020-03-15');
+    await selectLabeled(page, 'Sexo', data.pet_gender || 'macho');
+    await page.locator('textarea').first().fill(
+      data.pet_reason_treatment_text || data.reason_treatment_text || 'Tratamento veterinário'
+    );
+    return;
+  }
+
   await page.locator('textarea').first().fill(data.reason_treatment_text);
 
   if (data.ciap_random) {
@@ -96,6 +107,15 @@ export async function fillResponsibleForm(page, data) {
 }
 
 export async function fillPatientForm(page, data) {
+  const isPet = Boolean(data.is_pet || data.pet);
+  if (isPet) {
+    await fillLabeledInput(page, 'Nome do pet', data.associate_name);
+    await fillLabeledInput(page, 'Nascimento do pet', data.associate_birth_date);
+    await selectLabeled(page, 'Sexo', data.gender);
+    await page.locator('textarea').first().fill(data.reason_treatment_text);
+    return;
+  }
+
   await fillLabeledInput(page, 'Nome', data.associate_name);
   await fillLabeledInput(page, 'Sobrenome', data.associate_last_name);
   await fillLabeledInput(page, 'Nascimento', data.associate_birth_date);

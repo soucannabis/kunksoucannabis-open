@@ -2,22 +2,11 @@
 
 const { query } = require('../db/pool');
 const { AppError } = require('../utils/response');
-const { parseRoles } = require('../schema/rbac');
+const { isStaffRoles, isProfessionalRole } = require('../schema/rbac');
 const professionalTypesConfig = require('./professionalTypesConfig');
 const professionalsService = require('./professionalsService');
 
 const STATUS_PAID = 'Pagamento Concluído';
-
-function isStaffRoles(roles) {
-  const list = parseRoles(roles);
-  return list.some((r) =>
-    ['Administrador', 'Acolhimento', 'Produção', 'Financeiro'].includes(r)
-  );
-}
-
-function isProfessionalRole(roles) {
-  return parseRoles(roles).includes('Profissional');
-}
 
 function monthRange(yearMonth) {
   // yearMonth: YYYY-MM

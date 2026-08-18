@@ -146,8 +146,8 @@ Admin opcional: `POST /modules/pagarme/recipients/soucannabis` com body (mesmo e
 
 | Rota | Uso |
 |---|---|
-| `POST /modules/pagarme/webhook` | Pedidos (público) |
-| `POST /modules/pagarme/webhook-service` | Serviços (público) |
+| `POST /modules/pagarme/webhook` | Pedidos (caminho público; **HTTP Basic obrigatório**) |
+| `POST /modules/pagarme/webhook-service` | Serviços (caminho público; **HTTP Basic obrigatório**) |
 | `POST /modules/pagarme/webhooks/test-payment` | Cria link de pagamento `KUNK_WH_*` (passo 2 do Admin) |
 | `POST /modules/pagarme/webhooks/validate` | Probe URLs + confere se `order.created` do link já chegou; se ok, ativa o módulo |
 | `GET /modules/pagarme/webhooks/status` | Status da última validação |
@@ -166,7 +166,9 @@ Comportamento pedidos:
 4. Se `split_mode` e ainda sem `soucannabis_order_id` → dispara create na SC com `external_payment_info`.
 5. Sem Pipefy / Beeviral / frete aleatório do legado.
 
-Validar webhook (basic auth / secret) quando configurado.
+Inbound exige HTTP Basic com `webhook_user` e `webhook_pass` **ambos** preenchidos
+(Admin ou env). Sem credenciais → **401** (fail-closed). A resposta 401 não inclui
+oráculo de senha (`pass_match` / `expected_user`).
 
 ## Meios (UI)
 

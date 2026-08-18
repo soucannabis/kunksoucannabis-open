@@ -281,6 +281,35 @@ describe('admin/webhooks', () => {
     assert.equal(test.status, 502, JSON.stringify(test.body));
     assert.equal(test.body.errors[0].code, 'WEBHOOK_TEST_FAILED');
     assert.match(test.body.errors[0].message, /Teste falhou/i);
-    assert.match(test.body.errors[0].message, /HTTP 500|fail/i);
+    assert.match(test.body.errors[0].message, /HTTP 500/);
+    assert.doesNotMatch(test.body.errors[0].message, /\bfail\b/);
+    assert.doesNotMatch(JSON.stringify(test.body.errors[0].details || {}), /\bfail\b/);
+  });
+
+  it('rejects internal webhook URLs', async () => {
+    const metadata = await request(app)
+      .post('/api/v1/admin/webhooks')
+      .set('Cookie', cookie)
+      .send({
+        name: 'ssrf-meta',
+        url: 'http://169.254.169.254/latest/meta-data',
+        tables: ['users'],
+        actions: ['create'],
+        enabled: true,
+      });
+    assert.equal(metadata.status, 400, JSON.stringify(metadata.body));
+    assert.match(String(metadata.body.errors?.[0]?.message || ''), /interna/i);
+
+    const lan = await request(app)
+      .post('/api/v1/admin/webhooks')
+      .set('Cookie', cookie)
+      .send({
+        name: 'ssrf-lan',
+        url: 'http://192.168.0.20/hook',
+        tables: ['users'],
+        actions: ['create'],
+        enabled: true,
+      });
+    assert.equal(lan.status, 400, JSON.stringify(lan.body));
   });
 });

@@ -15,7 +15,7 @@ test.describe('Funil completo — cadastro até contato', () => {
 
     const email = uniqueEmail('full-funnel');
     const contactEmail = uniqueEmail('full-funnel-contato');
-    await ensureDocSignTemplatesPublished(page.context().request);
+    await ensureDocSignTemplatesPublished(page.context());
 
     try {
       // 1–2. Acessar cadastramento e criar conta

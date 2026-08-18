@@ -113,7 +113,7 @@ const GENDER_OPTIONS = [
   { value: 'outro', label: 'Outro' },
 ];
 
-const MARITAL_OPTIONS = ['Solteiro', 'Casado', 'União-Estável', 'Viúvo', 'Divorciado'];
+const MARITAL_OPTIONS = ['Solteiro(a)', 'Casado(a)', 'União-Estável', 'Viúvo(a)', 'Divorciado(a)'];
 
 const UF_OPTIONS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -179,9 +179,12 @@ function formatCep(value) {
 function normalizeMarital(value) {
   const raw = String(value || '').trim();
   if (!raw) return '';
-  const found = MARITAL_OPTIONS.find(
-    (o) => o.toLowerCase() === raw.toLowerCase() || o.toLowerCase().replace(/-/g, ' ') === raw.toLowerCase().replace(/-/g, ' ')
-  );
+  const lower = raw.toLowerCase().replace(/-/g, ' ');
+  const found = MARITAL_OPTIONS.find((o) => {
+    const opt = o.toLowerCase().replace(/-/g, ' ');
+    const base = opt.replace(/\(a\)$/i, '').trim();
+    return opt === lower || base === lower || `${base}(a)` === lower;
+  });
   return found || raw;
 }
 

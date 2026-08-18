@@ -11,8 +11,9 @@
 | `GET /items/users?filter[user_code][_eq]=` | Deep link `?a=` | |
 | `GET /users/code/:userCode` | Atalho por código (se já existir `getByCode`) | |
 | `GET /users/search?q=` | Busca rápida (já usado em Serviços) | |
-| `POST /items/users` | Criar associado (painel: e-mail) | |
-| `PATCH /items/users/:id` | Atualizar dados / annotations / prescritor; **Tornar associado** = `status=Associado` + `associate_status=5` | |
+| `POST /items/users` | Criar associado (painel: e-mail). Create ainda aceita `user_code` / `status` | |
+| `PATCH /items/users/:id` | Atualizar dados cadastrais / annotations / prescritor / endereço. Funil, `user_code` e sessão são readonly | |
+| `POST /users/:id/make-associate` | Tornar associado: `status=Associado` + `associate_status=assinatura_termo` (não gera termo) | |
 | `DELETE /items/users/:id` | Excluir só se sem pedidos, serviços e pacientes (**409** `HAS_LINKED_RECORDS`) | |
 
 Query útil: `?patients=1` — hidrata pacientes no responsável (`hydratePatients` / `responsible_code`).

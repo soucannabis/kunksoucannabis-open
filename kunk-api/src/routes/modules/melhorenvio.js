@@ -2,8 +2,10 @@
 
 const { Router } = require('express');
 const { requireModule } = require('./requireModule');
+const { authorizeAdmin } = require('../../middleware/authorize');
 const { ok } = require('../../utils/response');
 const meAuth = require('../../services/melhorenvio/auth');
+const { createOAuthState, assertOAuthState } = require('../../services/oauthState');
 const meQuote = require('../../services/melhorenvio/quote');
 const meLabel = require('../../services/melhorenvio/label');
 const credentialsService = require('../../services/credentialsService');
@@ -14,15 +16,15 @@ const router = Router();
  * Setup / OAuth / teste ficam FORA do requireModule.
  * Senão: módulo off → 503 → impossível autenticar para depois ativar.
  */
-router.get('/oauth/authorize', async (req, res, next) => {
+router.get('/oauth/authorize', authorizeAdmin, async (req, res, next) => {
   try {
     const { oauthRedirectUri } = require('../../utils/publicApiUrl');
     await credentialsService.putCredentials(
       'melhorenvio',
-      { redirect_uri: oauthRedirectUri('melhorenvio', req) },
+      { redirect_uri: oauthRedirectUri('melhorenvio') },
       { runTest: false }
     );
-    const url = await meAuth.buildAuthorizeUrl();
+    const url = await meAuth.buildAuthorizeUrl(createOAuthState('melhorenvio'));
     res.json(ok({ url }));
   } catch (err) {
     next(err);
@@ -32,6 +34,7 @@ router.get('/oauth/authorize', async (req, res, next) => {
 /** Browser callback is registered publicly on /modules (before authenticate). */
 router.get('/oauth/callback', async (req, res, next) => {
   try {
+    assertOAuthState('melhorenvio', req.query.state);
     const code = req.query.code;
     await meAuth.exchangeCode(code);
     res.json(ok({ ok: true }));
@@ -40,7 +43,7 @@ router.get('/oauth/callback', async (req, res, next) => {
   }
 });
 
-router.get('/oauth/status', async (req, res, next) => {
+router.get('/oauth/status', authorizeAdmin, async (req, res, next) => {
   try {
     const data = await meAuth.oauthStatus();
     res.json(ok(data));
@@ -59,7 +62,7 @@ router.get('/status', async (req, res, next) => {
   }
 });
 
-router.post('/test', async (req, res, next) => {
+router.post('/test', authorizeAdmin, async (req, res, next) => {
   try {
     const creds = await credentialsService.resolveAll('melhorenvio');
     await meAuth.testConnection(creds);
@@ -72,7 +75,7 @@ router.post('/test', async (req, res, next) => {
 });
 
 // Catálogo (Admin / favoritos de frete) — setup, não exige módulo ativo no sistema.
-router.get('/companies', async (req, res, next) => {
+router.get('/companies', authorizeAdmin, async (req, res, next) => {
   try {
     const data = await meQuote.listCompanies();
     res.json(ok(data));
@@ -81,7 +84,7 @@ router.get('/companies', async (req, res, next) => {
   }
 });
 
-router.get('/services', async (req, res, next) => {
+router.get('/services', authorizeAdmin, async (req, res, next) => {
   try {
     const data = await meQuote.listServices();
     res.json(ok(data));
@@ -90,7 +93,7 @@ router.get('/services', async (req, res, next) => {
   }
 });
 
-router.get('/service-options', async (req, res, next) => {
+router.get('/service-options', authorizeAdmin, async (req, res, next) => {
   try {
     const data = await meQuote.listServices();
     res.json(ok(data));

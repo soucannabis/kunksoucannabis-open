@@ -13,11 +13,11 @@ Ver [authentication.md](./authentication.md).
 
 | Método | Path | Descrição |
 |---|---|---|
-| POST | `/auth/login` | Login painel (operador) |
+| POST | `/auth/login` | Login painel (operador). 429 após 5 falhas / 5 min por IP+e-mail (teto 30 / IP) |
 | POST | `/auth/logout` | Logout operador |
 | GET | `/auth/me` | Operador atual |
-| POST | `/auth/associate/register-email` | Cadastro e-mail (fase 1) + sessão associado |
-| POST | `/auth/associate/login` | Login associado |
+| POST | `/auth/associate/register-email` | Cadastro e-mail (fase 1) + sessão associado. 429 após 5 / 15 min / IP |
+| POST | `/auth/associate/login` | Login associado. 429 após 5 falhas / 5 min por IP+e-mail (teto 30 / IP) |
 | POST | `/auth/associate/logout` | Logout associado |
 | GET | `/auth/associate/me` | Associado atual |
 | POST | `/auth/associate/forgot-password` | Reset: dispara e-mail |
@@ -35,9 +35,10 @@ Ver [authentication.md](./authentication.md).
 | GET | `/users` | Listar (`filter`/`sort`/`limit`; `?patients`; `include=responsible`) |
 | GET | `/users/search` | Busca global (nome, CPF, email, telefone) |
 | GET | `/users/by-code/:user_code` | Lookup por `user_code` |
-| GET | `/users/exists` | `?email=` → estado none / in_progress / associado |
+| GET | `/users/exists` | `?email=` → estado none / in_progress / associado. 429 após 5 / 15 min / IP |
 | POST | `/users` | Criar associado (admin/painel) |
-| PATCH | `/users/:id` | Atualizar (painel) |
+| PATCH | `/users/:id` | Atualizar dados cadastrais no painel (allowlist; funil/sessão só em endpoints dedicados) |
+| POST | `/users/:id/make-associate` | `status=Associado` + `associate_status=assinatura_termo` |
 | PATCH | `/users/me` | Persistência parcial (sessão associado) |
 | GET | `/users/:id/patients` | Pacientes do associado (painel) |
 | GET | `/users/me/patients` | Pacientes do responsável logado |
@@ -100,7 +101,9 @@ Portal do profissional (role `Profissional`): listagem escopada a `internal_code
 
 | Método | Path | Descrição |
 |---|---|---|
-| POST | `/reception` | Nova triagem |
+| GET | `/reception/form-schema` | Schema do form público |
+| POST | `/reception/public` | Triagem anônima. 429 após 5 / 15 min / IP |
+| POST | `/reception` | Nova triagem (painel) |
 | PATCH | `/reception/:id/complete` | Fechar com `completion_reason` |
 | PATCH | `/reception/:id/attendant` | Atribuir atendente |
 

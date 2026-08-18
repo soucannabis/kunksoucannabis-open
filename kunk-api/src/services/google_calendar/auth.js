@@ -3,6 +3,7 @@
 const credentialsService = require('../credentialsService');
 const { AppError } = require('../../utils/response');
 const { query } = require('../../db/pool');
+const { oauthRedirectUri } = require('../../utils/publicApiUrl');
 
 const GOOGLE_AUTH = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token';
@@ -30,25 +31,31 @@ async function saveTokens({ access_token, refresh_token }) {
   }
 }
 
-async function getAuthorizeUrl() {
+async function getAuthorizeUrl(state) {
+  if (!state) {
+    throw new AppError(400, 'OAUTH_STATE_INVALID', 'state OAuth ausente');
+  }
   const creds = await resolveCreds();
-  if (!creds.client_id || !creds.redirect_uri) {
-    throw new AppError(400, 'CREDENTIAL_MISSING', 'client_id e redirect_uri do Google Calendar são obrigatórios');
+  const redirectUri = oauthRedirectUri('google_calendar');
+  if (!creds.client_id) {
+    throw new AppError(400, 'CREDENTIAL_MISSING', 'client_id do Google Calendar é obrigatório');
   }
   const params = new URLSearchParams({
     client_id: creds.client_id,
-    redirect_uri: creds.redirect_uri,
+    redirect_uri: redirectUri,
     response_type: 'code',
     scope: SCOPES,
     access_type: 'offline',
     prompt: 'consent',
+    state: String(state),
   });
   return `${GOOGLE_AUTH}?${params.toString()}`;
 }
 
 async function exchangeCode(code) {
   const creds = await resolveCreds();
-  if (!creds.client_id || !creds.client_secret || !creds.redirect_uri) {
+  const redirectUri = oauthRedirectUri('google_calendar');
+  if (!creds.client_id || !creds.client_secret) {
     throw new AppError(400, 'CREDENTIAL_MISSING', 'Credenciais OAuth Google incompletas');
   }
   if (!code) {
@@ -61,7 +68,7 @@ async function exchangeCode(code) {
       code,
       client_id: creds.client_id,
       client_secret: creds.client_secret,
-      redirect_uri: creds.redirect_uri,
+      redirect_uri: redirectUri,
       grant_type: 'authorization_code',
     }),
   });

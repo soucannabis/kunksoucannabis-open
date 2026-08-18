@@ -43,7 +43,7 @@ npm run dev:kunk           # app — :4257
 npm run dev:doc-sign       # termos — :4258
 ```
 
-Garanta `CORS_ORIGIN` na API incluindo as origens locais dos apps.
+Os apps falam com `/api/v1` no próprio host (proxy Vite). Não é necessário preencher `CORS_ORIGIN`.
 
 ## 4. Este site de documentação
 

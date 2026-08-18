@@ -12,6 +12,21 @@ function parsePerms(value) {
   }
 }
 
+const PORTAL_ROLE = 'Profissional';
+
+function hasPortalRole(permissions) {
+  return permissions.includes(PORTAL_ROLE);
+}
+
+function hasStaffRole(permissions) {
+  return permissions.some((p) => p && p !== PORTAL_ROLE && p !== 'api');
+}
+
+function professionalLabel(p) {
+  const name = [p.name, p.last_name].filter(Boolean).join(' ').trim();
+  return name || p.professional_code || String(p.id);
+}
+
 export function UsersPage({ api }) {
   const [rows, setRows] = useState([]);
   const [error, setError] = useState('');
@@ -90,6 +105,7 @@ export function UserFormPage({ api, isNew = false }) {
   const navigate = useNavigate();
   const id = !isNew ? window.location.pathname.split('/').pop() : null;
   const [rolesCatalog, setRolesCatalog] = useState([]);
+  const [professionals, setProfessionals] = useState([]);
   const [form, setForm] = useState({
     name: '',
     last_name: '',
@@ -110,8 +126,16 @@ export function UserFormPage({ api, isNew = false }) {
     (async () => {
       setLoading(true);
       try {
-        const rolesRes = await api.adminRoles();
-        if (!cancelled) setRolesCatalog(rolesRes.data || []);
+        const [rolesRes, profsRes] = await Promise.all([
+          api.adminRoles(),
+          api.listProfessionals(),
+        ]);
+        if (!cancelled) {
+          const roles = (rolesRes.data || []).filter((r) => r.id !== 'api');
+          setRolesCatalog(roles);
+          const rows = Array.isArray(profsRes.data) ? profsRes.data : [];
+          setProfessionals(rows.filter((p) => p.professional_code));
+        }
         if (!isNew && id) {
           const res = await api.getSystemUser(id);
           const u = res.data || {};
@@ -141,9 +165,33 @@ export function UserFormPage({ api, isNew = false }) {
   function toggleRole(roleId) {
     setForm((prev) => {
       const set = new Set(prev.permissions);
+      if (roleId === PORTAL_ROLE) {
+        if (hasStaffRole(prev.permissions)) return prev;
+        if (set.has(PORTAL_ROLE)) {
+          set.delete(PORTAL_ROLE);
+          return { ...prev, permissions: [...set], internal_code: '' };
+        }
+        set.add(PORTAL_ROLE);
+        return { ...prev, permissions: [...set] };
+      }
+      if (hasPortalRole(prev.permissions)) return prev;
       if (set.has(roleId)) set.delete(roleId);
       else set.add(roleId);
       return { ...prev, permissions: [...set] };
+    });
+  }
+
+  function onProfessionalChange(code) {
+    setForm((prev) => {
+      if (hasStaffRole(prev.permissions)) return prev;
+      if (!code) {
+        return {
+          ...prev,
+          internal_code: '',
+          permissions: prev.permissions.filter((p) => p !== PORTAL_ROLE),
+        };
+      }
+      return { ...prev, internal_code: code, permissions: [PORTAL_ROLE] };
     });
   }
 
@@ -157,6 +205,9 @@ export function UserFormPage({ api, isNew = false }) {
       if (isNew) {
         if (!form.permissions.length) {
           throw new Error('Selecione ao menos uma permissão');
+        }
+        if (hasPortalRole(form.permissions) && !form.internal_code) {
+          throw new Error('Selecione um profissional para o acesso ao relatório de atendimentos');
         }
         const res = await api.createSystemUser({
           name: form.name,
@@ -180,7 +231,10 @@ export function UserFormPage({ api, isNew = false }) {
         );
         return;
       }
-      const body = {
+        if (hasPortalRole(form.permissions) && !form.internal_code) {
+          throw new Error('Selecione um profissional para o acesso ao relatório de atendimentos');
+        }
+        const body = {
         name: form.name,
         last_name: form.last_name,
         email: form.email,
@@ -368,27 +422,48 @@ export function UserFormPage({ api, isNew = false }) {
           </div>
         ) : null}
         <div className="field">
-          <label htmlFor="internal_code">Código interno</label>
-          <input
+          <label htmlFor="internal_code">Selecione um profissional</label>
+          <select
             id="internal_code"
             value={form.internal_code}
-            onChange={(e) => setForm({ ...form, internal_code: e.target.value })}
-          />
+            disabled={hasStaffRole(form.permissions)}
+            onChange={(e) => onProfessionalChange(e.target.value)}
+          >
+            <option value="">—</option>
+            {professionals.map((p) => (
+              <option key={p.professional_code} value={p.professional_code}>
+                {professionalLabel(p)}
+              </option>
+            ))}
+          </select>
+          <p className="muted" style={{ fontSize: '0.85rem', marginTop: 6 }}>
+            Se este cadastro for de acesso ao relatório de atendimentos, selecione o profissional
+            correspondente.
+          </p>
         </div>
         <div className="field">
           <label>Permissões</label>
           <div className="chips">
-            {rolesCatalog.map((role) => (
-              <button
-                key={role.id}
-                type="button"
-                className={`chip ${form.permissions.includes(role.id) ? 'on' : ''}`}
-                onClick={() => toggleRole(role.id)}
-                title={role.description}
-              >
-                {role.id}
-              </button>
-            ))}
+            {rolesCatalog.map((role) => {
+              const portalLocked = hasStaffRole(form.permissions);
+              const staffLocked = hasPortalRole(form.permissions);
+              const locked =
+                (role.id === PORTAL_ROLE && portalLocked) ||
+                (role.id !== PORTAL_ROLE && staffLocked);
+              return (
+                <button
+                  key={role.id}
+                  type="button"
+                  className={`chip ${form.permissions.includes(role.id) ? 'on' : ''}`}
+                  onClick={() => toggleRole(role.id)}
+                  title={role.description}
+                  disabled={locked}
+                  aria-disabled={locked}
+                >
+                  {role.id}
+                </button>
+              );
+            })}
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>

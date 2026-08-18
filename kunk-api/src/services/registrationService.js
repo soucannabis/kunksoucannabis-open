@@ -5,7 +5,6 @@ const { query } = require('../db/pool');
 const { AppError } = require('../utils/response');
 const { isKnownColumn } = require('../schema/collections');
 const associateAuthRepository = require('../repositories/associateAuthRepository');
-const { env } = require('../config/env');
 const ciap2Config = require('./ciap2Config');
 const {
   PHASE,
@@ -20,7 +19,7 @@ const PATCHABLE = [
   'gender', 'nationality', 'associate_cpf', 'associate_rg', 'associate_rg_issuer',
   'marital_status', 'account_password', 'mobile_number', 'street', 'street_number',
   'complement', 'neighborhood', 'city', 'state', 'cep', 'reason_treatment_text',
-  'ciap_codes', 'email_account', 'prescription', 'preferred_products', 'date_prescription',
+  'ciap_codes', 'prescription', 'preferred_products', 'date_prescription',
   'fullname',
 ];
 
@@ -36,6 +35,25 @@ const REQUIRED_PATIENT = [
   'gender', 'nationality', 'associate_cpf', 'associate_rg', 'associate_rg_issuer',
   'ciap_codes', 'reason_treatment_text',
 ];
+
+const REQUIRED_PET_PATIENT = [
+  'associate_name', 'associate_birth_date', 'gender', 'reason_treatment_text',
+];
+
+function isPatientRegistration(responsibleType) {
+  return ['another', 'pet'].includes(String(responsibleType || ''));
+}
+
+function requiredResponsibleFields(responsibleType) {
+  if (responsibleType !== 'pet') return REQUIRED_RESPONSIBLE;
+  return REQUIRED_RESPONSIBLE.filter(
+    (key) => key !== 'reason_treatment_text' && key !== 'ciap_codes'
+  );
+}
+
+function requiredPatientFields(responsibleType) {
+  return responsibleType === 'pet' ? REQUIRED_PET_PATIENT : REQUIRED_PATIENT;
+}
 
 function isValidCpf(value) {
   const cpf = String(value || '').replace(/\D/g, '');
@@ -183,7 +201,10 @@ async function patchMe(associateRow, body) {
   }
 
   const merged = { ...associateRow, ...updates };
-  const invalidFields = await computeInvalidFields(merged, REQUIRED_RESPONSIBLE);
+  const invalidFields = await computeInvalidFields(
+    merged,
+    requiredResponsibleFields(merged.responsible_type)
+  );
 
   const setParts = [];
   const params = [];
@@ -232,8 +253,12 @@ async function listMyPatients(associateRow) {
 
 async function createMyPatient(associateRow, body) {
   assertPhaseWritable(associateRow.associate_status, PHASE.DADOS_PESSOAIS);
-  if (associateRow.responsible_type !== 'another') {
-    throw new AppError(400, 'VALIDATION_ERROR', 'Paciente só é permitido quando responsible_type=another');
+  if (!isPatientRegistration(associateRow.responsible_type)) {
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'Paciente só é permitido quando responsible_type=another ou pet'
+    );
   }
 
   const payload = body || {};
@@ -261,7 +286,10 @@ async function createMyPatient(associateRow, body) {
   }
 
   const draft = { ...updates };
-  const invalidFields = await computeInvalidFields(draft, REQUIRED_PATIENT);
+  const invalidFields = await computeInvalidFields(
+    draft,
+    requiredPatientFields(associateRow.responsible_type)
+  );
   const userCode = uuidv4();
 
   const cols = [
@@ -332,7 +360,10 @@ async function patchMyPatient(associateRow, patientId, body) {
   }
 
   const merged = { ...patient, ...updates };
-  const invalidFields = await computeInvalidFields(merged, REQUIRED_PATIENT);
+  const invalidFields = await computeInvalidFields(
+    merged,
+    requiredPatientFields(associateRow.responsible_type)
+  );
 
   const setParts = [];
   const params = [];
@@ -479,10 +510,16 @@ async function advance(associateRow) {
   const phase = normalizePhase(associateRow.associate_status);
 
   if (phase === PHASE.CADASTRO_CRIADO) {
-    const okForm = await formComplete(associateRow, REQUIRED_RESPONSIBLE);
+    const okForm = await formComplete(
+      associateRow,
+      requiredResponsibleFields(associateRow.responsible_type)
+    );
     if (!okForm) {
       throw new AppError(400, 'VALIDATION_ERROR', 'Formulário do responsável incompleto', {
-        invalid_fields: await computeInvalidFields(associateRow, REQUIRED_RESPONSIBLE),
+        invalid_fields: await computeInvalidFields(
+          associateRow,
+          requiredResponsibleFields(associateRow.responsible_type)
+        ),
       });
     }
     const result = await query(
@@ -493,17 +530,25 @@ async function advance(associateRow) {
   }
 
   if (phase === PHASE.DADOS_PESSOAIS) {
-    const okForm = await formComplete(associateRow, REQUIRED_RESPONSIBLE);
+    const okForm = await formComplete(
+      associateRow,
+      requiredResponsibleFields(associateRow.responsible_type)
+    );
     if (!okForm) {
       throw new AppError(400, 'VALIDATION_ERROR', 'Formulário do responsável incompleto');
     }
-    if (associateRow.responsible_type === 'another') {
+    if (isPatientRegistration(associateRow.responsible_type)) {
       const patients = await listMyPatients(associateRow);
       if (!patients.length) {
         throw new AppError(400, 'VALIDATION_ERROR', 'Paciente obrigatório');
       }
       const patientRow = await associateAuthRepository.getById(patients[0].id);
-      if (!(await formComplete(patientRow, REQUIRED_PATIENT))) {
+      if (
+        !(await formComplete(
+          patientRow,
+          requiredPatientFields(associateRow.responsible_type)
+        ))
+      ) {
         throw new AppError(400, 'VALIDATION_ERROR', 'Formulário do paciente incompleto');
       }
     }
@@ -527,7 +572,7 @@ async function advance(associateRow) {
   }
 
   if (phase === PHASE.ASSINATURA_TERMO) {
-    if (associateRow.adhesion_term || env.termsDevBypass) {
+    if (associateRow.adhesion_term) {
       const result = await query(
         `UPDATE users SET status = 'Associado', date_updated = NOW() WHERE id = $1 RETURNING *`,
         [associateRow.id]

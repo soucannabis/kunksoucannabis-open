@@ -4,6 +4,7 @@ const ICONS = new Set([
   'heart', 'history', 'list', 'lock', 'plug', 'search', 'target', 'truck',
   'user', 'users', 'hero-registration', 'hero-triage', 'hero-orders',
   'hero-care', 'hero-associates', 'hero-dashboard', 'hero-report', 'hero-api',
+  'hero-admin', 'hero-sign',
 ]);
 
 function svgIcon(name, className = '') {
@@ -64,6 +65,7 @@ async function main() {
 
   const cover = document.querySelector('#cover');
   cover.classList.add(`theme-${data.theme || 'forest'}`);
+  if (data.layout) cover.classList.add(`cover--${data.layout}`);
   cover.dataset.coverId = id;
   if (data.backgroundImage) {
     cover.classList.add('cover--has-bg');
@@ -73,15 +75,28 @@ async function main() {
 
   document.title = `${data.title} — Kunk`;
   document.querySelector('#eyebrow').textContent = data.eyebrow || '';
+  const logoEl = document.querySelector('#cover-logo');
+  if (data.logoImage) {
+    logoEl.hidden = false;
+    logoEl.alt = data.title || '';
+    logoEl.src = data.logoImage;
+    await preloadBackground(data.logoImage);
+  } else {
+    logoEl.removeAttribute('src');
+    logoEl.hidden = true;
+  }
   const titleEl = document.querySelector('#title');
   titleEl.textContent = data.title;
   fitTitle(titleEl, { max: data.titleSize || 96, min: 48 });
-  document.querySelector('#left-title').textContent = data.left?.title || 'O QUE O MÓDULO FAZ';
-  document.querySelector('#right-title').textContent = data.right?.title || 'PARA A ASSOCIAÇÃO';
-  document.querySelector('#hero-icon').innerHTML = svgIcon(data.heroIcon || 'dashboard');
-  document.querySelector('#footer').textContent = data.footer || '';
-  renderItems(document.querySelector('#left-items'), data.left?.items);
-  renderItems(document.querySelector('#right-items'), data.right?.items);
+
+  if (data.layout !== 'closing') {
+    document.querySelector('#left-title').textContent = data.left?.title || 'O QUE O MÓDULO FAZ';
+    document.querySelector('#right-title').textContent = data.right?.title || 'PARA A ASSOCIAÇÃO';
+    document.querySelector('#hero-icon').innerHTML = svgIcon(data.heroIcon || 'dashboard');
+    document.querySelector('#footer').textContent = data.footer || '';
+    renderItems(document.querySelector('#left-items'), data.left?.items);
+    renderItems(document.querySelector('#right-items'), data.right?.items);
+  }
 
   document.documentElement.dataset.ready = 'true';
   window.__COVER_READY__ = true;

@@ -99,6 +99,27 @@ export function createApiClient({ baseUrl, app } = {}) {
     getFile: (id) => request('GET', `/files/${id}`),
     attachFile: (id, body) => request('POST', `/files/${id}/attach`, body),
     fileDownloadUrl: (id) => `${root}/files/${id}/download`,
+    async fileDownload(id) {
+      const headers = {};
+      if (appKey) headers['X-Kunk-App'] = appKey;
+      const res = await fetch(`${root}/files/${id}/download`, {
+        method: 'GET',
+        credentials: 'include',
+        headers,
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        const err0 = (json && json.errors && json.errors[0]) || {};
+        throw new ApiError(
+          res.status,
+          err0.code || 'INTERNAL_ERROR',
+          err0.message || 'Não foi possível abrir o arquivo',
+          err0.details,
+          json?.errors
+        );
+      }
+      return res.blob();
+    },
     termsStatus: () => request('GET', '/terms/status'),
     createContract: () => request('POST', '/terms/contracts', {}),
 
@@ -210,17 +231,8 @@ export function createApiClient({ baseUrl, app } = {}) {
     ordersStatusConfig: () => request('GET', '/orders/status-config'),
     ordersBulk: (body) => request('POST', '/orders/bulk', body),
     updateOrderProduction: (id, body) => request('PATCH', `/orders/${id}/production`, body),
-    updateOrderStatus: (id, status, opts = {}) =>
-      request('PATCH', `/orders/${id}/status`, {
-        status,
-        ...(opts.skip_payment_lock || opts.force_test_paid
-          ? {
-              skip_payment_lock: true,
-              force_test_paid: true,
-              external_payment_info: opts.external_payment_info,
-            }
-          : {}),
-      }),
+    updateOrderStatus: (id, status) =>
+      request('PATCH', `/orders/${id}/status`, { status }),
     ordersByUser: (userCode) => request('GET', `/orders/by-user/${encodeURIComponent(userCode)}`),
     createLoggiLabel: (body) => request('POST', '/modules/loggi/create-label', body),
     cancelLoggiLabel: (body) => request('POST', '/modules/loggi/cancel', body),

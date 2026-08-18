@@ -5,6 +5,7 @@ const receptionService = require('../services/receptionService');
 const { authenticate } = require('../middleware/authenticate');
 const { authorize } = require('../middleware/authorize');
 const { ok, AppError } = require('../utils/response');
+const { assertAuthEnumRateLimit } = require('../utils/rateLimit');
 
 const router = Router();
 
@@ -19,6 +20,7 @@ router.get('/form-schema', async (req, res, next) => {
 
 router.post('/public', async (req, res, next) => {
   try {
+    assertAuthEnumRateLimit(req, 'reception-public');
     const data = await receptionService.createPublicReception(req.body || {});
     res.status(201).json(ok(data));
   } catch (err) {

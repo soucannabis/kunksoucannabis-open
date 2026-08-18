@@ -14,6 +14,8 @@ test.describe('users', () => {
     await expect(page.getByRole('heading', { name: 'Usuários' })).toBeVisible();
 
     await page.getByRole('link', { name: 'Convidar usuário' }).click();
+    await expect(page.getByLabel('Selecione um profissional')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Prescritor' })).toHaveCount(0);
     const email = uniqueEmail('ui');
     await page.getByRole('textbox', { name: 'Nome', exact: true }).fill('Oper');
     await page.getByRole('textbox', { name: 'Sobrenome' }).fill('E2E');

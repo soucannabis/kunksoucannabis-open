@@ -3,14 +3,18 @@
 const { fail, AppError } = require('../utils/response');
 const systemErrorsService = require('../services/systemErrorsService');
 
-/** Extrai constraint / coluna de erros do node-pg. */
-function pgDetails(err) {
-  const details = {};
-  if (err.constraint) details.constraint = err.constraint;
-  if (err.table) details.table = err.table;
-  if (err.column) details.column = err.column;
-  if (err.detail) details.detail = err.detail;
-  return Object.keys(details).length ? details : null;
+/** Constraint / tabela / valor do node-pg — só para log, nunca na resposta HTTP. */
+function pgLogFields(err) {
+  const fields = { code: err.code };
+  if (err.constraint) fields.constraint = err.constraint;
+  if (err.table) fields.table = err.table;
+  if (err.column) fields.column = err.column;
+  if (err.detail) fields.detail = err.detail;
+  return fields;
+}
+
+function logPgError(err) {
+  console.error('[kunk-api] pg', pgLogFields(err));
 }
 
 function mapPgError(err) {
@@ -19,18 +23,16 @@ function mapPgError(err) {
       return new AppError(
         400,
         'VALIDATION_ERROR',
-        'Referência inválida: valor não existe na tabela relacionada',
-        pgDetails(err)
+        'Referência inválida: valor não existe na tabela relacionada'
       );
-    case '23505': // unique_violation
-      return new AppError(409, 'CONFLICT', 'Registro duplicado (unique)', pgDetails(err));
+    case '23505': { // unique_violation
+      if (err.constraint === 'users_email_account_login_uidx') {
+        return new AppError(409, 'ACCOUNT_EXISTS', 'Conta já existe. Faça login.');
+      }
+      return new AppError(409, 'CONFLICT', 'Registro duplicado');
+    }
     case '23502': // not_null_violation
-      return new AppError(
-        400,
-        'VALIDATION_ERROR',
-        `Campo obrigatório ausente${err.column ? `: ${err.column}` : ''}`,
-        pgDetails(err)
-      );
+      return new AppError(400, 'VALIDATION_ERROR', 'Campo obrigatório ausente');
     case '22P02': {
       // invalid_text_representation (UUID malformado, ou string em coluna INTEGER)
       const pgMsg = String(err.message || '');
@@ -41,11 +43,10 @@ function mapPgError(err) {
         return new AppError(
           500,
           'SCHEMA_MISMATCH',
-          'Banco desatualizado: users.associate_status ainda é numérico. Reinicie a API (migração automática) ou rode alter-associate-status-ptbr.sql',
-          pgDetails(err)
+          'Banco desatualizado: users.associate_status ainda é numérico. Reinicie a API (migração automática) ou rode alter-associate-status-ptbr.sql'
         );
       }
-      return new AppError(400, 'VALIDATION_ERROR', 'Formato de valor inválido', pgDetails(err));
+      return new AppError(400, 'VALIDATION_ERROR', 'Formato de valor inválido');
     }
     default:
       return null;
@@ -80,7 +81,13 @@ function errorHandler(err, req, res, next) {
 
   const mapped = err?.code ? mapPgError(err) : null;
   if (mapped) {
-    return res.status(mapped.status).json(fail(mapped.code, mapped.message, mapped.details));
+    logPgError(err);
+    if (shouldRecordError(mapped)) {
+      void systemErrorsService.recordSafe(
+        systemErrorsService.payloadFromBackendError(mapped, req)
+      );
+    }
+    return res.status(mapped.status).json(fail(mapped.code, mapped.message));
   }
 
   console.error('[kunk-api]', err);

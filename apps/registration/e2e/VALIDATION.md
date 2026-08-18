@@ -23,7 +23,7 @@ Documentação de cada teste automatizado do funil em `apps/registration/e2e/`.
 | `nationality` | Brasileira |
 | `associate_cpf` | `52998224725` |
 | `associate_rg` / issuer | `1234567` / `SSP/SP` |
-| `marital_status` | Solteiro |
+| `marital_status` | Solteiro(a) |
 | `account_password` | definida no `register-email` (`senha123`, min. 8) |
 | `mobile_number` | `5511999999999` |
 | endereço | Rua A, 100, Centro, São Paulo/SP, CEP `01310100` |

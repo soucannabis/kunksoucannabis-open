@@ -17,9 +17,10 @@ Badges SC: `split pronto` | `conta não PSP` | `%` inválido | `falta recipient 
 
 1. Credenciais (`secret_key`, …) + teste (inclui **probe PSP** → badge Gateway/PSP).
 2. **Recebedor da associação** — cadastrar no painel Pagar.me e colar o ID (`re_…` / `rp_…`) → `association_recipient_id`.
-3. Exibir URLs webhook:
+3. Exibir URLs webhook (**HTTP Basic obrigatório** no cadastro da Pagar.me, mesmo usuário/senha do Admin):
    - `{PUBLIC_API_URL}/api/v1/modules/pagarme/webhook`
    - `{PUBLIC_API_URL}/api/v1/modules/pagarme/webhook-service`
+   Sem Basic Auth a API responde 401 e o pagamento não é confirmado.
 4. Status do `soucannabis_recipient_id` (preenchido pela SC via API; fallback suporte colar `rp_…`).
 5. Enable + toggles pedidos/serviços.
    - Aviso se Gateway: “Pedidos SouCannabis / split exigem conta PSP”.

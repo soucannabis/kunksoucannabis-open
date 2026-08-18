@@ -20,31 +20,32 @@ Toda rota autenticada passa por autorização baseada em **role** (sessão) ou *
 | `Acolhimento` | Reception, users, services, orders (operacional) |
 | `Produção` | Orders (produção), products |
 | `Financeiro` | Orders/services (leitura + validação comissão) |
-| `Prescritor` | Relatórios / dados do próprio `prescriber_code` (pedidos — fora do módulo de serviços v1) |
-| `Profissional` | Portal de relatório de serviços; escopo `internal_code` = `professional_code` |
+| `Profissional` | Portal de relatório de atendimentos; escopo `internal_code` = `professional_code`. Papel exclusivo, sem misturar com staff. |
 | `api` | Reservado a tokens de integração |
+
+Prescritor de receita (`is_prescriber` no cadastro de profissionais) **não** é usuário do sistema e não tem papel de login.
 
 Os nomes podem permanecer compatíveis com o JSON atual de `permissions` no kunkserver.
 
 ## Matriz padrão (proposta v1)
 
-| Collection | Admin | Acolhimento | Produção | Financeiro | Prescritor |
-|---|---|---|---|---|---|
-| `users` | CRUD | CRU | R | R | — |
-| `system_users` | CRUD | R (limitado) | — | — | — |
-| `orders` | CRUD | CRUD | RU | RU | R* |
-| `services` | CRUD | CRUD | — | RU | R* |
-| `products` | CRUD | R | RU | R | — |
-| `professionals` | CRUD | RU | — | R | R* |
-| `reception` | CRUD | CRUD | — | — | — |
-| `tags` | CRUD | CRUD | R | R | — |
-| `reports` | CRUD | R | R | R | R* |
-| `files` / `*_files` | CRUD | CRUD | R | R | — |
-| `users_api` / tokens | CRUD | — | — | — | — |
+| Collection | Admin | Acolhimento | Produção | Financeiro |
+|---|---|---|---|---|
+| `users` | CRUD | CRU | R | R |
+| `system_users` | CRUD | R (limitado) | — | — |
+| `orders` | CRUD | CRUD | RU | RU |
+| `services` | CRUD | CRUD | — | RU |
+| `products` | CRUD | R | RU | R |
+| `professionals` | CRUD | RU | — | R |
+| `reception` | CRUD | CRUD | — | — |
+| `tags` | CRUD | CRUD | R | R |
+| `reports` | CRUD | R | R | R |
+| `files` / `*_files` | CRUD | CRUD | R | R |
+| `users_api` / tokens | CRUD | — | — | — |
 
-`R*` = leitura **escopada** ao próprio código (`Prescritor` / `Profissional`), não lista global.
+`R*` = leitura **escopada** ao próprio código (`Profissional`), não lista global.
 
-Role `Profissional` (portal de serviços): ver [`../frontend/kunk/relatorios-servicos/api.md`](../frontend/kunk/relatorios-servicos/api.md) — tipicamente `services` R*, `professionals` R* (próprio), sem CRUD staff.
+Role `Profissional` (portal de serviços): ver [`../frontend/kunk/relatorios-servicos/api.md`](../frontend/kunk/relatorios-servicos/api.md) — `services` R* e `professionals` R* no próprio `professional_code` (`GET`/`PATCH` de domínio e `/items/professionals`). Sem `files` / `*_files`. `PATCH /professionals/:id/donation-balance` e `POST /professionals/:id/portal-access` (+ resend) são só staff.
 
 ## Middleware
 
@@ -72,6 +73,8 @@ modules:pagarme
 *                    # admin token (evitar em produção)
 ```
 
+Rotas admin de tokens (`/auth/tokens`), operadores (`POST/PATCH/DELETE /system-users`) e templates DocSign exigem sessão `Administrador` **ou** API key com scope `*`. Scope restrito não passa, mesmo com role `api`.
+
 Mapeamento:
 
 | Scope | Actions |
@@ -85,8 +88,8 @@ Mapeamento:
 
 Além do RBAC de collection, aplicar **filtros obrigatórios** no repositório:
 
-- Role `Prescritor` → `WHERE prescriber_code = …` (pedidos; fora do relatório de serviços v1)
 - Role `Profissional` → `WHERE services.professional_id = system_users.internal_code` (relatório de serviços)
+- Role `Profissional` → `WHERE professionals.professional_code = system_users.internal_code` (cadastro do portal; `scopeFilterFor(..., 'professionals')`)
 - Tokens com scope restrito → mesmo princípio se o token estiver vinculado a um parceiro
 
 Isso evita vazamento mesmo se o cliente omitir o filter.

@@ -1,12 +1,13 @@
 'use strict';
 
 const crypto = require('crypto');
-const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 const { query } = require('../db/pool');
 const { stripSensitive } = require('../schema/collections');
 const { AppError } = require('../utils/response');
 const { env } = require('../config/env');
+const { hashPassword, verifyPassword } = require('../utils/password');
+const { sha256Hex } = require('../utils/tokenHash');
 const {
   PHASE,
   normalizePhase,
@@ -14,7 +15,6 @@ const {
   isAssociateStatus,
 } = require('../constants/associatePhases');
 
-const SALT_ROUNDS = process.env.NODE_ENV === 'test' ? 4 : 10;
 const RESET_TTL_MS = 60 * 60 * 1000; // documented TTL; SQL uses interval '1 hour'
 
 function parseInvalidFields(raw) {
@@ -53,29 +53,70 @@ async function findByEmailAccount(email) {
     `SELECT * FROM users
      WHERE lower(email_account) = lower($1)
        AND (status IS NULL OR status <> 'patient')
+     ORDER BY id ASC
      LIMIT 1`,
     [email]
   );
   return result.rows[0] || null;
 }
 
-async function findBySessionToken(token) {
+function normalizeLoginEmail(email) {
+  const normalized = String(email || '').trim().toLowerCase();
+  if (!normalized || !normalized.includes('@')) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'email é obrigatório', {
+      email: ['obrigatório'],
+    });
+  }
+  return normalized;
+}
+
+async function assertLoginEmailAvailable(email, { excludeId } = {}) {
+  const { ensureEmailAccountUnique } = require('../db/ensureEmailAccountUnique');
+  await ensureEmailAccountUnique();
+
+  const normalized = normalizeLoginEmail(email);
+  const existing = await findByEmailAccount(normalized);
+  if (!existing || Number(existing.id) === Number(excludeId)) return normalized;
+
+  const state = accountState(existing);
+  const details = { user_code: existing.user_code, id: existing.id };
+  if (state === 'in_progress') {
+    throw new AppError(
+      409,
+      'ACCOUNT_IN_PROGRESS',
+      'Cadastro em andamento. Faça login para retomar.',
+      details
+    );
+  }
+  throw new AppError(409, 'ACCOUNT_EXISTS', 'Conta já existe. Faça login.', details);
+}
+
+async function loadActiveAssociateByStoredToken(storedToken) {
   const result = await query(
     `SELECT * FROM users
      WHERE session_token = $1 AND is_session_active = true
        AND (status IS NULL OR status <> 'patient')
      LIMIT 1`,
-    [token]
+    [storedToken]
   );
   return result.rows[0] || null;
 }
 
-async function hashPassword(password) {
-  return bcrypt.hash(password, SALT_ROUNDS);
+async function findBySessionToken(token) {
+  if (!token) return null;
+  const hashed = sha256Hex(token);
+  const hashedRow = await loadActiveAssociateByStoredToken(hashed);
+  if (hashedRow) return hashedRow;
+
+  const legacyRow = await loadActiveAssociateByStoredToken(token);
+  if (!legacyRow) return null;
+  await query(`UPDATE users SET session_token = $1 WHERE id = $2`, [hashed, legacyRow.id]);
+  legacyRow.session_token = hashed;
+  return legacyRow;
 }
 
 function hashResetToken(token) {
-  return crypto.createHash('sha256').update(token).digest('hex');
+  return sha256Hex(token);
 }
 
 async function createSession(userId) {
@@ -88,7 +129,7 @@ async function createSession(userId) {
       last_activity = NOW(),
       is_session_active = true
      WHERE id = $3`,
-    [sessionToken, expires, userId]
+    [sha256Hex(sessionToken), expires, userId]
   );
   return { sessionToken, expires };
 }
@@ -99,8 +140,8 @@ async function logout(sessionToken) {
     `UPDATE users SET
       is_session_active = false,
       session_token = NULL
-     WHERE session_token = $1`,
-    [sessionToken]
+     WHERE session_token = $1 OR session_token = $2`,
+    [sha256Hex(sessionToken), sessionToken]
   );
 }
 
@@ -155,24 +196,8 @@ function assertPassword(password) {
 }
 
 async function registerEmail(email, password) {
-  const normalized = String(email || '').trim().toLowerCase();
-  if (!normalized || !normalized.includes('@')) {
-    throw new AppError(400, 'VALIDATION_ERROR', 'email é obrigatório', {
-      email: ['obrigatório'],
-    });
-  }
   assertPassword(password);
-
-  const existing = await findByEmailAccount(normalized);
-  if (existing) {
-    const state = accountState(existing);
-    if (state === 'associado') {
-      throw new AppError(409, 'ACCOUNT_EXISTS', 'Conta já existe. Faça login.');
-    }
-    if (state === 'in_progress') {
-      throw new AppError(409, 'ACCOUNT_IN_PROGRESS', 'Cadastro em andamento. Faça login para retomar.');
-    }
-  }
+  const normalized = await assertLoginEmailAvailable(email);
 
   const passwordHash = await hashPassword(String(password));
   const userCode = uuidv4();
@@ -201,26 +226,9 @@ async function login(email, password) {
   }
 
   const user = await findByEmailAccount(String(email).trim());
-  if (!user || !user.account_password) {
+  const valid = await verifyPassword(password, user?.account_password);
+  if (!user || !valid) {
     throw new AppError(401, 'INVALID_CREDENTIALS', 'Credenciais inválidas');
-  }
-
-  let valid = false;
-  let needsRehash = false;
-  if (user.account_password.startsWith('$2')) {
-    valid = await bcrypt.compare(password, user.account_password);
-  } else {
-    valid = user.account_password === password;
-    needsRehash = valid;
-  }
-
-  if (!valid) {
-    throw new AppError(401, 'INVALID_CREDENTIALS', 'Credenciais inválidas');
-  }
-
-  if (needsRehash) {
-    const hash = await hashPassword(password);
-    await query(`UPDATE users SET account_password = $1 WHERE id = $2`, [hash, user.id]);
   }
 
   const { sessionToken, expires } = await createSession(user.id);
@@ -318,6 +326,8 @@ module.exports = {
   publicAssociate,
   parseInvalidFields,
   findByEmailAccount,
+  normalizeLoginEmail,
+  assertLoginEmailAvailable,
   accountState,
   registerEmail,
   login,

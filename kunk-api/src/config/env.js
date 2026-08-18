@@ -8,14 +8,16 @@ function bool(value, fallback = false) {
   return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase());
 }
 
+/** Allowlist of browser Origins. Empty / "true" → false (do not reflect any Origin). */
 function parseCorsOrigin(value) {
-  if (value === undefined || value === null || value === '') return true;
-  if (value === 'true' || value === true) return true;
-  const parts = String(value)
+  if (value === undefined || value === null || value === true) return false;
+  const raw = String(value).trim();
+  if (!raw || raw.toLowerCase() === 'true') return false;
+  const parts = raw
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  if (parts.length === 0) return true;
+  if (parts.length === 0) return false;
   if (parts.length === 1) return parts[0];
   return parts;
 }
@@ -69,7 +71,8 @@ const env = {
     credentialsJson: process.env.GCS_CREDENTIALS_JSON || '',
   },
   nodeEnv: process.env.NODE_ENV || 'development',
-  termsDevBypass: bool(process.env.TERMS_DEV_BYPASS, false),
+  /** Rate limit GET /users/exists and POST /auth/associate/register-email (5 / 15 min / IP). Set 0 for local e2e. */
+  authEnumRateLimit: bool(process.env.AUTH_ENUM_RATE_LIMIT, true),
   /** Public base URL of doc-sign app (e.g. http://localhost:4258) for signing_url */
   docSignPublicUrl: String(process.env.DOC_SIGN_PUBLIC_URL || process.env.VITE_DOC_SIGN_URL || 'http://localhost:4258').replace(
     /\/$/,
@@ -102,4 +105,4 @@ Object.defineProperty(env, 'databaseUrl', {
   },
 });
 
-module.exports = { env, resolvePgUrl };
+module.exports = { env, resolvePgUrl, parseCorsOrigin };

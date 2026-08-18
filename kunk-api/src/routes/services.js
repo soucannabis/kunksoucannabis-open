@@ -5,7 +5,6 @@ const servicesService = require('../services/servicesService');
 const servicesReportsService = require('../services/servicesReportsService');
 const { authenticate } = require('../middleware/authenticate');
 const { authorize } = require('../middleware/authorize');
-const { scopeFilterFor } = require('../schema/rbac');
 const { ok } = require('../utils/response');
 
 const router = Router();
@@ -32,8 +31,7 @@ router.post('/reports/validate', authorize('services', 'read'), async (req, res,
 
 router.get('/', authorize('services', 'read'), async (req, res, next) => {
   try {
-    const scopeFilter = scopeFilterFor(req.user?.roles || req.user?.permissions, req.user);
-    const result = await servicesService.list(req.query, { scopeFilter });
+    const result = await servicesService.list(req.query, { scopeFilter: req.scopeFilter });
     res.json(ok(result.data, result.meta));
   } catch (err) {
     next(err);

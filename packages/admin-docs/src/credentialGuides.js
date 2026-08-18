@@ -87,7 +87,7 @@ export const CREDENTIAL_SETUP_GUIDES = {
       'Acesse o [Dashboard Pagar.me](https://dashboard.pagar.me/) com a conta da associação (produção ou teste).',
       'Em **Configurações → Chaves de API**, copie a **Secret Key** (`sk_…`) e a **Public Key** (`pk_…`).',
       'Cole as chaves abaixo e clique em **Autenticar**. O Kunk testa a API e indica se a conta é **PSP** (necessária para split com Pedidos SouCannabis) ou **Gateway** (só Pagar.me standalone).',
-      'Configure também usuário/senha de **webhooks** se a tela pedir, e as URLs de sucesso / recebedores conforme o onboarding de pagamentos.',
+      'No passo **Webhooks**, defina usuário e senha. No painel Pagar.me o webhook **precisa** de HTTP Basic com esses mesmos valores — sem autenticação a API responde 401 e o pagamento não é confirmado.',
     ],
     docs: [
       { label: 'Introdução', href: 'https://docs.pagar.me/reference/introdu%C3%A7%C3%A3o-1' },

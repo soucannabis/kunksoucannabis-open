@@ -7,13 +7,14 @@ const registrationService = require('../services/registrationService');
 const { authenticate } = require('../middleware/authenticate');
 const { requireAssociate } = require('../middleware/requireAssociate');
 const { authorize } = require('../middleware/authorize');
-const { scopeFilterFor } = require('../schema/rbac');
 const { ok } = require('../utils/response');
+const { assertAuthEnumRateLimit } = require('../utils/rateLimit');
 
 const router = Router();
 
 router.get('/exists', async (req, res, next) => {
   try {
+    assertAuthEnumRateLimit(req, 'users-exists');
     const data = await registrationService.usersExists(req.query.email);
     res.json(ok(data));
   } catch (err) {
@@ -128,8 +129,7 @@ router.post('/import', authorize('users', 'create'), async (req, res, next) => {
 
 router.get('/', authorize('users', 'read'), async (req, res, next) => {
   try {
-    const scopeFilter = scopeFilterFor(req.user?.roles || req.user?.permissions, req.user);
-    const result = await usersService.list(req.query, { scopeFilter });
+    const result = await usersService.list(req.query, { scopeFilter: req.scopeFilter });
     res.json(ok(result.data, result.meta));
   } catch (err) {
     next(err);

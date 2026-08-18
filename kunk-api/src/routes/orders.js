@@ -2,9 +2,11 @@
 
 const { Router } = require('express');
 const ordersService = require('../services/ordersService');
+const { env } = require('../config/env');
 const { authenticate } = require('../middleware/authenticate');
 const { authorize } = require('../middleware/authorize');
 const { ok, AppError } = require('../utils/response');
+const { skipPaymentLockFromBody } = require('../utils/paymentLockBypass');
 
 const router = Router();
 router.use(authenticate);
@@ -132,10 +134,7 @@ router.patch('/:id', authorize('orders', 'update'), async (req, res, next) => {
 router.patch('/:id/status', authorize('orders', 'update'), async (req, res, next) => {
   try {
     const body = req.body || {};
-    const skipPaymentLock =
-      body.skip_payment_lock === true ||
-      body.force_test_paid === true ||
-      body.test_bypass_payment_lock === true;
+    const skipPaymentLock = skipPaymentLockFromBody(body, env.nodeEnv);
     const options = { skipPaymentLock };
     if (skipPaymentLock) {
       options.source = 'test_bypass';

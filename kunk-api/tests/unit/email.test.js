@@ -9,7 +9,7 @@ const {
   SMTP_TIMEOUT_MS,
   testConnection,
 } = require('../../src/services/email');
-const { checkRateLimit, resetRateLimits } = require('../../src/utils/rateLimit');
+const { checkRateLimit, peekRateLimit, resetRateLimits, assertLoginRateLimit, recordLoginFailure } = require('../../src/utils/rateLimit');
 
 describe('email templates', () => {
   it('builds password reset template', () => {
@@ -114,5 +114,58 @@ describe('rateLimit', () => {
       assert.equal(checkRateLimit(key, { limit: 3, windowMs: 60000 }).ok, true);
     }
     assert.equal(checkRateLimit(key, { limit: 3, windowMs: 60000 }).ok, false);
+  });
+
+  it('peek does not consume quota', () => {
+    resetRateLimits();
+    const key = `peek-${Date.now()}`;
+    assert.equal(peekRateLimit(key, { limit: 1, windowMs: 60000 }).ok, true);
+    assert.equal(peekRateLimit(key, { limit: 1, windowMs: 60000 }).ok, true);
+    assert.equal(checkRateLimit(key, { limit: 1, windowMs: 60000 }).ok, true);
+    assert.equal(peekRateLimit(key, { limit: 1, windowMs: 60000 }).ok, false);
+  });
+
+  it('login rate limit is 5 failures per IP+email then 429', () => {
+    resetRateLimits();
+    const { env } = require('../../src/config/env');
+    const prev = env.authEnumRateLimit;
+    env.authEnumRateLimit = true;
+    const req = { ip: '10.0.0.8' };
+    try {
+      for (let i = 0; i < 5; i++) {
+        assertLoginRateLimit(req, 'op-login', 'a@test.local');
+        recordLoginFailure(req, 'op-login', 'a@test.local');
+      }
+      assert.throws(
+        () => assertLoginRateLimit(req, 'op-login', 'a@test.local'),
+        (err) => err.status === 429 && err.code === 'RATE_LIMITED'
+      );
+      assertLoginRateLimit(req, 'op-login', 'b@test.local');
+    } finally {
+      env.authEnumRateLimit = prev;
+      resetRateLimits();
+    }
+  });
+
+  it('login rate limit caps 30 failures per IP', () => {
+    resetRateLimits();
+    const { env } = require('../../src/config/env');
+    const prev = env.authEnumRateLimit;
+    env.authEnumRateLimit = true;
+    const req = { ip: '10.0.0.9' };
+    try {
+      for (let i = 0; i < 30; i++) {
+        const email = `u${i}@test.local`;
+        assertLoginRateLimit(req, 'op-login', email);
+        recordLoginFailure(req, 'op-login', email);
+      }
+      assert.throws(
+        () => assertLoginRateLimit(req, 'op-login', 'other@test.local'),
+        (err) => err.status === 429 && err.code === 'RATE_LIMITED'
+      );
+    } finally {
+      env.authEnumRateLimit = prev;
+      resetRateLimits();
+    }
   });
 });

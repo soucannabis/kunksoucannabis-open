@@ -2,6 +2,7 @@
 
 const { Router } = require('express');
 const { requireModule } = require('./requireModule');
+const { authorizeAdmin } = require('../../middleware/authorize');
 const { ok } = require('../../utils/response');
 const pagarme = require('../../services/pagarme');
 
@@ -10,6 +11,7 @@ const router = Router();
 /**
  * Rotas de setup/validação ficam FORA do requireModule.
  * Setup (auth, test-payment, validate) fica fora de requireModule.
+ * Setup exige Administrador; status e checkout permanecem para a loja.
  */
 router.get('/status', async (req, res, next) => {
   try {
@@ -19,7 +21,7 @@ router.get('/status', async (req, res, next) => {
   }
 });
 
-router.get('/webhooks/status', async (req, res, next) => {
+router.get('/webhooks/status', authorizeAdmin, async (req, res, next) => {
   try {
     res.json(ok(await pagarme.getWebhooksStatus(req)));
   } catch (err) {
@@ -27,7 +29,7 @@ router.get('/webhooks/status', async (req, res, next) => {
   }
 });
 
-router.post('/webhooks/validate', async (req, res, next) => {
+router.post('/webhooks/validate', authorizeAdmin, async (req, res, next) => {
   try {
     res.json(ok(await pagarme.validateWebhooks(req, { persist: true })));
   } catch (err) {
@@ -35,7 +37,7 @@ router.post('/webhooks/validate', async (req, res, next) => {
   }
 });
 
-router.post('/webhooks/test-payment', async (req, res, next) => {
+router.post('/webhooks/test-payment', authorizeAdmin, async (req, res, next) => {
   try {
     res.json(ok(await pagarme.createTestPaymentLink()));
   } catch (err) {
@@ -43,7 +45,7 @@ router.post('/webhooks/test-payment', async (req, res, next) => {
   }
 });
 
-router.post('/webhooks/ensure', async (req, res, next) => {
+router.post('/webhooks/ensure', authorizeAdmin, async (req, res, next) => {
   try {
     const generateAuth = req.body?.generate_auth !== false;
     res.json(ok(await pagarme.ensureWebhooks(req, { generateAuth })));
@@ -52,7 +54,7 @@ router.post('/webhooks/ensure', async (req, res, next) => {
   }
 });
 
-router.post('/test', async (req, res, next) => {
+router.post('/test', authorizeAdmin, async (req, res, next) => {
   try {
     const credentialsService = require('../../services/credentialsService');
     const creds = await credentialsService.resolveAll('pagarme');
@@ -73,7 +75,7 @@ router.get('/', (req, res) => {
   res.json(ok({ module: 'pagarme', status: 'enabled' }));
 });
 
-router.get('/webhooks', async (req, res, next) => {
+router.get('/webhooks', authorizeAdmin, async (req, res, next) => {
   try {
     const data = await pagarme.listHooks({
       status: req.query.status,
@@ -89,7 +91,7 @@ router.get('/webhooks', async (req, res, next) => {
   }
 });
 
-router.get('/webhooks/:hookId', async (req, res, next) => {
+router.get('/webhooks/:hookId', authorizeAdmin, async (req, res, next) => {
   try {
     res.json(ok(await pagarme.getHook(req.params.hookId)));
   } catch (err) {
@@ -97,7 +99,7 @@ router.get('/webhooks/:hookId', async (req, res, next) => {
   }
 });
 
-router.post('/webhooks/:hookId/retry', async (req, res, next) => {
+router.post('/webhooks/:hookId/retry', authorizeAdmin, async (req, res, next) => {
   try {
     res.json(ok(await pagarme.retryHook(req.params.hookId)));
   } catch (err) {
@@ -113,7 +115,7 @@ router.post('/orders', async (req, res, next) => {
   }
 });
 
-router.post('/recipients', async (req, res, next) => {
+router.post('/recipients', authorizeAdmin, async (req, res, next) => {
   try {
     res.json(ok(await pagarme.createRecipient(req.body || {})));
   } catch (err) {
@@ -121,7 +123,7 @@ router.post('/recipients', async (req, res, next) => {
   }
 });
 
-router.post('/recipients/association', async (req, res, next) => {
+router.post('/recipients/association', authorizeAdmin, async (req, res, next) => {
   try {
     const force = Boolean(req.body?.force);
     const body = { ...(req.body || {}) };
@@ -132,7 +134,7 @@ router.post('/recipients/association', async (req, res, next) => {
   }
 });
 
-router.post('/recipients/soucannabis', async (req, res, next) => {
+router.post('/recipients/soucannabis', authorizeAdmin, async (req, res, next) => {
   try {
     const force = Boolean(req.body?.force);
     const body = { ...(req.body || {}) };

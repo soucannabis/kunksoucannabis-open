@@ -11,7 +11,7 @@ Variáveis centrais (veja `.env.example` completo no pacote):
 |---|---|
 | `PG_URL` ou `PGHOST`/`PG*` | Conexão PostgreSQL |
 | `PORT` | Porta HTTP da API |
-| `CORS_ORIGIN` | Origens permitidas (apps locais/produção) |
+| `CORS_ORIGIN` | Allowlist de `Origin` no browser. Vazio = CORS desligado. Apps oficiais usam `/api/v1` via proxy e não precisam desta env. |
 | `COOKIE_SECURE` | Cookies seguros (HTTPS) |
 | `SESSION_MAX_HOURS` | Duração da sessão |
 | `STORAGE_PATH` | Storage local de arquivos |

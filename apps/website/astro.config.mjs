@@ -33,6 +33,7 @@ const sidebar = [
       { label: "Requisitos", slug: "instalacao/requisitos" },
       { label: "Setup local", slug: "instalacao/setup-local" },
       { label: "Deploy / Docker", slug: "instalacao/deploy" },
+      { label: "Deploy no Railway", slug: "instalacao/railway" },
       { label: "Mapa do repositório", slug: "introducao/mapa-repositorio" },
     ],
   },
@@ -134,8 +135,13 @@ export default defineConfig({
         clientPort: 4260,
       },
       watch: {
-        // Conteúdo sincronizado fica em pastas gitignored; precisa ser observado
-        ignored: ["**/node_modules/**", "**/.git/**"],
+        ignored: [
+          "**/node_modules/**",
+          "**/.git/**",
+          "!**/src/content/docs/api/**",
+          "!**/src/content/docs/frontend/**",
+          "!**/src/content/docs/funcionalidades/**",
+        ],
       },
     },
   },

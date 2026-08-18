@@ -369,6 +369,105 @@
       },
       "footer": "Auth → Recursos → Integração → Operação",
       "backgroundImage": "./backgrounds/bg-api-kunk.png"
+    },
+    {
+      "id": "admin",
+      "title": "PAINEL ADMINISTRATIVO",
+      "titleSize": 96,
+      "theme": "admin",
+      "heroIcon": "hero-admin",
+      "left": {
+        "title": "O QUE O MÓDULO FAZ",
+        "items": [
+          {
+            "icon": "gear",
+            "text": "Configura dados da associação"
+          },
+          {
+            "icon": "users",
+            "text": "Gerencia profissionais e usuários"
+          },
+          {
+            "icon": "lock",
+            "text": "Define loja, triagem e permissões"
+          },
+          {
+            "icon": "api",
+            "text": "Controla aparência e tokens de API"
+          }
+        ]
+      },
+      "right": {
+        "title": "PARA A ASSOCIAÇÃO",
+        "items": [
+          {
+            "icon": "target",
+            "text": "Controle central da operação"
+          },
+          {
+            "icon": "lock",
+            "text": "Segurança por perfil de acesso"
+          },
+          {
+            "icon": "gear",
+            "text": "Sistema adaptado à associação"
+          }
+        ]
+      },
+      "footer": "Associação → Equipe → Permissões → Sistema",
+      "backgroundImage": "./backgrounds/bg-admin.png"
+    },
+    {
+      "id": "assinatura",
+      "title": "ASSINATURA DE TERMOS",
+      "titleSize": 96,
+      "theme": "sign",
+      "heroIcon": "hero-sign",
+      "left": {
+        "title": "O QUE O MÓDULO FAZ",
+        "items": [
+          {
+            "icon": "document",
+            "text": "Edita modelos de termo"
+          },
+          {
+            "icon": "document",
+            "text": "Baixa o PDF do termo"
+          },
+          {
+            "icon": "history",
+            "text": "Consulta o histórico completo"
+          }
+        ]
+      },
+      "right": {
+        "title": "PARA A ASSOCIAÇÃO",
+        "items": [
+          {
+            "icon": "lock",
+            "text": "Assinatura com validade"
+          },
+          {
+            "icon": "history",
+            "text": "Auditoria do processo"
+          },
+          {
+            "icon": "checklist",
+            "text": "Modelos padronizados"
+          }
+        ]
+      },
+      "footer": "Modelo → Assinar → Histórico",
+      "backgroundImage": "./backgrounds/bg-assinatura.png"
+    },
+    {
+      "id": "obrigado",
+      "title": "SouCannabis",
+      "titleSize": 72,
+      "theme": "thanks",
+      "layout": "closing",
+      "logoImage": "./logos/soucannabis-white.png",
+      "backgroundImage": "./backgrounds/bg-obrigado.png"
     }
   ]
 }

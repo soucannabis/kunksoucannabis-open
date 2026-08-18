@@ -3,6 +3,7 @@
 const credentialsService = require('../credentialsService');
 const { AppError } = require('../../utils/response');
 const { query } = require('../../db/pool');
+const { oauthRedirectUri } = require('../../utils/publicApiUrl');
 
 const ME_ENVIRONMENTS = {
   sandbox: {
@@ -200,17 +201,21 @@ async function saveTokens({ access_token, refresh_token }) {
   }
 }
 
-async function buildAuthorizeUrl() {
+async function buildAuthorizeUrl(state) {
+  if (!state) {
+    throw new AppError(400, 'OAUTH_STATE_INVALID', 'state OAuth ausente');
+  }
   const clientId = (await credentialsService.resolveField('melhorenvio', 'client_id')).value;
-  const redirect = (await credentialsService.resolveField('melhorenvio', 'redirect_uri')).value;
-  if (!clientId || !redirect) {
-    throw new AppError(400, 'CREDENTIAL_MISSING', 'client_id/redirect_uri Melhor Envio ausentes');
+  const redirect = oauthRedirectUri('melhorenvio');
+  if (!clientId) {
+    throw new AppError(400, 'CREDENTIAL_MISSING', 'client_id Melhor Envio ausente');
   }
   const origin = meSiteOrigin(await getApiBase());
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirect,
     response_type: 'code',
+    state: String(state),
     scope:
       'cart-read cart-write companies-read shipping-calculate shipping-checkout shipping-companies shipping-generate shipping-preview shipping-print shipping-tracking shipping-cancel orders-read purchases-read users-read',
   });
@@ -243,8 +248,8 @@ async function getOAuthTokenUrl() {
 async function exchangeCode(code) {
   const clientId = (await credentialsService.resolveField('melhorenvio', 'client_id')).value;
   const clientSecret = (await credentialsService.resolveField('melhorenvio', 'client_secret')).value;
-  const redirect = (await credentialsService.resolveField('melhorenvio', 'redirect_uri')).value;
-  if (!clientId || !clientSecret || !redirect) {
+  const redirect = oauthRedirectUri('melhorenvio');
+  if (!clientId || !clientSecret) {
     throw new AppError(400, 'CREDENTIAL_MISSING', 'Credenciais OAuth Melhor Envio incompletas');
   }
   if (!code) {

@@ -292,9 +292,50 @@ body { background: #041d18; }
 .theme-rose { --bg-a: #401923; --bg-b: #a35161; --accent: #cda74c; --grid-opacity: 0; }
 .theme-data { --bg-a: #14143d; --bg-b: #46437e; --accent: #d5af4e; --grid-opacity: .12; }
 .theme-api { --bg-a: #021428; --bg-b: #075b6f; --accent: #d2ae57; --grid-opacity: .28; }
+.theme-admin { --bg-a: #1a1410; --bg-b: #6b4a2e; --accent: #d2ae57; --grid-opacity: .08; }
+.theme-thanks { --bg-a: #041810; --bg-b: #1d5a3c; --accent: #d2ae57; --grid-opacity: .06; }
+.theme-sign { --bg-a: #1a160c; --bg-b: #4a5a32; --accent: #d2ae57; --grid-opacity: .05; }
 
 .theme-paper.cover--has-bg .cover__background { filter: sepia(.08) saturate(.95) contrast(1.02); }
 .theme-orders.cover--has-bg .cover__background { filter: saturate(1.08) contrast(1.04); }
 .theme-rose.cover--has-bg .cover__background { filter: saturate(1.06) contrast(1.03); }
 .theme-data.cover--has-bg .cover__background { filter: saturate(1.04) contrast(1.05); }
 .theme-api.cover--has-bg .cover__background { filter: saturate(1.08) contrast(1.04); }
+.theme-admin.cover--has-bg .cover__background { filter: saturate(1.05) contrast(1.04); }
+.theme-thanks.cover--has-bg .cover__background { filter: saturate(1.06) contrast(1.03) brightness(1.02); }
+.theme-sign.cover--has-bg .cover__background { filter: saturate(1.04) contrast(1.03); }
+
+.cover--closing .cover__content,
+.cover--closing .cover__footer,
+.cover--closing .cover__eyebrow {
+  display: none;
+}
+
+.cover--closing .cover__header {
+  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  justify-content: center;
+  padding: 0 120px;
+}
+
+.cover--closing .cover__title {
+  font-family: Inter, Arial, Helvetica, sans-serif;
+  font-weight: 800;
+  letter-spacing: .02em;
+  text-transform: none;
+}
+
+.cover__logo {
+  display: none;
+  width: 280px;
+  height: auto;
+  margin: 0 0 28px;
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, .45));
+}
+
+.cover--closing .cover__logo[src] {
+  display: block;
+}

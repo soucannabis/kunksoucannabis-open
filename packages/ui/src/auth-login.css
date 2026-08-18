@@ -148,6 +148,14 @@
   text-align: center;
 }
 
+.auth-login-card-lead {
+  margin: -0.35rem 0 1rem;
+  color: #4a5348;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
 .auth-login-alert {
   margin-bottom: 0.85rem;
   padding: 0.75rem 0.9rem;

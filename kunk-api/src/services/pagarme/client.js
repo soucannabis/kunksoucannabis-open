@@ -89,8 +89,8 @@ async function ensureCredentialRows() {
        ('pagarme', 'secret_key', NULL, 'PAGARME_SECRET_KEY', true, 'Chave secreta Pagar.me'),
        ('pagarme', 'public_key', NULL, 'PAGARME_PUBLIC_KEY', false, 'Chave pública Pagar.me'),
        ('pagarme', 'api_base_url', NULL, 'PAGARME_URL_API', false, 'Base URL API v5'),
-       ('pagarme', 'webhook_user', NULL, 'PAGARME_WEBHOOK_USER', false, 'Usuário HTTP Basic do webhook (visível no Admin)'),
-       ('pagarme', 'webhook_pass', NULL, 'PAGARME_WEBHOOK_PASS', true, 'Senha HTTP Basic do webhook')
+       ('pagarme', 'webhook_user', NULL, 'PAGARME_WEBHOOK_USER', false, 'Usuário HTTP Basic do webhook — o mesmo que deve ser cadastrado no painel Pagar.me'),
+       ('pagarme', 'webhook_pass', NULL, 'PAGARME_WEBHOOK_PASS', true, 'Senha HTTP Basic do webhook — a mesma que deve ser cadastrada no painel Pagar.me')
      ON CONFLICT (service, field_key) DO NOTHING`
   );
 }

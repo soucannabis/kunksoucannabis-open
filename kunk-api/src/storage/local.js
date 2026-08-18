@@ -15,9 +15,22 @@ function createLocalDriver({ rootPath }) {
   }
 
   function resolveKey(key) {
-    if (!key) throw new AppError(500, 'STORAGE_ERROR', 'storage_key ausente');
-    if (path.isAbsolute(key)) return key;
-    return path.join(root, key);
+    if (!key || typeof key !== 'string') {
+      throw new AppError(500, 'STORAGE_ERROR', 'storage_key ausente');
+    }
+    if (key.includes('\0')) {
+      throw new AppError(400, 'INVALID_STORAGE_KEY', 'storage_key inválido');
+    }
+
+    const rootResolved = path.resolve(root);
+    const candidate = path.isAbsolute(key)
+      ? path.resolve(key)
+      : path.resolve(rootResolved, key);
+    const rel = path.relative(rootResolved, candidate);
+    if (!rel || rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) {
+      throw new AppError(400, 'INVALID_STORAGE_KEY', 'storage_key fora do diretório de arquivos');
+    }
+    return candidate;
   }
 
   return {

@@ -104,4 +104,44 @@ describe('domain/system_users', () => {
 
     await ensureAdminUser();
   });
+
+  it('rejects Prescritor and mixed Profissional on invite', async () => {
+    const session = await loginAsAdmin();
+    app = session.app;
+    cookie = session.cookie;
+
+    const prescritor = await request(app)
+      .post('/api/v1/system-users')
+      .set('Cookie', cookie)
+      .send({
+        email: `pre${Date.now()}@t.com`,
+        name: 'Pre',
+        last_name: 'Scritor',
+        permissions: ['Prescritor'],
+      });
+    assert.equal(prescritor.status, 400, JSON.stringify(prescritor.body));
+
+    const mixed = await request(app)
+      .post('/api/v1/system-users')
+      .set('Cookie', cookie)
+      .send({
+        email: `mix${Date.now()}@t.com`,
+        name: 'Mix',
+        last_name: 'Role',
+        permissions: ['Profissional', 'Acolhimento'],
+        internal_code: 'any',
+      });
+    assert.equal(mixed.status, 400, JSON.stringify(mixed.body));
+
+    const noCode = await request(app)
+      .post('/api/v1/system-users')
+      .set('Cookie', cookie)
+      .send({
+        email: `ncode${Date.now()}@t.com`,
+        name: 'No',
+        last_name: 'Code',
+        permissions: ['Profissional'],
+      });
+    assert.equal(noCode.status, 400, JSON.stringify(noCode.body));
+  });
 });

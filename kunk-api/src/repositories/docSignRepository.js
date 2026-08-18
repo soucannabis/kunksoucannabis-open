@@ -323,7 +323,15 @@ async function insertContract(row, clientQuery = query) {
 }
 
 async function getContractById(id) {
-  const result = await query(`SELECT * FROM term_contracts WHERE id = $1`, [id]);
+  const result = await query(
+    `SELECT c.*,
+            COALESCE(NULLIF(tt.display_name, ''), tt.title, c.kind) AS kind_display_name,
+            COALESCE(NULLIF(tt.title, ''), NULLIF(tt.display_name, ''), c.kind) AS title
+     FROM term_contracts c
+     LEFT JOIN term_templates tt ON tt.kind = c.kind
+     WHERE c.id = $1`,
+    [id]
+  );
   return result.rows[0] || null;
 }
 

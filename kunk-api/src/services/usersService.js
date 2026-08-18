@@ -150,29 +150,9 @@ async function getById(id, queryParams = {}) {
  * Respeita ACCOUNT_EXISTS / ACCOUNT_IN_PROGRESS.
  */
 async function createUserFromPanel(payload = {}) {
-  const email = String(payload.email_account || payload.email || '')
-    .trim()
-    .toLowerCase();
-  if (!email || !email.includes('@')) {
-    throw new AppError(400, 'VALIDATION_ERROR', 'email é obrigatório');
-  }
-
-  const existing = await associateAuthRepository.findByEmailAccount(email);
-  if (existing) {
-    const state = associateAuthRepository.accountState(existing);
-    if (state === 'associado') {
-      throw new AppError(409, 'ACCOUNT_EXISTS', 'Conta já existe', {
-        user_code: existing.user_code,
-        id: existing.id,
-      });
-    }
-    if (state === 'in_progress') {
-      throw new AppError(409, 'ACCOUNT_IN_PROGRESS', 'Cadastro em andamento', {
-        user_code: existing.user_code,
-        id: existing.id,
-      });
-    }
-  }
+  const email = await associateAuthRepository.assertLoginEmailAvailable(
+    payload.email_account || payload.email
+  );
 
   const now = new Date().toISOString();
   return itemsRepository.createItem('users', {
@@ -192,7 +172,7 @@ async function createUserFromPanel(payload = {}) {
 async function createUser(payload) {
   if (payload?.panel === true || (payload?.email_account && !payload?.account_password && !payload?.status?.includes?.('patient'))) {
     const { panel, ...rest } = payload;
-    if (panel === true || (!payload.responsible_code && !payload.account_password)) {
+    if (!payload.responsible_code && !payload.account_password) {
       return createUserFromPanel(rest);
     }
   }
@@ -206,28 +186,88 @@ async function createUser(payload) {
   }
   delete body.panel;
   delete body.email;
+  const isPatient = String(body.status || '') === 'patient';
+  if (body.email_account && !isPatient) {
+    body.email_account = await associateAuthRepository.assertLoginEmailAvailable(body.email_account);
+  }
   return itemsRepository.createItem('users', body);
 }
 
-async function updateUser(id, payload = {}) {
-  const body = { ...payload };
-  delete body.account_password;
-  delete body.session_token;
-  delete body.password_reset_token;
-  if (body.email && !body.email_account) {
-    body.email_account = String(body.email).trim().toLowerCase();
-  }
-  delete body.email;
+/** Campos que o PATCH de painel (`/users/:id`) e de paciente podem gravar. */
+const PANEL_PATCHABLE = new Set([
+  'responsible_type',
+  'associate_name',
+  'associate_last_name',
+  'associate_birth_date',
+  'gender',
+  'nationality',
+  'associate_cpf',
+  'associate_rg',
+  'associate_rg_issuer',
+  'marital_status',
+  'mobile_number',
+  'street',
+  'street_number',
+  'complement',
+  'neighborhood',
+  'city',
+  'state',
+  'cep',
+  'reason_treatment_text',
+  'ciap_codes',
+  'prescription',
+  'preferred_products',
+  'date_prescription',
+  'fullname',
+  'proof_of_address',
+  'rg_proof',
+  'rg_patient_proof',
+  'annotations',
+  'email_account',
+  'avatar_url',
+  'delivery_address',
+  'prescriber',
+  'prescriber_code',
+]);
 
+function pickAllowedUserPatch(payload = {}) {
+  const src = { ...payload };
+  if (src.email && !src.email_account) {
+    src.email_account = String(src.email).trim().toLowerCase();
+  }
+  const body = {};
+  for (const key of PANEL_PATCHABLE) {
+    if (src[key] !== undefined) body[key] = src[key];
+  }
   if (body.annotations != null && typeof body.annotations !== 'string') {
     body.annotations = JSON.stringify(body.annotations);
+  }
+  return body;
+}
+
+async function updateUser(id, payload = {}) {
+  const body = pickAllowedUserPatch(payload);
+  if (!Object.keys(body).length) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Payload vazio');
+  }
+
+  if (body.email_account != null && String(body.email_account).trim() !== '') {
+    body.email_account = await associateAuthRepository.assertLoginEmailAvailable(
+      body.email_account,
+      { excludeId: id }
+    );
   }
 
   return itemsRepository.updateItem('users', id, body);
 }
 
 async function makeAssociate(id) {
-  return updateUser(id, { status: 'Associado', associate_status: PHASE.ASSINATURA_TERMO });
+  return itemsRepository.updateItem(
+    'users',
+    id,
+    { status: 'Associado', associate_status: PHASE.ASSINATURA_TERMO },
+    { skipReadonly: ['status', 'associate_status'] }
+  );
 }
 
 async function getPatients(id) {
@@ -279,20 +319,9 @@ async function updatePatient(responsibleId, patientId, payload = {}) {
   if (String(patient.responsible_code) !== String(responsible.user_code)) {
     throw new AppError(404, 'NOT_FOUND', 'Paciente não pertence a este responsável');
   }
-  const body = { ...payload };
-  delete body.responsible_code;
-  delete body.user_code;
-  delete body.account_password;
-  delete body.status;
-  delete body.use_custom_contact;
-  delete body.use_custom_address;
-  delete body.use_delivery;
-  if (body.email && !body.email_account) {
-    body.email_account = String(body.email).trim().toLowerCase();
-  }
-  delete body.email;
-  if (body.annotations != null && typeof body.annotations !== 'string') {
-    body.annotations = JSON.stringify(body.annotations);
+  const body = pickAllowedUserPatch(payload);
+  if (!Object.keys(body).length) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Payload vazio');
   }
   return itemsRepository.updateItem('users', patientId, body);
 }

@@ -71,6 +71,22 @@ async function main() {
   }
 
   try {
+    const { ensureUsersApiTokenPrefix } = require('./db/ensureUsersApiTokenPrefix');
+    await ensureUsersApiTokenPrefix();
+    console.log('Schema: users_api.token_prefix ok');
+  } catch (err) {
+    console.warn('Schema: não foi possível garantir users_api.token_prefix:', err.message);
+  }
+
+  try {
+    const { ensureEmailAccountUnique } = require('./db/ensureEmailAccountUnique');
+    await ensureEmailAccountUnique();
+    console.log('Schema: users_email_account_login_uidx ok');
+  } catch (err) {
+    console.warn('Schema: não foi possível garantir users_email_account_login_uidx:', err.message);
+  }
+
+  try {
     const { ensureWebhooks } = require('./db/ensureWebhooks');
     await ensureWebhooks();
     console.log('Schema: webhook_endpoints / webhook_deliveries ok');

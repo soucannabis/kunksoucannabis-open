@@ -94,7 +94,7 @@ Opaco 32+ bytes; hash em `signing_token_hash`; TTL default 14 dias.
 
 ### F. Stubs
 
-Remover 501 na entrega; `TERMS_DEV_BYPASS` só QA.
+Remover 501 na entrega. Fase 4→Associado exige `adhesion_term` (sem bypass).
 
 ---
 

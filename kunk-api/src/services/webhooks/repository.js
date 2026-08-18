@@ -6,6 +6,7 @@ const { query, withClient } = require('../../db/pool');
 const { env } = require('../../config/env');
 const { encrypt, decrypt } = require('../../utils/configCrypto');
 const { AppError } = require('../../utils/response');
+const { assertPublicHttpUrl } = require('../../utils/publicHttpUrl');
 const {
   WEBHOOK_TABLES,
   WEBHOOK_ACTIONS,
@@ -49,6 +50,10 @@ function assertHttpUrl(url) {
     throw new AppError(400, 'VALIDATION_ERROR', 'URL deve usar http ou https');
   }
   return parsed.toString();
+}
+
+async function assertWebhookUrl(url) {
+  return assertPublicHttpUrl(url);
 }
 
 function normalizeTables(tables) {
@@ -115,7 +120,7 @@ async function getEndpoint(id) {
 async function createEndpoint({ name, url, tables, actions, enabled = true }) {
   const trimmedName = String(name || '').trim();
   if (!trimmedName) throw new AppError(400, 'VALIDATION_ERROR', 'Nome é obrigatório');
-  const normalizedUrl = assertHttpUrl(url);
+  const normalizedUrl = await assertWebhookUrl(url);
   const normalizedTables = normalizeTables(tables);
   const normalizedActions = normalizeActions(actions);
   const secret = generateSecret();
@@ -143,7 +148,7 @@ async function updateEndpoint(id, patch = {}) {
 
   const next = {
     name: patch.name != null ? String(patch.name).trim() : existing.name,
-    url: patch.url != null ? assertHttpUrl(patch.url) : existing.url,
+    url: patch.url != null ? await assertWebhookUrl(patch.url) : existing.url,
     tables: patch.tables != null ? normalizeTables(patch.tables) : existing.tables,
     actions: patch.actions != null ? normalizeActions(patch.actions) : existing.actions,
     enabled: patch.enabled != null ? Boolean(patch.enabled) : existing.enabled,
@@ -356,6 +361,7 @@ module.exports = {
   encryptSecret,
   decryptSecret,
   assertHttpUrl,
+  assertWebhookUrl,
   normalizeTables,
   normalizeActions,
   toPublicEndpoint,

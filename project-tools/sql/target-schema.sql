@@ -74,6 +74,12 @@ CREATE TABLE IF NOT EXISTS users (
   CONSTRAINT fk_users_responsible_code FOREIGN KEY (responsible_code) REFERENCES users(user_code) ON DELETE SET NULL
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_account_login_uidx
+  ON users (lower(btrim(email_account)))
+  WHERE email_account IS NOT NULL
+    AND btrim(email_account) <> ''
+    AND (status IS NULL OR status <> 'patient');
+
 -- system_users (operadores do painel; ex-Kunk_Users / kunk_users)
 CREATE TABLE IF NOT EXISTS system_users (
   id SERIAL PRIMARY KEY,
@@ -534,8 +540,12 @@ CREATE TABLE IF NOT EXISTS users_api (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255),
   token VARCHAR(255),
+  token_prefix VARCHAR(32),
   is_sample BOOLEAN NOT NULL DEFAULT false
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_api_token_prefix_uidx
+  ON users_api (token_prefix);
 
 -- Users_files → users_files
 CREATE TABLE IF NOT EXISTS users_files (

@@ -327,7 +327,7 @@ router.get('/:service', async (req, res, next) => {
       payload.me_urls = meAuth.ME_ENVIRONMENTS;
 
       // Pin display values without writing on every GET
-      const redirectUri = oauthRedirectUri('melhorenvio', req);
+      const redirectUri = oauthRedirectUri('melhorenvio');
       payload.oauth_redirect_uri = redirectUri;
       payload.credentials = credentials.map((c) => {
         if (c.field_key === 'api_base_url') {
@@ -356,7 +356,7 @@ router.get('/:service', async (req, res, next) => {
         await gcAuth.ensureCredentialRows();
         credentials = await credentialsService.listPublic(service);
       }
-      const redirectUri = oauthRedirectUri('google_calendar', req);
+      const redirectUri = oauthRedirectUri('google_calendar');
       payload.oauth_redirect_uri = redirectUri;
       payload.credentials = credentials.map((c) => {
         if (c.field_key === 'redirect_uri') {
@@ -768,7 +768,7 @@ router.put('/:service/credentials', async (req, res, next) => {
 
     // Redirect URI is always computed by the API — never taken from the admin form.
     if (service === 'melhorenvio' || service === 'google_calendar') {
-      fields.redirect_uri = oauthRedirectUri(service, req);
+      fields.redirect_uri = oauthRedirectUri(service);
     }
 
     const testFn = async (merged) => {

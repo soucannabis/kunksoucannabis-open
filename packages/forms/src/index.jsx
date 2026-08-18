@@ -100,7 +100,7 @@ export const GENDER_OPTIONS = [
   { value: 'outro', label: 'Outro' },
 ];
 
-export const MARITAL_OPTIONS = ['Solteiro', 'Casado', 'União-Estável', 'Viúvo', 'Divorciado'];
+export const MARITAL_OPTIONS = ['Solteiro(a)', 'Casado(a)', 'União-Estável', 'Viúvo(a)', 'Divorciado(a)'];
 
 export const UF_OPTIONS = [
   'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
@@ -387,10 +387,13 @@ export function validateAssociateForm(form, { ciap2Enabled = true } = {}) {
     'marital_status', 'account_password', 'mobile_number', 'street', 'street_number',
     'neighborhood', 'city', 'state', 'cep', 'reason_treatment_text',
   ];
-  for (const key of required) {
+  const responsibleRequired = form.responsible_type === 'pet'
+    ? required.filter((key) => key !== 'reason_treatment_text')
+    : required;
+  for (const key of responsibleRequired) {
     if (form[key] === undefined || form[key] === null || String(form[key]).trim() === '') invalid.push(key);
   }
-  if (ciap2Enabled) {
+  if (ciap2Enabled && form.responsible_type !== 'pet') {
     const codes = normalizeCiapCodes(form.ciap_codes);
     if (codes.length < 1) invalid.push('ciap_codes');
     if (codes.length > 10) invalid.push('ciap_codes');

@@ -3,6 +3,8 @@
 const { Router } = require('express');
 const docSignService = require('../services/docSignService');
 const filesRepository = require('../repositories/filesRepository');
+const { applyFileDownloadHeaders } = require('../utils/fileType');
+const { requestIp } = require('../utils/rateLimit');
 const repo = require('../repositories/docSignRepository');
 const { authenticate } = require('../middleware/authenticate');
 const { authorizeAdmin } = require('../middleware/authorize');
@@ -13,10 +15,9 @@ const crypto = require('crypto');
 const router = Router();
 
 function requestMeta(req, body = {}) {
-  const fwd = req.headers['x-forwarded-for'];
-  const ip = (typeof fwd === 'string' ? fwd.split(',')[0] : null) || req.ip || null;
+  const ip = requestIp(req);
   return {
-    ip: ip ? String(ip).trim() : null,
+    ip: ip && ip !== 'unknown' ? String(ip).trim() : null,
     userAgent: req.headers['user-agent'] || null,
     timezone: body.timezone || null,
   };
@@ -172,6 +173,7 @@ router.post('/templates/:kind/preview-pdf', authenticate, authorizeAdmin, async 
     });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Content-Sha256', result.sha256);
     res.send(result.buffer);
   } catch (err) {
@@ -338,8 +340,7 @@ router.get('/sign/:token/pdf', async (req, res, next) => {
     if (!row) throw new AppError(404, 'TOKEN_INVALID', 'Link inválido');
     const file = await filesRepository.getFile(row.filled_pdf_file_id);
     const stream = await filesRepository.openFileStream(file);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${file.filename}"`);
+    applyFileDownloadHeaders(res, file);
     stream.on('error', (err) => next(err));
     stream.pipe(res);
   } catch (err) {

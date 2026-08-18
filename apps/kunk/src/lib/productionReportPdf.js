@@ -141,13 +141,18 @@ async function prescriptionForOrder(api, order) {
   const fileResponse = await api.getFile(prescription);
   const file = fileResponse.data || null;
   if (!file?.id) return { order, prescription: null };
-  const response = await fetch(api.fileDownloadUrl(file.id), { credentials: 'include' });
-  if (!response.ok) throw new Error(`Não foi possível baixar a receita (${response.status})`);
+  const blob = api.fileDownload
+    ? await api.fileDownload(file.id)
+    : await (async () => {
+        const response = await fetch(api.fileDownloadUrl(file.id), { credentials: 'include' });
+        if (!response.ok) throw new Error(`Não foi possível baixar a receita (${response.status})`);
+        return response.blob();
+      })();
   return {
     order,
     prescription: {
-      bytes: new Uint8Array(await response.arrayBuffer()),
-      mime: file.mime_type || file.type || '',
+      bytes: new Uint8Array(await blob.arrayBuffer()),
+      mime: file.mime_type || file.type || blob.type || '',
       name: file.filename || file.name || '',
     },
   };

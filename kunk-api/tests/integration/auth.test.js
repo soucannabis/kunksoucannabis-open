@@ -5,10 +5,13 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const { loginAsAdmin, createBearerToken, extractCookie, setApiAccessEnabled } = require('../helpers/auth');
 const { getApp } = require('../helpers/app');
-const { ensureAdminUser } = require('../helpers/db');
+const { ensureAdminUser, query } = require('../helpers/db');
 const { OPERATOR_COOKIE_BY_APP } = require('../../src/constants/authCookies');
+const { sha256Hex } = require('../../src/utils/tokenHash');
+const { env } = require('../../src/config/env');
+const { resetRateLimits } = require('../../src/utils/rateLimit');
 
-describe('auth', () => {
+describe('auth', { concurrency: false }, () => {
   let app;
   let cookie;
 
@@ -35,6 +38,60 @@ describe('auth', () => {
     assert.ok(res.headers['set-cookie']);
     cookie = extractCookie(res.headers['set-cookie'], OPERATOR_COOKIE_BY_APP.admin);
     assert.ok(String(cookie).startsWith(`${OPERATOR_COOKIE_BY_APP.admin}=`));
+  });
+
+  it('stores hashed session token; cookie still authenticates', async () => {
+    const creds = await ensureAdminUser();
+    const res = await request(app)
+      .post('/api/v1/auth/login')
+      .set('X-Kunk-App', 'admin')
+      .send(creds);
+    assert.equal(res.status, 200);
+    cookie = extractCookie(res.headers['set-cookie'], OPERATOR_COOKIE_BY_APP.admin);
+    const rawToken = String(cookie).slice(`${OPERATOR_COOKIE_BY_APP.admin}=`.length);
+    const stored = await query(
+      `SELECT session_token FROM operator_sessions
+       WHERE user_id = $1 AND app = 'admin' AND is_active = true`,
+      [res.body.data.user.id]
+    );
+    assert.equal(stored.rows[0].session_token, sha256Hex(rawToken));
+    assert.notEqual(stored.rows[0].session_token, rawToken);
+
+    const me = await request(app)
+      .get('/api/v1/auth/me')
+      .set('Cookie', cookie)
+      .set('X-Kunk-App', 'admin');
+    assert.equal(me.status, 200);
+    assert.ok(me.body.data.user.id);
+  });
+
+  it('migrates leftover plaintext session token on use', async () => {
+    const creds = await ensureAdminUser();
+    const res = await request(app)
+      .post('/api/v1/auth/login')
+      .set('X-Kunk-App', 'admin')
+      .send(creds);
+    assert.equal(res.status, 200);
+    cookie = extractCookie(res.headers['set-cookie'], OPERATOR_COOKIE_BY_APP.admin);
+    const rawToken = String(cookie).slice(`${OPERATOR_COOKIE_BY_APP.admin}=`.length);
+    await query(
+      `UPDATE operator_sessions SET session_token = $1
+       WHERE user_id = $2 AND app = 'admin' AND is_active = true`,
+      [rawToken, res.body.data.user.id]
+    );
+
+    const me = await request(app)
+      .get('/api/v1/auth/me')
+      .set('Cookie', cookie)
+      .set('X-Kunk-App', 'admin');
+    assert.equal(me.status, 200);
+
+    const stored = await query(
+      `SELECT session_token FROM operator_sessions
+       WHERE user_id = $1 AND app = 'admin' AND is_active = true`,
+      [res.body.data.user.id]
+    );
+    assert.equal(stored.rows[0].session_token, sha256Hex(rawToken));
   });
 
   it('login requires app', async () => {
@@ -178,6 +235,81 @@ describe('auth', () => {
     assert.equal(denied.status, 403);
   });
 
+  it('limited bearer cannot manage tokens or operators', async () => {
+    await refreshSession();
+    await setApiAccessEnabled(true);
+    const limited = await createBearerToken(cookie, ['items:orders:read']);
+
+    const createToken = await request(app)
+      .post('/api/v1/auth/tokens')
+      .set('Authorization', `Bearer ${limited}`)
+      .send({ email: 'escalated', scopes: ['*'] });
+    assert.equal(createToken.status, 403);
+    assert.equal(createToken.body.errors[0].code, 'FORBIDDEN');
+
+    const invite = await request(app)
+      .post('/api/v1/system-users')
+      .set('Authorization', `Bearer ${limited}`)
+      .send({
+        email: `esc${Date.now()}@t.com`,
+        name: 'Esc',
+        last_name: 'Alated',
+        permissions: ['Administrador'],
+      });
+    assert.equal(invite.status, 403);
+    assert.equal(invite.body.errors[0].code, 'FORBIDDEN');
+  });
+
+  it('bearer looks up by token_prefix; wrong suffix and plaintext leftover fail', async () => {
+    await refreshSession();
+    await setApiAccessEnabled(true);
+    const token = await createBearerToken(cookie);
+
+    const okMe = await request(app).get('/api/v1/auth/me').set('Authorization', `Bearer ${token}`);
+    assert.equal(okMe.status, 200);
+
+    const wrongSuffix = `${token.slice(0, -4)}ffff`;
+    const miss = await request(app)
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${wrongSuffix}`);
+    assert.equal(miss.status, 401);
+
+    const { query } = require('../helpers/db');
+    const { apiTokenLookupPrefix } = require('../../src/utils/apiToken');
+    const { ensureUsersApiTokenPrefix } = require('../../src/db/ensureUsersApiTokenPrefix');
+    await ensureUsersApiTokenPrefix();
+    const plain = `kunk_live_plain${'a'.repeat(40)}`;
+    const prefix = apiTokenLookupPrefix(plain);
+    const inserted = await query(
+      `INSERT INTO users_api (email, token, token_prefix) VALUES ($1, $2, $3) RETURNING id`,
+      [JSON.stringify({ label: 'plain-leftover', scopes: ['*'] }), plain, prefix]
+    );
+    try {
+      const rejected = await request(app)
+        .get('/api/v1/auth/me')
+        .set('Authorization', `Bearer ${plain}`);
+      assert.equal(rejected.status, 401);
+    } finally {
+      await query(`DELETE FROM users_api WHERE id = $1`, [inserted.rows[0].id]);
+    }
+  });
+
+  it('star bearer can list and create tokens when API enabled', async () => {
+    await refreshSession();
+    const star = await createBearerToken(cookie, ['*']);
+
+    const list = await request(app)
+      .get('/api/v1/auth/tokens')
+      .set('Authorization', `Bearer ${star}`);
+    assert.equal(list.status, 200);
+
+    const created = await request(app)
+      .post('/api/v1/auth/tokens')
+      .set('Authorization', `Bearer ${star}`)
+      .send({ email: 'star-child', scopes: ['items:orders:read'] });
+    assert.equal(created.status, 201);
+  });
+
   it('cookie + bearer conflict', async () => {
     await refreshSession();
     const token = await createBearerToken(cookie);
@@ -222,7 +354,7 @@ describe('auth', () => {
       .get('/api/v1/auth/me')
       .set('Cookie', adminCookie)
       .set('X-Kunk-App', 'admin');
-    assert.equal(adminMe.status, 200);
+    assert.equal(adminMe.status, 200, JSON.stringify(adminMe.body));
 
     const kunkMe = await request(app)
       .get('/api/v1/auth/me')
@@ -305,5 +437,128 @@ describe('auth', () => {
       .set('Cookie', kunkCookie)
       .set('X-Kunk-App', 'kunk');
     assert.equal(kunkMe.status, 200);
+  });
+
+  it('rejects leftover plaintext operator password; forgot+reset recovers', async () => {
+    const crypto = require('crypto');
+    const { query } = require('../helpers/db');
+    const { getApp } = require('../helpers/app');
+    const { isBcryptHash, verifyPassword } = require('../../src/utils/password');
+    const localApp = getApp();
+    const email = `plain-op-${crypto.randomUUID()}@test.local`;
+    const leftover = 'Leftover123!';
+    await query(`DELETE FROM operator_sessions WHERE user_id IN (SELECT id FROM system_users WHERE email = $1)`, [
+      email,
+    ]).catch(() => {});
+    await query(`DELETE FROM system_users WHERE email = $1`, [email]);
+    const inserted = await query(
+      `INSERT INTO system_users (email, password, name, permissions, status, date_created)
+       VALUES ($1, $2, 'Plain', $3, 'active', NOW())
+       RETURNING id`,
+      [email, leftover, JSON.stringify(['Acolhimento'])]
+    );
+    const userId = inserted.rows[0].id;
+
+    try {
+      const denied = await request(localApp)
+        .post('/api/v1/auth/login')
+        .set('X-Kunk-App', 'admin')
+        .send({ email, password: leftover });
+      assert.equal(denied.status, 401);
+      assert.equal(denied.body.errors[0].code, 'INVALID_CREDENTIALS');
+
+      const forgot = await request(localApp)
+        .post('/api/v1/auth/forgot-password')
+        .send({ email, app: 'admin' });
+      assert.equal(forgot.status, 200, JSON.stringify(forgot.body));
+      assert.ok(forgot.body.data.reset_token);
+
+      const reset = await request(localApp)
+        .post('/api/v1/auth/reset-password')
+        .send({ token: forgot.body.data.reset_token, password: 'NewPass123!' });
+      assert.equal(reset.status, 200, JSON.stringify(reset.body));
+
+      const stored = await query(`SELECT password FROM system_users WHERE id = $1`, [userId]);
+      assert.equal(isBcryptHash(stored.rows[0].password), true);
+      assert.equal(await verifyPassword('NewPass123!', stored.rows[0].password), true);
+
+      const login = await request(localApp)
+        .post('/api/v1/auth/login')
+        .set('X-Kunk-App', 'admin')
+        .send({ email, password: 'NewPass123!' });
+      assert.equal(login.status, 200, JSON.stringify(login.body));
+    } finally {
+      await query(`DELETE FROM operator_sessions WHERE user_id = $1`, [userId]).catch(() => {});
+      await query(`DELETE FROM system_users WHERE id = $1`, [userId]);
+    }
+  });
+
+  it('rate-limits operator login after 5 failures per IP+email; successes do not count', async () => {
+    const prev = env.authEnumRateLimit;
+    env.authEnumRateLimit = true;
+    resetRateLimits();
+    const crypto = require('crypto');
+    const { query } = require('../helpers/db');
+    const { hashPassword } = require('../../src/utils/password');
+    const email = `login-rl-${crypto.randomUUID()}@test.local`;
+    const password = 'TestAdmin123!';
+    let userId;
+    try {
+      const hash = await hashPassword(password);
+      const inserted = await query(
+        `INSERT INTO system_users (email, password, name, permissions, status, date_created)
+         VALUES ($1, $2, 'Rl', $3, 'active', NOW()) RETURNING id`,
+        [email, hash, JSON.stringify(['Acolhimento'])]
+      );
+      userId = inserted.rows[0].id;
+      const creds = { email, password };
+      for (let i = 0; i < 3; i++) {
+        const okLogin = await request(app)
+          .post('/api/v1/auth/login')
+          .set('X-Kunk-App', 'admin')
+          .send(creds);
+        assert.equal(okLogin.status, 200, JSON.stringify(okLogin.body));
+      }
+      for (let i = 0; i < 5; i++) {
+        const res = await request(app)
+          .post('/api/v1/auth/login')
+          .set('X-Kunk-App', 'admin')
+          .send({ email, password: 'wrong-password' });
+        assert.equal(res.status, 401, JSON.stringify(res.body));
+        assert.equal(res.body.errors[0].code, 'INVALID_CREDENTIALS');
+      }
+      const limited = await request(app)
+        .post('/api/v1/auth/login')
+        .set('X-Kunk-App', 'admin')
+        .send({ email, password: 'wrong-password' });
+      assert.equal(limited.status, 429);
+      assert.equal(limited.body.errors[0].code, 'RATE_LIMITED');
+    } finally {
+      if (userId) {
+        await query(`DELETE FROM operator_sessions WHERE user_id = $1`, [userId]).catch(() => {});
+        await query(`DELETE FROM system_users WHERE id = $1`, [userId]).catch(() => {});
+      }
+      env.authEnumRateLimit = prev;
+      resetRateLimits();
+    }
+  });
+
+  it('forgot-password rate limit ignores spoofed X-Forwarded-For', async () => {
+    resetRateLimits();
+    const email = `forgot-xff-${Date.now()}@test.local`;
+    for (let i = 0; i < 5; i++) {
+      const res = await request(app)
+        .post('/api/v1/auth/forgot-password')
+        .set('X-Forwarded-For', `1.2.3.${i}`)
+        .send({ email, app: 'admin' });
+      assert.equal(res.status, 200, JSON.stringify(res.body));
+    }
+    const limited = await request(app)
+      .post('/api/v1/auth/forgot-password')
+      .set('X-Forwarded-For', '9.9.9.9')
+      .send({ email, app: 'admin' });
+    assert.equal(limited.status, 429);
+    assert.equal(limited.body.errors[0].code, 'RATE_LIMITED');
+    resetRateLimits();
   });
 });

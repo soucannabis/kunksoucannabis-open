@@ -105,8 +105,8 @@ const FIELD_LABELS = {
   from_name: 'Nome do remetente',
   secret_key: 'Secret key (sk_… / sk_test_…) — obrigatória',
   public_key: 'Public key (pk_… / pk_test_…) — opcional',
-  webhook_user: 'Usuário HTTP Basic (igual ao painel Pagar.me)',
-  webhook_pass: 'Senha HTTP Basic (igual ao painel Pagar.me)',
+  webhook_user: 'Usuário HTTP Basic — cadastre o mesmo no painel Pagar.me (webhook autenticado)',
+  webhook_pass: 'Senha HTTP Basic — cadastre a mesma no painel Pagar.me (webhook autenticado)',
   base_url: 'Base URL SouCannabis',
   api_token: 'Token Utalk (Bearer)',
   organization_id: 'Organization ID',
@@ -129,8 +129,8 @@ const FIELD_PLACEHOLDERS = {
   from_name: 'Nome da associação',
   secret_key: 'sk_… ou sk_test_…',
   public_key: 'pk_… ou pk_test_…',
-  webhook_user: 'Usuário do webhook',
-  webhook_pass: 'Senha do webhook',
+  webhook_user: 'Usuário Basic Auth (Pagar.me)',
+  webhook_pass: 'Senha Basic Auth (Pagar.me)',
   base_url: 'https://api.soucannabis.exemplo',
   api_token: 'Cole o token Bearer',
   organization_id: 'Ex.: org_abc123',
@@ -1481,7 +1481,7 @@ export function ExternalServiceDetailPage({ api }) {
               <span>conectado</span>
             </div>
             <div data-testid="pagarme-connected-webhooks" style={pagarmeConnectedRowStyle}>
-              <span>3. Webhooks</span>
+              <span>3. Webhooks (HTTP Basic no Pagar.me)</span>
               <span>conectado</span>
             </div>
           </div>
@@ -1786,7 +1786,7 @@ export function ExternalServiceDetailPage({ api }) {
           data-testid="pagarme-webhooks"
           style={pagarmeSetupBlockStyle}
         >
-          <h3 style={{ marginTop: 0 }}>3. Webhooks</h3>
+          <h3 style={{ marginTop: 0 }}>3. Webhooks — autenticação obrigatória no Pagar.me</h3>
           <p
             data-testid="pagarme-webhooks-dashboard-hint"
             style={{
@@ -1798,12 +1798,34 @@ export function ExternalServiceDetailPage({ api }) {
               color: '#000',
             }}
           >
-            Conta → Configurações → Webhooks → Criar webhook. Eventos:{' '}
-            <code>order.created</code> (obrigatório) e <code>order.paid</code>. Copie as URLs, use
-            usuário/senha abaixo, abra o link do passo 2 e gere o boleto sem pagá-lo. Em seguida,
-            clique em Validar — a API confere se recebeu o <code>order.created</code>. Isso pode
-            levar até 1 minuto; se ainda não aparecer, tente de novo em breve.
+            {data.pagarme_status?.webhooks?.dashboard_hint || (
+              <>
+                <strong>Obrigatório:</strong> no painel da Pagar.me o webhook precisa de
+                autenticação <strong>HTTP Basic</strong> (usuário e senha iguais aos desta tela).
+                Sem isso a API responde 401 e o pagamento não é confirmado. Conta → Configurações →
+                Webhooks → Criar webhook; cole as URLs abaixo; ative HTTP Basic — não deixe o
+                webhook anônimo. Eventos: <code>order.created</code> (obrigatório) e{' '}
+                <code>order.paid</code>. Depois abra o link do passo 2, gere o boleto sem pagá-lo e
+                clique em Validar (o <code>order.created</code> pode levar até 1 minuto).
+              </>
+            )}
           </p>
+          {!pagarmeWebhookAuthReady && (
+            <p
+              data-testid="pagarme-webhooks-auth-required"
+              style={{
+                fontSize: '0.85rem',
+                margin: '0 0 14px',
+                padding: '8px 10px',
+                background: '#f8e8e8',
+                borderRadius: 6,
+                color: '#000',
+              }}
+            >
+              Salve usuário e senha abaixo e cadastre os <strong>mesmos valores</strong> no webhook
+              da Pagar.me. A API rejeita qualquer POST sem Basic Auth.
+            </p>
+          )}
 
           <div style={{ marginBottom: 16 }}>
             <CopyableUrlRow

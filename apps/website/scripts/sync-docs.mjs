@@ -229,10 +229,25 @@ function walkMarkdown(dir, files = []) {
   return files;
 }
 
-function clearSyncedDirs() {
-  for (const dir of [...SYNC_DIRS, "directus"]) {
-    fs.rmSync(path.join(DEST, dir), { recursive: true, force: true });
+function pruneOrphans(keep) {
+  fs.rmSync(path.join(DEST, "directus"), { recursive: true, force: true });
+  for (const dir of SYNC_DIRS) {
+    const destDir = path.join(DEST, dir);
+    if (!fs.existsSync(destDir)) continue;
+    for (const file of walkMarkdown(destDir)) {
+      const rel = path.relative(DEST, file).split(path.sep).join("/");
+      if (!keep.has(rel)) fs.unlinkSync(file);
+    }
   }
+}
+
+function writeIfChanged(outPath, rendered) {
+  if (fs.existsSync(outPath) && fs.readFileSync(outPath, "utf8") === rendered) {
+    return false;
+  }
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fs.writeFileSync(outPath, rendered, "utf8");
+  return true;
 }
 
 function sync() {
@@ -242,10 +257,11 @@ function sync() {
   }
 
   fs.mkdirSync(DEST, { recursive: true });
-  clearSyncedDirs();
 
+  const keep = new Set();
   let count = 0;
   let skipped = 0;
+  let written = 0;
   for (const dir of SYNC_DIRS) {
     const fromRoot = path.join(SRC, dir);
     for (const file of walkMarkdown(fromRoot)) {
@@ -259,6 +275,7 @@ function sync() {
       if (path.basename(rel) === "README.md") {
         outRel = path.join(path.dirname(rel), "index.md");
       }
+      outRel = outRel.split(path.sep).join("/");
       const outPath = path.join(DEST, outRel);
 
       const fallback =
@@ -271,14 +288,16 @@ function sync() {
         skipped += 1;
         continue;
       }
-      fs.mkdirSync(path.dirname(outPath), { recursive: true });
-      fs.writeFileSync(outPath, rendered, "utf8");
+      keep.add(outRel);
       count += 1;
+      if (writeIfChanged(outPath, rendered)) written += 1;
     }
   }
 
+  pruneOrphans(keep);
+
   console.log(
-    `sync-docs: ${count} páginas → ${path.relative(REPO_ROOT, DEST)} (omitidas: ${skipped})`
+    `sync-docs: ${count} páginas → ${path.relative(REPO_ROOT, DEST)} (escritas: ${written}, omitidas: ${skipped})`
   );
 }
 

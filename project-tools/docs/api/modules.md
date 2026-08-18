@@ -57,10 +57,9 @@ Sem valor no Admin → módulo **desligado**.
 
 ## Autorização
 
-Além do módulo ativo, exigir:
+Setup / OAuth / teste / segredo (`oauth/authorize`, `*/test`, webhooks Pagar.me de validação, `outbound-credentials`) exigem sessão **Administrador** ou API key com scope `*`.
 
-- Sessão com role adequada, **ou**
-- Scope `modules:{name}` no API token
+Operação de loja (status, checkout, etiqueta, cotação, calendários, sync) exige sessão autenticada e o módulo ligado (`requireModule`). Cotação de frete no carrinho permanece em `/freight/quote`.
 
 ## Papéis no frete (quote vs label)
 
