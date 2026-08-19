@@ -123,7 +123,7 @@ const FIELD_PLACEHOLDERS = {
   api_key: 'Cole a API key',
   host: 'smtp.exemplo.com',
   port: '587',
-  user: 'usuario@exemplo.com',
+  user: 'smtp-user',
   pass: 'Senha SMTP',
   from_email: 'noreply@exemplo.com',
   from_name: 'Nome da associação',
@@ -417,8 +417,8 @@ function CredentialField({
               id={`cred-${cred.field_key}`}
               className="input"
               type={
-                cred.field_key === 'user'
-                  ? 'email'
+                serviceName === 'email' && cred.field_key === 'user'
+                  ? 'text'
                   : cred.is_secret
                     ? 'password'
                     : cred.field_key.includes('url')
