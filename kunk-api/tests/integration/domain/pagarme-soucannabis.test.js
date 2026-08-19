@@ -49,6 +49,21 @@ describe('domain/pagarme + soucannabis_orders admin gates', () => {
     assert.ok(names.includes('soucannabis_orders'));
   });
 
+  it('GET soucannabis_orders returns enabled false when module flag is off', async () => {
+    await query(`
+      INSERT INTO system_configs (system, key, value, value_type, is_sensitive, allow_hardcoded, description)
+      VALUES ('modules', 'modules.soucannabis_orders.enabled', 'false', 'boolean', false, false, 't')
+      ON CONFLICT (system, key) DO UPDATE SET value = EXCLUDED.value;
+    `);
+    const res = await request(app)
+      .get('/api/v1/admin/external-services/soucannabis_orders')
+      .set('Cookie', cookie);
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body.data?.enabled, false);
+    assert.equal(res.body.data?.config_enabled, false);
+    assert.equal(res.body.data?.sc_status?.enabled, false);
+  });
+
   it('blocks enabling soucannabis_orders without pagarme', async () => {
     await request(app)
       .patch('/api/v1/admin/external-services/soucannabis_orders')

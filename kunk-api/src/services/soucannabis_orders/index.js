@@ -24,7 +24,7 @@ async function getStatus() {
 
   return {
     module: 'soucannabis_orders',
-    enabled: sc.enabled || (await isModuleEnabled('soucannabis_orders')),
+    enabled: await isModuleEnabled('soucannabis_orders'),
     pagarme_ok: Boolean(pagarmeStatus.enabled && pagarmeStatus.is_psp),
     is_psp: pagarmeStatus.is_psp,
     credentials_complete: Boolean(hasClient && hasSecret && hasBase),
