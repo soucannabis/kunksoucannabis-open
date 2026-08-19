@@ -11,6 +11,9 @@ const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'TestAdmin123!';
  * Faz `test.skip` se o driver for local ou se o login falhar.
  */
 export async function requireActiveCloudBucket(playwright, apiUrl) {
+  if (process.env.E2E_STORAGE_CLOUD !== '1') {
+    test.skip(true, 'Storage cloud E2E: defina E2E_STORAGE_CLOUD=1 (fora da bateria principal)');
+  }
   const ctx = await playwright.request.newContext();
   try {
     const login = await ctx.post(`${apiUrl}/auth/login`, {

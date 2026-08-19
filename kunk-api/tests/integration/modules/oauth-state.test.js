@@ -58,7 +58,7 @@ describe('modules/oauth-state', () => {
 
   it('Google authorize URL includes state when client credentials exist in DB', async (t) => {
     if (!hasGoogle) {
-      t.skip('google_calendar client_id/secret ausentes no banco');
+      t.skip('google_calendar client_id/secret ausentes no PG — suite requires-oauth-seed');
       return;
     }
     const res = await asAdmin('/api/v1/modules/google_calendar/oauth/authorize?redirect=0');
@@ -79,7 +79,7 @@ describe('modules/oauth-state', () => {
 
   it('Melhor Envio authorize URL includes state when client credentials exist in DB', async (t) => {
     if (!hasMelhorEnvio) {
-      t.skip('melhorenvio client_id/secret ausentes no banco');
+      t.skip('melhorenvio client_id/secret ausentes no PG — suite requires-oauth-seed');
       return;
     }
     const res = await asAdmin('/api/v1/modules/melhorenvio/oauth/authorize');
@@ -100,7 +100,7 @@ describe('modules/oauth-state', () => {
 
   it('Google authorize ignores X-Forwarded-Host for redirect_uri', async (t) => {
     if (!hasGoogle) {
-      t.skip('google_calendar client_id/secret ausentes no banco');
+      t.skip('google_calendar client_id/secret ausentes no PG — suite requires-oauth-seed');
       return;
     }
     const { oauthRedirectUri } = require('../../../src/utils/publicApiUrl');
@@ -120,7 +120,7 @@ describe('modules/oauth-state', () => {
 
   it('Melhor Envio authorize ignores X-Forwarded-Host for redirect_uri', async (t) => {
     if (!hasMelhorEnvio) {
-      t.skip('melhorenvio client_id/secret ausentes no banco');
+      t.skip('melhorenvio client_id/secret ausentes no PG — suite requires-oauth-seed');
       return;
     }
     const { oauthRedirectUri } = require('../../../src/utils/publicApiUrl');

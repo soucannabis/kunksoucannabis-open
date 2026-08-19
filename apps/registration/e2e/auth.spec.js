@@ -68,7 +68,7 @@ test.describe('Auth — cadastro, login, reset', () => {
     // call forgot from page.request; if no token, skip reset UI with token from API in test env
     const forgot = await api.forgotPassword(email);
     const token = forgot.data?.data?.reset_token;
-    test.skip(!token, 'reset_token only exposed when API NODE_ENV=test');
+    test.skip(!token, 'reset_token indisponível — API remota sem NODE_ENV=test (fora da bateria principal)');
 
     await page.goto('/nova-senha');
     await page.getByRole('button', { name: /Já tenho o token/i }).click();

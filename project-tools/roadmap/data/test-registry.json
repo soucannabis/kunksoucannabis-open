@@ -9,7 +9,7 @@
         "config": "./playwright.config.js",
         "spec": "e2e/install.spec.js",
         "label": "Admin · Instalação",
-        "description": "Executa a cobertura E2E de Admin · Instalação pela spec `e2e/install.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
+        "description": "Executa a cobertura E2E de Admin · Instalação pela spec `e2e/install.spec.js`. Local-only: skip automático em E2E remoto (Railway) — instalador fresh exige PG vazio."
       },
       "api": {
         "id": "api.admin.install",
@@ -581,7 +581,7 @@
         "config": "./playwright.config.js",
         "spec": "e2e/storage.spec.js",
         "label": "Admin · Armazenamento",
-        "description": "Executa a cobertura E2E de Admin · Armazenamento pela spec `e2e/storage.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
+        "description": "Executa a cobertura E2E de Admin · Armazenamento pela spec `e2e/storage.spec.js`. Specs storage-cloud exigem E2E_STORAGE_CLOUD=1 (fora da bateria principal)."
       },
       "api": {
         "id": "api.admin.storage",
@@ -961,7 +961,7 @@
         "cwd": "apps/kunk",
         "spec": "e2e/cart.spec.js",
         "label": "Kunk · Novo pedido",
-        "description": "Executa a cobertura E2E de Kunk · Novo pedido pela spec `e2e/cart.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
+        "description": "Carrinho/novo pedido com `?u=` (associado), frete mockado e TOTAL_MISMATCH. Reativado — não usa test.skip hardcoded."
       },
       "api": {
         "id": "api.kunk.checkout",
@@ -1647,7 +1647,7 @@
           "tests/integration/modules/melhorenvio.live.test.js"
         ],
         "label": "API · frete",
-        "description": "Valida normalização e cotação de frete, além dos fluxos operacionais dos provedores Loggi e Melhor Envio. Suites relacionadas: `tests/integration/freight/quote-config.test.js`, `tests/unit/freightNormalize.test.js`, `tests/integration/modules/loggi.live.test.js` e `tests/integration/modules/melhorenvio.live.test.js`."
+        "description": "Valida normalização e cotação de frete. Suites live (`loggi.live`, `melhorenvio.live`) exigem RUN_LIVE_FREIGHT_TESTS=true — fora da bateria principal."
       },
       "description": "cobertura de API em `tests/integration/freight/quote-config.test.js`, `tests/unit/freightNormalize.test.js`, `tests/integration/modules/loggi.live.test.js` e `tests/integration/modules/melhorenvio.live.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
@@ -1725,7 +1725,7 @@
           "tests/unit/oauthState.test.js"
         ],
         "label": "API · oauth segurança",
-        "description": "Valida geração, persistência e verificação do `state` OAuth para impedir callbacks inválidos ou forjados. Suites relacionadas: `tests/integration/modules/oauth-state.test.js` e `tests/unit/oauthState.test.js`."
+        "description": "Valida geração, persistência e verificação do `state` OAuth para impedir callbacks inválidos ou forjados. Skip condicional se client_id/secret OAuth ausentes no PG (requires-oauth-seed)."
       },
       "description": "cobertura de API em `tests/integration/modules/oauth-state.test.js` e `tests/unit/oauthState.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     }

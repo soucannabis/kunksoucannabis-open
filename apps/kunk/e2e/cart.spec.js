@@ -2,17 +2,9 @@ import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
 import { ADMIN_EMAIL, ADMIN_PASSWORD } from './helpers/fixtures.js';
 import { loginInBrowser } from './helpers/api.js';
+import { findAssociateUserCode } from './helpers/cart.js';
 
-/**
- * Carrinho e2e completo (frete mockado + TOTAL_MISMATCH) fica para depois —
- * módulos Loggi/ME permanecem off por default; validação de frete no browser
- * depende de config Loja + intercept estável pós-habilitação.
- *
- * Spec mantida no repo para reativar quando MODULE_* + store estiverem ok.
- */
 test.describe('cart', () => {
-  test.skip(true, 'adiado: e2e de frete/carrinho após habilitar módulos e config Loja');
-
   test.beforeAll(async () => {
     await ensureAdminUser();
   });
@@ -79,8 +71,11 @@ test.describe('cart', () => {
 
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(page).toHaveURL(/\/app/);
-    await page.goto('/app/loja/novo-pedido');
+
+    const userCode = await findAssociateUserCode(page);
+    await page.goto(`/app/loja/novo-pedido?u=${encodeURIComponent(userCode)}`);
     await expect(page.getByTestId('cart-page')).toBeVisible();
+    await expect(page.getByTestId('cart-missing-user')).toHaveCount(0);
 
     await page.getByTestId('add-manual-item').click();
     await expect(page.getByTestId('item-qty-0')).toBeVisible();
