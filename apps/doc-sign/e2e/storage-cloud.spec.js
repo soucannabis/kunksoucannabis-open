@@ -5,6 +5,8 @@ import {
   requireActiveCloudBucket,
   uploadDocument,
   expectedFileUrl,
+  assertFileViewableApi,
+  assertFileVisibleInBrowser,
   TINY_JPEG,
 } from './helpers/storageCloud.js';
 
@@ -13,7 +15,8 @@ test.describe('armazenamento cloud — bucket ativo', () => {
     await prepareDocSignE2e();
   });
 
-  test('upload de arquivo (logo/termo) usa bucket e URL /files/:id/download', async ({
+  test('upload, metadados, download inline e visualização no browser', async ({
+    page,
     request,
     playwright,
   }) => {
@@ -34,16 +37,15 @@ test.describe('armazenamento cloud — bucket ativo', () => {
     expect(up.data.storage_driver).toBe(driver);
     expect(up.data.storage_key).toBeTruthy();
 
-    // Mesmo formato que o editor de modelo monta após upload
     const editorUrl = `/api/v1/files/${up.data.id}/download`;
     expect(editorUrl).toBe(expectedFileUrl(up.data.id));
 
-    const dl = await request.get(`${API_URL}/files/${up.data.id}/download`, {
-      failOnStatusCode: false,
+    await assertFileViewableApi(request, API_URL, up.data.id, {
+      driver,
+      expectedBuffer: TINY_JPEG,
     });
-    expect(dl.status()).toBe(200);
-    const bytes = Buffer.from(await dl.body());
-    expect(bytes.equals(TINY_JPEG)).toBe(true);
+
+    await assertFileVisibleInBrowser(page, request, API_URL, up.data.id);
 
     await request.delete(`${API_URL}/files/${up.data.id}`, { failOnStatusCode: false });
   });

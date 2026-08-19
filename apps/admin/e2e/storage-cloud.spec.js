@@ -1,11 +1,13 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
-import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL, appUrl } from './helpers/fixtures.js';
+import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL } from './helpers/fixtures.js';
 import { loginInBrowser } from './helpers/api.js';
 import {
   requireActiveCloudBucket,
   uploadDocument,
   expectedFileUrl,
+  assertFileViewableApi,
+  assertFileVisibleInBrowser,
   TINY_JPEG,
 } from './helpers/storageCloud.js';
 
@@ -14,7 +16,7 @@ test.describe('armazenamento cloud — bucket ativo', () => {
     await ensureAdminUser();
   });
 
-  test('upload grava no bucket e URL lógica é /files/:id/download', async ({
+  test('upload, metadados, download inline e visualização no browser', async ({
     page,
     request,
     playwright,
@@ -37,22 +39,22 @@ test.describe('armazenamento cloud — bucket ativo', () => {
     expect(up.data.storage_key).toBeTruthy();
     expect(String(up.data.storage_key)).not.toMatch(/^\/|^[A-Za-z]:\\/);
 
-    const meta = await request.get(`${API_URL}/files/${up.data.id}`, { failOnStatusCode: false });
-    expect(meta.status()).toBe(200);
-    const metaBody = await meta.json();
-    expect(metaBody.data.url).toBe(expectedFileUrl(up.data.id));
-    expect(metaBody.data.storage_driver).toBe(driver);
-
-    const dl = await request.get(`${API_URL}/files/${up.data.id}/download`, {
-      failOnStatusCode: false,
+    await assertFileViewableApi(request, API_URL, up.data.id, {
+      driver,
+      expectedBuffer: TINY_JPEG,
     });
-    expect(dl.status()).toBe(200);
-    const bytes = Buffer.from(await dl.body());
-    expect(bytes.equals(TINY_JPEG)).toBe(true);
+
+    const listed = await request.get(`${API_URL}/files?limit=20`, { failOnStatusCode: false });
+    expect(listed.status()).toBe(200);
+    const listBody = await listed.json();
+    expect(Array.isArray(listBody.data)).toBe(true);
+    expect(listBody.data.some((f) => f.id === up.data.id)).toBe(true);
+
+    await assertFileVisibleInBrowser(page, request, API_URL, up.data.id);
 
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(page).toHaveURL(/\/home\/?$/);
-    // Página Arquivos removida do Admin — download via API já validado acima.
+
     await request.delete(`${API_URL}/files/${up.data.id}`, { failOnStatusCode: false });
   });
 });

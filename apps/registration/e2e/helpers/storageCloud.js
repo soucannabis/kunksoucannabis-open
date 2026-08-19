@@ -1,10 +1,45 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 /** JPEG mínimo válido para multipart. */
 export const TINY_JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
 
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'admin@kunk-api.test';
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'TestAdmin123!';
+
+export function expectedFileUrl(id) {
+  return `/api/v1/files/${id}/download`;
+}
+
+export async function assertFileViewableApi(request, apiUrl, fileId, {
+  driver,
+  expectedBuffer = TINY_JPEG,
+  expectedMime = 'image/jpeg',
+} = {}) {
+  const meta = await request.get(`${apiUrl}/files/${fileId}`, { failOnStatusCode: false });
+  expect(meta.status(), 'GET /files/:id').toBe(200);
+  const metaBody = await meta.json();
+  expect(metaBody.data.url).toBe(expectedFileUrl(fileId));
+  if (driver) expect(metaBody.data.storage_driver).toBe(driver);
+
+  const dl = await request.get(`${apiUrl}/files/${fileId}/download`, { failOnStatusCode: false });
+  expect(dl.status(), 'GET /files/:id/download').toBe(200);
+  expect(dl.headers()['content-type']).toContain(expectedMime);
+  expect(String(dl.headers()['content-disposition'] || '')).toMatch(/^inline/i);
+  expect(dl.headers()['x-content-type-options']).toBe('nosniff');
+  const bytes = Buffer.from(await dl.body());
+  expect(bytes.equals(expectedBuffer)).toBe(true);
+  return metaBody.data;
+}
+
+export async function assertFileVisibleInBrowser(page, request, apiUrl, fileId) {
+  const state = await request.storageState();
+  if (state.cookies?.length) {
+    await page.context().addCookies(state.cookies);
+  }
+  const response = await page.goto(`${apiUrl}/files/${fileId}/download`, { waitUntil: 'load' });
+  expect(response?.status(), 'browser GET download').toBe(200);
+  expect(response?.headers()['content-type'] || '').toContain('image/jpeg');
+}
 
 /**
  * Confirma bucket S3/GCS ativo via API admin (contexto isolado).
@@ -34,8 +69,4 @@ export async function requireActiveCloudBucket(playwright, apiUrl) {
   } finally {
     await ctx.dispose();
   }
-}
-
-export function expectedFileUrl(id) {
-  return `/api/v1/files/${id}/download`;
 }
