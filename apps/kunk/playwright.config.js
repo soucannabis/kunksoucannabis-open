@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const FRONT_URL = process.env.E2E_FRONT_URL || 'http://localhost:4257';
+const FRONT_URL = process.env.E2E_FRONT_URL || process.env.KUNK_URL || 'http://localhost:4257';
 const API_URL = process.env.E2E_API_URL || `${FRONT_URL}/api/v1`;
 
 const isRemote = /^https?:\/\/(?!localhost)/i.test(FRONT_URL);

@@ -1,4 +1,4 @@
-export const FRONT_URL = process.env.E2E_FRONT_URL || 'http://localhost:4257';
+export const FRONT_URL = process.env.E2E_FRONT_URL || process.env.KUNK_URL || 'http://localhost:4257';
 export const API_URL = process.env.E2E_API_URL || `${FRONT_URL}/api/v1`;
 
 export const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'admin@kunk-api.test';
