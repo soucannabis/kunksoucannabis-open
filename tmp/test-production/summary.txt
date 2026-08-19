@@ -1,0 +1,12 @@
+Resumo da bateria de testes em producao
+API URL: https://kunk-api-production-19e6.up.railway.app/api/v1
+PG_URL configurado: sim
+
+- smoke: SKIP
+- api-unit: SKIP
+- api-integration: SKIP
+- api-contract: SKIP
+- e2e-admin: SKIP
+- e2e-kunk: SKIP
+- e2e-registration: OK
+- e2e-doc-sign: SKIP

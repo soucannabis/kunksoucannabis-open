@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { ensureAdminUser, getPool } from '../helpers/db.js';
-import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL, appUrl } from '../helpers/fixtures.js';
-import { loginInBrowser } from '../helpers/api.js';
+import { getPool, prepareDocSignE2e } from '../helpers/db.js';
+import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL } from '../helpers/fixtures.js';
+import { expectTermosPageReady, gotoAuthenticated } from '../helpers/api.js';
 
 async function loginApi(request) {
   const res = await request.post(`${API_URL}/auth/login`, {
@@ -9,8 +9,11 @@ async function loginApi(request) {
     headers: { 'X-Kunk-App': 'doc-sign' },
   });
   expect(res.ok(), await res.text()).toBeTruthy();
-  const setCookie = res.headers()['set-cookie'];
-  return Array.isArray(setCookie) ? setCookie.join('; ') : setCookie || '';
+  const setCookie = res.headersArray().filter((h) => h.name.toLowerCase() === 'set-cookie');
+  const raw = setCookie
+    .map((h) => h.value)
+    .find((value) => String(value).startsWith('kunk_oss_session_doc_sign='));
+  return raw ? String(raw).split(';')[0] : '';
 }
 
 async function ensureSelfTemplatePublished(request) {
@@ -61,24 +64,24 @@ async function ensureAssociateReadyForTerm() {
 
 test.describe('roadmap · criar / emitir termo', () => {
   test.beforeAll(async () => {
-    await ensureAdminUser();
+    await prepareDocSignE2e();
   });
 
   test('abre modal Novo termo com modelo e busca de associado', async ({ page, request }) => {
     await ensureSelfTemplatePublished(request);
-    await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await page.goto(appUrl('/termos'));
-    await expect(page.getByRole('heading', { name: 'Termos' })).toBeVisible();
+    await gotoAuthenticated(page, '/termos');
+    await expectTermosPageReady(page);
 
-    await page.getByRole('button', { name: /Novo termo/i }).click();
+    await page.locator('.btn-novo-termo').click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByRole('heading', { name: 'Novo termo' })).toBeVisible();
     await expect(dialog.locator('#term-kind')).toBeVisible();
     await expect(dialog.getByLabel(/Buscar associado/i)).toBeVisible();
 
-    const firstOpt = dialog.locator('#term-kind option').first();
-    await expect(firstOpt).toBeVisible();
-    await expect(firstOpt).not.toHaveText(/Nenhum modelo publicado/i);
+    const kindSelect = dialog.locator('#term-kind');
+    await expect(kindSelect).toBeVisible();
+    await expect(kindSelect).not.toHaveValue('');
+    await expect(kindSelect.locator('option[value="self"]')).toHaveCount(1);
   });
 
   test('admin emite termo e recebe signing_url', async ({ page, request }) => {
@@ -99,9 +102,9 @@ test.describe('roadmap · criar / emitir termo', () => {
     expect(data?.status).toBe('pending');
     expect(String(data?.signing_url || '')).toMatch(/\/assinar\//);
 
-    await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await page.goto(appUrl('/termos'));
-    await page.getByLabel('Buscar').fill(email);
+    await gotoAuthenticated(page, '/termos');
+    await expectTermosPageReady(page);
+    await page.locator('#term-search').fill(email);
     await expect(page.getByText(email).first()).toBeVisible({ timeout: 15_000 });
   });
 });

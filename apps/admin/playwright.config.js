@@ -5,6 +5,8 @@ import { FRONT_URL, API_URL } from './e2e/helpers/fixtures.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const isRemote = /^https?:\/\/(?!localhost)/i.test(FRONT_URL);
+
 export default defineConfig({
   testDir: path.join(__dirname, 'e2e'),
   fullyParallel: false,
@@ -27,12 +29,16 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: 'npm run dev -- --host 0.0.0.0 --port 4256',
-    cwd: __dirname,
-    url: FRONT_URL,
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  ...(isRemote
+    ? {}
+    : {
+        webServer: {
+          command: 'npm run dev -- --host 0.0.0.0 --port 4256',
+          cwd: __dirname,
+          url: FRONT_URL,
+          reuseExistingServer: true,
+          timeout: 120_000,
+        },
+      }),
   metadata: { apiUrl: API_URL, frontUrl: FRONT_URL },
 });

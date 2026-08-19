@@ -56,7 +56,7 @@ let pool;
 export function getPool() {
   if (!pool) {
     const connectionString = loadDatabaseUrl();
-    if (!connectionString) throw new Error('PG_URL (ou PGHOST/PG*) ausente para helpers E2E kunk');
+    if (!connectionString) return null;
     pool = new pg.Pool({ connectionString });
   }
   return pool;
@@ -69,6 +69,7 @@ async function hashPassword(password) {
 
 async function upsertUser({ email, password, permissions, name, lastName, code }) {
   const p = getPool();
+  if (!p) return { email, password };
   const hash = await hashPassword(password);
   const existing = await p.query(`SELECT id FROM system_users WHERE email = $1`, [email]);
   if (existing.rows[0]) {
@@ -98,8 +99,8 @@ async function upsertUser({ email, password, permissions, name, lastName, code }
 
 export async function ensureAdminUser() {
   return upsertUser({
-    email: 'admin@kunk-api.test',
-    password: 'TestAdmin123!',
+    email: process.env.E2E_ADMIN_EMAIL || 'admin@kunk-api.test',
+    password: process.env.E2E_ADMIN_PASSWORD || 'TestAdmin123!',
     permissions: ['Administrador'],
     name: 'Admin',
     lastName: 'Test',
@@ -121,6 +122,7 @@ export async function ensureDemoAdminUser() {
 /** Garante tema claro do formulário público de triagem (para demos que clicam em Padrão escuro). */
 export async function ensureTriageFormThemeLight() {
   const p = getPool();
+  if (!p) return;
   const system = 'triage';
   const key = 'triage.form.theme';
   const existing = await p.query(
@@ -148,6 +150,7 @@ export async function ensureTriageFormThemeLight() {
 /** Snapshot JSON dos tipos de profissional em system_configs. */
 export async function snapshotProfessionalTypes() {
   const p = getPool();
+  if (!p) return null;
   const { rows } = await p.query(
     `SELECT value FROM system_configs WHERE system = 'services' AND key = 'professional_types' LIMIT 1`
   );
@@ -164,6 +167,7 @@ export async function snapshotProfessionalTypes() {
 export async function restoreProfessionalTypes(types) {
   if (!Array.isArray(types)) return;
   const p = getPool();
+  if (!p) return;
   const serialized = JSON.stringify(types);
   const existing = await p.query(
     `SELECT id FROM system_configs WHERE system = 'services' AND key = 'professional_types' LIMIT 1`
@@ -187,6 +191,7 @@ export async function restoreProfessionalTypes(types) {
 /** Garante api.enabled = false (para demos que clicam em Habilitar + Salvar). */
 export async function ensureApiAccessDisabled() {
   const p = getPool();
+  if (!p) return;
   const system = 'api';
   const key = 'api.enabled';
   const existing = await p.query(
@@ -213,8 +218,8 @@ export async function ensureApiAccessDisabled() {
 
 export async function ensureAcolhimentoUser() {
   return upsertUser({
-    email: 'acolhimento@kunk-api.test',
-    password: 'TestAcol123!',
+    email: process.env.E2E_ACOL_EMAIL || 'acolhimento@kunk-api.test',
+    password: process.env.E2E_ACOL_PASSWORD || 'TestAcol123!',
     permissions: ['Acolhimento'],
     name: 'Acol',
     lastName: 'Test',
@@ -244,6 +249,7 @@ export async function ensureProfessionalUser({
   lastName = 'Oliveira',
 } = {}) {
   const p = getPool();
+  if (!p) return { email, password };
   const { rows } = await p.query(
     `SELECT professional_code, name, last_name, email
      FROM professionals

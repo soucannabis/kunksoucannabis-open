@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
-import { ADMIN_EMAIL, ADMIN_PASSWORD, appUrl } from './helpers/fixtures.js';
-import { dismissAdminPrompts, loginInBrowser } from './helpers/api.js';
+import { dismissAdminPrompts, gotoAuthenticated } from './helpers/api.js';
 
 function makeValidCpf(seed) {
   const base = String(100000000 + (Number(seed) % 899999999)).padStart(9, '0').slice(0, 9);
@@ -31,10 +30,7 @@ test.describe('importação de associados', () => {
       `E2E,Importada,e2e-import-${stamp}@test.local,${cpf},11987654321,01310100,SP,São Paulo`,
     ].join('\n');
 
-    await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page).toHaveURL(/\/home\/?$/, { timeout: 30000 });
-    await page.goto(appUrl('/kunk/importacao'));
-    await dismissAdminPrompts(page);
+    await gotoAuthenticated(page, '/kunk/importacao');
 
     await expect(page.getByRole('heading', { name: /^Importação de dados$/i })).toBeVisible({
       timeout: 20000,
@@ -50,8 +46,19 @@ test.describe('importação de associados', () => {
       timeout: 15000,
     });
 
+    await dismissAdminPrompts(page);
+    await expect(page.getByText('Sessão inválida ou expirada')).toHaveCount(0);
+
+    const validateResponse = page.waitForResponse(
+      (res) =>
+        res.url().includes('/users/import/validate') &&
+        res.request().method() === 'POST' &&
+        res.status() === 200
+    );
     await page.getByRole('button', { name: /Validar dados/i }).click();
-    await expect(page.getByRole('heading', { name: /Validação/i })).toBeVisible({
+    await validateResponse;
+
+    await expect(page.getByRole('heading', { name: '3. Validação' })).toBeVisible({
       timeout: 20000,
     });
     await expect(page.getByText(/1 linha\(s\) válida\(s\)/i)).toBeVisible();
@@ -66,10 +73,7 @@ test.describe('importação de associados', () => {
   });
 
   test('página lista link de exemplo e etapas', async ({ page }) => {
-    await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page).toHaveURL(/\/home\/?$/, { timeout: 30000 });
-    await page.goto(appUrl('/kunk/importacao'));
-    await dismissAdminPrompts(page);
+    await gotoAuthenticated(page, '/kunk/importacao');
     await expect(page.getByRole('heading', { name: /^Importação de dados$/i })).toBeVisible({
       timeout: 20000,
     });

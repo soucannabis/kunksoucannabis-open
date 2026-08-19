@@ -3,7 +3,21 @@
 const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
+const { v4: uuidv4 } = require('uuid');
 const { loginAsAdmin } = require('../../helpers/auth');
+
+const orderBase = {
+  user_code: uuidv4(),
+  associate_name: 'Teste Checkout',
+  address: {
+    street: 'Rua Teste',
+    street_number: '10',
+    neighborhood: 'Centro',
+    city: 'Sao Paulo',
+    state: 'SP',
+    cep: '01310100',
+  },
+};
 
 describe('orders/checkout-total', () => {
   let app;
@@ -19,9 +33,10 @@ describe('orders/checkout-total', () => {
     const res = await request(app)
       .post('/api/v1/orders')
       .set('Cookie', cookie)
+      .set('X-Kunk-App', 'admin')
       .send({
+        ...orderBase,
         status: 'Aguardando pagamento',
-        associate_name: 'Teste',
         items: [{ amount: 50, quantity: 2 }],
         total: 10,
         delivery_price: 0,
@@ -36,9 +51,11 @@ describe('orders/checkout-total', () => {
     const res = await request(app)
       .post('/api/v1/orders')
       .set('Cookie', cookie)
+      .set('X-Kunk-App', 'admin')
       .send({
+        ...orderBase,
+        user_code: uuidv4(),
         status: 'Aguardando pagamento',
-        associate_name: 'Teste',
         items: [{ amount: 50, quantity: 2 }],
         total: 100,
         delivery_price: 0,

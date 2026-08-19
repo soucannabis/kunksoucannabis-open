@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { uniqueEmail, responsiblePayload, patientPayload } from './helpers/fixtures.js';
 import { seedAssociate } from './helpers/api.js';
-import { fillResponsibleForm, fillPatientForm } from './helpers/forms.js';
+import { fillResponsibleForm, fillPatientForm, fillLabeledInput } from './helpers/forms.js';
 
 test.describe('Funil — dados do responsável e paciente', () => {
   test('bem-vindo → form → documentos (himself)', async ({ page }) => {
@@ -21,17 +21,15 @@ test.describe('Funil — dados do responsável e paciente', () => {
     const email = uniqueEmail('partial');
     await seedAssociate(page, { email, phase: 1 });
     await page.goto('/cadastro-associado');
-    await page.getByRole('button', { name: 'Para mim' }).click();
-    await page.locator('label.form-label').filter({ hasText: /^Nome$/ }).locator('xpath=following-sibling::*[1]').fill('Ana');
-    await page.locator('label.form-label').filter({ hasText: /^CPF$/ }).locator('xpath=following-sibling::*[1]').fill('000');
+    await expect(page.getByRole('heading', { name: /Dados do responsável/i })).toBeVisible();
+    await fillLabeledInput(page, 'Nome', 'Ana');
+    await fillLabeledInput(page, 'CPF', '000');
     await page.getByRole('button', { name: /Salvar e continuar/i }).click();
     await expect(page.getByRole('alert')).toBeVisible();
     await expect(page).toHaveURL(/\/cadastro-associado/);
     // reload — API should have kept name
     await page.reload();
-    await expect(
-      page.locator('label.form-label').filter({ hasText: /^Nome$/ }).locator('xpath=following-sibling::*[1]')
-    ).toHaveValue('Ana');
+    await expect(page.getByRole('textbox').first()).toHaveValue('Ana');
   });
 
   test('another → paciente → documentos', async ({ page }) => {
@@ -43,7 +41,7 @@ test.describe('Funil — dados do responsável e paciente', () => {
     await expect(page).toHaveURL(/\/cadastro-paciente/, { timeout: 30_000 });
 
     await fillPatientForm(page, patientPayload());
-    await expect(page.locator('label.form-label').filter({ hasText: /^Nome$/ }).locator('xpath=following-sibling::*[1]')).toHaveValue('João');
+    await expect(page.getByRole('textbox').first()).toHaveValue('João');
 
     const waitAdvance = page.waitForResponse(
       (r) => r.url().includes('/users/me/advance') && r.request().method() === 'POST',

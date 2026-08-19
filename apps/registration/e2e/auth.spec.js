@@ -83,6 +83,7 @@ test.describe('Auth — cadastro, login, reset', () => {
     const email = uniqueEmail('out');
     await seedAssociate(page, { email, phase: 1 });
     await page.goto('/bem-vindo');
+    await expect(page.getByRole('button', { name: /Sair/i })).toBeVisible({ timeout: 15000 });
     await page.getByRole('button', { name: /Sair/i }).click();
     await page.goto('/bem-vindo');
     await expect(page).toHaveURL(/\/cadastro$/);

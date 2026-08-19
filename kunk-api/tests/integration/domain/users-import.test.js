@@ -5,16 +5,18 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const { loginAsAdmin } = require('../../helpers/auth');
 const { cleanupTestLocalUsers, query } = require('../../helpers/db');
+const { uniqueValidCpf } = require('../../helpers/integrationEnv');
 
 const stamp = Date.now();
 const emailOk = `import-ok-${stamp}@test.local`;
 const emailDup = `import-dup-${stamp}@test.local`;
 const emailSkip = `import-skip-${stamp}@test.local`;
+const cpfOk = uniqueValidCpf();
 
 function buildCsv() {
   return [
     'Nome,Sobrenome,E-mail,CPF,Celular,CEP,UF,Cidade',
-    `Ana,Importada,${emailOk},529.982.247-25,11987654321,01310100,SP,São Paulo`,
+    `Ana,Importada,${emailOk},${cpfOk},11987654321,01310100,SP,São Paulo`,
     `Bruno,Duplicado,${emailDup},111.444.777-35,21988887777,22041080,RJ,Rio`,
     `Carla,Invalida,${emailSkip},000.000.000-00,11999998888,01310100,SP,São Paulo`,
   ].join('\n');
@@ -99,7 +101,7 @@ describe('domain/users-import', () => {
     const okRow = rows.find((r) => r.line === 2);
     assert.equal(okRow.ok, true);
     assert.equal(okRow.payload.mobile_number, '+5511987654321');
-    assert.equal(okRow.payload.associate_cpf, '529.982.247-25');
+    assert.equal(okRow.payload.associate_cpf, cpfOk);
     assert.equal(okRow.payload.cep, '01310-100');
 
     const dupRow = rows.find((r) => r.line === 3);
@@ -140,7 +142,7 @@ describe('domain/users-import', () => {
     );
     assert.equal(db.rows.length, 1);
     assert.equal(db.rows[0].associate_name, 'Ana');
-    assert.equal(db.rows[0].associate_cpf, '529.982.247-25');
+    assert.equal(db.rows[0].associate_cpf, cpfOk);
     assert.equal(db.rows[0].mobile_number, '+5511987654321');
     assert.equal(db.rows[0].cep, '01310-100');
     assert.equal(db.rows[0].state, 'SP');

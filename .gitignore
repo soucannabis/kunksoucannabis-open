@@ -1,3 +1,6 @@
+# Credenciais de teste em producao
+.env.production.test
+
 # Dependências e build
 node_modules/
 dist/

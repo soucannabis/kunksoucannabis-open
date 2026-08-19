@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
-import { ADMIN_EMAIL, ADMIN_PASSWORD, uniqueEmail } from './helpers/fixtures.js';
-import { loginInBrowser } from './helpers/api.js';
+import { uniqueEmail } from './helpers/fixtures.js';
+import { gotoAuthenticated } from './helpers/api.js';
 
 test.describe('users', () => {
   test.beforeAll(async () => {
@@ -9,8 +9,7 @@ test.describe('users', () => {
   });
 
   test('cria e edita operador', async ({ page }) => {
-    await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await page.getByRole('link', { name: 'Usuários' }).click();
+    await gotoAuthenticated(page, '/usuarios');
     await expect(page.getByRole('heading', { name: 'Usuários' })).toBeVisible();
 
     await page.getByRole('link', { name: 'Convidar usuário' }).click();

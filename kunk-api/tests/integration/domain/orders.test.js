@@ -4,6 +4,16 @@ const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const { loginAsAdmin } = require('../../helpers/auth');
+const { v4: uuidv4 } = require('uuid');
+
+const ORDER_ADDRESS = {
+  street: 'Rua Teste',
+  street_number: '10',
+  neighborhood: 'Centro',
+  city: 'Sao Paulo',
+  state: 'SP',
+  cep: '01310100',
+};
 
 describe('domain/orders', () => {
   let app;
@@ -35,14 +45,14 @@ describe('domain/orders', () => {
     const created = await request(app)
       .post('/api/v1/orders')
       .set('Cookie', cookie)
-      .send({ status: 'Novo', associate_name: 'A', total: 0, items: [] });
+      .send({ status: 'Novo', associate_name: 'A', user_code: uuidv4(), total: 0, items: [], address: ORDER_ADDRESS });
     assert.equal(created.status, 201, JSON.stringify(created.body));
     orderId = created.body.data.id;
 
     const st = await request(app)
       .patch(`/api/v1/orders/${orderId}/status`)
       .set('Cookie', cookie)
-      .send({ status: 'Produção' });
+      .send({ status: 'Aguardando aprovação' });
     assert.equal(st.status, 200);
 
     const pr = await request(app)

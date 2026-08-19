@@ -26,3 +26,8 @@ export function appUrl(path = '/') {
 export function uniqueEmail(prefix = 'op') {
   return `${prefix}-${Date.now()}@admin-e2e.local`;
 }
+
+/** Ambiente remoto (Railway) — instalação fresh e TRUNCATE não se aplicam. */
+export function isRemoteE2e() {
+  return /^https?:\/\/(?!localhost)/i.test(FRONT_URL);
+}

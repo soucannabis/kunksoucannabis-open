@@ -11,6 +11,18 @@ function labeledField(page, labelText) {
     .first();
 }
 
+async function resolveFieldControl(page, labelText) {
+  const re = new RegExp(`^${labelText}$`);
+  const formLabel = labeledField(page, labelText);
+  if (await formLabel.count()) {
+    const nested = formLabel.locator('input, textarea, select').first();
+    if (await nested.count()) return nested;
+    return formLabel.locator('xpath=following-sibling::*[1]');
+  }
+  const labelCell = page.locator('main').getByText(re, { exact: true }).first();
+  return labelCell.locator('xpath=..').locator('input, textarea, select').first();
+}
+
 async function checkCiap(page, code) {
   const addBtn = page.getByRole('button', { name: /Adicionar CIAP/i });
   if (await addBtn.count()) {
@@ -44,13 +56,13 @@ export async function selectRandomCiap(page, count = 3) {
 }
 
 export async function fillLabeledInput(page, labelText, value) {
-  const label = labeledField(page, labelText);
-  await label.locator('xpath=following-sibling::*[1]').fill(value);
+  const control = await resolveFieldControl(page, labelText);
+  await control.fill(value);
 }
 
 export async function selectLabeled(page, labelText, value) {
-  const label = labeledField(page, labelText);
-  await label.locator('xpath=following-sibling::*[1]').selectOption(value);
+  const control = await resolveFieldControl(page, labelText);
+  await control.selectOption(value);
 }
 
 export async function fillResponsibleForm(page, data) {
@@ -171,13 +183,11 @@ export function oversizedJpegBuffer(bytes = 26 * 1024 * 1024) {
  * e preenche/envia nativamente. Retorna a aba do contato (já fechada).
  */
 export async function openIframeContactInNewTabAndSubmit(page, context, data = {}) {
-  await expect(
-    page.frameLocator('iframe[title="Formulário de contato"]').getByRole('button', {
-      name: /Entrar na fila/i,
-    })
-  ).toBeVisible({ timeout: 30_000 });
-
   const iframe = page.locator('iframe[title="Formulário de contato"]');
+  await expect(iframe).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/Carregando formulário/i)).toHaveCount(0, { timeout: 30_000 });
+  await expect(iframe).toHaveAttribute('src', /.+/ , { timeout: 30_000 });
+
   const src = await iframe.getAttribute('src');
   if (!src) throw new Error('iframe de contato sem src');
 

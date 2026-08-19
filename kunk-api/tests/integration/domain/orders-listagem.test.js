@@ -1,9 +1,10 @@
 'use strict';
 
-const { describe, it, before } = require('node:test');
+const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const { loginAsAdmin } = require('../../helpers/auth');
+const { isolatePaymentModules, paymentBypassBody } = require('../../helpers/integrationEnv');
 const { v4: uuidv4 } = require('uuid');
 
 describe('domain/orders listagem', () => {
@@ -11,8 +12,10 @@ describe('domain/orders listagem', () => {
   let cookie;
   let orderId;
   let productSku;
+  let moduleIsolation;
 
   before(async () => {
+    moduleIsolation = await isolatePaymentModules();
     const session = await loginAsAdmin();
     app = session.app;
     cookie = session.cookie;
@@ -65,6 +68,10 @@ describe('domain/orders listagem', () => {
     orderId = created.body.data.id;
   });
 
+  after(async () => {
+    await moduleIsolation?.restore();
+  });
+
   it('GET /orders/status-config returns defaults', async () => {
     const res = await request(app).get('/api/v1/orders/status-config').set('Cookie', cookie);
     assert.equal(res.status, 200);
@@ -87,7 +94,7 @@ describe('domain/orders listagem', () => {
     const paid = await request(app)
       .patch(`/api/v1/orders/${orderId}/status`)
       .set('Cookie', cookie)
-      .send({ status: 'Pagamento concluído' });
+      .send(paymentBypassBody('Pagamento concluído'));
     assert.equal(paid.status, 200, JSON.stringify(paid.body));
     assert.ok(paid.body.data.payment_date);
     const items = paid.body.data.items;

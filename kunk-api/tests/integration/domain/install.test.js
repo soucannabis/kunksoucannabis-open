@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const { getApp } = require('../../helpers/app');
 const { query, ensureAdminUser } = require('../../helpers/db');
+const { isSharedProductionDb } = require('../../helpers/integrationEnv');
 
 /** 1x1 PNG */
 const TINY_PNG_BASE64 =
@@ -177,7 +178,7 @@ describe('domain/install', () => {
     assert.equal(res.status, 400, JSON.stringify(res.body));
   });
 
-  it('install-sample seeds small demo data after install', async () => {
+  it('install-sample seeds small demo data after install', { skip: isSharedProductionDb() }, async () => {
     const sampleDataService = require('../../../src/services/sampleDataService');
     await sampleDataService.deleteSampleData();
     await prepareEmptyOperators();

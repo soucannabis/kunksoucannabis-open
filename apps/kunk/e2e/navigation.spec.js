@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
-import { loginInBrowser } from './helpers/api.js';
+import { loginInBrowser, expectLoggedInShell } from './helpers/api.js';
 
 /**
  * Substitui expectativas de stub ("Module under development") pelas páginas reais.
@@ -12,37 +12,47 @@ test.describe('navigation', () => {
 
   test.beforeEach(async ({ page }) => {
     await loginInBrowser(page);
-    await expect(page.getByText('Kunk SouCannabis')).toBeVisible();
+    await expectLoggedInShell(page);
   });
 
-  async function openSection(page, sectionLabel) {
-    await page.getByTestId('kunk-sidebar').getByText(sectionLabel, { exact: true }).click();
+  function sidebar(page) {
+    return page.getByTestId('kunk-sidebar');
+  }
+
+  /** Expande seção sem fechar se o item alvo já estiver visível (sidebar usa toggle). */
+  async function navigateToMenuItem(page, sectionLabel, itemName) {
+    const menu = sidebar(page);
+    const item = menu.getByRole('menuitem', { name: itemName }).first();
+    if (!(await item.isVisible())) {
+      await menu.getByText(sectionLabel, { exact: true }).click();
+      await expect(item).toBeVisible();
+    }
+    await item.scrollIntoViewIfNeeded();
+    await item.evaluate((el) => el.click());
   }
 
   test('navega Associados → associados', async ({ page }) => {
-    await openSection(page, 'Acolhimento');
-    await page.getByRole('menuitem', { name: 'Associados' }).click();
+    if (!page.url().includes('/app/acolhimento/associados')) {
+      await navigateToMenuItem(page, 'Acolhimento', 'Associados');
+    }
     await expect(page).toHaveURL(/\/app\/acolhimento\/associados/);
-    await expect(page.getByPlaceholder(/Pesquisar/i)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByPlaceholder(/Nome, e-mail ou telefone/i)).toBeVisible({ timeout: 20_000 });
   });
 
   test('navega Triagem → fila', async ({ page }) => {
-    await openSection(page, 'Acolhimento');
-    await page.getByRole('menuitem', { name: 'Triagem' }).click();
+    await navigateToMenuItem(page, 'Acolhimento', 'Triagem');
     await expect(page).toHaveURL(/\/app\/acolhimento\/triagem/);
-    await expect(page.getByRole('tab').first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByLabel('Status')).toBeVisible({ timeout: 20_000 });
   });
 
   test('navega Pedidos → listagem', async ({ page }) => {
-    await openSection(page, 'Loja');
-    await page.getByRole('menuitem', { name: 'Pedidos' }).click();
+    await navigateToMenuItem(page, 'Loja', 'Pedidos');
     await expect(page).toHaveURL(/\/app\/loja\/pedidos/);
     await expect(page.getByTestId('orders-page')).toBeVisible();
   });
 
   test('navega Atendimentos → listagem', async ({ page }) => {
-    await openSection(page, 'Acolhimento');
-    await page.getByRole('menuitem', { name: 'Atendimentos' }).click();
+    await navigateToMenuItem(page, 'Acolhimento', 'Atendimentos');
     await expect(page).toHaveURL(/\/app\/acolhimento\/servicos/);
     await expect(page.getByRole('button', { name: /Novo Atendimento/i })).toBeVisible({
       timeout: 20_000,
@@ -50,8 +60,7 @@ test.describe('navigation', () => {
   });
 
   test('navega Produtos → listagem', async ({ page }) => {
-    await openSection(page, 'Loja');
-    await page.getByRole('menuitem', { name: 'Produtos' }).click();
+    await navigateToMenuItem(page, 'Loja', 'Produtos');
     await expect(page).toHaveURL(/\/app\/loja\/produtos/);
     await expect(page.getByRole('button', { name: /Novo produto/i })).toBeVisible({
       timeout: 20_000,

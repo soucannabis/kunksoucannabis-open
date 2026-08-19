@@ -11,7 +11,7 @@ test.describe('guards', () => {
 
   test('papel sem permissão vai para unauthorized', async ({ page }) => {
     await ensureFinanceiroUser();
-    await loginInBrowser(page, FINANCEIRO_EMAIL, FINANCEIRO_PASSWORD);
+    await loginInBrowser(page, FINANCEIRO_EMAIL, FINANCEIRO_PASSWORD, { expectShell: false });
     await expect(page).toHaveURL(/\/unauthorized/);
   });
 });

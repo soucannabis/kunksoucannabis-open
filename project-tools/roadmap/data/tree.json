@@ -132,6 +132,13 @@
               "path": "/kunk/aparencia",
               "description": "Fundo, menu e temas do Kunk",
               "baseline": { "e2e": true, "api": false, "manual": false }
+            },
+            {
+              "id": "admin-importacao",
+              "label": "Importação de associados",
+              "path": "/kunk/importacao",
+              "description": "Importação CSV de associados e validação prévia do arquivo",
+              "baseline": { "e2e": true, "api": true, "manual": false }
             }
           ]
         },
@@ -146,6 +153,13 @@
               "path": "/sistema-cadastro",
               "description": "Boas-vindas, concluído, botão e URL da triagem",
               "baseline": { "e2e": false, "api": false, "manual": false }
+            },
+            {
+              "id": "admin-guards",
+              "label": "Guards e sem permissão",
+              "path": "/sem-permissao",
+              "description": "Bloqueio de páginas do Admin conforme role do operador",
+              "baseline": { "e2e": true, "api": true, "manual": false }
             }
           ]
         },
@@ -462,6 +476,20 @@
               "path": "/app/*",
               "description": "Sidebar por role, QuickNav, busca, tema, cache",
               "baseline": { "e2e": true, "api": true, "manual": false }
+            },
+            {
+              "id": "kunk-guards",
+              "label": "Guards de acesso",
+              "path": "/sem-permissao",
+              "description": "Bloqueio de páginas do Kunk por autenticação e permissões",
+              "baseline": { "e2e": true, "api": true, "manual": false }
+            },
+            {
+              "id": "kunk-navigation",
+              "label": "Navegação e QuickNav",
+              "path": "/app/*",
+              "description": "Navegação entre seções, rotas operacionais e atalhos rápidos",
+              "baseline": { "e2e": true, "api": false, "manual": false }
             }
           ]
         }
@@ -532,6 +560,20 @@
               "label": "Cadastro concluído",
               "path": "/cadastro-concluido",
               "description": "Tela final + atalho para contato/triagem",
+              "baseline": { "e2e": true, "api": false, "manual": false }
+            },
+            {
+              "id": "reg-validacao",
+              "label": "Validação de dados e uploads",
+              "path": "/cadastro,/cadastro-associado,/documentos,/finalizar",
+              "description": "Validação de campos, documentos, limites de upload e recuperação do fluxo",
+              "baseline": { "e2e": true, "api": true, "manual": false }
+            },
+            {
+              "id": "reg-funil-completo",
+              "label": "Funil completo",
+              "path": "/cadastro → /cadastro-concluido",
+              "description": "Execução ponta a ponta do cadastro do associado até a conclusão",
               "baseline": { "e2e": true, "api": false, "manual": false }
             }
           ]
@@ -639,6 +681,84 @@
               "baseline": { "e2e": false, "api": true, "manual": false }
             }
           ]
+        }
+      ]
+    },
+    {
+      "id": "app-api-infra",
+      "label": "API / Infraestrutura",
+      "app": "api",
+      "description": "Funcionalidades técnicas cobertas diretamente por suites API sem depender do frontend",
+      "children": [
+        {
+          "id": "api-items-crud",
+          "label": "CRUD genérico de items",
+          "path": "/items/:collection",
+          "description": "Leitura, criação, edição e exclusão genérica de coleções expostas pela API",
+          "baseline": { "e2e": false, "api": true, "manual": false }
+        },
+        {
+          "id": "api-busca-global",
+          "label": "Busca global com RBAC",
+          "path": "/search",
+          "description": "Busca global respeitando permissões e escopo por role",
+          "baseline": { "e2e": false, "api": true, "manual": false }
+        },
+        {
+          "id": "api-estoque",
+          "label": "Controle de estoque",
+          "path": "/orders,/products",
+          "description": "Débito de estoque, saldos e consistência de movimentações após pagamentos",
+          "baseline": { "e2e": false, "api": true, "manual": false }
+        },
+        {
+          "id": "api-frete",
+          "label": "Cotação de frete",
+          "path": "/freight/*",
+          "description": "Configuração e cotação multi-provider para envio de pedidos",
+          "baseline": { "e2e": false, "api": true, "manual": false }
+        },
+        {
+          "id": "api-export-csv",
+          "label": "Exportação CSV",
+          "path": "/products/export.csv",
+          "description": "Exportação CSV de produtos e consistência do conteúdo exportado",
+          "baseline": { "e2e": false, "api": true, "manual": false }
+        },
+        {
+          "id": "api-bulk-pedidos",
+          "label": "Ações em lote de pedidos",
+          "path": "/orders/bulk",
+          "description": "Operações em lote sobre pedidos, filtros e atualização em massa",
+          "baseline": { "e2e": false, "api": true, "manual": false }
+        },
+        {
+          "id": "api-rate-limiting",
+          "label": "Rate limiting",
+          "path": "/auth,/registration,/reception",
+          "description": "Proteção contra abuso em endpoints públicos com limitação de requisições",
+          "baseline": { "e2e": false, "api": true, "manual": false }
+        },
+        {
+          "id": "api-contrato",
+          "label": "Contrato da API",
+          "path": "schema/routes/operators",
+          "description": "Estrutura esperada de tabelas, rotas e operadores disponíveis na API",
+          "baseline": { "e2e": false, "api": true, "manual": false }
+        },
+        {
+          "id": "api-webhooks-pagarme",
+          "label": "Webhooks públicos Pagar.me",
+          "path": "/pagarme/webhook",
+          "description": "Recepção e efeitos dos webhooks públicos de pagamentos e serviços",
+          "baseline": { "e2e": false, "api": true, "manual": false }
+        },
+        {
+          "id": "api-oauth-seguranca",
+          "label": "Segurança OAuth state",
+          "path": "/oauth/*",
+          "description": "Validação do state OAuth e proteção contra callbacks inconsistentes",
+          "baseline": { "e2e": false, "api": true, "manual": false }
         }
       ]
     }

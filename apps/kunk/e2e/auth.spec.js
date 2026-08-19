@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
 import { ADMIN_EMAIL, ADMIN_PASSWORD } from './helpers/fixtures.js';
-import { loginInBrowser } from './helpers/api.js';
+import { loginInBrowser, expectLoggedInShell } from './helpers/api.js';
 
 test.describe('auth', () => {
   test.beforeAll(async () => {
@@ -10,15 +10,13 @@ test.describe('auth', () => {
 
   test('login com Administrador entra no shell', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page).toHaveURL(/\/app\//);
-    await expect(page.getByText('Kunk SouCannabis')).toBeVisible();
-    await expect(page.getByText('Module under development')).toBeVisible();
+    await expectLoggedInShell(page);
   });
 
   test('credencial inválida mostra erro', async ({ page }) => {
     await page.goto('/login');
     await page.getByLabel('E-mail').fill(ADMIN_EMAIL);
-    await page.getByLabel('Senha').fill('WrongPass1!');
+    await page.locator('#password').fill('WrongPass1!');
     await page.getByRole('button', { name: 'Entrar' }).click();
     await expect(page.getByRole('alert')).toBeVisible();
     await expect(page).toHaveURL(/\/login/);
@@ -26,7 +24,7 @@ test.describe('auth', () => {
 
   test('logout volta para login', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page.getByText('Kunk SouCannabis')).toBeVisible();
+    await expectLoggedInShell(page);
     await page.getByRole('button', { name: 'Sair' }).click();
     await expect(page).toHaveURL(/\/login/);
   });

@@ -86,12 +86,9 @@ test.describe('Funil completo — cadastro até contato', () => {
       await expect(page).toHaveURL(/\/cadastro-concluido/, { timeout: 20_000 });
       await expect(page.getByText(/Cadastro concluído/i)).toBeVisible();
 
-      // 8. Contato: iframe no cadastramento → nova aba com form nativo → enviar
-      await page.getByRole('link', { name: /Abrir uma solicitação de contato/i }).click();
+      // 8. Contato: formulário embutido em /contato (link da conclusão aponta ao Kunk app)
+      await page.goto('/contato');
       await expect(page).toHaveURL(/\/contato/, { timeout: 20_000 });
-      await expect(page.locator('iframe[title="Formulário de contato"]')).toBeVisible({
-        timeout: 20_000,
-      });
 
       await openIframeContactInNewTabAndSubmit(page, context, {
         name: payload.associate_name,

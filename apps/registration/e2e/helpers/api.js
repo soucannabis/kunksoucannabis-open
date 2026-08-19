@@ -1,4 +1,7 @@
-import { API_URL, PASSWORD, responsiblePayload, patientPayload } from './fixtures.js';
+import { API_URL, PASSWORD, responsiblePayload, patientPayload, isRemoteE2E } from './fixtures.js';
+import { hasExplicitDbUrl, ensureAssociateForE2E } from './db.js';
+import { syncAssociateSessionFromResponse, hydrateAssociateInBrowser } from './session.js';
+import { acquireRegisterSlot } from './registerBudget.js';
 
 const PHASE = {
   1: 'cadastro_criado',
@@ -35,8 +38,25 @@ export function createApi(request) {
     return { status: res.status(), data, res };
   }
 
+  async function registerEmail(email, password = PASSWORD) {
+    if (isRemoteE2E && !hasExplicitDbUrl()) {
+      await acquireRegisterSlot();
+    }
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const res = await json('post', '/auth/associate/register-email', { email, password });
+      if (res.status !== 429) return res;
+      const retryAfterHeader = res.res?.headers?.()['retry-after'];
+      const retryAfterSec = retryAfterHeader ? Number(retryAfterHeader) : NaN;
+      const waitMs = Number.isFinite(retryAfterSec) && retryAfterSec > 0
+        ? retryAfterSec * 1000
+        : Math.min(15 * 60 * 1000, 5000 * (attempt + 1));
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+    }
+    return json('post', '/auth/associate/register-email', { email, password });
+  }
+
   return {
-    registerEmail: (email, password = PASSWORD) => json('post', '/auth/associate/register-email', { email, password }),
+    registerEmail,
     login: (email, password = PASSWORD) => json('post', '/auth/associate/login', { email, password }),
     logout: () => json('post', '/auth/associate/logout', {}),
     me: () => json('get', '/auth/associate/me'),
@@ -88,7 +108,10 @@ export async function ensureDocSignTemplatesPublished(contextOrRequest) {
 
   try {
     const login = await api.post('/auth/login', {
-      data: { email: 'admin@kunk-api.test', password: 'TestAdmin123!' },
+      data: {
+        email: process.env.E2E_ADMIN_EMAIL || 'admin@kunk-api.test',
+        password: process.env.E2E_ADMIN_PASSWORD || 'TestAdmin123!',
+      },
       failOnStatusCode: false,
     });
     if (login.status() !== 200) {
@@ -118,8 +141,13 @@ export async function ensureDocSignTemplatesPublished(contextOrRequest) {
         'kunk_oss_session_kunk',
         'kunk_oss_session_doc_sign',
       ]);
-      if (cookies.some((c) => operatorNames.has(c.name))) {
+      const operatorCookies = cookies.filter((c) => operatorNames.has(c.name));
+      if (operatorCookies.length) {
         await browserContext.clearCookies();
+        const associateCookies = cookies.filter((c) => !operatorNames.has(c.name));
+        if (associateCookies.length) {
+          await browserContext.addCookies(associateCookies);
+        }
       }
     }
   }
@@ -136,13 +164,35 @@ export async function seedAssociate(page, { email, phase = 1, responsibleType = 
     await ensureDocSignTemplatesPublished(page.context());
   }
   const api = createApi(page.context().request);
-  const reg = await api.registerEmail(email);
-  if (reg.status !== 201) {
-    throw new Error(`register failed: ${reg.status} ${JSON.stringify(reg.data)}`);
+
+  let user;
+  if (isRemoteE2E && hasExplicitDbUrl()) {
+    const inserted = await ensureAssociateForE2E(email);
+    if (inserted) {
+      const login = await api.login(email);
+      if (login.status === 200) {
+        await syncAssociateSessionFromResponse(page, login.res);
+        user = login.data?.data?.user;
+      }
+    }
+  }
+
+  if (!user) {
+    const reg = await api.registerEmail(email);
+    if (reg.status !== 201) {
+      throw new Error(`register failed: ${reg.status} ${JSON.stringify(reg.data)}`);
+    }
+    user = reg.data?.data?.user;
+    if (isRemoteE2E) {
+      await syncAssociateSessionFromResponse(page, reg.res);
+    }
   }
 
   if (targetRank <= 1) {
-    return { api, email, user: reg.data.data.user };
+    if (isRemoteE2E) {
+      await hydrateAssociateInBrowser(page, email);
+    }
+    return { api, email, user };
   }
 
   const patch = await api.patchMe(responsiblePayload({ responsible_type: responsibleType }));
@@ -188,5 +238,8 @@ export async function seedAssociate(page, { email, phase = 1, responsibleType = 
   }
 
   me = await api.me();
+  if (isRemoteE2E) {
+    await hydrateAssociateInBrowser(page, email);
+  }
   return { api, email, user: me.data?.data?.user };
 }

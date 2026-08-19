@@ -4,6 +4,7 @@ const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const { loginAsAdmin } = require('../../helpers/auth');
+const { readModuleFlag, setModuleFlag } = require('../../helpers/integrationEnv');
 
 describe('modules/disabled', () => {
   let app;
@@ -23,9 +24,19 @@ describe('modules/disabled', () => {
   });
 
   it('returns 503 MODULE_DISABLED for usage routes when off', async () => {
-    const res = await request(app).get('/api/v1/modules/loggi').set('Cookie', cookie);
-    assert.equal(res.status, 503);
-    assert.equal(res.body.errors[0].code, 'MODULE_DISABLED');
+    const previous = await readModuleFlag('loggi');
+    await setModuleFlag('loggi', false);
+    try {
+      const res = await request(app).get('/api/v1/modules/loggi').set('Cookie', cookie);
+      assert.equal(res.status, 503);
+      assert.equal(res.body.errors[0].code, 'MODULE_DISABLED');
+    } finally {
+      if (previous == null) {
+        await setModuleFlag('loggi', false);
+      } else {
+        await setModuleFlag('loggi', previous === 'true');
+      }
+    }
   });
 
   it('allows oauth/status setup without module enabled', async () => {
@@ -45,36 +56,42 @@ describe('modules/disabled', () => {
   });
 
   it('returns 503 for loggi quote when off', async () => {
-    const res = await request(app)
-      .post('/api/v1/modules/loggi/quote-freight')
-      .set('Cookie', cookie)
-      .send({ address: { cep: '74000000' } });
-    assert.equal(res.status, 503);
-    assert.equal(res.body.errors[0].code, 'MODULE_DISABLED');
+    const previous = await readModuleFlag('loggi');
+    await setModuleFlag('loggi', false);
+    try {
+      const res = await request(app)
+        .post('/api/v1/modules/loggi/quote-freight')
+        .set('Cookie', cookie)
+        .send({ address: { cep: '74000000' } });
+      assert.equal(res.status, 503);
+      assert.equal(res.body.errors[0].code, 'MODULE_DISABLED');
+    } finally {
+      if (previous == null) {
+        await setModuleFlag('loggi', false);
+      } else {
+        await setModuleFlag('loggi', previous === 'true');
+      }
+    }
   });
 
   it('enabled module responds when Admin flag on', async () => {
-    const off = await request(app)
-      .patch('/api/v1/admin/external-services/email')
-      .set('Cookie', cookie)
-      .send({ enabled: false });
-    assert.ok(off.status === 200 || off.status === 404 || off.status === 400);
-
-    const on = await request(app)
-      .patch('/api/v1/admin/external-services/email')
-      .set('Cookie', cookie)
-      .send({ enabled: true });
-    assert.equal(on.status, 200, JSON.stringify(on.body));
-
+    const previous = await readModuleFlag('email');
+    await setModuleFlag('email', false);
     try {
+      const disabled = await request(app).get('/api/v1/modules/email').set('Cookie', cookie);
+      assert.equal(disabled.status, 503);
+      assert.equal(disabled.body.errors[0].code, 'MODULE_DISABLED');
+
+      await setModuleFlag('email', true);
       const res = await request(app).get('/api/v1/modules/email').set('Cookie', cookie);
       assert.equal(res.status, 200);
       assert.equal(res.body.data.module, 'email');
     } finally {
-      await request(app)
-        .patch('/api/v1/admin/external-services/email')
-        .set('Cookie', cookie)
-        .send({ enabled: false });
+      if (previous == null) {
+        await setModuleFlag('email', false);
+      } else {
+        await setModuleFlag('email', previous === 'true');
+      }
     }
   });
 });

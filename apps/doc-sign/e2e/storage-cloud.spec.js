@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ensureAdminUser } from './helpers/db.js';
+import { prepareDocSignE2e } from './helpers/db.js';
 import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL } from './helpers/fixtures.js';
 import {
   requireActiveCloudBucket,
@@ -10,7 +10,7 @@ import {
 
 test.describe('armazenamento cloud — bucket ativo', () => {
   test.beforeAll(async () => {
-    await ensureAdminUser();
+    await prepareDocSignE2e();
   });
 
   test('upload de arquivo (logo/termo) usa bucket e URL /files/:id/download', async ({

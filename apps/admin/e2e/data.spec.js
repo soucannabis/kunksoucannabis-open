@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
-import { ADMIN_EMAIL, ADMIN_PASSWORD } from './helpers/fixtures.js';
-import { loginInBrowser } from './helpers/api.js';
+import { gotoAuthenticated, dismissAdminPrompts } from './helpers/api.js';
 
 test.describe('dados', () => {
   test.beforeAll(async () => {
@@ -9,11 +8,9 @@ test.describe('dados', () => {
   });
 
   test('CRUD leve em etiquetas', async ({ page }) => {
-    await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await page.locator('.admin-nav').getByRole('link', { name: 'Banco de dados', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Banco de dados' })).toBeVisible();
-    await page.getByRole('link', { name: 'Etiquetas' }).click();
-    await expect(page.getByRole('heading', { name: 'Etiquetas' })).toBeVisible();
+    await gotoAuthenticated(page, '/dados/tags');
+    await expect(page.getByRole('heading', { name: 'Etiquetas' })).toBeVisible({ timeout: 20000 });
+    await dismissAdminPrompts(page);
 
     await page.getByRole('button', { name: 'Configurar campos visíveis' }).click();
     await expect(page.getByRole('heading', { name: 'Campos visíveis' })).toBeVisible();
@@ -22,12 +19,13 @@ test.describe('dados', () => {
 
     await page.getByRole('link', { name: 'Novo registro' }).click();
     const tagName = `e2e-${Date.now()}`;
-    await page.getByLabel('Etiqueta').fill(tagName);
+    const tagInput = page.locator('#f-tag');
+    await tagInput.fill(tagName);
     await page.getByRole('button', { name: 'Salvar' }).click();
     await expect(page).toHaveURL(/\/dados\/tags\/\d+/);
-    await expect(page.getByLabel('Etiqueta')).toHaveValue(tagName);
+    await expect(tagInput).toHaveValue(tagName);
 
-    await page.getByLabel('Etiqueta').fill(`${tagName}-edit`);
+    await tagInput.fill(`${tagName}-edit`);
     await page.getByRole('button', { name: 'Salvar' }).click();
     await expect(page.getByText('Salvo.')).toBeVisible();
 

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
 import { ADMIN_EMAIL, ADMIN_PASSWORD, appUrl } from './helpers/fixtures.js';
-import { loginInBrowser } from './helpers/api.js';
+import { loginInBrowser, dismissAdminPrompts } from './helpers/api.js';
 
 test.describe('central de ajuda (documentação)', () => {
   test.beforeAll(async () => {
@@ -11,6 +11,7 @@ test.describe('central de ajuda (documentação)', () => {
   test('menu Documentação abre a central de ajuda', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await expect(page).toHaveURL(/\/home\/?$/);
+    await dismissAdminPrompts(page);
     await page.locator('.admin-nav').getByRole('link', { name: 'Documentação', exact: true }).click();
     await expect(page).toHaveURL(/\/inicio\/?$/);
     await expect(page.getByTestId('admin-docs-home')).toBeVisible();
@@ -39,8 +40,10 @@ test.describe('central de ajuda (documentação)', () => {
 
   test('menu Documentação a partir de outra página', async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
+    await dismissAdminPrompts(page);
     await page.locator('.admin-nav').getByRole('link', { name: 'Banco de dados', exact: true }).click();
     await expect(page).toHaveURL(/\/dados\/?$/);
+    await dismissAdminPrompts(page);
     await page.locator('.admin-nav').getByRole('link', { name: 'Documentação', exact: true }).click();
     await expect(page).toHaveURL(/\/inicio\/?$/);
     await expect(page.getByTestId('admin-docs-home')).toBeVisible();

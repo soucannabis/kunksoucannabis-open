@@ -29,27 +29,29 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: [
-    {
-      command: 'npm run dev -- --host 0.0.0.0 --port 4255',
-      url: FRONT_URL,
-      reuseExistingServer: true,
-      timeout: 120_000,
-    },
-    // Formulário de contato (/contato) é iframe do Kunk.
-    {
-      command: 'npm run dev --prefix ../kunk -- --host 0.0.0.0 --port 4257',
-      url: process.env.E2E_KUNK_URL || 'http://localhost:4257',
-      reuseExistingServer: true,
-      timeout: 120_000,
-    },
-    // Assinatura do termo (full-funnel / UI) redireciona para o doc-sign.
-    {
-      command: 'npm run dev --prefix ../doc-sign -- --host 0.0.0.0 --port 4258',
-      url: process.env.E2E_DOC_SIGN_URL || 'http://localhost:4258',
-      reuseExistingServer: true,
-      timeout: 120_000,
-    },
-  ],
+  ...(/^https?:\/\/(?!localhost)/i.test(FRONT_URL)
+    ? {}
+    : {
+        webServer: [
+          {
+            command: 'npm run dev -- --host 0.0.0.0 --port 4255',
+            url: FRONT_URL,
+            reuseExistingServer: true,
+            timeout: 120_000,
+          },
+          {
+            command: 'npm run dev --prefix ../kunk -- --host 0.0.0.0 --port 4257',
+            url: process.env.E2E_KUNK_URL || 'http://localhost:4257',
+            reuseExistingServer: true,
+            timeout: 120_000,
+          },
+          {
+            command: 'npm run dev --prefix ../doc-sign -- --host 0.0.0.0 --port 4258',
+            url: process.env.E2E_DOC_SIGN_URL || 'http://localhost:4258',
+            reuseExistingServer: true,
+            timeout: 120_000,
+          },
+        ],
+      }),
   metadata: { apiUrl: API_URL },
 });

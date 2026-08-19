@@ -5,9 +5,11 @@ const assert = require('node:assert/strict');
 const {
   parseStatuses,
   getAwaitingValue,
+  getAwaitingApprovalValue,
   getPaidValue,
   isAllowedStatus,
   ORDER_STATUS_AWAITING,
+  ORDER_STATUS_AWAITING_APPROVAL,
   ORDER_STATUS_PAID,
 } = require('../../src/services/orderStatusesService');
 
@@ -29,6 +31,9 @@ describe('orderStatusesService', () => {
       ])
     );
     assert.ok(isAllowedStatus('Entregue', s));
-    assert.equal(s.length, 3);
+    // A regra atual garante o status de aprovação mesmo em catálogos antigos.
+    assert.equal(s.length, 4);
+    assert.equal(getAwaitingApprovalValue(s), ORDER_STATUS_AWAITING_APPROVAL);
+    assert.ok(isAllowedStatus(ORDER_STATUS_AWAITING_APPROVAL, s));
   });
 });

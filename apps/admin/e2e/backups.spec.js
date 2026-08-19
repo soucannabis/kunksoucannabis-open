@@ -26,7 +26,7 @@ test.describe('backups', () => {
       return;
     }
 
-    await expect(card.getByRole('heading', { name: 'Backup' })).toBeVisible();
+    await expect(card.getByRole('heading', { name: 'Backup', exact: true })).toBeVisible();
     await expect(card.getByText(/Últimos backups/i)).toBeVisible();
     await expect(card.locator('#backup-enabled')).toBeVisible();
     await expect(card.locator('#backup-time')).toBeVisible();

@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pg from 'pg';
+import { isRemoteE2e } from './fixtures.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -56,9 +57,7 @@ let pool;
 export function getPool() {
   if (!pool) {
     const connectionString = loadDatabaseUrl();
-    if (!connectionString) {
-      throw new Error('PG_URL (ou PGHOST/PGUSER/PGPASSWORD/PGDATABASE) ausente para helpers E2E admin');
-    }
+    if (!connectionString) return null;
     pool = new pg.Pool({ connectionString });
   }
   return pool;
@@ -70,9 +69,13 @@ async function hashPassword(password) {
 }
 
 export async function ensureAdminUser() {
-  const email = 'admin@kunk-api.test';
-  const password = 'TestAdmin123!';
+  const email = process.env.E2E_ADMIN_EMAIL || 'admin@kunk-api.test';
+  const password = process.env.E2E_ADMIN_PASSWORD || 'TestAdmin123!';
+  if (isRemoteE2e() && process.env.E2E_ALLOW_DB_RESET !== '1') {
+    return { email, password };
+  }
   const p = getPool();
+  if (!p) return { email, password };
   const hash = await hashPassword(password);
   const existing = await p.query(`SELECT id FROM system_users WHERE email = $1`, [email]);
   if (existing.rows[0]) {
@@ -93,9 +96,13 @@ export async function ensureAdminUser() {
 }
 
 export async function ensureAcolhimentoUser() {
-  const email = 'acolhimento@kunk-api.test';
-  const password = 'TestAcol123!';
+  const email = process.env.E2E_ACOL_EMAIL || 'acolhimento@kunk-api.test';
+  const password = process.env.E2E_ACOL_PASSWORD || 'TestAcol123!';
+  if (isRemoteE2e() && process.env.E2E_ALLOW_DB_RESET !== '1') {
+    return { email, password };
+  }
   const p = getPool();
+  if (!p) return { email, password };
   const hash = await hashPassword(password);
   const existing = await p.query(`SELECT id FROM system_users WHERE email = $1`, [email]);
   if (existing.rows[0]) {

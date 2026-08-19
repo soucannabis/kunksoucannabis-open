@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { appUrl } from './helpers/fixtures.js';
+import { appUrl, isRemoteE2e } from './helpers/fixtures.js';
 import {
   INSTALL_ASSOCIATION,
   INSTALL_E2E_EMAIL,
@@ -12,6 +12,8 @@ import {
 test.describe.configure({ mode: 'serial' });
 
 test.describe('install', () => {
+  test.skip(isRemoteE2e(), 'Fluxo de instalação fresh exige ambiente local com banco vazio');
+
   test.beforeAll(async () => {
     await prepareInstallE2e();
   });
@@ -59,7 +61,6 @@ test.describe('install', () => {
 
     await page.getByRole('button', { name: 'Concluir instalação' }).click();
     await expect(page).toHaveURL(/\/login(\?installed=1)?$/);
-    // Banner only when query is present; tolerate redirect race without query
     if (page.url().includes('installed=1')) {
       await expect(page.getByRole('status')).toContainText(/Instalação concluída/i);
     }

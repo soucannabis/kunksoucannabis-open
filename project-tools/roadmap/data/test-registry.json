@@ -8,7 +8,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/install.spec.js",
-        "label": "Admin · Instalação"
+        "label": "Admin · Instalação",
+        "description": "Executa a cobertura E2E de Admin · Instalação pela spec `e2e/install.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.install",
@@ -17,8 +18,9 @@
           "tests/integration/domain/install.test.js"
         ],
         "label": "API · install",
-        "description": "Valida a instalação do schema e bootstrap da instância na API."
-      }
+        "description": "Valida a instalação do schema e bootstrap da instância na API. Suites relacionadas: `tests/integration/domain/install.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/install.spec.js` e cobertura de API em `tests/integration/domain/install.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-login": {
       "e2e": {
@@ -27,7 +29,8 @@
         "config": "./playwright.config.js",
         "spec": "e2e/auth.spec.js",
         "grep": "login com Administrador",
-        "label": "Admin · Login"
+        "label": "Admin · Login",
+        "description": "Executa a cobertura E2E de Admin · Login pela spec `e2e/auth.spec.js` com foco no cenário `login com Administrador`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.auth",
@@ -36,8 +39,9 @@
           "tests/integration/auth.test.js"
         ],
         "label": "API · auth",
-        "description": "Valida autenticação de operadores (login/sessão) na API."
-      }
+        "description": "Valida autenticação de operadores (login/sessão) na API. Suites relacionadas: `tests/integration/auth.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/auth.spec.js` e cobertura de API em `tests/integration/auth.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-nova-senha": {
       "e2e": {
@@ -45,7 +49,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/nova-senha.spec.js",
-        "label": "Admin · Nova senha"
+        "label": "Admin · Nova senha",
+        "description": "Executa a cobertura E2E de Admin · Nova senha pela spec `e2e/roadmap/nova-senha.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.operator-password-reset",
@@ -54,8 +59,9 @@
           "tests/integration/domain/operator-password-reset.test.js"
         ],
         "label": "API · operator password reset",
-        "description": "Valida o fluxo de redefinição de senha de operadores."
-      }
+        "description": "Valida o fluxo de redefinição de senha de operadores. Suites relacionadas: `tests/integration/domain/operator-password-reset.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/nova-senha.spec.js` e cobertura de API em `tests/integration/domain/operator-password-reset.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-home": {
       "e2e": {
@@ -63,7 +69,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/home.spec.js",
-        "label": "Admin · Home"
+        "label": "Admin · Home",
+        "description": "Executa a cobertura E2E de Admin · Home pela spec `e2e/roadmap/home.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.system-health",
@@ -73,8 +80,9 @@
           "tests/integration/health.test.js"
         ],
         "label": "API · health / systemHealth",
-        "description": "Valida health check e agregação de status dos serviços."
-      }
+        "description": "Valida health check e agregação de status dos serviços. Suites relacionadas: `tests/unit/systemHealthService.test.js` e `tests/integration/health.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/home.spec.js` e cobertura de API em `tests/unit/systemHealthService.test.js` e `tests/integration/health.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-docs": {
       "e2e": {
@@ -82,13 +90,16 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/docs-home.spec.js",
-        "label": "Admin · Documentação"
+        "label": "Admin · Documentação",
+        "description": "Executa a cobertura E2E de Admin · Documentação pela spec `e2e/docs-home.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.docs",
         "status": "missing",
-        "note": "Documentação é estática no front — sem suite API dedicada"
-      }
+        "note": "Documentação é estática no front — sem suite API dedicada",
+        "description": "Documentação é estática no front — sem suite API dedicada."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/docs-home.spec.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-assoc": {
       "e2e": {
@@ -96,7 +107,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/association-data.spec.js",
-        "label": "Admin · Dados da associação"
+        "label": "Admin · Dados da associação",
+        "description": "Executa a cobertura E2E de Admin · Dados da associação pela spec `e2e/roadmap/association-data.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.config-registration",
@@ -105,8 +117,9 @@
           "tests/integration/config.admin.test.js"
         ],
         "label": "API · config admin",
-        "description": "Valida leitura/gravação de configurações públicas (dados da associação)."
-      }
+        "description": "Valida leitura/gravação de configurações públicas (dados da associação). Suites relacionadas: `tests/integration/config.admin.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/association-data.spec.js` e cobertura de API em `tests/integration/config.admin.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-dados": {
       "e2e": {
@@ -114,7 +127,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/data.spec.js",
-        "label": "Admin · Banco de dados"
+        "label": "Admin · Banco de dados",
+        "description": "Executa a cobertura E2E de Admin · Banco de dados pela spec `e2e/data.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.sample-data",
@@ -124,8 +138,9 @@
           "tests/integration/items/users.test.js"
         ],
         "label": "API · sample-data / items",
-        "description": "Valida sample data e CRUD básico de itens (usuários)."
-      }
+        "description": "Valida sample data e CRUD básico de itens (usuários). Suites relacionadas: `tests/integration/admin/sample-data.test.js` e `tests/integration/items/users.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/data.spec.js` e cobertura de API em `tests/integration/admin/sample-data.test.js` e `tests/integration/items/users.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-triagem-form": {
       "e2e": {
@@ -134,7 +149,8 @@
         "config": "./playwright.config.js",
         "spec": "e2e/triage.spec.js",
         "grep": "formulário",
-        "label": "Admin · Triagem formulário"
+        "label": "Admin · Triagem formulário",
+        "description": "Executa a cobertura E2E de Admin · Triagem formulário pela spec `e2e/triage.spec.js` com foco no cenário `formulário`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.triagem-config",
@@ -143,8 +159,9 @@
           "tests/integration/config.admin.test.js"
         ],
         "label": "API · config triage",
-        "description": "Valida configurações Admin usadas pela triagem."
-      }
+        "description": "Valida configurações Admin usadas pela triagem. Suites relacionadas: `tests/integration/config.admin.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/triage.spec.js` e cobertura de API em `tests/integration/config.admin.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-triagem-status": {
       "e2e": {
@@ -153,13 +170,16 @@
         "config": "./playwright.config.js",
         "spec": "e2e/triage.spec.js",
         "grep": "status da fila",
-        "label": "Admin · Triagem status"
+        "label": "Admin · Triagem status",
+        "description": "Executa a cobertura E2E de Admin · Triagem status pela spec `e2e/triage.spec.js` com foco no cenário `status da fila`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.triagem-status",
         "status": "missing",
-        "note": "Status da fila é config Admin — cobrir via config.admin se expandir"
-      }
+        "note": "Status da fila é config Admin — cobrir via config.admin se expandir",
+        "description": "Status da fila é config Admin — cobrir via config.admin se expandir."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/triage.spec.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-triagem-modulos": {
       "e2e": {
@@ -168,13 +188,16 @@
         "config": "./playwright.config.js",
         "spec": "e2e/triage.spec.js",
         "grep": "módulos",
-        "label": "Admin · Triagem módulos"
+        "label": "Admin · Triagem módulos",
+        "description": "Executa a cobertura E2E de Admin · Triagem módulos pela spec `e2e/triage.spec.js` com foco no cenário `módulos`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.triagem-modulos",
         "status": "missing",
-        "note": "Módulos de triagem — sem suite dedicada"
-      }
+        "note": "Módulos de triagem — sem suite dedicada",
+        "description": "Módulos de triagem — sem suite dedicada."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/triage.spec.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-profissionais": {
       "e2e": {
@@ -182,7 +205,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/services-types.spec.js",
-        "label": "Admin · Config profissionais"
+        "label": "Admin · Config profissionais",
+        "description": "Executa a cobertura E2E de Admin · Config profissionais pela spec `e2e/services-types.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.professional-types",
@@ -191,8 +215,9 @@
           "tests/unit/professionalTypesConfig.test.js"
         ],
         "label": "API · professional types",
-        "description": "Valida configuração de tipos/taxas de profissionais."
-      }
+        "description": "Valida configuração de tipos/taxas de profissionais. Suites relacionadas: `tests/unit/professionalTypesConfig.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/services-types.spec.js` e cobertura de API em `tests/unit/professionalTypesConfig.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-loja-status": {
       "e2e": {
@@ -200,7 +225,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/store-order-statuses.spec.js",
-        "label": "Admin · Status pedidos"
+        "label": "Admin · Status pedidos",
+        "description": "Executa a cobertura E2E de Admin · Status pedidos pela spec `e2e/store-order-statuses.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.order-statuses",
@@ -209,8 +235,9 @@
           "tests/unit/orderStatusesService.test.js"
         ],
         "label": "API · order statuses",
-        "description": "Valida serviço de status de pedidos da loja."
-      }
+        "description": "Valida serviço de status de pedidos da loja. Suites relacionadas: `tests/unit/orderStatusesService.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/store-order-statuses.spec.js` e cobertura de API em `tests/unit/orderStatusesService.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-permissoes": {
       "e2e": {
@@ -218,7 +245,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/role-pages.spec.js",
-        "label": "Admin · Permissões"
+        "label": "Admin · Permissões",
+        "description": "Executa a cobertura E2E de Admin · Permissões pela spec `e2e/role-pages.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.rbac",
@@ -227,8 +255,9 @@
           "tests/unit/rbac.test.js"
         ],
         "label": "API · rbac",
-        "description": "Valida regras RBAC de páginas por role."
-      }
+        "description": "Valida regras RBAC de páginas por role. Suites relacionadas: `tests/unit/rbac.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/role-pages.spec.js` e cobertura de API em `tests/unit/rbac.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-ciap2": {
       "e2e": {
@@ -236,7 +265,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/ciap2.spec.js",
-        "label": "Admin · CIAP-2"
+        "label": "Admin · CIAP-2",
+        "description": "Executa a cobertura E2E de Admin · CIAP-2 pela spec `e2e/ciap2.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.ciap2",
@@ -245,8 +275,9 @@
           "tests/integration/modules/ciap2.test.js"
         ],
         "label": "API · ciap2",
-        "description": "Valida módulo CIAP-2 na API."
-      }
+        "description": "Valida módulo CIAP-2 na API. Suites relacionadas: `tests/integration/modules/ciap2.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/ciap2.spec.js` e cobertura de API em `tests/integration/modules/ciap2.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-aparencia": {
       "e2e": {
@@ -254,7 +285,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/appearance.spec.js",
-        "label": "Admin · Aparência"
+        "label": "Admin · Aparência",
+        "description": "Executa a cobertura E2E de Admin · Aparência pela spec `e2e/appearance.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.aparencia",
@@ -263,8 +295,9 @@
           "tests/integration/config.admin.test.js"
         ],
         "label": "API · config kunk",
-        "description": "Valida configurações do sistema kunk (aparência)."
-      }
+        "description": "Valida configurações do sistema kunk (aparência). Suites relacionadas: `tests/integration/config.admin.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/appearance.spec.js` e cobertura de API em `tests/integration/config.admin.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-cadastro": {
       "e2e": {
@@ -272,7 +305,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/registration-system.spec.js",
-        "label": "Admin · Sistema de cadastro"
+        "label": "Admin · Sistema de cadastro",
+        "description": "Executa a cobertura E2E de Admin · Sistema de cadastro pela spec `e2e/roadmap/registration-system.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.registration-config",
@@ -281,8 +315,51 @@
           "tests/integration/config.admin.test.js"
         ],
         "label": "API · registration config",
-        "description": "Valida configs do funil de cadastro (registration)."
-      }
+        "description": "Valida configs do funil de cadastro (registration). Suites relacionadas: `tests/integration/config.admin.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/registration-system.spec.js` e cobertura de API em `tests/integration/config.admin.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "admin-importacao": {
+      "e2e": {
+        "id": "e2e.admin.importacao",
+        "cwd": "apps/admin",
+        "config": "./playwright.config.js",
+        "spec": "e2e/users-import.spec.js",
+        "label": "Admin · Importação de associados",
+        "description": "Executa a cobertura E2E de Admin · Importação de associados pela spec `e2e/users-import.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
+      },
+      "api": {
+        "id": "api.admin.users-import",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/integration/domain/users-import.test.js",
+          "tests/unit/usersImport.test.js"
+        ],
+        "label": "API · users import",
+        "description": "Valida upload CSV, mapeamento de colunas, validação de linhas e importação de associados na API. Suites relacionadas: `tests/integration/domain/users-import.test.js` e `tests/unit/usersImport.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/users-import.spec.js` e cobertura de API em `tests/integration/domain/users-import.test.js` e `tests/unit/usersImport.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "admin-guards": {
+      "e2e": {
+        "id": "e2e.admin.guards",
+        "cwd": "apps/admin",
+        "config": "./playwright.config.js",
+        "spec": "e2e/guards.spec.js",
+        "label": "Admin · Guards",
+        "description": "Executa a cobertura E2E de Admin · Guards pela spec `e2e/guards.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
+      },
+      "api": {
+        "id": "api.admin.guards",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/unit/rbac.test.js",
+          "tests/unit/assertOperatorPermissions.test.js"
+        ],
+        "label": "API · admin guards",
+        "description": "Valida bloqueio de páginas e permissões de operadores do Admin conforme regras RBAC. Suites relacionadas: `tests/unit/rbac.test.js` e `tests/unit/assertOperatorPermissions.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/guards.spec.js` e cobertura de API em `tests/unit/rbac.test.js` e `tests/unit/assertOperatorPermissions.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-ext-overview": {
       "e2e": {
@@ -291,7 +368,8 @@
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/external-services-smoke.spec.js",
         "grep": "visão geral",
-        "label": "Admin · Ext overview"
+        "label": "Admin · Ext overview",
+        "description": "Executa a cobertura E2E de Admin · Ext overview pela spec `e2e/roadmap/external-services-smoke.spec.js` com foco no cenário `visão geral`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.ext-credentials",
@@ -300,8 +378,9 @@
           "tests/integration/admin/credentials.test.js"
         ],
         "label": "API · credentials",
-        "description": "Valida gestão de credenciais de serviços externos."
-      }
+        "description": "Valida gestão de credenciais de serviços externos. Suites relacionadas: `tests/integration/admin/credentials.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/external-services-smoke.spec.js` e cobertura de API em `tests/integration/admin/credentials.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-ext-email": {
       "e2e": {
@@ -310,7 +389,8 @@
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/external-services-smoke.spec.js",
         "grep": "e-mail",
-        "label": "Admin · E-mail"
+        "label": "Admin · E-mail",
+        "description": "Executa a cobertura E2E de Admin · E-mail pela spec `e2e/roadmap/external-services-smoke.spec.js` com foco no cenário `e-mail`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.email",
@@ -319,8 +399,9 @@
           "tests/unit/email.test.js"
         ],
         "label": "API · email unit",
-        "description": "Valida templates, normalização SMTP, erros e timeout do e-mail."
-      }
+        "description": "Valida templates, normalização SMTP, erros e timeout do e-mail. Suites relacionadas: `tests/unit/email.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/external-services-smoke.spec.js` e cobertura de API em `tests/unit/email.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-ext-pagarme": {
       "e2e": {
@@ -329,7 +410,8 @@
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/external-services-smoke.spec.js",
         "grep": "pagarme",
-        "label": "Admin · Pagar.me"
+        "label": "Admin · Pagar.me",
+        "description": "Executa a cobertura E2E de Admin · Pagar.me pela spec `e2e/roadmap/external-services-smoke.spec.js` com foco no cenário `pagarme`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.pagarme",
@@ -339,8 +421,9 @@
           "tests/unit/pagarmeSplit.test.js"
         ],
         "label": "API · pagarme",
-        "description": "Valida webhooks/setup e split do Pagar.me."
-      }
+        "description": "Valida webhooks/setup e split do Pagar.me. Suites relacionadas: `tests/unit/pagarmeHooksSetup.test.js` e `tests/unit/pagarmeSplit.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/external-services-smoke.spec.js` e cobertura de API em `tests/unit/pagarmeHooksSetup.test.js` e `tests/unit/pagarmeSplit.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-ext-envio": {
       "e2e": {
@@ -349,7 +432,8 @@
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/external-services-smoke.spec.js",
         "grep": "dados de envio",
-        "label": "Admin · Dados de envio"
+        "label": "Admin · Dados de envio",
+        "description": "Executa a cobertura E2E de Admin · Dados de envio pela spec `e2e/roadmap/external-services-smoke.spec.js` com foco no cenário `dados de envio`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.freight-quote",
@@ -358,8 +442,9 @@
           "tests/integration/freight/quote-config.test.js"
         ],
         "label": "API · freight config",
-        "description": "Valida configuração de cotação/frete (dados de envio)."
-      }
+        "description": "Valida configuração de cotação/frete (dados de envio). Suites relacionadas: `tests/integration/freight/quote-config.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/external-services-smoke.spec.js` e cobertura de API em `tests/integration/freight/quote-config.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-ext-loggi": {
       "e2e": {
@@ -367,7 +452,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/external-services.spec.js",
-        "label": "Admin · Loggi"
+        "label": "Admin · Loggi",
+        "description": "Executa a cobertura E2E de Admin · Loggi pela spec `e2e/external-services.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.loggi",
@@ -376,8 +462,9 @@
           "tests/integration/modules/disabled.test.js"
         ],
         "label": "API · modules disabled/loggi",
-        "description": "Valida comportamento de módulos externos (Loggi/disabled)."
-      }
+        "description": "Valida comportamento de módulos externos (Loggi/disabled). Suites relacionadas: `tests/integration/modules/disabled.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/external-services.spec.js` e cobertura de API em `tests/integration/modules/disabled.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-ext-melhorenvio": {
       "e2e": {
@@ -386,7 +473,8 @@
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/external-services-smoke.spec.js",
         "grep": "melhor envio",
-        "label": "Admin · Melhor Envio"
+        "label": "Admin · Melhor Envio",
+        "description": "Executa a cobertura E2E de Admin · Melhor Envio pela spec `e2e/roadmap/external-services-smoke.spec.js` com foco no cenário `melhor envio`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.melhorenvio",
@@ -395,8 +483,9 @@
           "tests/integration/modules/disabled.test.js"
         ],
         "label": "API · modules ME",
-        "description": "Valida comportamento de módulos externos (Melhor Envio)."
-      }
+        "description": "Valida comportamento de módulos externos (Melhor Envio). Suites relacionadas: `tests/integration/modules/disabled.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/external-services-smoke.spec.js` e cobertura de API em `tests/integration/modules/disabled.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-ext-soucannabis": {
       "e2e": {
@@ -405,7 +494,8 @@
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/external-services-smoke.spec.js",
         "grep": "soucannabis",
-        "label": "Admin · SC Orders"
+        "label": "Admin · SC Orders",
+        "description": "Executa a cobertura E2E de Admin · SC Orders pela spec `e2e/roadmap/external-services-smoke.spec.js` com foco no cenário `soucannabis`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.soucannabis-orders",
@@ -415,8 +505,9 @@
           "tests/integration/domain/pagarme-soucannabis.test.js"
         ],
         "label": "API · soucannabis orders",
-        "description": "Valida mapeamento e sync de pedidos SouCannabis."
-      }
+        "description": "Valida mapeamento e sync de pedidos SouCannabis. Suites relacionadas: `tests/unit/soucannabisOrdersMap.test.js` e `tests/integration/domain/pagarme-soucannabis.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/external-services-smoke.spec.js` e cobertura de API em `tests/unit/soucannabisOrdersMap.test.js` e `tests/integration/domain/pagarme-soucannabis.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-ext-utalk": {
       "e2e": {
@@ -425,7 +516,8 @@
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/external-services-smoke.spec.js",
         "grep": "utalk",
-        "label": "Admin · Utalk"
+        "label": "Admin · Utalk",
+        "description": "Executa a cobertura E2E de Admin · Utalk pela spec `e2e/roadmap/external-services-smoke.spec.js` com foco no cenário `utalk`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.utalk",
@@ -435,8 +527,9 @@
           "tests/unit/utalkTriageMessage.test.js"
         ],
         "label": "API · utalk",
-        "description": "Valida cliente Utalk e mensagem de triagem."
-      }
+        "description": "Valida cliente Utalk e mensagem de triagem. Suites relacionadas: `tests/unit/utalkClient.test.js` e `tests/unit/utalkTriageMessage.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/external-services-smoke.spec.js` e cobertura de API em `tests/unit/utalkClient.test.js` e `tests/unit/utalkTriageMessage.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-ext-google-calendar": {
       "e2e": {
@@ -445,7 +538,8 @@
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/external-services-smoke.spec.js",
         "grep": "google calendar",
-        "label": "Admin · Google Calendar"
+        "label": "Admin · Google Calendar",
+        "description": "Executa a cobertura E2E de Admin · Google Calendar pela spec `e2e/roadmap/external-services-smoke.spec.js` com foco no cenário `google calendar`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.gcal",
@@ -455,8 +549,9 @@
           "tests/unit/googleCalendarErrors.test.js"
         ],
         "label": "API · google calendar",
-        "description": "Valida integração Google Calendar e erros amigáveis."
-      }
+        "description": "Valida integração Google Calendar e erros amigáveis. Suites relacionadas: `tests/unit/googleCalendar.test.js` e `tests/unit/googleCalendarErrors.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/external-services-smoke.spec.js` e cobertura de API em `tests/unit/googleCalendar.test.js` e `tests/unit/googleCalendarErrors.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-ext-geoapify": {
       "e2e": {
@@ -465,7 +560,8 @@
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/external-services-smoke.spec.js",
         "grep": "geoapify",
-        "label": "Admin · Geoapify"
+        "label": "Admin · Geoapify",
+        "description": "Executa a cobertura E2E de Admin · Geoapify pela spec `e2e/roadmap/external-services-smoke.spec.js` com foco no cenário `geoapify`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.geoapify",
@@ -474,8 +570,9 @@
           "tests/unit/geoapifyComposite.test.js"
         ],
         "label": "API · geoapify",
-        "description": "Valida composição/validação de endereço Geoapify."
-      }
+        "description": "Valida composição/validação de endereço Geoapify. Suites relacionadas: `tests/unit/geoapifyComposite.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/external-services-smoke.spec.js` e cobertura de API em `tests/unit/geoapifyComposite.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-storage": {
       "e2e": {
@@ -483,7 +580,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/storage.spec.js",
-        "label": "Admin · Armazenamento"
+        "label": "Admin · Armazenamento",
+        "description": "Executa a cobertura E2E de Admin · Armazenamento pela spec `e2e/storage.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.storage",
@@ -492,8 +590,9 @@
           "tests/integration/admin/storage.test.js"
         ],
         "label": "API · storage",
-        "description": "Valida status, configuração e ativação do armazenamento (local/S3/GCS)."
-      }
+        "description": "Valida status, configuração e ativação do armazenamento (local/S3/GCS). Suites relacionadas: `tests/integration/admin/storage.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/storage.spec.js` e cobertura de API em `tests/integration/admin/storage.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-backups": {
       "e2e": {
@@ -501,7 +600,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/backups.spec.js",
-        "label": "Admin · Backups"
+        "label": "Admin · Backups",
+        "description": "Executa a cobertura E2E de Admin · Backups pela spec `e2e/backups.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.backups",
@@ -511,8 +611,9 @@
           "tests/unit/backupService.test.js"
         ],
         "label": "API · backups",
-        "description": "Valida listagem, guards e parse de horário do backup Admin."
-      }
+        "description": "Valida listagem, guards e parse de horário do backup Admin. Suites relacionadas: `tests/integration/admin/backups.test.js` e `tests/unit/backupService.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/backups.spec.js` e cobertura de API em `tests/integration/admin/backups.test.js` e `tests/unit/backupService.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-cache": {
       "e2e": {
@@ -520,7 +621,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/cache.spec.js",
-        "label": "Admin · Cache"
+        "label": "Admin · Cache",
+        "description": "Executa a cobertura E2E de Admin · Cache pela spec `e2e/cache.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.cache",
@@ -530,8 +632,9 @@
           "tests/unit/memoryCache.test.js"
         ],
         "label": "API · cache",
-        "description": "Valida cache Admin e memoryCache."
-      }
+        "description": "Valida cache Admin e memoryCache. Suites relacionadas: `tests/integration/admin/cache.test.js` e `tests/unit/memoryCache.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/cache.spec.js` e cobertura de API em `tests/integration/admin/cache.test.js` e `tests/unit/memoryCache.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-usuarios": {
       "e2e": {
@@ -539,7 +642,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/users.spec.js",
-        "label": "Admin · Usuários"
+        "label": "Admin · Usuários",
+        "description": "Executa a cobertura E2E de Admin · Usuários pela spec `e2e/users.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.system-users",
@@ -549,8 +653,9 @@
           "tests/integration/items/system_users.test.js"
         ],
         "label": "API · system_users",
-        "description": "Valida CRUD de system_users."
-      }
+        "description": "Valida CRUD de system_users. Suites relacionadas: `tests/integration/domain/system_users.test.js` e `tests/integration/items/system_users.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/users.spec.js` e cobertura de API em `tests/integration/domain/system_users.test.js` e `tests/integration/items/system_users.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-credenciais-suporte": {
       "e2e": {
@@ -558,7 +663,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/support-credentials.spec.js",
-        "label": "Admin · Credenciais suporte"
+        "label": "Admin · Credenciais suporte",
+        "description": "Executa a cobertura E2E de Admin · Credenciais suporte pela spec `e2e/roadmap/support-credentials.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.support-credentials",
@@ -567,8 +673,9 @@
           "tests/unit/supportCredentialsService.test.js"
         ],
         "label": "API · support credentials",
-        "description": "Valida serviço de credenciais de suporte."
-      }
+        "description": "Valida serviço de credenciais de suporte. Suites relacionadas: `tests/unit/supportCredentialsService.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/support-credentials.spec.js` e cobertura de API em `tests/unit/supportCredentialsService.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-acesso-api": {
       "e2e": {
@@ -576,7 +683,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/api-access.spec.js",
-        "label": "Admin · API tokens"
+        "label": "Admin · API tokens",
+        "description": "Executa a cobertura E2E de Admin · API tokens pela spec `e2e/api-access.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.users-api",
@@ -585,14 +693,16 @@
           "tests/integration/items/users_api.test.js"
         ],
         "label": "API · users_api tokens",
-        "description": "Valida tokens/scopes de users_api."
-      }
+        "description": "Valida tokens/scopes de users_api. Suites relacionadas: `tests/integration/items/users_api.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/api-access.spec.js` e cobertura de API em `tests/integration/items/users_api.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-webhooks": {
       "e2e": {
         "id": "e2e.admin.webhooks",
         "status": "missing",
-        "label": "Admin · Webhooks (UI)"
+        "label": "Admin · Webhooks (UI)",
+        "description": "Cobertura E2E ausente no momento para Admin · Webhooks (UI); esta feature ainda precisa de spec Playwright dedicada."
       },
       "api": {
         "id": "api.admin.webhooks",
@@ -602,8 +712,9 @@
           "tests/integration/admin/webhooks.test.js"
         ],
         "label": "API · webhooks outbound",
-        "description": "Valida CRUD admin, emit/diff de payload, assinatura HMAC, outbox/retries e teste síncrono de entrega."
-      }
+        "description": "Valida CRUD admin, emit/diff de payload, assinatura HMAC, outbox/retries e teste síncrono de entrega. Suites relacionadas: `tests/unit/webhooks.test.js` e `tests/integration/admin/webhooks.test.js`."
+      },
+      "description": "cobertura de API em `tests/unit/webhooks.test.js` e `tests/integration/admin/webhooks.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-erros": {
       "e2e": {
@@ -611,7 +722,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/system-errors.spec.js",
-        "label": "Admin · Erros"
+        "label": "Admin · Erros",
+        "description": "Executa a cobertura E2E de Admin · Erros pela spec `e2e/system-errors.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.system-errors",
@@ -621,8 +733,9 @@
           "tests/unit/systemErrorsService.test.js"
         ],
         "label": "API · system errors",
-        "description": "Valida API e serviço de system_errors."
-      }
+        "description": "Valida API e serviço de system_errors. Suites relacionadas: `tests/integration/admin/system-errors.test.js` e `tests/unit/systemErrorsService.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/system-errors.spec.js` e cobertura de API em `tests/integration/admin/system-errors.test.js` e `tests/unit/systemErrorsService.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "admin-web-vitals": {
       "e2e": {
@@ -630,7 +743,8 @@
         "cwd": "apps/admin",
         "config": "./playwright.config.js",
         "spec": "e2e/web-vitals.spec.js",
-        "label": "Admin · Web Vitals"
+        "label": "Admin · Web Vitals",
+        "description": "Executa a cobertura E2E de Admin · Web Vitals pela spec `e2e/web-vitals.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.admin.web-vitals",
@@ -640,8 +754,9 @@
           "tests/unit/webVitalsService.test.js"
         ],
         "label": "API · web vitals",
-        "description": "Valida coleta/consulta de Web Vitals."
-      }
+        "description": "Valida coleta/consulta de Web Vitals. Suites relacionadas: `tests/integration/admin/web-vitals.test.js` e `tests/unit/webVitalsService.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/web-vitals.spec.js` e cobertura de API em `tests/integration/admin/web-vitals.test.js` e `tests/unit/webVitalsService.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-contato": {
       "e2e": {
@@ -649,7 +764,8 @@
         "cwd": "apps/kunk",
         "spec": "e2e/pages.spec.js",
         "grep": "formulário público /contato",
-        "label": "Kunk · Contato"
+        "label": "Kunk · Contato",
+        "description": "Executa a cobertura E2E de Kunk · Contato pela spec `e2e/pages.spec.js` com foco no cenário `formulário público /contato`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.reception",
@@ -658,15 +774,17 @@
           "tests/integration/domain/reception.test.js"
         ],
         "label": "API · reception",
-        "description": "Valida domínio de recepção/triagem na API."
-      }
+        "description": "Valida domínio de recepção/triagem na API. Suites relacionadas: `tests/integration/domain/reception.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/pages.spec.js` e cobertura de API em `tests/integration/domain/reception.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-login": {
       "e2e": {
         "id": "e2e.kunk.login",
         "cwd": "apps/kunk",
         "spec": "e2e/auth.spec.js",
-        "label": "Kunk · Login"
+        "label": "Kunk · Login",
+        "description": "Executa a cobertura E2E de Kunk · Login pela spec `e2e/auth.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.auth",
@@ -675,15 +793,17 @@
           "tests/integration/auth.test.js"
         ],
         "label": "API · auth",
-        "description": "Valida autenticação usada pelo app Kunk."
-      }
+        "description": "Valida autenticação usada pelo app Kunk. Suites relacionadas: `tests/integration/auth.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/auth.spec.js` e cobertura de API em `tests/integration/auth.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-portal-profissional": {
       "e2e": {
         "id": "e2e.kunk.portal-profissional",
         "cwd": "apps/kunk",
         "spec": "e2e/roadmap/portal-profissional.spec.js",
-        "label": "Kunk · Portal profissional"
+        "label": "Kunk · Portal profissional",
+        "description": "Executa a cobertura E2E de Kunk · Portal profissional pela spec `e2e/roadmap/portal-profissional.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.services-reports",
@@ -692,15 +812,17 @@
           "tests/unit/servicesReportsPayable.test.js"
         ],
         "label": "API · services reports",
-        "description": "Valida relatório payable de serviços do profissional."
-      }
+        "description": "Valida relatório payable de serviços do profissional. Suites relacionadas: `tests/unit/servicesReportsPayable.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/portal-profissional.spec.js` e cobertura de API em `tests/unit/servicesReportsPayable.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-convite": {
       "e2e": {
         "id": "e2e.kunk.convite",
         "cwd": "apps/kunk",
         "spec": "e2e/roadmap/convite.spec.js",
-        "label": "Kunk · Convite"
+        "label": "Kunk · Convite",
+        "description": "Executa a cobertura E2E de Kunk · Convite pela spec `e2e/roadmap/convite.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.system-users-invite",
@@ -709,15 +831,17 @@
           "tests/integration/domain/system_users.test.js"
         ],
         "label": "API · system_users",
-        "description": "Valida convites/criação de system_users."
-      }
+        "description": "Valida convites/criação de system_users. Suites relacionadas: `tests/integration/domain/system_users.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/convite.spec.js` e cobertura de API em `tests/integration/domain/system_users.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-nova-senha": {
       "e2e": {
         "id": "e2e.kunk.nova-senha",
         "cwd": "apps/kunk",
         "spec": "e2e/roadmap/nova-senha.spec.js",
-        "label": "Kunk · Nova senha"
+        "label": "Kunk · Nova senha",
+        "description": "Executa a cobertura E2E de Kunk · Nova senha pela spec `e2e/roadmap/nova-senha.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.password-reset",
@@ -726,8 +850,9 @@
           "tests/integration/domain/operator-password-reset.test.js"
         ],
         "label": "API · password reset",
-        "description": "Valida reset de senha de operadores."
-      }
+        "description": "Valida reset de senha de operadores. Suites relacionadas: `tests/integration/domain/operator-password-reset.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/nova-senha.spec.js` e cobertura de API em `tests/integration/domain/operator-password-reset.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-associados": {
       "e2e": {
@@ -735,7 +860,8 @@
         "cwd": "apps/kunk",
         "spec": "e2e/pages.spec.js",
         "grep": "associados carrega",
-        "label": "Kunk · Associados"
+        "label": "Kunk · Associados",
+        "description": "Executa a cobertura E2E de Kunk · Associados pela spec `e2e/pages.spec.js` com foco no cenário `associados carrega`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.users",
@@ -744,8 +870,9 @@
           "tests/integration/domain/users.test.js"
         ],
         "label": "API · users",
-        "description": "Valida domínio de associados (users)."
-      }
+        "description": "Valida domínio de associados (users). Suites relacionadas: `tests/integration/domain/users.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/pages.spec.js` e cobertura de API em `tests/integration/domain/users.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-triagem": {
       "e2e": {
@@ -753,7 +880,8 @@
         "cwd": "apps/kunk",
         "spec": "e2e/pages.spec.js",
         "grep": "triagem carrega",
-        "label": "Kunk · Triagem"
+        "label": "Kunk · Triagem",
+        "description": "Executa a cobertura E2E de Kunk · Triagem pela spec `e2e/pages.spec.js` com foco no cenário `triagem carrega`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.reception-triagem",
@@ -763,8 +891,9 @@
           "tests/integration/items/reception.test.js"
         ],
         "label": "API · reception items",
-        "description": "Valida recepção/itens de triagem."
-      }
+        "description": "Valida recepção/itens de triagem. Suites relacionadas: `tests/integration/domain/reception.test.js` e `tests/integration/items/reception.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/pages.spec.js` e cobertura de API em `tests/integration/domain/reception.test.js` e `tests/integration/items/reception.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-servicos": {
       "e2e": {
@@ -772,7 +901,8 @@
         "cwd": "apps/kunk",
         "spec": "e2e/pages.spec.js",
         "grep": "serviços carrega",
-        "label": "Kunk · Serviços"
+        "label": "Kunk · Serviços",
+        "description": "Executa a cobertura E2E de Kunk · Serviços pela spec `e2e/pages.spec.js` com foco no cenário `serviços carrega`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.services",
@@ -781,8 +911,9 @@
           "tests/integration/domain/services.test.js"
         ],
         "label": "API · services",
-        "description": "Valida domínio de serviços."
-      }
+        "description": "Valida domínio de serviços. Suites relacionadas: `tests/integration/domain/services.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/pages.spec.js` e cobertura de API em `tests/integration/domain/services.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-institucionais": {
       "e2e": {
@@ -790,7 +921,8 @@
         "cwd": "apps/kunk",
         "spec": "e2e/pages.spec.js",
         "grep": "clientes institucionais",
-        "label": "Kunk · Institucionais"
+        "label": "Kunk · Institucionais",
+        "description": "Executa a cobertura E2E de Kunk · Institucionais pela spec `e2e/pages.spec.js` com foco no cenário `clientes institucionais`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.institutional",
@@ -799,15 +931,17 @@
           "tests/unit/institutionalClients.test.js"
         ],
         "label": "API · institutional clients",
-        "description": "Valida clientes institucionais."
-      }
+        "description": "Valida clientes institucionais. Suites relacionadas: `tests/unit/institutionalClients.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/pages.spec.js` e cobertura de API em `tests/unit/institutionalClients.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-pedidos": {
       "e2e": {
         "id": "e2e.kunk.pedidos",
         "cwd": "apps/kunk",
         "spec": "e2e/orders.spec.js",
-        "label": "Kunk · Pedidos"
+        "label": "Kunk · Pedidos",
+        "description": "Executa a cobertura E2E de Kunk · Pedidos pela spec `e2e/orders.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.orders",
@@ -817,15 +951,17 @@
           "tests/integration/domain/orders-listagem.test.js"
         ],
         "label": "API · orders",
-        "description": "Valida domínio e listagem de pedidos."
-      }
+        "description": "Valida domínio e listagem de pedidos. Suites relacionadas: `tests/integration/domain/orders.test.js` e `tests/integration/domain/orders-listagem.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/orders.spec.js` e cobertura de API em `tests/integration/domain/orders.test.js` e `tests/integration/domain/orders-listagem.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-novo-pedido": {
       "e2e": {
         "id": "e2e.kunk.novo-pedido",
         "cwd": "apps/kunk",
         "spec": "e2e/cart.spec.js",
-        "label": "Kunk · Novo pedido"
+        "label": "Kunk · Novo pedido",
+        "description": "Executa a cobertura E2E de Kunk · Novo pedido pela spec `e2e/cart.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.checkout",
@@ -834,8 +970,9 @@
           "tests/integration/orders/checkout-total.test.js"
         ],
         "label": "API · checkout",
-        "description": "Valida totais/checkout do carrinho."
-      }
+        "description": "Valida totais/checkout do carrinho. Suites relacionadas: `tests/integration/orders/checkout-total.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/cart.spec.js` e cobertura de API em `tests/integration/orders/checkout-total.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-produtos": {
       "e2e": {
@@ -843,7 +980,8 @@
         "cwd": "apps/kunk",
         "spec": "e2e/pages.spec.js",
         "grep": "produtos carrega",
-        "label": "Kunk · Produtos"
+        "label": "Kunk · Produtos",
+        "description": "Executa a cobertura E2E de Kunk · Produtos pela spec `e2e/pages.spec.js` com foco no cenário `produtos carrega`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.products",
@@ -853,8 +991,9 @@
           "tests/integration/domain/products-stock.test.js"
         ],
         "label": "API · products",
-        "description": "Valida produtos e estoque."
-      }
+        "description": "Valida produtos e estoque. Suites relacionadas: `tests/integration/items/products.test.js` e `tests/integration/domain/products-stock.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/pages.spec.js` e cobertura de API em `tests/integration/items/products.test.js` e `tests/integration/domain/products-stock.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-profissionais": {
       "e2e": {
@@ -862,7 +1001,8 @@
         "cwd": "apps/kunk",
         "spec": "e2e/pages.spec.js",
         "grep": "profissionais carrega",
-        "label": "Kunk · Profissionais"
+        "label": "Kunk · Profissionais",
+        "description": "Executa a cobertura E2E de Kunk · Profissionais pela spec `e2e/pages.spec.js` com foco no cenário `profissionais carrega`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.professionals",
@@ -872,8 +1012,9 @@
           "tests/integration/domain/products-professionals.test.js"
         ],
         "label": "API · professionals",
-        "description": "Valida profissionais na API."
-      }
+        "description": "Valida profissionais na API. Suites relacionadas: `tests/integration/items/professionals.test.js` e `tests/integration/domain/products-professionals.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/pages.spec.js` e cobertura de API em `tests/integration/items/professionals.test.js` e `tests/integration/domain/products-professionals.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-dashboard": {
       "e2e": {
@@ -881,7 +1022,8 @@
         "cwd": "apps/kunk",
         "spec": "e2e/pages.spec.js",
         "grep": "dashboard analytics",
-        "label": "Kunk · Dashboard"
+        "label": "Kunk · Dashboard",
+        "description": "Executa a cobertura E2E de Kunk · Dashboard pela spec `e2e/pages.spec.js` com foco no cenário `dashboard analytics`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.analytics",
@@ -891,8 +1033,9 @@
           "tests/unit/analyticsService.test.js"
         ],
         "label": "API · analytics",
-        "description": "Valida analytics/dashboard."
-      }
+        "description": "Valida analytics/dashboard. Suites relacionadas: `tests/integration/domain/analytics.test.js` e `tests/unit/analyticsService.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/pages.spec.js` e cobertura de API em `tests/integration/domain/analytics.test.js` e `tests/unit/analyticsService.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-relatorio-servicos": {
       "e2e": {
@@ -900,7 +1043,8 @@
         "cwd": "apps/kunk",
         "spec": "e2e/pages.spec.js",
         "grep": "relatório de serviços",
-        "label": "Kunk · Relatório serviços"
+        "label": "Kunk · Relatório serviços",
+        "description": "Executa a cobertura E2E de Kunk · Relatório serviços pela spec `e2e/pages.spec.js` com foco no cenário `relatório de serviços`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.reports-services",
@@ -910,8 +1054,9 @@
           "tests/unit/servicesReportsPayable.test.js"
         ],
         "label": "API · reports",
-        "description": "Valida relatórios de serviços/payable."
-      }
+        "description": "Valida relatórios de serviços/payable. Suites relacionadas: `tests/integration/domain/reports.test.js` e `tests/unit/servicesReportsPayable.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/pages.spec.js` e cobertura de API em `tests/integration/domain/reports.test.js` e `tests/unit/servicesReportsPayable.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-historico": {
       "e2e": {
@@ -919,7 +1064,8 @@
         "cwd": "apps/kunk",
         "spec": "e2e/pages.spec.js",
         "grep": "histórico do sistema",
-        "label": "Kunk · Histórico"
+        "label": "Kunk · Histórico",
+        "description": "Executa a cobertura E2E de Kunk · Histórico pela spec `e2e/pages.spec.js` com foco no cenário `histórico do sistema`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.activity",
@@ -928,8 +1074,9 @@
           "tests/integration/domain/activity.test.js"
         ],
         "label": "API · activity",
-        "description": "Valida activity log do sistema."
-      }
+        "description": "Valida activity log do sistema. Suites relacionadas: `tests/integration/domain/activity.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/pages.spec.js` e cobertura de API em `tests/integration/domain/activity.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-tags": {
       "e2e": {
@@ -937,7 +1084,8 @@
         "cwd": "apps/kunk",
         "spec": "e2e/pages.spec.js",
         "grep": "tags carrega",
-        "label": "Kunk · Tags"
+        "label": "Kunk · Tags",
+        "description": "Executa a cobertura E2E de Kunk · Tags pela spec `e2e/pages.spec.js` com foco no cenário `tags carrega`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.tags",
@@ -946,15 +1094,17 @@
           "tests/integration/items/tags.test.js"
         ],
         "label": "API · tags",
-        "description": "Valida CRUD de tags."
-      }
+        "description": "Valida CRUD de tags. Suites relacionadas: `tests/integration/items/tags.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/pages.spec.js` e cobertura de API em `tests/integration/items/tags.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "kunk-shell": {
       "e2e": {
         "id": "e2e.kunk.shell",
         "cwd": "apps/kunk",
         "spec": "e2e/shell.spec.js",
-        "label": "Kunk · Shell"
+        "label": "Kunk · Shell",
+        "description": "Executa a cobertura E2E de Kunk · Shell pela spec `e2e/shell.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.kunk.shell-unit",
@@ -965,8 +1115,50 @@
           "src/app/routes.test.js"
         ],
         "label": "Vitest · menu/routes",
-        "description": "Valida unitários de menu e rotas do app Kunk (Vitest)."
-      }
+        "description": "Valida unitários de menu e rotas do app Kunk (Vitest). Suites relacionadas: `src/app/menuConfig.test.js` e `src/app/routes.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/shell.spec.js` e cobertura de API em `src/app/menuConfig.test.js` e `src/app/routes.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "kunk-guards": {
+      "e2e": {
+        "id": "e2e.kunk.guards",
+        "cwd": "apps/kunk",
+        "spec": "e2e/guards.spec.js",
+        "label": "Kunk · Guards",
+        "description": "Executa a cobertura E2E de Kunk · Guards pela spec `e2e/guards.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
+      },
+      "api": {
+        "id": "api.kunk.guards",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/unit/rbac.test.js",
+          "tests/unit/assertOperatorPermissions.test.js"
+        ],
+        "label": "API · kunk guards",
+        "description": "Valida autenticação mínima e negação de acesso do app Kunk para papéis sem permissão. Suites relacionadas: `tests/unit/rbac.test.js` e `tests/unit/assertOperatorPermissions.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/guards.spec.js` e cobertura de API em `tests/unit/rbac.test.js` e `tests/unit/assertOperatorPermissions.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "kunk-navigation": {
+      "e2e": {
+        "id": "e2e.kunk.navigation",
+        "cwd": "apps/kunk",
+        "spec": "e2e/navigation.spec.js",
+        "label": "Kunk · Navigation",
+        "description": "Executa a cobertura E2E de Kunk · Navigation pela spec `e2e/navigation.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
+      },
+      "api": {
+        "id": "api.kunk.navigation",
+        "cwd": "apps/kunk",
+        "runner": "vitest",
+        "files": [
+          "src/app/menuConfig.test.js",
+          "src/app/routes.test.js"
+        ],
+        "label": "Vitest · kunk navigation",
+        "description": "Valida configuração de navegação, menu lateral e resolução de rotas/atalhos do app Kunk. Suites relacionadas: `src/app/menuConfig.test.js` e `src/app/routes.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/navigation.spec.js` e cobertura de API em `src/app/menuConfig.test.js` e `src/app/routes.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "reg-cadastro": {
       "e2e": {
@@ -974,7 +1166,8 @@
         "cwd": "apps/registration",
         "spec": "e2e/auth.spec.js",
         "grep": "register",
-        "label": "Registration · Cadastro"
+        "label": "Registration · Cadastro",
+        "description": "Executa a cobertura E2E de Registration · Cadastro pela spec `e2e/auth.spec.js` com foco no cenário `register`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.reg.registration",
@@ -983,8 +1176,9 @@
           "tests/integration/domain/registration.test.js"
         ],
         "label": "API · registration",
-        "description": "Valida domínio de registration (criar conta)."
-      }
+        "description": "Valida domínio de registration (criar conta). Suites relacionadas: `tests/integration/domain/registration.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/auth.spec.js` e cobertura de API em `tests/integration/domain/registration.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "reg-login": {
       "e2e": {
@@ -992,7 +1186,8 @@
         "cwd": "apps/registration",
         "spec": "e2e/auth.spec.js",
         "grep": "login",
-        "label": "Registration · Login"
+        "label": "Registration · Login",
+        "description": "Executa a cobertura E2E de Registration · Login pela spec `e2e/auth.spec.js` com foco no cenário `login`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.reg.auth",
@@ -1001,8 +1196,9 @@
           "tests/integration/auth.test.js"
         ],
         "label": "API · auth",
-        "description": "Valida auth do associado."
-      }
+        "description": "Valida auth do associado. Suites relacionadas: `tests/integration/auth.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/auth.spec.js` e cobertura de API em `tests/integration/auth.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "reg-bem-vindo": {
       "e2e": {
@@ -1010,20 +1206,24 @@
         "cwd": "apps/registration",
         "spec": "e2e/auth.spec.js",
         "grep": "bem-vindo",
-        "label": "Registration · Bem-vindo"
+        "label": "Registration · Bem-vindo",
+        "description": "Executa a cobertura E2E de Registration · Bem-vindo pela spec `e2e/auth.spec.js` com foco no cenário `bem-vindo`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.reg.bem-vindo",
         "status": "missing",
-        "note": "Texto de boas-vindas é config — sem suite dedicada"
-      }
+        "note": "Texto de boas-vindas é config — sem suite dedicada",
+        "description": "Texto de boas-vindas é config — sem suite dedicada."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/auth.spec.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "reg-dados": {
       "e2e": {
         "id": "e2e.reg.dados",
         "cwd": "apps/registration",
         "spec": "e2e/funnel-forms.spec.js",
-        "label": "Registration · Dados associado"
+        "label": "Registration · Dados associado",
+        "description": "Executa a cobertura E2E de Registration · Dados associado pela spec `e2e/funnel-forms.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.reg.users",
@@ -1032,8 +1232,9 @@
           "tests/integration/domain/users.test.js"
         ],
         "label": "API · users",
-        "description": "Valida dados do associado na API."
-      }
+        "description": "Valida dados do associado na API. Suites relacionadas: `tests/integration/domain/users.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/funnel-forms.spec.js` e cobertura de API em `tests/integration/domain/users.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "reg-paciente": {
       "e2e": {
@@ -1041,7 +1242,8 @@
         "cwd": "apps/registration",
         "spec": "e2e/funnel-forms.spec.js",
         "grep": "paciente",
-        "label": "Registration · Paciente"
+        "label": "Registration · Paciente",
+        "description": "Executa a cobertura E2E de Registration · Paciente pela spec `e2e/funnel-forms.spec.js` com foco no cenário `paciente`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.reg.paciente",
@@ -1050,15 +1252,17 @@
           "tests/integration/domain/users.test.js"
         ],
         "label": "API · users/patients",
-        "description": "Valida pacientes vinculados ao associado."
-      }
+        "description": "Valida pacientes vinculados ao associado. Suites relacionadas: `tests/integration/domain/users.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/funnel-forms.spec.js` e cobertura de API em `tests/integration/domain/users.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "reg-documentos": {
       "e2e": {
         "id": "e2e.reg.documentos",
         "cwd": "apps/registration",
         "spec": "e2e/documents.spec.js",
-        "label": "Registration · Documentos"
+        "label": "Registration · Documentos",
+        "description": "Executa a cobertura E2E de Registration · Documentos pela spec `e2e/documents.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.reg.files",
@@ -1067,8 +1271,9 @@
           "tests/integration/domain/files.test.js"
         ],
         "label": "API · files",
-        "description": "Valida upload/domínio de arquivos."
-      }
+        "description": "Valida upload/domínio de arquivos. Suites relacionadas: `tests/integration/domain/files.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/documents.spec.js` e cobertura de API em `tests/integration/domain/files.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "reg-finalizar": {
       "e2e": {
@@ -1076,7 +1281,8 @@
         "cwd": "apps/registration",
         "spec": "e2e/phase5.spec.js",
         "grep": "finalizar",
-        "label": "Registration · Finalizar"
+        "label": "Registration · Finalizar",
+        "description": "Executa a cobertura E2E de Registration · Finalizar pela spec `e2e/phase5.spec.js` com foco no cenário `finalizar`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.reg.finalizar",
@@ -1085,8 +1291,9 @@
           "tests/integration/domain/registration.test.js"
         ],
         "label": "API · registration complete",
-        "description": "Valida conclusão do funil de registration."
-      }
+        "description": "Valida conclusão do funil de registration. Suites relacionadas: `tests/integration/domain/registration.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/phase5.spec.js` e cobertura de API em `tests/integration/domain/registration.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "reg-concluido": {
       "e2e": {
@@ -1094,20 +1301,65 @@
         "cwd": "apps/registration",
         "spec": "e2e/phase5.spec.js",
         "grep": "cadastro-concluido",
-        "label": "Registration · Concluído"
+        "label": "Registration · Concluído",
+        "description": "Executa a cobertura E2E de Registration · Concluído pela spec `e2e/phase5.spec.js` com foco no cenário `cadastro-concluido`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.reg.concluido",
         "status": "missing",
-        "note": "Tela final — coberto no fluxo e2e phase5"
-      }
+        "note": "Tela final — coberto no fluxo e2e phase5",
+        "description": "Tela final — coberto no fluxo e2e phase5."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/phase5.spec.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "reg-validacao": {
+      "e2e": {
+        "id": "e2e.reg.validacao",
+        "cwd": "apps/registration",
+        "spec": "e2e/funnel-validation.spec.js",
+        "label": "Registration · Validação",
+        "description": "Executa a cobertura E2E de Registration · Validação pela spec `e2e/funnel-validation.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
+      },
+      "api": {
+        "id": "api.reg.validacao",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/integration/domain/registration.test.js",
+          "tests/integration/domain/files.test.js"
+        ],
+        "label": "API · registration validation",
+        "description": "Valida regras de formulário, documentos, uploads e rejeições do funil de cadastro. Suites relacionadas: `tests/integration/domain/registration.test.js` e `tests/integration/domain/files.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/funnel-validation.spec.js` e cobertura de API em `tests/integration/domain/registration.test.js` e `tests/integration/domain/files.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "reg-funil-completo": {
+      "e2e": {
+        "id": "e2e.reg.funil-completo",
+        "cwd": "apps/registration",
+        "spec": "e2e/full-funnel.spec.js",
+        "label": "Registration · Funil completo",
+        "description": "Executa a cobertura E2E de Registration · Funil completo pela spec `e2e/full-funnel.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
+      },
+      "api": {
+        "id": "api.reg.funil-completo",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/integration/domain/registration.test.js",
+          "tests/integration/domain/doc-sign.test.js",
+          "tests/integration/domain/reception.test.js"
+        ],
+        "label": "API · registration full funnel",
+        "description": "Valida as APIs que sustentam o fluxo ponta a ponta de cadastro, assinatura e contato final. Suites relacionadas: `tests/integration/domain/registration.test.js`, `tests/integration/domain/doc-sign.test.js` e `tests/integration/domain/reception.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/full-funnel.spec.js` e cobertura de API em `tests/integration/domain/registration.test.js`, `tests/integration/domain/doc-sign.test.js` e `tests/integration/domain/reception.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "reg-contato": {
       "e2e": {
         "id": "e2e.reg.contato",
         "cwd": "apps/registration",
         "spec": "e2e/contact-form.spec.js",
-        "label": "Registration · Contato"
+        "label": "Registration · Contato",
+        "description": "Executa a cobertura E2E de Registration · Contato pela spec `e2e/contact-form.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.reg.contato",
@@ -1116,8 +1368,9 @@
           "tests/integration/domain/reception.test.js"
         ],
         "label": "API · reception",
-        "description": "Valida recepção usada pelo embed de contato."
-      }
+        "description": "Valida recepção usada pelo embed de contato. Suites relacionadas: `tests/integration/domain/reception.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/contact-form.spec.js` e cobertura de API em `tests/integration/domain/reception.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "reg-nova-senha": {
       "e2e": {
@@ -1125,7 +1378,8 @@
         "cwd": "apps/registration",
         "spec": "e2e/auth.spec.js",
         "grep": "senha",
-        "label": "Registration · Nova senha"
+        "label": "Registration · Nova senha",
+        "description": "Executa a cobertura E2E de Registration · Nova senha pela spec `e2e/auth.spec.js` com foco no cenário `senha`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.reg.password",
@@ -1134,28 +1388,33 @@
           "tests/integration/auth.test.js"
         ],
         "label": "API · auth reset",
-        "description": "Valida reset de senha do associado."
-      }
+        "description": "Valida reset de senha do associado. Suites relacionadas: `tests/integration/auth.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/auth.spec.js` e cobertura de API em `tests/integration/auth.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "reg-shell": {
       "e2e": {
         "id": "e2e.reg.shell",
         "cwd": "apps/registration",
         "spec": "e2e/shell.spec.js",
-        "label": "Registration · Shell/guards"
+        "label": "Registration · Shell/guards",
+        "description": "Executa a cobertura E2E de Registration · Shell/guards pela spec `e2e/shell.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.reg.shell",
         "status": "missing",
-        "note": "Guards são front — e2e/guards.spec.js"
-      }
+        "note": "Guards são front — e2e/guards.spec.js",
+        "description": "Guards são front — e2e/guards.spec.js."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/shell.spec.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "ds-login": {
       "e2e": {
         "id": "e2e.ds.login",
         "cwd": "apps/doc-sign",
         "spec": "e2e/auth.spec.js",
-        "label": "Doc-sign · Login"
+        "label": "Doc-sign · Login",
+        "description": "Executa a cobertura E2E de Doc-sign · Login pela spec `e2e/auth.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.ds.auth",
@@ -1164,8 +1423,9 @@
           "tests/integration/auth.test.js"
         ],
         "label": "API · auth",
-        "description": "Valida autenticação do Doc-sign."
-      }
+        "description": "Valida autenticação do Doc-sign. Suites relacionadas: `tests/integration/auth.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/auth.spec.js` e cobertura de API em `tests/integration/auth.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "ds-termos": {
       "e2e": {
@@ -1173,7 +1433,8 @@
         "cwd": "apps/doc-sign",
         "spec": "e2e/templates.spec.js",
         "grep": "lista termos",
-        "label": "Doc-sign · Termos"
+        "label": "Doc-sign · Termos",
+        "description": "Executa a cobertura E2E de Doc-sign · Termos pela spec `e2e/templates.spec.js` com foco no cenário `lista termos`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.ds.doc-sign",
@@ -1183,8 +1444,9 @@
           "tests/unit/docSign.test.js"
         ],
         "label": "API · doc-sign",
-        "description": "Valida domínio doc-sign (listagem e ciclo de termos)."
-      }
+        "description": "Valida domínio doc-sign (listagem e ciclo de termos). Suites relacionadas: `tests/integration/domain/doc-sign.test.js` e `tests/unit/docSign.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/templates.spec.js` e cobertura de API em `tests/integration/domain/doc-sign.test.js` e `tests/unit/docSign.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "ds-criar-termo": {
       "e2e": {
@@ -1192,7 +1454,8 @@
         "cwd": "apps/doc-sign",
         "config": "./playwright.config.js",
         "spec": "e2e/roadmap/criar-termo.spec.js",
-        "label": "Doc-sign · Criar termo"
+        "label": "Doc-sign · Criar termo",
+        "description": "Executa a cobertura E2E de Doc-sign · Criar termo pela spec `e2e/roadmap/criar-termo.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.ds.create-contract",
@@ -1201,15 +1464,17 @@
           "tests/integration/domain/doc-sign.test.js"
         ],
         "label": "API · create contract",
-        "description": "Valida POST /doc-sign/contracts: publicar modelo, criar termo pendente e gerar signing_url."
-      }
+        "description": "Valida POST /doc-sign/contracts: publicar modelo, criar termo pendente e gerar signing_url. Suites relacionadas: `tests/integration/domain/doc-sign.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/criar-termo.spec.js` e cobertura de API em `tests/integration/domain/doc-sign.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "ds-assinar": {
       "e2e": {
         "id": "e2e.ds.assinar",
         "cwd": "apps/doc-sign",
         "spec": "e2e/roadmap/assinar.spec.js",
-        "label": "Doc-sign · Assinar"
+        "label": "Doc-sign · Assinar",
+        "description": "Executa a cobertura E2E de Doc-sign · Assinar pela spec `e2e/roadmap/assinar.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.ds.assinar",
@@ -1218,8 +1483,9 @@
           "tests/integration/domain/doc-sign.test.js"
         ],
         "label": "API · doc-sign sign",
-        "description": "Valida assinatura de termos na API."
-      }
+        "description": "Valida assinatura de termos na API. Suites relacionadas: `tests/integration/domain/doc-sign.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/assinar.spec.js` e cobertura de API em `tests/integration/domain/doc-sign.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "ds-modelos": {
       "e2e": {
@@ -1227,7 +1493,8 @@
         "cwd": "apps/doc-sign",
         "spec": "e2e/templates.spec.js",
         "grep": "lista modelos",
-        "label": "Doc-sign · Modelos"
+        "label": "Doc-sign · Modelos",
+        "description": "Executa a cobertura E2E de Doc-sign · Modelos pela spec `e2e/templates.spec.js` com foco no cenário `lista modelos`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.ds.modelos",
@@ -1236,8 +1503,9 @@
           "tests/unit/docSign.test.js"
         ],
         "label": "API · doc-sign templates",
-        "description": "Valida templates de termo."
-      }
+        "description": "Valida templates de termo. Suites relacionadas: `tests/unit/docSign.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/templates.spec.js` e cobertura de API em `tests/unit/docSign.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "ds-editor": {
       "e2e": {
@@ -1245,7 +1513,8 @@
         "cwd": "apps/doc-sign",
         "spec": "e2e/templates.spec.js",
         "grep": "editor self",
-        "label": "Doc-sign · Editor"
+        "label": "Doc-sign · Editor",
+        "description": "Executa a cobertura E2E de Doc-sign · Editor pela spec `e2e/templates.spec.js` com foco no cenário `editor self`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.ds.editor",
@@ -1254,15 +1523,17 @@
           "tests/unit/docSign.test.js"
         ],
         "label": "API · doc-sign editor",
-        "description": "Valida persistência/publicação de modelos."
-      }
+        "description": "Valida persistência/publicação de modelos. Suites relacionadas: `tests/unit/docSign.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/templates.spec.js` e cobertura de API em `tests/unit/docSign.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "ds-termo-detalhe": {
       "e2e": {
         "id": "e2e.ds.termo-detalhe",
         "cwd": "apps/doc-sign",
         "spec": "e2e/roadmap/termo-detalhe.spec.js",
-        "label": "Doc-sign · Detalhe termo"
+        "label": "Doc-sign · Detalhe termo",
+        "description": "Executa a cobertura E2E de Doc-sign · Detalhe termo pela spec `e2e/roadmap/termo-detalhe.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.ds.termo-detalhe",
@@ -1271,15 +1542,17 @@
           "tests/integration/domain/doc-sign.test.js"
         ],
         "label": "API · doc-sign detail",
-        "description": "Valida detalhe de termo na API."
-      }
+        "description": "Valida detalhe de termo na API. Suites relacionadas: `tests/integration/domain/doc-sign.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/termo-detalhe.spec.js` e cobertura de API em `tests/integration/domain/doc-sign.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "ds-audit": {
       "e2e": {
         "id": "e2e.ds.audit",
         "cwd": "apps/doc-sign",
         "spec": "e2e/roadmap/audit.spec.js",
-        "label": "Doc-sign · Auditoria"
+        "label": "Doc-sign · Auditoria",
+        "description": "Executa a cobertura E2E de Doc-sign · Auditoria pela spec `e2e/roadmap/audit.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.ds.audit",
@@ -1288,15 +1561,17 @@
           "tests/integration/domain/doc-sign.test.js"
         ],
         "label": "API · doc-sign audit",
-        "description": "Valida auditoria de termos."
-      }
+        "description": "Valida auditoria de termos. Suites relacionadas: `tests/integration/domain/doc-sign.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/audit.spec.js` e cobertura de API em `tests/integration/domain/doc-sign.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     },
     "ds-nova-senha": {
       "e2e": {
         "id": "e2e.ds.nova-senha",
         "cwd": "apps/doc-sign",
         "spec": "e2e/roadmap/nova-senha.spec.js",
-        "label": "Doc-sign · Nova senha"
+        "label": "Doc-sign · Nova senha",
+        "description": "Executa a cobertura E2E de Doc-sign · Nova senha pela spec `e2e/roadmap/nova-senha.spec.js`. Valida o fluxo visível ao operador/usuário, navegação da página, mensagens de feedback e persistência do resultado esperado no frontend."
       },
       "api": {
         "id": "api.ds.password",
@@ -1305,8 +1580,154 @@
           "tests/integration/domain/operator-password-reset.test.js"
         ],
         "label": "API · password reset",
-        "description": "Valida reset de senha (operador)."
-      }
+        "description": "Valida reset de senha (operador). Suites relacionadas: `tests/integration/domain/operator-password-reset.test.js`."
+      },
+      "description": "Cobertura frontend via Playwright em `e2e/roadmap/nova-senha.spec.js` e cobertura de API em `tests/integration/domain/operator-password-reset.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "api-items-crud": {
+      "api": {
+        "id": "api.infra.items-crud",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/integration/items/files.test.js",
+          "tests/integration/items/orders.test.js",
+          "tests/integration/items/orders_files.test.js",
+          "tests/integration/items/products.test.js",
+          "tests/integration/items/professionals.test.js",
+          "tests/integration/items/reception.test.js",
+          "tests/integration/items/reports.test.js",
+          "tests/integration/items/services.test.js",
+          "tests/integration/items/services_files.test.js",
+          "tests/integration/items/system_users.test.js",
+          "tests/integration/items/tags.test.js",
+          "tests/integration/items/users.test.js",
+          "tests/integration/items/users_api.test.js",
+          "tests/integration/items/users_files.test.js"
+        ],
+        "label": "API · items CRUD",
+        "description": "Valida o CRUD genérico de coleções expostas em `/items/:collection`, incluindo filtros, escrita, anexos e permissões. Suites relacionadas: `tests/integration/items/files.test.js`, `tests/integration/items/orders.test.js`, `tests/integration/items/orders_files.test.js`, `tests/integration/items/products.test.js`, `tests/integration/items/professionals.test.js`, `tests/integration/items/reception.test.js`, `tests/integration/items/reports.test.js`, `tests/integration/items/services.test.js`, `tests/integration/items/services_files.test.js`, `tests/integration/items/system_users.test.js`, `tests/integration/items/tags.test.js`, `tests/integration/items/users.test.js`, `tests/integration/items/users_api.test.js` e `tests/integration/items/users_files.test.js`."
+      },
+      "description": "cobertura de API em `tests/integration/items/files.test.js`, `tests/integration/items/orders.test.js`, `tests/integration/items/orders_files.test.js`, `tests/integration/items/products.test.js`, `tests/integration/items/professionals.test.js`, `tests/integration/items/reception.test.js`, `tests/integration/items/reports.test.js`, `tests/integration/items/services.test.js`, `tests/integration/items/services_files.test.js`, `tests/integration/items/system_users.test.js`, `tests/integration/items/tags.test.js`, `tests/integration/items/users.test.js`, `tests/integration/items/users_api.test.js` e `tests/integration/items/users_files.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "api-busca-global": {
+      "api": {
+        "id": "api.infra.busca-global",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/integration/domain/search-rbac.test.js",
+          "tests/unit/searchService.test.js"
+        ],
+        "label": "API · busca global",
+        "description": "Valida busca global com escopo por role, fontes de dados e sanitização de resultados. Suites relacionadas: `tests/integration/domain/search-rbac.test.js` e `tests/unit/searchService.test.js`."
+      },
+      "description": "cobertura de API em `tests/integration/domain/search-rbac.test.js` e `tests/unit/searchService.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "api-estoque": {
+      "api": {
+        "id": "api.infra.estoque",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/integration/domain/orders-stock-debit.test.js",
+          "tests/integration/domain/products-stock.test.js",
+          "tests/unit/stockService.stampBatch.test.js"
+        ],
+        "label": "API · estoque",
+        "description": "Valida débito de estoque após pagamento, atualização de saldos e integridade das movimentações. Suites relacionadas: `tests/integration/domain/orders-stock-debit.test.js`, `tests/integration/domain/products-stock.test.js` e `tests/unit/stockService.stampBatch.test.js`."
+      },
+      "description": "cobertura de API em `tests/integration/domain/orders-stock-debit.test.js`, `tests/integration/domain/products-stock.test.js` e `tests/unit/stockService.stampBatch.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "api-frete": {
+      "api": {
+        "id": "api.infra.frete",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/integration/freight/quote-config.test.js",
+          "tests/unit/freightNormalize.test.js",
+          "tests/integration/modules/loggi.live.test.js",
+          "tests/integration/modules/melhorenvio.live.test.js"
+        ],
+        "label": "API · frete",
+        "description": "Valida normalização e cotação de frete, além dos fluxos operacionais dos provedores Loggi e Melhor Envio. Suites relacionadas: `tests/integration/freight/quote-config.test.js`, `tests/unit/freightNormalize.test.js`, `tests/integration/modules/loggi.live.test.js` e `tests/integration/modules/melhorenvio.live.test.js`."
+      },
+      "description": "cobertura de API em `tests/integration/freight/quote-config.test.js`, `tests/unit/freightNormalize.test.js`, `tests/integration/modules/loggi.live.test.js` e `tests/integration/modules/melhorenvio.live.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "api-export-csv": {
+      "api": {
+        "id": "api.infra.export-csv",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/integration/domain/products-stock.test.js"
+        ],
+        "label": "API · export csv",
+        "description": "Valida a exportação CSV de produtos, incluindo estrutura do arquivo e consistência dos campos exportados. Suites relacionadas: `tests/integration/domain/products-stock.test.js`."
+      },
+      "description": "cobertura de API em `tests/integration/domain/products-stock.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "api-bulk-pedidos": {
+      "api": {
+        "id": "api.infra.bulk-pedidos",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/integration/domain/orders-listagem.test.js",
+          "tests/integration/domain/orders.test.js"
+        ],
+        "label": "API · bulk pedidos",
+        "description": "Valida ações em lote, listagem, filtros e alterações coletivas aplicadas a pedidos. Suites relacionadas: `tests/integration/domain/orders-listagem.test.js` e `tests/integration/domain/orders.test.js`."
+      },
+      "description": "cobertura de API em `tests/integration/domain/orders-listagem.test.js` e `tests/integration/domain/orders.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "api-rate-limiting": {
+      "api": {
+        "id": "api.infra.rate-limiting",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/integration/auth.test.js",
+          "tests/integration/domain/registration.test.js",
+          "tests/integration/domain/reception.test.js"
+        ],
+        "label": "API · rate limiting",
+        "description": "Valida limites de requisição e proteção contra abuso em endpoints públicos de auth, cadastro e triagem. Suites relacionadas: `tests/integration/auth.test.js`, `tests/integration/domain/registration.test.js` e `tests/integration/domain/reception.test.js`."
+      },
+      "description": "cobertura de API em `tests/integration/auth.test.js`, `tests/integration/domain/registration.test.js` e `tests/integration/domain/reception.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "api-contrato": {
+      "api": {
+        "id": "api.infra.contrato",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/contract/api-structure.test.js"
+        ],
+        "label": "API · contrato",
+        "description": "Valida o contrato estrutural da API: tabelas, rotas, operadores, filtros e convenções esperadas. Suites relacionadas: `tests/contract/api-structure.test.js`."
+      },
+      "description": "cobertura de API em `tests/contract/api-structure.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "api-webhooks-pagarme": {
+      "api": {
+        "id": "api.infra.webhooks-pagarme",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/integration/domain/pagarme-soucannabis.test.js",
+          "tests/unit/pagarmeWebhookAuth.test.js",
+          "tests/unit/pagarmeHooksSetup.test.js"
+        ],
+        "label": "API · webhooks pagarme",
+        "description": "Valida autenticação, processamento e efeitos dos webhooks públicos do Pagar.me e do fluxo SouCannabis. Suites relacionadas: `tests/integration/domain/pagarme-soucannabis.test.js`, `tests/unit/pagarmeWebhookAuth.test.js` e `tests/unit/pagarmeHooksSetup.test.js`."
+      },
+      "description": "cobertura de API em `tests/integration/domain/pagarme-soucannabis.test.js`, `tests/unit/pagarmeWebhookAuth.test.js` e `tests/unit/pagarmeHooksSetup.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
+    },
+    "api-oauth-seguranca": {
+      "api": {
+        "id": "api.infra.oauth-seguranca",
+        "cwd": "kunk-api",
+        "files": [
+          "tests/integration/modules/oauth-state.test.js",
+          "tests/unit/oauthState.test.js"
+        ],
+        "label": "API · oauth segurança",
+        "description": "Valida geração, persistência e verificação do `state` OAuth para impedir callbacks inválidos ou forjados. Suites relacionadas: `tests/integration/modules/oauth-state.test.js` e `tests/unit/oauthState.test.js`."
+      },
+      "description": "cobertura de API em `tests/integration/modules/oauth-state.test.js` e `tests/unit/oauthState.test.js`. A descrição resume onde a funcionalidade é testada e quais validações principais são exercitadas."
     }
   }
 }

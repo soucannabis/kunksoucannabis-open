@@ -1,6 +1,8 @@
 /** Shared constants and payloads for registration E2E. */
 
 export const FRONT_URL = process.env.E2E_FRONT_URL || 'http://localhost:4255';
+/** Railway/produção: front e API em origens distintas. */
+export const isRemoteE2E = /^https?:\/\/(?!localhost)/i.test(FRONT_URL);
 /** Hit API via Vite proxy so session cookies share the front origin. */
 export const API_URL = process.env.E2E_API_URL || `${FRONT_URL}/api/v1`;
 export const VALID_CPF = '52998224725';

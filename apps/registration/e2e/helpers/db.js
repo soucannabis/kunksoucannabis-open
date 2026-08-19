@@ -30,6 +30,12 @@ function parseEnvFile(envPath) {
 function loadDatabaseUrl() {
   if (process.env.PG_URL) return process.env.PG_URL;
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  if (process.env.E2E_PG_URL) return process.env.E2E_PG_URL;
+
+  const apiUrl = process.env.E2E_API_URL || '';
+  if (/^https?:\/\/(?!localhost)/i.test(apiUrl)) {
+    return null;
+  }
 
   const envPath = path.resolve(__dirname, '../../../../kunk-api/.env');
   const fileEnv = parseEnvFile(envPath);
@@ -47,7 +53,74 @@ function loadDatabaseUrl() {
       `@${host}:${port}/${encodeURIComponent(database)}`
     );
   }
-  throw new Error('PG_URL (ou PGHOST/PGUSER/PGPASSWORD/PGDATABASE) not found');
+  return null;
+}
+
+function requirePool() {
+  const url = loadDatabaseUrl();
+  if (!url) return null;
+  return new pg.Pool({ connectionString: url });
+}
+
+/** Indica se PG_URL/DATABASE_URL está disponível para seeds E2E. */
+export function hasDbUrl() {
+  return Boolean(loadDatabaseUrl());
+}
+
+/** Só env explícita — evita usar kunk-api/.env local ao rodar E2E remoto. */
+export function hasExplicitDbUrl() {
+  return Boolean(process.env.PG_URL || process.env.DATABASE_URL || process.env.E2E_PG_URL);
+}
+
+let bcryptModule;
+async function hashAssociatePassword(plain) {
+  if (!bcryptModule) {
+    const { createRequire } = await import('module');
+    const req = createRequire(path.join(__dirname, '../../../../kunk-api/package.json'));
+    bcryptModule = req('bcrypt');
+  }
+  // API em produção (Railway) usa 10 rounds; local test usa 4.
+  const rounds = 10;
+  return bcryptModule.hash(String(plain), rounds);
+}
+
+/**
+ * Cria associado mínimo (fase cadastro_criado) via DB — evita POST register-email (rate limit).
+ * Retorna false se PG_URL não estiver configurado.
+ */
+export async function ensureAssociateForE2E(email, { password = 'senha123' } = {}) {
+  if (!email) throw new Error('ensureAssociateForE2E exige email');
+  const pool = requirePool();
+  if (!pool) return false;
+
+  const normalized = String(email).trim().toLowerCase();
+  await deleteAssociateByEmail(normalized);
+  const passwordHash = await hashAssociatePassword(password);
+  const userCode = randomUUID();
+
+  try {
+    await pool.query(
+      `INSERT INTO users (
+         email_account, account_password, associate_status, status, user_code,
+         date_created, created_date, invalid_fields
+       ) VALUES ($1, $2, 'cadastro_criado', 'cadastro_criado', $3::uuid, NOW(), NOW(), $4)`,
+      [normalized, passwordHash, userCode, JSON.stringify([])]
+    );
+
+    const { rows } = await pool.query(
+      `SELECT id FROM users
+       WHERE lower(email_account) = lower($1)
+         AND (status IS NULL OR status <> 'patient')
+       LIMIT 1`,
+      [normalized]
+    );
+    if (!rows[0]) {
+      throw new Error(`ensureAssociateForE2E: insert falhou para ${normalized}`);
+    }
+    return true;
+  } finally {
+    await pool.end();
+  }
 }
 
 /** Endereço padrão SP para demos de frete (Loggi / Melhor Envio). */
@@ -69,7 +142,8 @@ export async function ensureDemoAssociateShippingAddress(
   address = DEMO_SHIPPING_ADDRESS
 ) {
   if (!email) throw new Error('ensureDemoAssociateShippingAddress exige email');
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return { id: null, email_account: email, address };
   try {
     const cepDigits = String(address.cep || '').replace(/\D/g, '');
     if (cepDigits.length !== 8) {
@@ -119,7 +193,8 @@ export async function ensureDemoAssociateShippingAddress(
 
 /** Force status/fase for E2E pós-termo (QA only). */
 export async function forceAssociateStatus(email, { status = 'Associado', associate_status = 'assinatura_termo' } = {}) {
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return;
   try {
     await pool.query(
       `UPDATE users SET status = $1, associate_status = $2, date_updated = NOW()
@@ -148,7 +223,8 @@ export async function cleanupAssociateOrdersAndPrescriptions(email) {
     return { deletedOrders: 0, deletedPrescriptionFiles: 0 };
   }
 
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return { deletedOrders: 0, deletedPrescriptionFiles: 0 };
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -228,7 +304,8 @@ export async function cleanupAssociateOrdersAndPrescriptions(email) {
 
 /** Reabre a assinatura de uma conta de demo, removendo somente seus contratos anteriores. */
 export async function resetAssociateTermByEmail(email) {
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return { deletedContracts: 0, deletedFiles: 0 };
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -293,7 +370,8 @@ export async function resetAssociateTermByEmail(email) {
  */
 export async function deleteAssociateByEmail(email) {
   if (!email) return { deletedUsers: 0 };
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return { deletedUsers: 0 };
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -456,7 +534,8 @@ export async function cleanupDuplicateAnaSilvaAssociates(keepEmail) {
     throw new Error('cleanupDuplicateAnaSilvaAssociates exige keepEmail');
   }
 
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return { keptEmail: keepEmail, deletedDuplicates: 0, deletedEmails: [] };
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -556,7 +635,8 @@ export async function cleanupDuplicateAnaSilvaAssociates(keepEmail) {
 /** Remove contatos de triagem criados pelo E2E (e-mail exato). */
 export async function deleteReceptionByEmail(email) {
   if (!email) return { deleted: 0 };
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return { deleted: 0 };
   try {
     const res = await pool.query(
       `DELETE FROM reception WHERE lower(email) = lower($1)`,
@@ -577,7 +657,8 @@ export async function cleanupAssociateServicesAndReception(email) {
     return { deletedServices: 0, deletedReceiptFiles: 0, deletedReception: 0 };
   }
 
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return { deletedServices: 0, deletedReceiptFiles: 0, deletedReception: 0 };
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -647,7 +728,8 @@ export async function cleanupAssociateServicesAndReception(email) {
  * do modal de associados. Retorna somente IDs temporários para cleanup.
  */
 export async function seedAssociateHistoryDemo(email) {
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return { associate: null, patient: null, orderIds: [], serviceIds: [] };
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -858,7 +940,8 @@ export async function prepareServicesReportDemo({
   contestText = DEMO_CONTEST_TEXT,
   irisPrice = 200,
 } = {}) {
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return null;
   try {
     const { rows: pros } = await pool.query(
       `SELECT id, name, last_name, email, professional_code, contest_reports
@@ -964,7 +1047,8 @@ export async function cleanupServicesReportDemoContests({
   restoreIrisPrice = 200,
 } = {}) {
   if (!professionalId) return { removed: 0 };
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return { removed: 0 };
   try {
     const { rows } = await pool.query(
       `SELECT id, contest_reports FROM professionals WHERE id = $1`,
@@ -1000,7 +1084,8 @@ export async function cleanupServicesReportDemoContests({
 
 /** Remove somente pedidos e atendimentos temporários identificados por ID. */
 export async function cleanupHistoryDemoData({ orderIds = [], serviceIds = [] } = {}) {
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return { deletedOrders: 0, deletedServices: 0 };
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -1031,7 +1116,8 @@ export async function cleanupHistoryDemoData({ orderIds = [], serviceIds = [] } 
  * Renomeia Acol/Admin de teste e cria extras fictícios.
  */
 export async function ensureDemoTriageAttendants(pool) {
-  const db = pool || new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const db = pool || requirePool();
+  if (!db) return { assume: null, transfer: null, extras: [] };
   const ownPool = !pool;
   try {
     const attendants = [
@@ -1136,7 +1222,8 @@ export async function prepareTriageConcluidoDemo({
   attendantCode = 'ADMIN-TEST',
   associateEmail = process.env.DEMO_ASSOCIATE_EMAIL || 'associado@soucannabis.ong.br',
 } = {}) {
-  const pool = new pg.Pool({ connectionString: loadDatabaseUrl() });
+  const pool = requirePool();
+  if (!pool) return null;
   try {
     const attendants = await ensureDemoTriageAttendants(pool);
     const deleted = await pool.query(`DELETE FROM reception WHERE status = 'done'`);

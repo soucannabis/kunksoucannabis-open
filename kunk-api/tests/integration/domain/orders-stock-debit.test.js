@@ -1,10 +1,11 @@
 'use strict';
 
-const { describe, it, before } = require('node:test');
+const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const { loginAsAdmin } = require('../../helpers/auth');
 const { query } = require('../../helpers/db');
+const { isolatePaymentModules, paymentBypassBody } = require('../../helpers/integrationEnv');
 const { v4: uuidv4 } = require('uuid');
 
 const ADDRESS = {
@@ -21,8 +22,10 @@ describe('domain/orders stock debit on payment', () => {
   let cookie;
   let productId;
   let sku;
+  let moduleIsolation;
 
   before(async () => {
+    moduleIsolation = await isolatePaymentModules();
     const session = await loginAsAdmin();
     app = session.app;
     cookie = session.cookie;
@@ -43,6 +46,10 @@ describe('domain/orders stock debit on payment', () => {
       });
     assert.equal(created.status, 201, JSON.stringify(created.body));
     productId = created.body.data.id;
+  });
+
+  after(async () => {
+    await moduleIsolation?.restore();
   });
 
   it('debits product.amount and writes sale movement when status → Pagamento concluído', async () => {
@@ -79,7 +86,7 @@ describe('domain/orders stock debit on payment', () => {
     const paid = await request(app)
       .patch(`/api/v1/orders/${orderId}/status`)
       .set('Cookie', cookie)
-      .send({ status: 'Pagamento concluído' });
+      .send(paymentBypassBody('Pagamento concluído'));
     assert.equal(paid.status, 200, JSON.stringify(paid.body));
     assert.ok(paid.body.data.stock_debited_at, 'stock_debited_at deve ser preenchido');
     assert.equal(paid.body.data.status, 'Pagamento concluído');
@@ -114,7 +121,7 @@ describe('domain/orders stock debit on payment', () => {
     const paidAgain = await request(app)
       .patch(`/api/v1/orders/${orderId}/status`)
       .set('Cookie', cookie)
-      .send({ status: 'Pagamento concluído' });
+      .send(paymentBypassBody('Pagamento concluído'));
     assert.equal(paidAgain.status, 200, JSON.stringify(paidAgain.body));
     const afterIdem = await query(`SELECT amount FROM products WHERE id = $1`, [productId]);
     assert.equal(Number(afterIdem.rows[0].amount), 12);
@@ -155,7 +162,7 @@ describe('domain/orders stock debit on payment', () => {
     const paid = await request(app)
       .patch(`/api/v1/orders/${orderRes.body.data.id}/status`)
       .set('Cookie', cookie)
-      .send({ status: 'Pagamento concluído' });
+      .send(paymentBypassBody('Pagamento concluído'));
     assert.equal(paid.status, 200, JSON.stringify(paid.body));
     assert.ok(paid.body.data.stock_debited_at);
 
@@ -195,7 +202,7 @@ describe('domain/orders stock debit on payment', () => {
     const paid = await request(app)
       .patch(`/api/v1/orders/${orderId}/status`)
       .set('Cookie', cookie)
-      .send({ status: 'Pagamento concluído' });
+      .send(paymentBypassBody('Pagamento concluído'));
     assert.equal(paid.status, 200, JSON.stringify(paid.body));
     assert.ok(paid.body.data.stock_debited_at);
 

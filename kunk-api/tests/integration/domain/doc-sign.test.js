@@ -7,6 +7,7 @@ const { getApp } = require('../../helpers/app');
 const { query, ensureAdminUser, cleanupTestLocalUsers } = require('../../helpers/db');
 const { loginAsAdmin, extractAssociateCookie } = require('../../helpers/auth');
 const { resetRateLimits } = require('../../../src/utils/rateLimit');
+const { ensureDocSignLogo } = require('../../helpers/integrationEnv');
 
 describe('doc-sign integration', () => {
   let app;
@@ -27,6 +28,8 @@ describe('doc-sign integration', () => {
         .set('Cookie', adminCookie);
       assert.equal(tpl.status, 200);
       assert.ok(tpl.body.data.draft_content_json);
+
+      await ensureDocSignLogo(app, adminCookie, kind);
 
       const pub = await request(app)
         .post(`/api/v1/doc-sign/templates/${kind}/publish`)

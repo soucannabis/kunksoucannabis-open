@@ -15,11 +15,15 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
-    command: 'npm run dev -- --host 0.0.0.0 --port 4258',
-    url: FRONT_URL,
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  ...(/^https?:\/\/(?!localhost)/i.test(FRONT_URL)
+    ? {}
+    : {
+        webServer: {
+          command: 'npm run dev -- --host 0.0.0.0 --port 4258',
+          url: FRONT_URL,
+          reuseExistingServer: true,
+          timeout: 120_000,
+        },
+      }),
   metadata: { apiUrl: API_URL, frontUrl: FRONT_URL },
 });

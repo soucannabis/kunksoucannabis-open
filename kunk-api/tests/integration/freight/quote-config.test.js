@@ -4,6 +4,7 @@ const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const { loginAsAdmin } = require('../../helpers/auth');
+const { readModuleFlag, setModuleFlags } = require('../../helpers/integrationEnv');
 const storeFreight = require('../../../src/services/storeFreightConfig');
 
 describe('freight/quote-config', () => {
@@ -17,15 +18,34 @@ describe('freight/quote-config', () => {
   });
 
   it('returns FREIGHT_NO_QUOTE when no providers enabled', async () => {
-    const res = await request(app)
-      .post('/api/v1/freight/quote')
-      .set('Cookie', cookie)
-      .send({ address: { cep: '74000000', street: 'Rua', number: '1', city: 'Goiânia', state: 'GO' } });
-    assert.equal(res.status, 400);
-    assert.equal(res.body.errors[0].code, 'FREIGHT_NO_QUOTE');
+    const snapshot = {
+      loggi: await readModuleFlag('loggi'),
+      melhorenvio: await readModuleFlag('melhorenvio'),
+      soucannabis_orders: await readModuleFlag('soucannabis_orders'),
+    };
+    await setModuleFlags({ loggi: false, melhorenvio: false, soucannabis_orders: false });
+    try {
+      const res = await request(app)
+        .post('/api/v1/freight/quote')
+        .set('Cookie', cookie)
+        .send({ address: { cep: '74000000', street: 'Rua', number: '1', city: 'Goiânia', state: 'GO' } });
+      assert.equal(res.status, 400);
+      assert.equal(res.body.errors[0].code, 'FREIGHT_NO_QUOTE');
+    } finally {
+      await setModuleFlags({
+        loggi: snapshot.loggi === 'true',
+        melhorenvio: snapshot.melhorenvio === 'true',
+        soucannabis_orders: snapshot.soucannabis_orders === 'true',
+      });
+    }
   });
 
   it('CONFIG_INCOMPLETE when module on but store package missing', async () => {
+    const snapshot = {
+      soucannabis_orders: await readModuleFlag('soucannabis_orders'),
+    };
+    await setModuleFlags({ soucannabis_orders: false });
+
     const enable = await request(app)
       .patch('/api/v1/admin/external-services/loggi')
       .set('Cookie', cookie)
@@ -63,6 +83,9 @@ describe('freight/quote-config', () => {
         .patch('/api/v1/admin/external-services/loggi')
         .set('Cookie', cookie)
         .send({ enabled: false, use_for_quote: false });
+      await setModuleFlags({
+        soucannabis_orders: snapshot.soucannabis_orders === 'true',
+      });
     }
   });
 });

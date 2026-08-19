@@ -56,7 +56,7 @@ let pool;
 export function getPool() {
   if (!pool) {
     const connectionString = loadDatabaseUrl();
-    if (!connectionString) throw new Error('PG_URL (ou PGHOST/PG*) ausente para helpers E2E doc-sign');
+    if (!connectionString) return null;
     pool = new pg.Pool({ connectionString });
   }
   return pool;
@@ -68,9 +68,10 @@ async function hashPassword(password) {
 }
 
 export async function ensureAdminUser() {
-  const email = 'admin@kunk-api.test';
-  const password = 'TestAdmin123!';
+  const email = process.env.E2E_ADMIN_EMAIL || 'admin@kunk-api.test';
+  const password = process.env.E2E_ADMIN_PASSWORD || 'TestAdmin123!';
   const p = getPool();
+  if (!p) return { email, password };
   const hash = await hashPassword(password);
   const existing = await p.query(`SELECT id FROM system_users WHERE email = $1`, [email]);
   if (existing.rows[0]) {
@@ -88,4 +89,35 @@ export async function ensureAdminUser() {
     );
   }
   return { email, password };
+}
+
+const DOC_SIGN_E2E_ASSOCIATION = {
+  VITE_ASSOCIATION_NAME: 'E2E Doc-sign Assoc',
+  VITE_ASSOCIATION_FULL_NAME: 'ASSOCIACAO E2E DOC SIGN TESTE',
+  VITE_ASSOCIATION_EMAIL: 'contato-docsign-e2e@test.local',
+  VITE_ASSOCIATION_PHONE: '11999998888',
+  VITE_ASSOCIATION_SITE: 'www.docsign-e2e.test',
+  VITE_ASSOCIATION_CNPJ: '11222333000181',
+  VITE_ASSOCIATION_CITY: 'Sao Paulo',
+  VITE_ASSOCIATION_STATE: 'SP',
+};
+
+/** Preenche campos obrigatórios de Dados da associação para liberar login no doc-sign. */
+export async function ensureAssociationData() {
+  const p = getPool();
+  if (!p) return;
+  for (const [key, value] of Object.entries(DOC_SIGN_E2E_ASSOCIATION)) {
+    await p.query(
+      `INSERT INTO system_configs (system, key, value, value_type, is_sensitive, allow_hardcoded, description)
+       VALUES ('registration', $1, $2, 'string', false, true, 'e2e doc-sign')
+       ON CONFLICT (system, key)
+       DO UPDATE SET value = EXCLUDED.value, date_updated = NOW()`,
+      [key, value]
+    );
+  }
+}
+
+export async function prepareDocSignE2e() {
+  await ensureAdminUser();
+  await ensureAssociationData();
 }

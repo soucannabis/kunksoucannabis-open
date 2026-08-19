@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { ensureAdminUser } from '../helpers/db.js';
+import { prepareDocSignE2e } from '../helpers/db.js';
 import { ADMIN_EMAIL, ADMIN_PASSWORD, appUrl } from '../helpers/fixtures.js';
 import { loginInBrowser } from '../helpers/api.js';
 
 test.describe('roadmap · audit', () => {
   test.beforeAll(async () => {
-    await ensureAdminUser();
+    await prepareDocSignE2e();
   });
 
   test('rota de auditoria responde quando há termo', async ({ page }) => {

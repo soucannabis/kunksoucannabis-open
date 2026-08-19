@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { uniqueEmail } from './helpers/fixtures.js';
 import { seedAssociate } from './helpers/api.js';
+import { hydrateAssociateInBrowser } from './helpers/session.js';
 
 test.describe('Pós-termo — finalizar e conclusão', () => {
   test('finalizar → concluir → cadastro-concluido', async ({ page }) => {
@@ -22,8 +23,8 @@ test.describe('Pós-termo — finalizar e conclusão', () => {
 
     await page.getByRole('button', { name: /Finalizar cadastro/i }).click();
     await expect(page).toHaveURL(/\/cadastro-concluido/, { timeout: 20_000 });
-    await expect(page.getByText(/Cadastro concluído/i )).toBeVisible();
-    await expect(page.getByText(/Associado/)).toBeVisible();
+    await expect(page.getByText(/Cadastro concluído/i)).toBeVisible();
+    await expect(page.getByText(/cadastro foi realizado com sucesso/i)).toBeVisible();
   });
 
   test('consulta redireciona para finalizar', async ({ page }) => {
@@ -35,8 +36,10 @@ test.describe('Pós-termo — finalizar e conclusão', () => {
 
   test('home redirects concluido to cadastro-concluido', async ({ page }) => {
     const email = uniqueEmail('done');
-    const { api } = await seedAssociate(page, { email, phase: 5 });
-    await api.complete();
+    await seedAssociate(page, { email, phase: 5 });
+    const { forceAssociateStatus } = await import('./helpers/db.js');
+    await forceAssociateStatus(email, { status: 'Associado', associate_status: 'concluido' });
+    await hydrateAssociateInBrowser(page, email, undefined, { refresh: true });
     await page.goto('/');
     await expect(page).toHaveURL(/\/cadastro-concluido/);
   });

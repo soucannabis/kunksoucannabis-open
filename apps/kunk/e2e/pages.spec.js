@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
-import { loginInBrowser } from './helpers/api.js';
+import { loginInBrowser, expectLoggedInShell } from './helpers/api.js';
 
 test.describe('páginas operacionais', () => {
   test.beforeAll(async () => {
@@ -9,12 +9,12 @@ test.describe('páginas operacionais', () => {
 
   test.beforeEach(async ({ page }) => {
     await loginInBrowser(page);
-    await expect(page.getByText('Kunk SouCannabis')).toBeVisible();
+    await expectLoggedInShell(page);
   });
 
   test('associados carrega filtros', async ({ page }) => {
     await page.goto('/app/acolhimento/associados');
-    await expect(page.getByText(/Filtrar Associados/i)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('button', { name: 'Filtrar' })).toBeVisible({ timeout: 20_000 });
   });
 
   test('atendimentos carrega listagem', async ({ page }) => {
@@ -57,12 +57,14 @@ test.describe('páginas operacionais', () => {
 
   test('dashboard analytics carrega', async ({ page }) => {
     await page.goto('/app/relatorios/dashboard');
-    await expect(page.getByText('Dashboard')).toBeVisible({ timeout: 20_000 });
+    await expect(
+      page.locator('main').getByRole('heading', { name: 'Dashboard', exact: true })
+    ).toBeVisible({ timeout: 20_000 });
   });
 
   test('relatório de serviços carrega', async ({ page }) => {
     await page.goto('/app/relatorios/servicos');
-    await expect(page.getByText(/Relatório de Serviços/i).first()).toBeVisible({
+    await expect(page.getByText(/Relatório de atendimentos/i).first()).toBeVisible({
       timeout: 20_000,
     });
   });

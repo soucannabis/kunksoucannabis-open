@@ -13,7 +13,7 @@ test.describe('roadmap · dados da associação', () => {
     await dismissAdminPrompts(page);
     await page.goto(appUrl('/dados-associacao'));
       await expect(page.getByRole('heading', { name: 'Dados da associação' })).toBeVisible();
-    await expect(page.getByText('Logo', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Logos' })).toBeVisible();
     await expect(page.locator('#associationName')).toBeVisible();
   });
 });

@@ -19,7 +19,7 @@ test.describe('auth', () => {
   test('credencial inválida mostra erro', async ({ page }) => {
     await page.goto(appUrl('/login'));
     await page.getByLabel('E-mail').fill(ADMIN_EMAIL);
-    await page.getByLabel('Senha').fill('wrong-password');
+    await page.locator('#password').fill('wrong-password');
     await page.getByRole('button', { name: 'Entrar' }).click();
     await expect(page.getByRole('alert')).toBeVisible();
     await expect(page).toHaveURL(/\/login/);
