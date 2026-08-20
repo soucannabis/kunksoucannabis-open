@@ -1,51 +1,27 @@
 import { test, expect } from '@playwright/test';
 import { ensureAdminUser } from './helpers/db.js';
 import { ADMIN_EMAIL, ADMIN_PASSWORD, appUrl } from './helpers/fixtures.js';
-import { loginInBrowser, dismissAdminPrompts } from './helpers/api.js';
+import { loginInBrowser } from './helpers/api.js';
 
-test.describe('central de ajuda (documentação)', () => {
+test.describe('documentação externa', () => {
   test.beforeAll(async () => {
     await ensureAdminUser();
   });
 
-  test('menu Documentação abre a central de ajuda', async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await expect(page).toHaveURL(/\/home\/?$/);
-    await dismissAdminPrompts(page);
-    await page.locator('.admin-nav').getByRole('link', { name: 'Documentação', exact: true }).click();
-    await expect(page).toHaveURL(/\/inicio\/?$/);
-    await expect(page.getByTestId('admin-docs-home')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Central de ajuda', exact: true })).toBeVisible();
   });
 
-  test('pesquisa encontra artigo e Ir para a página navega', async ({ page }) => {
-    await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
+  test('menu Documentação abre o site oficial em nova aba', async ({ page, context }) => {
+    const popupPromise = context.waitForEvent('page');
+    await page.locator('.admin-nav').getByTestId('admin-nav-docs-external').click();
+    const popup = await popupPromise;
+    await popup.waitForLoadState('domcontentloaded');
+    await expect(popup).toHaveURL(/kunksoucannabis\.ong\.br/);
+  });
+
+  test('rota /inicio redireciona para /home', async ({ page }) => {
     await page.goto(appUrl('/inicio'));
-    await expect(page.getByTestId('admin-docs-home')).toBeVisible();
-
-    const storageNo = page.getByRole('button', { name: 'Não', exact: true });
-    await storageNo.click({ timeout: 3000 }).catch(() => {});
-
-    await page.getByTestId('admin-docs-search').fill('loggi');
-    const navLoggi = page.getByTestId('admin-docs-nav-servicos-loggi');
-    await expect(navLoggi).toBeVisible();
-    await navLoggi.click();
-    await expect(page).toHaveURL(/\/inicio\/servicos-loggi/);
-    await page.getByTestId('admin-docs-search').fill('');
-    await expect(page.getByTestId('admin-docs-article').getByRole('heading', { name: 'Loggi' })).toBeVisible();
-
-    await page.getByTestId('admin-docs-open-page').click({ force: true });
-    await expect(page).toHaveURL(/\/servicos-externos\/loggi/);
-  });
-
-  test('menu Documentação a partir de outra página', async ({ page }) => {
-    await loginInBrowser(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    await dismissAdminPrompts(page);
-    await page.locator('.admin-nav').getByRole('link', { name: 'Banco de dados', exact: true }).click();
-    await expect(page).toHaveURL(/\/dados\/?$/);
-    await dismissAdminPrompts(page);
-    await page.locator('.admin-nav').getByRole('link', { name: 'Documentação', exact: true }).click();
-    await expect(page).toHaveURL(/\/inicio\/?$/);
-    await expect(page.getByTestId('admin-docs-home')).toBeVisible();
+    await expect(page).toHaveURL(/\/home\/?$/);
   });
 });

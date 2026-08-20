@@ -36,7 +36,6 @@ import { SystemErrorBoundary } from './components/errors/SystemErrorBoundary.jsx
 import { SystemErrorsPage } from './pages/SystemErrorsPage.jsx';
 import { WebVitalsPage } from './pages/WebVitalsPage.jsx';
 import { CachePage } from './pages/CachePage.jsx';
-import { DocsHomePage } from './pages/DocsHomePage.jsx';
 import { HomePage } from './pages/HomePage.jsx';
 import { ApiAccessPage } from './pages/ApiAccessPage.jsx';
 import { WebhooksPage } from './pages/WebhooksPage.jsx';
@@ -68,8 +67,8 @@ export default function App() {
               >
                 <Route path="/" element={<Navigate to="/home" replace />} />
                 <Route path="/home" element={<HomePage api={api} />} />
-                <Route path="/inicio" element={<DocsHomePage />} />
-                <Route path="/inicio/:slug" element={<DocsHomePage />} />
+                <Route path="/inicio" element={<Navigate to="/home" replace />} />
+                <Route path="/inicio/:slug" element={<Navigate to="/home" replace />} />
                 <Route path="/dados-associacao" element={<AssociationDataPage api={api} />} />
                 <Route path="/sistema-cadastro" element={<RegistrationSystemPage api={api} />} />
                 <Route path="/dados" element={<DataIndexPage api={api} />} />

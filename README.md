@@ -86,6 +86,10 @@ READMEs por app: `apps/*/README.md` e [`kunk-api/README.md`](./kunk-api/README.m
 | `deploy/spa/` | Empacotamento/deploy dos frontends |
 | `docker-compose.kunk.yml` | Stack local unificada |
 
+## Licença
+
+Este projeto é distribuído sob a [GNU Affero General Public License v3.0](./LICENSE) (AGPL-3.0).
+
 ## Contribuição
 
 Abra issues e pull requests em [soucannabis/kunksoucannabis-open](https://github.com/soucannabis/kunksoucannabis-open). Preferência: mudanças pequenas, com testes na API (`npm test` em `kunk-api`) quando o comportamento mudar.

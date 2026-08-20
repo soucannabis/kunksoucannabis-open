@@ -207,7 +207,24 @@ function NavIcon({ name, size = 15 }) {
   }
 }
 
-function TopNavLink({ to, end, icon, children }) {
+const OFFICIAL_DOCS_URL = 'https://kunksoucannabis.ong.br/';
+
+function TopNavLink({ to, href, end, icon, children, external }) {
+  if (external && href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="admin-nav-link-icon"
+        data-testid="admin-nav-docs-external"
+      >
+        <NavIcon name={icon} />
+        <span>{children}</span>
+      </a>
+    );
+  }
+
   return (
     <NavLink
       to={to}
@@ -485,7 +502,7 @@ export function AdminShell({ api }) {
         <TopNavLink to="/home" icon="home">
           Home
         </TopNavLink>
-        <TopNavLink to="/inicio" icon="book">
+        <TopNavLink href={OFFICIAL_DOCS_URL} icon="book" external>
           Documentação
         </TopNavLink>
 

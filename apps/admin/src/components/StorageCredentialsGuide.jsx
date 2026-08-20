@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { STORAGE_SETUP_GUIDES } from '@kunk/admin-docs';
+import { STORAGE_SETUP_GUIDES } from '../lib/storageGuides.js';
 
 const CREDENTIAL_GUIDE_BOX_STYLE = {
   marginTop: 0,

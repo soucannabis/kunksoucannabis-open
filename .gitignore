@@ -50,11 +50,6 @@ playwright-report/
 test-results/
 *.local
 
-# Backups e ferramentas locais
-/bkp/
-.graphify-venv/
-graphify-out/
-
 # Projetos legados (referência local; fora do OSS)
 /cadastramento/
 /kunksoucannabis/
@@ -71,18 +66,3 @@ graphify-out/
 /entrypoint.sh
 /nginx.conf
 .dockerignore
-
-# Fora do OSS no main (dev / tooling / site de docs)
-/.cursor/
-/docuseal/
-/storage/
-/tmp/
-/todo.md
-/tests/smoke/
-/project-tools/
-/apps/website/
-/deploy/website/
-/MANIFESTO.md
-
-# Docs site moved to soucannabis/kunk-soucannabis-docs
-/docs/
