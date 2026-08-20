@@ -1,7 +1,6 @@
 # Matérias-primas
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/loja/materias-primas` |
 | **Componente** | `MateriasPrimas` |
-| **Arquivo legado** | `src/components/master/materiasPrimas.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição

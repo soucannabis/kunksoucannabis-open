@@ -1,7 +1,6 @@
 # Financeiro — relatório
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/financeiro/relatorio` |
 | **Componente** | `Finances` |
-| **Arquivo legado** | `src/components/master/finances.jsx` |
 | **Permissões** | Só gate `/app` |
 
 ## Descrição
@@ -25,7 +23,7 @@ Consulta/relatório de lançamentos financeiros já registrados.
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus finances** | `/api/directus/finances/all` |
+| **o schema de origem finances** | `/api/v1/finances/all` |
 
 ## Dependências de outras páginas / módulos
 

@@ -1,6 +1,6 @@
 # Rotas de domínio
 
-Rotas além do CRUD genérico, para regras de negócio e fluxos do produto.  
+Rotas além do CRUD genérico, para regras de negócio e fluxos do produto. 
 Prefixo: `/api/v1`.
 
 Estas rotas **complementam** `/items`; não substituem listagens simples.
@@ -65,7 +65,7 @@ Listagens genéricas também em `GET /items/users`.
 | POST | `/terms/contracts` | Alias deprecado → `/doc-sign/contracts` |
 | GET | `/terms/status` | Alias deprecado → `/doc-sign/status` |
 
-Stubs atuais retornam `TERMS_MODULE_IN_DEVELOPMENT` até a entrega.  
+Stubs atuais retornam `TERMS_MODULE_IN_DEVELOPMENT` até a entrega. 
 **Sem webhook externo** — ao completar assinatura, a própria API atualiza `users.adhesion_term` e `associate_status` 4→5.
 ---
 
@@ -89,7 +89,7 @@ Stubs atuais retornam `TERMS_MODULE_IN_DEVELOPMENT` até a entrega.
 | POST | `/services` | Criar agendamento / serviço |
 | PATCH | `/services/:id` | Atualizar |
 | GET | `/services/by-professional/:id` | Por profissional (`include` suportado) |
-| GET | `/services/exists` | Existe associate+professional (legado) |
+| GET | `/services/exists` | Existe associate+professional  |
 | GET | `/services/reports` | Relatório de serviços pagos (mês / profissional / `payable`) — ver [spec](../frontend/kunk/relatorios-servicos/api.md) |
 | POST | `/services/reports/validate` | Lote `commission_validation` (staff) |
 
@@ -166,7 +166,7 @@ Agregações para Relatórios → Dashboard. Ver [spec](../frontend/kunk/analyti
 | GET | `/system-users` | Listar operadores do painel |
 | POST | `/system-users` | Criar operador (admin) |
 
-CRUD genérico também em `/items/system_users` (ex-`kunk_users` / Directus `Kunk_Users`).
+CRUD genérico também em `/items/system_users` (`system_users`).
 
 ---
 
@@ -176,7 +176,7 @@ CRUD genérico também em `/items/system_users` (ex-`kunk_users` / Directus `Kun
 |---|---|---|
 | GET | `/search?q=&entity=` | Busca unificada (users, orders, …) |
 
-Equivalente ao `search.js` atual do kunkserver.
+Equivalente ao `search.js` atual do implementação anterior.
 
 ---
 
@@ -198,6 +198,6 @@ Equivalente ao `search.js` atual do kunkserver.
 
 ---
 
-## Migração a partir do kunkserver
+## Migração a partir do implementação anterior
 
-Ver [migration-from-directus.md](./migration-from-directus.md) para o mapa `/api/directus/...` → `/api/v1/...`.
+Ver para o mapa `/api/v1/...` → `/api/v1/...`.

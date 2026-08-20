@@ -4,7 +4,7 @@
 
 | # | Decisão |
 |---|---|
-| 1 | Layout/visual da página Serviços **igual ao legado** |
+| 1 | Layout/visual da página Serviços **igual aversões anteriores** |
 | 2 | Beeviral / cupons **fora**. PaymentModal / `payment_link` quando módulo `pagarme` ativo — ver [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md). Sem split SC em serviços |
 | 3 | Status `Aguardando Pagamento` / `Pagamento Concluído` + toggle manual |
 | 4 | **Comprovante ao ser enviado → `Pagamento Concluído`** (nos IDs do grupo se agrupado) |
@@ -20,7 +20,7 @@
 | 14 | Soft-delete de profissional (`active=0`) |
 | 15 | Acesso a páginas do Kunk **configurável no admin**; **default = todas as páginas para todas as roles staff** (Produção inclui Serviços) |
 | 16 | Alinhar `rbac.js`: Produção com acesso a `services` / `services_files` coerente com a página |
-| 17 | `payment_type` no modal Info; tipo `psychiatrist` no enum; UI MUI + classes legado |
+| 17 | `payment_type` no modal Info; tipo `psychiatrist` no enum; UI MUI + classes histórico |
 | 18 | WhatsApp/Utalk **fora** do v1 |
 | 19 | Secrets Google só persistem se teste/OAuth ok |
 | 20 | **Beneficiário do atendimento:** escolher responsável **ou** paciente (`services.patient_user_code`). Pré-seleção: se `users.patient_user_code` do funil for paciente válido do responsável → selecionar esse paciente |

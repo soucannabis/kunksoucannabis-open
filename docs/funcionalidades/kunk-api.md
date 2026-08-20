@@ -3,7 +3,7 @@
 > Backend REST (`kunk-api`, base `/api/v1`).
 > Índice: [README.md](./README.md) · Spec detalhada: [`../api/`](../api/)
 
-**Testes:** `npm run test:api` (`node --test` — unit, integration, contract).  
+**Testes:** `npm run test:api` (`node --test` — unit, integration, contract). 
 Não há Playwright na API; e2e dos apps exercitam parte das rotas.
 
 ## Domínio (rotas)

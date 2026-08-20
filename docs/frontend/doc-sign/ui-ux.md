@@ -31,8 +31,8 @@ Porta **4258** · subdomínio **`termos.`**
 
 ## 2. Assinatura
 
-Termo renderizado na página (HTML TipTap somente leitura) **acima**; painel draw / type / upload + consentimento **abaixo**.  
-Sem iframe/PDF na UI de assinatura (PDF assinável ainda é gerado no backend ao concluir).  
+Termo renderizado na página (HTML TipTap somente leitura) **acima**; painel draw / type / upload + consentimento **abaixo**. 
+Sem iframe/PDF na UI de assinatura (PDF assinável ainda é gerado no backend ao concluir). 
 Mobile com canvas touch. Pós-sucesso: redirect ao `cad.` fase 5.
 
 ---

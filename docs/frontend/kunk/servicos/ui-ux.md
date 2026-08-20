@@ -1,7 +1,6 @@
 # Serviços — UI/UX (`apps/kunk`)
 
-> **Obrigatório:** replicar layout, hierarquia visual e padrões do legado `services.jsx`.
-> Fonte: `kunksoucannabis/src/components/master/services.jsx` + classes em `App.css`.
+> **Obrigatório:** replicar layout, hierarquia visual e padrões anteriores `services.jsx`.
 > Beeviral fora. Toggle pago/pendente e comprovante permanecem. PaymentModal quando `pagarme` ativo — [`../pagamentos-soucannabis/ui-ux.md`](../pagamentos-soucannabis/ui-ux.md).
 
 ## Rota
@@ -12,7 +11,7 @@ Permissões: conforme `kunk.role_pages` (default: todas as roles staff, incl. Pr
 
 ---
 
-## Tokens visuais (legado)
+## Tokens visuais 
 
 | Token | Valor | Uso |
 |---|---|---|
@@ -52,7 +51,7 @@ Modais: Novo Serviço · Infos · Editar data/evento · Editar campo · PaymentM
 
 ### Classes / containers
 
-| Bloco | Classe / padrão legado |
+| Bloco | Classe / padrãversões anteriores |
 |---|---|
 | Barra superior | `Box` + `className="pageContainerOptions"` |
 | Tabela | `TableContainer` + `className="pageContainerTable"` + `Paper` |
@@ -64,7 +63,7 @@ Manter a mesma composição “opções em cima / tabela embaixo” — **não**
 
 ## Barra de filtros
 
-| Controle | Comportamento (legado) |
+| Controle | Comportamento  |
 |---|---|
 | Pesquisar | Normaliza NFD; palavras em qualquer ordem em `associate_name` / `professional_name`; também data e preços |
 | Data inicial / final | Filtra `date_created`; **default últimos 14 dias** |
@@ -75,7 +74,7 @@ Manter a mesma composição “opções em cima / tabela embaixo” — **não**
 
 ### Remover da barra
 
-| Controle legado | Ação |
+| Controle histórico | Ação |
 |---|---|
 | Coluna / filtro Beeviral | Não renderizar |
 
@@ -104,7 +103,7 @@ Manter a mesma composição “opções em cima / tabela embaixo” — **não**
 Não colapsar linhas: **uma linha = um registro**. O vínculo de grupo é a bolinha + o modal Info que lista o grupo.
 
 ```js
-// uuidToColor: hash do UUID → HSL → hex (portar do legado)
+// uuidToColor: hash do UUID → HSL → hex (portar anteriores)
 ```
 
 ### Ações por linha
@@ -122,7 +121,7 @@ Não colapsar linhas: **uma linha = um registro**. O vínculo de grupo é a boli
 
 ## Modal Novo Serviço
 
-| Propriedade | Valor legado |
+| Propriedade | Valor histórico |
 |---|---|
 | Largura | ~700px |
 | `borderRadius` | `20px` |
@@ -133,21 +132,21 @@ Não colapsar linhas: **uma linha = um registro**. O vínculo de grupo é a boli
 
 1. Form / busca de **associado responsável** (pré-fill se `?u=`)
 2. **Beneficiário do atendimento** (radio / select):
-   - O próprio associado responsável
-   - Paciente da lista (`GET /users/:id/patients`)
-   - **Default:** se o responsável tiver `patient_user_code` válido (funil) → pré-selecionar esse paciente; senão o responsável
-   - Operador pode alterar antes de criar
+ - O próprio associado responsável
+ - Paciente da lista (`GET /users/:id/patients`)
+ - **Default:** se o responsável tiver `patient_user_code` válido (funil) → pré-selecionar esse paciente; senão o responsável
+ - Operador pode alterar antes de criar
 3. Autocomplete opcional: **Relacionar a serviço existente** (reusa `booking_group_code`)
 4. Autocomplete **múltiplo** de profissionais (`is_collaborator` only)
 5. Bloco por profissional:
-   - Valor consulta (pré-preenchido)
-   - Doação
-   - Valor pago
-   - `datetime-local` da consulta (opcional)
-   - Checkbox **Criar evento no calendário**
-     - default **desmarcado**
-     - ao escolher a data → **marca automaticamente**
-     - usuário pode desmarcar
+ - Valor consulta (pré-preenchido)
+ - Doação
+ - Valor pago
+ - `datetime-local` da consulta (opcional)
+ - Checkbox **Criar evento no calendário**
+ - default **desmarcado**
+ - ao escolher a data → **marca automaticamente**
+ - usuário pode desmarcar
 6. Tags (compartilhadas)
 7. Observações (compartilhadas; template considera beneficiário)
 8. Botão Criar
@@ -158,7 +157,7 @@ Sem seção de cupons. Sem geração de payment_link. Sem “paciente ativo” i
 
 ## Modal Infos do serviço
 
-Espelhar o dialog legado “Observações do Serviço” (`observationsModal`).
+Espelhar o dialog histórico “Observações do Serviço” (`observationsModal`).
 
 ### Open
 
@@ -190,7 +189,7 @@ Espelhar o dialog legado “Observações do Serviço” (`observationsModal`).
 └──────────────────────────────────────────────────────┘
 ```
 
-### Remover do modal legado
+### Remover do modal histórico
 
 | Bloco | Motivo |
 |---|---|
@@ -217,7 +216,7 @@ Se o serviço já tem `event_id` e o usuário altera `consultation_date`:
 └──────────────────────────────────────────────────────┘
 ```
 
-- **Aprovar** → DELETE evento antigo + POST novo + PATCH serviço (data + event_*)  
+- **Aprovar** → DELETE evento antigo + POST novo + PATCH serviço (data + event_*) 
 - **Cancelar** → não persiste a nova data
 
 Sem `event_id`: PATCH da data normalmente; evento fica para o botão Agendar (ou checkbox só no create).
@@ -270,7 +269,7 @@ CreateRecipientModal / ranking de split: fora desta página (Pagarme em Serviço
 
 ## O que manter vs remover (resumo visual)
 
-| Bloco legado | OSS |
+| Blocversões anteriores | OSS |
 |---|---|
 | `pageContainerOptions` + tabela verde | Manter |
 | Bolinha de grupo por `code` | Manter (`booking_group_code`) |

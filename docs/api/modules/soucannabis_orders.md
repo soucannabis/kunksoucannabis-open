@@ -66,7 +66,7 @@ Remoto: `{base_url}/api/external`.
 | `POST` | `/outbound/pagarme/recipients` | SC cadastra recebedor (body completo Pagarme) |
 | `GET` | `/outbound/users/:user_code` | SC resolve associado local |
 | `POST` | `/webhooks/auth/token` | Token com **credenciais outbound** |
-| `POST` | `/webhooks/orders/sync` | Sync manual de pedidos (legado → OSS) |
+| `POST` | `/webhooks/orders/sync` | Sync manual de pedidos (entrada → OSS) |
 | `GET` | `/webhook-info` | Admin: URLs e exemplo (sessão) |
 
 ### Auditoria Outbound
@@ -84,7 +84,7 @@ Resposta: `{ data: { total, limit, offset, items: [...] } }`. Campos de auditori
 
 ### Webhook de sincronização manual
 
-Guia para o Kunk legado: [`soucannabis_orders_webhook_sync.md`](./soucannabis_orders_webhook_sync.md).
+Guia de sync: [`soucannabis_orders_webhook_sync.md`](./soucannabis_orders_webhook_sync.md).
 
 Rota pública (sem sessão), autenticada com as **credenciais outbound** (mesmas de `…/outbound/*`):
 

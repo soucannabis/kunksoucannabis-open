@@ -2,7 +2,6 @@
 
 > Página operacional de fila de acolhimento (`reception`).
 > **Especificação de implementação (novo projeto):** [`../triagem/`](../triagem/README.md).
-> Fonte legada: `kunksoucannabis` (`reception.jsx`).
 
 ## Identificação
 
@@ -10,8 +9,6 @@
 |---|---|
 | **Rota** | `/app/acolhimento/triagem` |
 | **App novo** | `apps/kunk/src/pages/reception/TriagePage.jsx` (stub → implementação) |
-| **Componente legado** | `Reception` + `ReceptionTableRow` |
-| **Arquivo legado** | `src/components/master/reception.jsx` + `reception/*` |
 | **Permissões** | Administrador \| Acolhimento \| Produção |
 
 ## Descrição

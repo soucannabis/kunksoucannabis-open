@@ -1,7 +1,6 @@
 # Prescritores / Profissionais
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 > **Gestão OSS:** [`../servicos/admin.md`](../servicos/admin.md) · rota `/app/profissionais`.
 
 ## Identificação
@@ -10,7 +9,6 @@
 |---|---|
 | **Rota legada** | `/app/prescritores` |
 | **Rota OSS** | `/app/profissionais` |
-| **Componente legado** | `PrescribersPage` / `ProfessionalsAndPartners` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição

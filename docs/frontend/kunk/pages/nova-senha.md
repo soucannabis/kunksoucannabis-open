@@ -1,7 +1,6 @@
 # Redefinição de senha
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/nova-senha` |
 | **Componente** | `RedefinePass` |
-| **Arquivo legado** | `src/components/externalPages/redefinePass.jsx` |
 | **Permissões** | Pública |
 
 ## Descrição
@@ -25,7 +23,7 @@ Fluxo 'esqueci minha senha': solicitação por e-mail e definição de nova senh
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus / kunk-user** | `verify-email`, `redefine-pass` |
+| **o schema de origem / kunk-user** | `verify-email`, `redefine-pass` |
 | **E-mail SMTP** | `/api/email/send-email-redefine-pass` |
 
 ## Dependências de outras páginas / módulos

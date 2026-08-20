@@ -36,7 +36,7 @@ O cadastramento (`apps/registration`) e o Kunk (`apps/kunk`) usam Vite só para 
 
 ### Branding (seed em `system_configs` com `system = registration`)
 
-| Token / env | Uso | Exemplo legado |
+| Token / env | Uso | Exemplversões anteriores |
 |---|---|---|
 | `VITE_ASSOCIATION_NAME` | Nome exibido | `Sou Cannabis` |
 | `VITE_ASSOCIATION_LOGO` | Logo login / welcome | URL ou path |
@@ -47,7 +47,7 @@ O cadastramento (`apps/registration`) e o Kunk (`apps/kunk`) usam Vite só para 
 
 Cores do cadastramento (CSS variables em `@kunk/theme`):
 
-| Variável CSS | Papel | Valor legado SouCannabis |
+| Variável CSS | Papel | Valor integrações específicas de associação |
 |---|---|---|
 | `--kunk-bg` | Fundo atmosférico | `#132712` (+ overlay) |
 | `--kunk-nav` | Navbar | `#4e774d` |
@@ -90,15 +90,15 @@ Toggle claro/escuro: `ThemeSettings` no sidebar; preferência em `localStorage.s
 
 ## O que não vai no frontend
 
-- Tokens de banco / Directus
-- Chaves de criptografia (`CONFIG_ENCRYPT_KEY`, `VITE_PASS_ENCRYPT` no legado é risco)
-- API keys de DocuSeal / e-mail
+- Tokens de banco / o schema de origem
+- Chaves de criptografia (`CONFIG_ENCRYPT_KEY`, `VITE_PASS_ENCRYPT` antes é risco)
+- API keys de o módulo de termos / e-mail
 
 Esses ficam só no servidor (`kunk-api`). Valores sensíveis em `system_configs` são criptografados at-rest.
 
 ## Feature flags leves
 
-Evitar `if (associationName === "Sou Cannabis")` no código (existe no legado para upload externo). Preferir:
+Evitar `if (associationName === "Sou Cannabis")` no código (existe antes para upload externo). Preferir:
 
 ```
 VITE_FEATURE_EXTERNAL_UPLOAD_URL=https://…

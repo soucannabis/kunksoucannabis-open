@@ -1,7 +1,6 @@
 # Relatório de serviços (externo / portal do profissional)
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 > **Spec de implementação OSS:** [`../relatorios-servicos/README.md`](../relatorios-servicos/README.md).
 
 ## Identificação
@@ -10,8 +9,7 @@
 |---|---|
 | **Rota** | `/relatorio/servicos` |
 | **Componente** | `ReportService` |
-| **Arquivo legado** | `src/components/master/reportServices.jsx` |
-| **Permissões legado** | Qualquer autenticado + `?p=` (gate fraco) |
+| **Permissões histórico** | Qualquer autenticado + `?p=` (gate fraco) |
 | **Permissões OSS** | Role `Profissional` + `internal_code` = `professional_code` |
 
 ## Descrição
@@ -24,14 +22,14 @@ Visão do profissional para conferir atendimentos pagos do mês, valor a receber
 - Totais de valor a receber
 - Contestar (“Estão faltando dados”) → `contest_reports`
 - Exportar PDF / logout
-- Legado também: cupons / recipient — **não portar**
+- Histórico também: cupons / recipient — **não portar**
 
 ## Integrações externas e serviços
 
 | Serviço | Uso nesta página |
 |---|---|
 | **Auth** | Login + logout |
-| **Directus** (legado) | services, professionals |
+| **o schema de origem**  | services, professionals |
 
 ## Dependências de outras páginas / módulos
 
@@ -41,7 +39,7 @@ Visão do profissional para conferir atendimentos pagos do mês, valor a receber
 
 ## Observações
 
-- Legado redirecionava `Prescritor` para relatório de **pedidos**; no OSS desta entrega o portal de serviços usa role **`Profissional`**.
+- Histórico redirecionava `Prescritor` para relatório de **pedidos**; no OSS desta entrega o portal de serviços usa role **`Profissional`**.
 
 ## Decisão open-source
 

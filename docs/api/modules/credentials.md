@@ -70,7 +70,7 @@ Criptografia: AES-256-GCM com `CONFIG_ENCRYPT_KEY` (mesmo mecanismo de configs s
 }
 ```
 
-`source`: `db` | `env` | `empty`  
+`source`: `db` | `env` | `empty` 
 Se `source=env`, UI: “Configurado via ambiente (`LOGGI_CLIENT_SECRET`)”.
 
 ### Escrita
@@ -97,7 +97,7 @@ PUT /admin/external-services/loggi/credentials
 
 ### Alterar chave
 
-UI mostra input vazio + placeholder “Nova chave” (nunca o valor antigo).  
+UI mostra input vazio + placeholder “Nova chave” (nunca o valor antigo). 
 Submit só envia campos que o usuário preencheu.
 
 ### Remover valor DB
@@ -141,7 +141,7 @@ Inserir rows com `encrypted_value=NULL` e `env_fallback` preenchido para o assis
 | soucannabis_orders | client_secret | SOUCANNABIS_ORDERS_CLIENT_SECRET | true |
 | soucannabis_orders | token_url | SOUCANNABIS_ORDERS_TOKEN_URL | false |
 
-Tokens ME e Google Calendar são preenchidos só pelo callback OAuth (não pelo form manual, exceto “limpar”).  
+Tokens ME e Google Calendar são preenchidos só pelo callback OAuth (não pelo form manual, exceto “limpar”). 
 `soucannabis_orders` usa OAuth **client credentials** no server (não popup). Recipient SC do split fica em `modules.pagarme.soucannabis_recipient_id` (config), não em credentials.
 
 `pagarme.webhook_user` / `webhook_pass` são HTTP Basic **obrigatórios** no cadastro do webhook no painel Pagar.me (os mesmos valores). Sem isso a API responde 401.

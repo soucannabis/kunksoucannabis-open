@@ -33,7 +33,7 @@ Detalhe: [`../../api/modules/pagarme.md`](../../api/modules/pagarme.md).
 | `POST` | `/modules/soucannabis_orders/webhooks/orders/sync` | Sync manual lote/delta |
 | `GET` | `/modules/soucannabis_orders/webhook-info` | Admin: URLs |
 
-Detalhe: [`../../api/modules/soucannabis_orders.md`](../../api/modules/soucannabis_orders.md) · guia legado: [`../../api/modules/soucannabis_orders_webhook_sync.md`](../../api/modules/soucannabis_orders_webhook_sync.md).
+Detalhe: [`../../api/modules/soucannabis_orders.md`](../../api/modules/soucannabis_orders.md) · guia histórico: [`../../api/modules/soucannabis_orders_webhook_sync.md`](../../api/modules/soucannabis_orders_webhook_sync.md).
 
 ## Domínio pedidos (side-effects)
 

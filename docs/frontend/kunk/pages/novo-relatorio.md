@@ -1,7 +1,6 @@
 # Novo / editar relatório
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/novo-relatorio` |
 | **Componente** | `Report` |
-| **Arquivo legado** | `src/components/master/report.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição
@@ -27,7 +25,7 @@ Construtor e executor de relatórios SQL (colunas, query, save). Arquivo grande 
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus reports** | table-columns, run-query, save-report, CRUD |
+| **o schema de origem reports** | table-columns, run-query, save-report, CRUD |
 | **PostgreSQL Reports** | execução SQL |
 
 ## Dependências de outras páginas / módulos

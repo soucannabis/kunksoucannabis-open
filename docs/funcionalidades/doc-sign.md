@@ -3,7 +3,7 @@
 > Termos e assinaturas nativos (`apps/doc-sign`, porta **4258**).
 > Índice: [README.md](./README.md)
 
-**Auth:** operador Administrador (gestão); assinatura pública por token.  
+**Auth:** operador Administrador (gestão); assinatura pública por token. 
 **Testes do app:** Playwright (`npm run test:e2e:doc-sign`). Fluxo de assinatura coberto na **API**.
 
 ## Gestão (admin)

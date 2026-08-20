@@ -1,6 +1,6 @@
 # Collections
 
-Collections acessíveis via `/api/v1/items/:collection`.  
+Collections acessíveis via `/api/v1/items/:collection`. 
 Nomes = tabelas do schema alvo ([target-schema.sql](../../sql/target-schema.sql)).
 
 ## Whitelist
@@ -21,7 +21,7 @@ Nomes = tabelas do schema alvo ([target-schema.sql](../../sql/target-schema.sql)
 | `tags` | `id` | Etiquetas (`contexts`) |
 | `users_files` | `id` | Junction user ↔ arquivo |
 | `files` | `id` (UUID) | Metadados de arquivo (preferir `/files`) |
-| `users_api` | `id` | Legado; preferir `/auth/tokens` |
+| `users_api` | `id` | Histórico; preferir `/auth/tokens` |
 
 ## Campos sensíveis (nunca expor por default)
 
@@ -29,7 +29,7 @@ Nomes = tabelas do schema alvo ([target-schema.sql](../../sql/target-schema.sql)
 |---|---|
 | `system_users` | `password`, `session_token`, `utalk_token` |
 | `users` | `account_password`, `session_token` |
-| `users_api` | `token` (plaintext legado) |
+| `users_api` | `token` (plaintext histórico) |
 
 ## Campos importantes por domínio
 
@@ -84,7 +84,7 @@ Nomes = tabelas do schema alvo ([target-schema.sql](../../sql/target-schema.sql)
 
 ## Collections **fora** do escopo open source
 
-Não entram na whitelist (existem no Directus de origem, mas não no produto OSS):
+Não entram na whitelist (existiam em schemas antigos, mas não no produto OSS):
 
 `Coupons`, `Deliveries`, `Satisfaction_survey`, `associados_pipefy`, `batch_control`, `changelog`, `finances`, `logs`, `notify`, `pedidos_pipefy2`, `utalk`, `Partners_files`
 

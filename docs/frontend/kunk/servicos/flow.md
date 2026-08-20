@@ -98,8 +98,8 @@ para cada profissional em selectedProfessionals:
 Regras:
 
 - **1 associado + N profissionais** no mesmo create → **N linhas** com o **mesmo** `booking_group_code`.
-- Adicionar profissional a um grupo já existente → reutiliza o `booking_group_code` (legado: “Precisa adicionar um novo profissional?”).
-- Se relacionar a um serviço existente **sem** profissional preenchido → PATCH no primeiro registro do grupo em vez de criar linha nova (comportamento legado).
+- Adicionar profissional a um grupo já existente → reutiliza o `booking_group_code` .
+- Se relacionar a um serviço existente **sem** profissional preenchido → PATCH no primeiro registro do grupo em vez de criar linha nova (comportamentversões anteriores).
 - Serviço **pode** ser criado **sem** `consultation_date`; a data entra depois (edição na tabela ou modal) e o evento via botão Agendar ou novo fluxo de data.
 
 Grupo visual na lista: bolinha colorida derivada do hash do `booking_group_code` (`uuidToColor`).
@@ -129,7 +129,7 @@ GET /services (ou /items/services com filtros)
        status (incl. Aguardando Pagamento / Pagamento Concluído)
 ```
 
-Manter coluna e toggle/filtro de **status de pagamento** (`Aguardando Pagamento` | `Pagamento Concluído`) como no legado — **sem** integração de checkout: o operador marca manualmente.
+Manter coluna e toggle/filtro de **status de pagamento** (`Aguardando Pagamento` | `Pagamento Concluído`) em versões anteriores — **sem** integração de checkout: o operador marca manualmente.
 
 ---
 
@@ -156,7 +156,7 @@ Ações no modal:
 | Comprovante | Upload `services_files` (tipo service); se agrupado, associa a todos os IDs do grupo; **ao enviar, marca status `Pagamento Concluído`** nos serviços afetados |
 | Salvar | PATCH observations, tags, payment_type |
 
-Fechar: limpa selectedService / profissional carregado; não precisa limpar o texto de obs em memória até o próximo open (legado).
+Fechar: limpa selectedService / profissional carregado; não precisa limpar o texto de obs em memória até o próximo open .
 
 Detalhe visual: [ui-ux.md](./ui-ux.md#modal-infos-do-serviço).
 
@@ -214,18 +214,18 @@ POST evento no calendar_id novo (após aprovação se mudar data no mesmo fluxo)
 PATCH event_id / event_link
 ```
 
-Sem `calendar_id` no profissional → toast orientando configurar na gestão de profissionais.  
+Sem `calendar_id` no profissional → toast orientando configurar na gestão de profissionais. 
 **Não** usar `primary_calendar_id` como destino do evento de consulta.
 
 ---
 
 ## 6. Editar campos na tabela
 
-Clique em preços → modal/inline → PATCH.  
+Clique em preços → modal/inline → PATCH. 
 Clique em data → se houver `event_id`, fluxo **5c** (modal de aprovação); senão PATCH direto.
 
-Toggle status pagamento na tabela: `Aguardando Pagamento` ↔ `Pagamento Concluído` (manual; serviços sem split SC).  
-Upload de comprovante → também define `Pagamento Concluído`.  
+Toggle status pagamento na tabela: `Aguardando Pagamento` ↔ `Pagamento Concluído` (manual; serviços sem split SC). 
+Upload de comprovante → também define `Pagamento Concluído`. 
 PaymentModal (se `pagarme` on): ver [`../pagamentos-soucannabis/flow.md`](../pagamentos-soucannabis/flow.md).
 
 Excluir linha → confirmação → DELETE (+ DELETE evento Google se `event_id`).
@@ -258,7 +258,7 @@ Excluir
   → **soft-delete**: active = 0 (nunca apagar hard se houver histórico desejado)
 ```
 
-Só `is_collaborator` truthy entra no Autocomplete de serviços.  
+Só `is_collaborator` truthy entra no Autocomplete de serviços. 
 Prescritores “de fora” ficam com `is_prescriber` e em geral **sem** `is_collaborator`, até a associação marcá-los como colaboradores.
 
 ---

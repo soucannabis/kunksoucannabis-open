@@ -1,7 +1,6 @@
 # Associados (lista completa)
 
-> Inventário legado. **Spec de implementação:** [../associados/README.md](../associados/README.md) (mesma página que cadastramento).
-> Fonte: `kunksoucannabis`.
+> Inventáriversões anteriores. **Spec de implementação:** [../associados/README.md](../associados/README.md) (mesma página que cadastramento).
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/associados` |
 | **Componente** | `Dash (prop associatesTable)` |
-| **Arquivo legado** | `src/components/master/dash.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição

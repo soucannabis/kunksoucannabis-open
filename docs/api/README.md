@@ -1,7 +1,7 @@
 # Kunk API — Documentação
 
 > Especificação da **nova API REST** do Kunk open source.
-> Substitui o Directus como camada de dados e autenticação.
+> Camada de dados e autenticação nativa do produto.
 > Status: **em implementação** — pacote [`kunk-api/`](../../../kunk-api/).
 
 ## Índice
@@ -11,11 +11,11 @@
 | [architecture.md](./architecture.md) | Visão geral, camadas, princípios |
 | [authentication.md](./authentication.md) | Sessão (frontend) + Bearer (API) |
 | [authorization.md](./authorization.md) | RBAC, roles, permissões por collection |
-| [items.md](./items.md) | CRUD genérico `/items/:collection` (estilo Directus) |
+| [items.md](./items.md) | CRUD genérico `/items/:collection` (da API Kunk) |
 | [query-parameters.md](./query-parameters.md) | `filter`, `sort`, `fields`, `limit`, `meta` |
 | [collections.md](./collections.md) | Collections permitidas e notas de domínio |
 | [domain-routes.md](./domain-routes.md) | Rotas de negócio (orders, services, auth…) |
-| [doc-sign.md](./doc-sign.md) | Termos e assinaturas nativos (substitui DocuSeal) |
+| [doc-sign.md](./doc-sign.md) | Termos e assinaturas nativos |
 | [files.md](./files.md) | Upload, download e metadados de arquivos |
 | [files-cloud-storage.md](./files-cloud-storage.md) | Drivers local / S3 / GCS + migração + lock |
 | [storage-s3-setup.md](./storage-s3-setup.md) | Como criar bucket S3 privado + IAM + credenciais |
@@ -30,7 +30,6 @@
 | [system-errors.md](./system-errors.md) | Observabilidade nativa (`system_errors`) |
 | [web-vitals.md](./web-vitals.md) | Core Web Vitals (`web_vitals`) |
 | [cache.md](./cache.md) | Memory cache operacional + flag Admin |
-| [migration-from-directus.md](./migration-from-directus.md) | Mapa Directus / kunkserver → nova API |
 | [openapi.yaml](./openapi.yaml) | Esboço OpenAPI 3.0 |
 
 ## Base URL
@@ -56,7 +55,7 @@ Detalhes em [authentication.md](./authentication.md).
 
 ## Collections do schema alvo
 
-Fonte: [`../directus/target-schema/README.md`](../directus/target-schema/README.md) e [`../../sql/target-schema.sql`](../../sql/target-schema.sql).
+Fonte: [`../../sql/target-schema.sql`](../../sql/target-schema.sql).
 
 `users`, `system_users`, `orders`, `orders_files`, `institutional_clients`, `products`, `professionals`, `reception`, `reports`, `services`, `services_files`, `tags`, `users_api`, `users_files`, `files`
 
@@ -64,7 +63,7 @@ Fonte: [`../directus/target-schema/README.md`](../directus/target-schema/README.
 
 Alinha aos princípios do produto open source:
 
-- PostgreSQL nativo (sem Directus)
+- PostgreSQL nativo
 - API REST robusta e padronizada
 - Módulos de terceiros desabilitados por padrão
 
@@ -83,7 +82,7 @@ Documentação das apps (estrutura multi-app + cadastramento primeiro):
 2. ~~Implementar auth + `/items` genérico~~ — ver `kunk-api/`
 3. Implementar cadastramento + **auth de associado** — ver [`../frontend/cadastramento/`](../frontend/cadastramento/)
 4. Adaptar painel em seguida
-5. Deprecar `/api/directus/*` após cutover
+5. Deprecar `/api/v1/*` após cutover
 
 Rodar testes da API:
 

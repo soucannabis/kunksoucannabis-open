@@ -1,7 +1,6 @@
 # Dashboards (lista)
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/dashboards` |
 | **Componente** | `Dashboards` |
-| **Arquivo legado** | `src/components/master/dashboards.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição
@@ -25,7 +23,7 @@ Lista dashboards (reports type=dashboard) e navega para o editor `/app/dashboard
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus reports** | `/api/directus/reports` |
+| **o schema de origem reports** | `/api/v1/reports` |
 
 ## Dependências de outras páginas / módulos
 

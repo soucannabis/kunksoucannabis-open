@@ -1,7 +1,6 @@
 # Relatórios de serviços — Documentação de implementação
 
 > Reimplementação do relatório de **serviços** (comissões / valores a pagar a profissionais) no produto unificado (`apps/kunk` + `apps/admin` + `kunk-api`).
-> Referência legada: [`reportServices.jsx`](../../../../kunksoucannabis/src/components/master/reportServices.jsx) + [`contestModalServices.jsx`](../../../../kunksoucannabis/src/components/inputs/contestModalServices.jsx).
 > **Fora desta entrega:** relatório de pedidos (`reportOrders.jsx`).
 
 ## Objetivo
@@ -23,11 +22,11 @@ Recriar o fluxo de **relatório de serviços** com:
 | Item | Motivo |
 |---|---|
 | Relatório de pedidos | Explicitamente excluído — só serviços |
-| Cupons no portal do profissional | Legado acoplado a Beeviral / saldo de doação — módulo separado |
+| Cupons no portal do profissional | Histórico acoplado a Beeviral / saldo de doação — módulo separado |
 | CreateRecipientModal / Pagar.me recipients | Pagamento |
 | Webhook n8n “Pagamento” | Específico SouCannabis |
 | Utalk / WhatsApp ao resolver contestação | Módulo separado (pode vir depois) |
-| Bônus por tags (“Terapeuta Base”, “consulta social”) | Regra SC hardcoded no legado — não portar; usar só taxa por tipo |
+| Bônus por tags (“Terapeuta Base”, “consulta social”) | Regra SC hardcoded antes — não portar; usar só taxa por tipo |
 | Relatórios custom / dashboards (`reports` collection) | Outro módulo |
 
 ## Índice
@@ -36,7 +35,7 @@ Recriar o fluxo de **relatório de serviços** com:
 |---|---|
 | [flow.md](./flow.md) | Fluxos: staff · portal profissional · conta · contestação · cálculo |
 | [fields.md](./fields.md) | Campos, fórmulas, tipos, validação/contestação |
-| [ui-ux.md](./ui-ux.md) | **Layout e visual iguais ao legado** (obrigatório) |
+| [ui-ux.md](./ui-ux.md) | **Layout e visual iguais aversões anteriores** (obrigatório) |
 | [admin.md](./admin.md) | Tipos de profissional, taxas, valores padrão, páginas por role |
 | [api.md](./api.md) | Contratos `kunk-api` |
 | [gaps.md](./gaps.md) | Decisões fechadas + checklist de implementação |
@@ -100,21 +99,6 @@ apps/admin
 | Conta em Profissionais + `/cadastro` | Portal anônimo só com `?p=` |
 | Role `Profissional` **só** relatório | Menu staff / outras páginas Kunk |
 | Contestações em `contest_reports` | Só WhatsApp sem persistência |
-
-## Comportamento legado → OSS
-
-| Legado | OSS |
-|---|---|
-| Role `Prescritor` + redirect pedidos/serviços | Role **`Profissional`** só para colaboradores; prescritor sem portal |
-| Acesso externo `?p=` sem gate forte | Login + escopo; **nunca** outras páginas `/app` |
-| Taxa −20/−10 hardcoded | `association_fee` no admin (sempre aplica); default 0 |
-| Doação às vezes no total | Flag `deduct_donation_from_payable` (default `false`) |
-| Fallback preço 240/110 no código | `default_consultation_price` opcional no admin |
-| Serviços sem data no grupo “Sem data” | **Excluídos** do relatório |
-| `info_report` | `contest_reports` (já no schema alvo) |
-| `validation` no service | `commission_validation` (`approved` \| `contested` \| null) |
-| Cupons / recipient / n8n / Utalk | Fora do v1 |
-| Bônus tags terapeuta | Não portar |
 
 ## Exemplo de configuração (Sou Cannabis — não é default)
 

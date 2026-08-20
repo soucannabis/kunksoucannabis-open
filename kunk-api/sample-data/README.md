@@ -63,14 +63,14 @@ npm run seed:load -- --profile=xlarge --yes
 | large | 20 000 | 50 000 | 12 000 | 8 000 |
 | xlarge | 50 000 | 120 000 | 30 000 | 15 000 |
 
-Overrides: `--users=2000 --orders=4000 --batch=500`.  
-~20% dos users são pacientes (`status=patient`) ligados a responsáveis.  
-Os demais distribuem fases do funil (`cadastro_criado`, `dados_pessoais`, `documentos`, `assinatura_termo`, `concluido`) e `status` Associado / em andamento — inclusive alguns com `invalid_fields` (problema no cadastro).  
+Overrides: `--users=2000 --orders=4000 --batch=500`. 
+~20% dos users são pacientes (`status=patient`) ligados a responsáveis. 
+Os demais distribuem fases do funil (`cadastro_criado`, `dados_pessoais`, `documentos`, `assinatura_termo`, `concluido`) e `status` Associado / em andamento — inclusive alguns com `invalid_fields` (problema no cadastro). 
 Preserva `system_users`, `system_configs` e `system_api_credentials`.
 
 ## Política
 
-- Directus/produção = referência de *shape*, nunca fonte de dump.
+- Dados de produção nunca devem ser usados como fonte de dump; o sample é 100% fictício.
 - **Todos os campos** de cada tabela do `target-schema.sql` (exceto `system_users`) são preenchidos no seed demo.
 - Cada registro do seed grava `is_sample = true`. Dados criados pelo uso normal ficam com `is_sample = false` (default).
 - No admin (**Dados** → Excluir dados de exemplo) é possível remover só as linhas com `is_sample = true`.

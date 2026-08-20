@@ -1,6 +1,6 @@
 # Files
 
-Substitui `directus_files` + junctions. Tabela `files` no schema alvo + `orders_files`, `users_files`, `services_files`.
+Substitui `files` + junctions. Tabela `files` no schema alvo + `orders_files`, `users_files`, `services_files`.
 
 O blob pode estar em disco local, Amazon S3 ou Google Cloud Storage (ver [files-cloud-storage.md](./files-cloud-storage.md)). A URL lógica permanece `/api/v1/files/{id}/download` — a API faz proxy com as credenciais do bucket (bucket privado).
 

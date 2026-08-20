@@ -20,7 +20,7 @@ Atualizar nav do admin e [`flow.md`](../../admin/flow.md) com essas rotas.
 
 ### Objetivos
 
-Tudo que a cotação e a etiqueta precisam de **origem** e **embalagem** vem daqui — **nunca** hardcode no código (legado: endereço Anápolis; dims fixas).
+Tudo que a cotação e a etiqueta precisam de **origem** e **embalagem** vem daqui — **nunca** hardcode no código .
 
 | Config | Key | Obrigatório |
 |---|---|---|
@@ -55,7 +55,7 @@ Remetente, caixa e declaração de conteúdo são **compartilhados** por Loggi e
 | CEP | text (8 dígitos) | sim |
 | País | text | sim (default `Brasil`) |
 
-Validação no save: CEP 8 dígitos; telefone e documento só dígitos no DB.  
+Validação no save: CEP 8 dígitos; telefone e documento só dígitos no DB. 
 Banner se incompleto: “Cotação e etiquetas ficam indisponíveis até preencher o remetente.”
 
 #### 3. Dimensões da caixa (`store.freight.package`)
@@ -67,7 +67,7 @@ Banner se incompleto: “Cotação e etiquetas ficam indisponíveis até preench
 | Largura | cm (`width_cm`) | sim | nenhum |
 | Altura | cm (`height_cm`) | sim | nenhum |
 
-Sem preenchimento → cotação/etiqueta indisponíveis (`CONFIG_INCOMPLETE`).  
+Sem preenchimento → cotação/etiqueta indisponíveis (`CONFIG_INCOMPLETE`). 
 Opcional: `label_package` só para etiqueta diferente da cotação.
 
 Ajuda: “Informe peso e medidas da embalagem real. Não há valor padrão no sistema.”
@@ -86,14 +86,14 @@ Ajuda: “Usado na cotação (seguro/valor declarado) e na etiqueta Loggi/Melhor
 #### 5. Entrega padrão (favorito)
 
 - Select em cascata:
-  - `GET /modules/loggi/service-options` → ex.: `Loggi > Econômico`
-  - `GET /modules/melhorenvio/service-options` → ex.: `Melhor Envio > Correios > PAC`
+ - `GET /modules/loggi/service-options` → ex.: `Loggi > Econômico`
+ - `GET /modules/melhorenvio/service-options` → ex.: `Melhor Envio > Correios > PAC`
 - Preview do label + limpar favorito
 - Também gravável pelo carrinho (“Definir como padrão”) por **qualquer** operador com acesso ao carrinho — ver [ui-ux.md](./ui-ux.md)
 
 #### 6. Salvar
 
-`PATCH /config/:id` para cada key alterada (`system=store`).  
+`PATCH /config/:id` para cada key alterada (`system=store`). 
 Não misturar secrets de API aqui.
 
 ---
@@ -115,15 +115,15 @@ Cada card:
 
 - Switch **Habilitado** (`modules.{service}.enabled`)
 - Checkboxes:
-  - Usar em **cálculo de frete** (`use_for_quote`)
-  - Usar em **geração de etiqueta** (`use_for_label`)
+ - Usar em **cálculo de frete** (`use_for_quote`)
+ - Usar em **geração de etiqueta** (`use_for_label`)
 - Badge de status das credenciais: `não configurado` | `env` | `configurado` | `teste ok` | `teste falhou`
 - Botão **Configurar** → assistente de API keys
 - Botão **Testar** (se já houver credencial/env)
 
 > Declaração de conteúdo **não** aparece aqui — fica em `/servicos-externos/envio` (compartilhada).
 
-### Default de papéis (legado SouCannabis)
+### Default de papéis (integrações específicas de associação)
 
 | Serviço | Quote | Label |
 |---|---|---|

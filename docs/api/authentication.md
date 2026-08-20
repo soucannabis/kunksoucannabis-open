@@ -85,7 +85,7 @@ Retorna o operador autenticado. **401** se cookie inválido/expirado.
 
 ## 1b. Sessão associado (cadastramento)
 
-> Implementar **junto com** o app de cadastramento.  
+> Implementar **junto com** o app de cadastramento. 
 > Detalhe: [`../frontend/cadastramento/gaps.md`](../frontend/cadastramento/gaps.md) · [`../frontend/cadastramento/api.md`](../frontend/cadastramento/api.md).
 
 ### Cookie
@@ -96,7 +96,7 @@ Retorna o operador autenticado. **401** se cookie inválido/expirado.
 | HttpOnly / Secure / SameSite / Path | iguais ao operador |
 | Domain | raiz da associação (cross-subdomain se necessário) |
 
-Separado de `kunk_oss_session` (operador) para não colidir painel × cadastro. O nome `session_token` fica reservado ao Kunk legado.
+Separado de `kunk_oss_session` (operador) para não colidir painel × cadastro. O nome `session_token` fica reservado a outras superfícies.
 
 ### Endpoints
 
@@ -172,8 +172,8 @@ DELETE /auth/tokens/:id
 
 ### Validação Bearer
 
-1. Extrair Bearer → verificar hash / revoked / expires  
-2. `req.auth = { type: "api_key", scopes }`  
+1. Extrair Bearer → verificar hash / revoked / expires 
+2. `req.auth = { type: "api_key", scopes }` 
 
 Escopos: ver [authorization.md](./authorization.md).
 
@@ -181,21 +181,21 @@ Escopos: ver [authorization.md](./authorization.md).
 
 ## 3. Regras de segurança
 
-1. Senhas e API tokens sempre hasheados  
-2. Cookies HttpOnly; sem token no `localStorage`  
-3. Rate limit em login / register-email / forgot-password  
-4. CORS restrito às origens do painel/cadastro  
-5. HTTPS em produção  
-6. Não logar senhas/cookies/Bearer  
-7. Um request: Bearer **ou** cookie operador **ou** cookie associado  
+1. Senhas e API tokens sempre hasheados 
+2. Cookies HttpOnly; sem token no `localStorage` 
+3. Rate limit em login / register-email / forgot-password 
+4. CORS restrito às origens do painel/cadastro 
+5. HTTPS em produção 
+6. Não logar senhas/cookies/Bearer 
+7. Um request: Bearer **ou** cookie operador **ou** cookie associado 
 
 ---
 
-## 4. Compatibilidade com o kunkserver atual
+## 4. Compatibilidade com o implementação anterior atual
 
 | Atual | Novo |
 |---|---|
 | `POST /api/auth/login` + cookie | `POST /api/v1/auth/login` (operador) |
 | Cookie em `Kunk_Users` | `system_users` + `session_token` |
-| Login associado legado | `/auth/associate/*` + `associate_session` |
+| Login associaanteriores | `/auth/associate/*` + `associate_session` |
 | `API_TOKEN` + plaintext | Bearer com hash + escopos |

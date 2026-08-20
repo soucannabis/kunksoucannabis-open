@@ -4,7 +4,7 @@
 
 | # | Decisão |
 |---|---|
-| 1 | Layout FAB + Dialog **igual ao legado** |
+| 1 | Layout FAB + Dialog **igual aversões anteriores** |
 | 2 | Quatro entidades: users, orders, services, reception |
 | 3 | Abrir em **nova aba** com deep link |
 | 4 | Associados: abrir cadastramento + ação Triagem |

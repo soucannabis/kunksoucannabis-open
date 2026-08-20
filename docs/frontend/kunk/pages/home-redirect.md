@@ -1,7 +1,6 @@
 # Home / redirecionamento
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/` |
 | **Componente** | `LoginUser | Navigate (condicional)` |
-| **Arquivo legado** | `src/App.jsx + src/components/externalPages/userLogin.jsx` |
 | **Permissões** | Pública (anônimo) ou autenticado (redirect por papel) |
 
 ## Descrição

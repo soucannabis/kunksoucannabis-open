@@ -1,7 +1,7 @@
-# Cadastramento — Campos (legado → schema alvo)
+# Cadastramento — Campos (origem → schema alvo)
 
 > Mapa dos campos usados pelo fluxo de cadastro.
-> Fonte de rename: [`../../directus/field-rename-map.json`](../../directus/field-rename-map.json).
+> Fonte de rename: [`../../schema-origem/field-rename-map.json`](../../schema-origem/field-rename-map.json).
 > Schema SQL: [`../../../sql/target-schema.sql`](../../../sql/target-schema.sql).
 > Fases e guards: [flow.md](./flow.md).
 
@@ -12,14 +12,14 @@ O app novo deve falar **somente** os nomes da coluna “Novo”.
 | Símbolo | Significado |
 |---|---|
 | ✓ | Presente no schema alvo (`users`) |
-| ✗ | Legado apenas — **não** portar |
+| ✗ | Histórico apenas — **não** portar |
 | — | Não grava / só UI |
 
 ---
 
 ## Campos de controle (todos os passos)
 
-| Papel | Legado | Novo | Notas |
+| Papel | Histórico | Novo | Notas |
 |---|---|---|---|
 | Fase do funil (responsável) | `associate_status` (0–9 opaco) | `associate_status` ✓ **1–5** | Ver [flow.md](./flow.md) |
 | Tipo / conclusão | `status` (várias strings) | `status` ✓ | `Associado` \| `patient` (e valores transitórios só se necessário) |
@@ -31,7 +31,7 @@ O app novo deve falar **somente** os nomes da coluna “Novo”.
 
 ## 1. Conta inicial (`/cadastro`) — fase 1
 
-| UI | Legado | Novo | Obrig. | Notas |
+| UI | Histórico | Novo | Obrig. | Notas |
 |---|---|---|---|---|
 | E-mail | `email_account` | `email_account` ✓ | sim | |
 | — | `associate_status` | `associate_status = 1` | — | |
@@ -41,7 +41,7 @@ O app novo deve falar **somente** os nomes da coluna “Novo”.
 
 ## 2. Responsável (`/cadastro-associado`) — fase 2
 
-| UI | Legado | Novo | Obrig. |
+| UI | Histórico | Novo | Obrig. |
 |---|---|---|---|
 | Tipo responsável | `responsable_type` | `responsible_type` ✓ | sim |
 | Nome | `name_associate` | `associate_name` ✓ | sim |
@@ -67,7 +67,7 @@ O app novo deve falar **somente** os nomes da coluna “Novo”.
 | Como nos conheceu | `met_us` | — ✗ | — |
 | — | `log` | `invalid_fields` ✓ | — | atualizado a cada submit |
 
-Submit: persistência parcial + `invalid_fields` — [flow.md](./flow.md).  
+Submit: persistência parcial + `invalid_fields` — [flow.md](./flow.md). 
 Form completo (`invalid_fields` vazio) → segue na fase 2 (paciente se `another`) ou libera fase 3.
 
 ### Valores canônicos
@@ -82,9 +82,9 @@ Form completo (`invalid_fields` vazio) → segue na fase 2 (paciente se `another
 
 | Aspecto | Comportamento |
 |---|---|
-| Campo | `ciap_codes` (legado: `reason_treatment`) |
+| Campo | `ciap_codes`  |
 | Texto | `reason_treatment_text` |
-| UI | Multi-select por categorias + busca (legado `CIAP2Select`) |
+| UI | Multi-select por categorias + busca (histórico `CIAP2Select`) |
 | Limite | máx. **10**; mín. **1** para form completo |
 | Persistência parcial | 1–10 → grava; vazio ou >10 → não grava + entra em `invalid_fields` |
 
@@ -138,7 +138,7 @@ Persistência parcial + `invalid_fields` no registro paciente (ou espelho no res
 | `another` | assistente para **responsável** e para **paciente** |
 | Termo | gera só quando **todos** os docs obrigatórios do caso estiverem OK → fase **4** |
 
-Legado `rg_proof` / `rg_patient_proof` (arquivo único) → no OSS, arquivos com metadados (`doc_type`, `side`, `subject`) via `users_files` / files API — ver [flow.md](./flow.md) e [gaps.md](./gaps.md).
+Histórico `rg_proof` / `rg_patient_proof` (arquivo único) → no OSS, arquivos com metadados (`doc_type`, `side`, `subject`) via `users_files` / files API — ver [flow.md](./flow.md) e [gaps.md](./gaps.md).
 
 | Campo | Novo | Notas |
 |---|---|---|
@@ -152,7 +152,7 @@ Assinatura OK → `associate_status = 5`, grava `adhesion_term`.
 
 ## 5. Consulta (`/consulta`) — fase 5
 
-| UI | Legado | Novo |
+| UI | Histórico | Novo |
 |---|---|---|
 | Receita médica | `medical_prescription` | **`prescription`** ✓ |
 | Laudo / exame | uploads na pasta | files API + tipo |
@@ -166,7 +166,7 @@ Assinatura OK → `associate_status = 5`, grava `adhesion_term`.
 
 ---
 
-## 7. Payload do termo (DocuSeal / futuro nativo)
+## 7. Payload do termo (o módulo de termos / futuro nativo)
 
 | Campo template | Origem |
 |---|---|

@@ -8,7 +8,7 @@
 | `apps/admin` | `/servicos-externos/google_calendar` | Assistente OAuth + calendário principal |
 | `apps/kunk` | `/app/profissionais` | Gestão operacional de profissionais |
 
-Papel: apenas `Administrador` (serviços externos + páginas por role).  
+Papel: apenas `Administrador` (serviços externos + páginas por role). 
 Acesso a Serviços/Profissionais no Kunk: via `kunk.role_pages` (default todas as páginas).
 
 Atualizar nav do admin e [`../../admin/flow.md`](../../admin/flow.md).
@@ -137,7 +137,7 @@ Sem ranking de split / CreateRecipientModal nesta tela (Pagarme de serviços: Ad
 
 ### Migração da rota legada
 
-| Legado | OSS |
+| Comportamento | Detalhe |
 |---|---|
 | `/app/prescritores` | `/app/profissionais` (gestão + filtros Colaborador / Prescritor) |
 | Ranking Pagar.me | Não portar |

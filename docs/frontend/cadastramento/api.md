@@ -93,7 +93,7 @@ Metadados: ver [gaps.md](./gaps.md) §4.
 | POST | `/terms/contracts` | **501/503** `TERMS_MODULE_IN_DEVELOPMENT` |
 | GET | `/terms/status` | `{ status: "module_in_development" }` |
 
-Front: após docs OK, tela da fase 4 com mensagem de módulo em desenvolvimento.  
+Front: após docs OK, tela da fase 4 com mensagem de módulo em desenvolvimento. 
 Não avançar para fase 5 por webhook. Sem assinatura do termo (`adhesion_term`) o advance 4→Associado é 400, inclusive em desenvolvimento.
 
 **Spec do módulo nativo:** [`../doc-sign/`](../doc-sign/README.md) — API alvo `/doc-sign/*`, avanço 4→5 na mesma `kunk-api` (sem webhook), `adhesion_term` = UUID do contrato, payload com **`user_code`**.
@@ -120,19 +120,7 @@ Acessível quando fase ≥ 5 (após módulo termos ou bypass QA).
 
 ---
 
-## Mapa legado → novo
-
-| Legado | Novo |
-|---|---|
-| create-user + auth | `register-email` |
-| update Directus | `PATCH /users/me` (+ patients) |
-| user por code | `GET /auth/associate/me` |
-| files / folder | `POST /files` + status |
-| docuseal | stub `/terms/*` até módulo pronto |
-| login/logout/me | `/auth/associate/*` |
-| lost/redefine pass | forgot / reset |
-
 ## Erros
 
-Envelope [`../../api/errors.md`](../../api/errors.md).  
+Envelope [`../../api/errors.md`](../../api/errors.md). 
 Códigos novos: `ACCOUNT_EXISTS`, `ACCOUNT_IN_PROGRESS`, `PHASE_LOCKED`, `TERMS_MODULE_IN_DEVELOPMENT`.

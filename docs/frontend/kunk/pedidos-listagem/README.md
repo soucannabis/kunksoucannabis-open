@@ -1,6 +1,6 @@
 # Pedidos — listagem OSS
 
-> Página `/app/loja/pedidos` no Kunk operacional — layout em cards do legado, sem BeeViral / WhatsApp / DC-e / relatório de produção.
+> Página `/app/loja/pedidos` no Kunk operacional — layout em cards anteriores, sem BeeViral / WhatsApp / DC-e / relatório de produção.
 
 ## Entregue
 

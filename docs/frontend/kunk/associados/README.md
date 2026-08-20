@@ -1,7 +1,6 @@
 # Associados (Cadastramento) — Documentação de implementação
 
 > Reimplementação da página de associados / cadastramento no produto unificado (`apps/kunk` + `kunk-api`).
-> Referência legada: [`dash.jsx`](../../../../kunksoucannabis/src/components/master/dash.jsx) + [`table.jsx`](../../../../kunksoucannabis/src/components/table.jsx) + [`UserModal.jsx`](../../../../kunksoucannabis/src/components/modals/UserModal.jsx).
 > Funil público (app de cadastramento): [`../cadastramento/`](../../cadastramento/gaps.md).
 > Search global: [`../search-global/README.md`](../search-global/README.md).
 
@@ -12,7 +11,7 @@ Recriar a área de **associados** com:
 1. **Mesmo layout e visual** da página legada `/app/acolhimento/associados`
 2. Lista dos **últimos cadastros** + cards/filtros de status do funil de cadastramento
 3. Resultados vindos do **search global** (deep link `?a=`)
-4. **Modal do associado** com as mesmas abas do legado (exceto Parceiro — só Prescritor)
+4. **Modal do associado** com as mesmas abas anteriores (exceto Parceiro — só Prescritor)
 5. Edição de dados do associado e pacientes; criação de pacientes
 6. Anotações da equipe de acolhimento
 7. Documentos via **FileUpload** já existente (`documentKinds` + `users_files`)
@@ -28,7 +27,7 @@ Recriar a área de **associados** com:
 | Parceiro no modal | Explicitamente: aba só **Prescritor** |
 | Beeviral / `bvid` | Específico SouCannabis |
 | Utalk / WhatsApp | Módulo separado |
-| Gráficos avançados do legado (`AssociatesChart`, etc.) | Opcional depois; cards de contagem de status **sim** |
+| Gráficos avançados anteriores (`AssociatesChart`, etc.) | Opcional depois; cards de contagem de status **sim** |
 | App público de cadastramento | Já tem docs em `frontend/cadastramento/` — esta spec é o **painel** |
 
 ## Índice
@@ -37,7 +36,7 @@ Recriar a área de **associados** com:
 |---|---|
 | [flow.md](./flow.md) | Fluxos: lista → modal → pacientes → serviços → termo stub |
 | [fields.md](./fields.md) | Campos `users`, anotações, docs, serviços (beneficiário) |
-| [ui-ux.md](./ui-ux.md) | **Layout e visual iguais ao legado** (obrigatório) |
+| [ui-ux.md](./ui-ux.md) | **Layout e visual iguais aversões anteriores** (obrigatório) |
 | [api.md](./api.md) | Contratos `kunk-api` |
 | [gaps.md](./gaps.md) | Decisões fechadas + checklist |
 
@@ -48,7 +47,7 @@ Docs relacionadas:
 | [`../search-global/README.md`](../search-global/README.md) | FAB + modal de busca global |
 | [`../servicos/README.md`](../servicos/README.md) | Serviços — atualizar seleção associado/paciente |
 | [`../../cadastramento/flow.md`](../../cadastramento/flow.md) | Fases `associate_status` 1–5 |
-| [`../pages/cadastramento.md`](../pages/cadastramento.md) | Inventário legado curto |
+| [`../pages/cadastramento.md`](../pages/cadastramento.md) | Inventáriversões anteriores curto |
 
 ## Posicionamento
 
@@ -85,7 +84,7 @@ apps/kunk  /app/acolhimento/associados   ←── operadores (lista + modal)
 | Replicar layout/cores/estrutura do `dash.jsx` + `table.jsx` + `UserModal` | Inventar dashboard novo |
 | Usar fases OSS `associate_status` 1–5 + `status` Associado/patient | Depender só das strings legadas (`published`, `proofs`, …) sem mapa |
 | Aba **Prescritor** (sem Parceiro) | Portar PartnerForm |
-| Termo: botões visíveis, ações **no-op / null** | Integrar DocuSeal nesta entrega |
+| Termo: botões visíveis, ações **no-op / null** | Integrar o módulo de termos nesta entrega |
 | Documentos = `FileUpload` + `documentKinds` | Reinventar uploader paralelo |
 | Pacientes listados por `responsible_code` | Usar “paciente ativo” global para montar serviço |
 | Em Serviços, escolher beneficiário; pré-selecionar via `users.patient_user_code` do funil se válido | Assumir cegamente o ponteiro sem permitir mudar |

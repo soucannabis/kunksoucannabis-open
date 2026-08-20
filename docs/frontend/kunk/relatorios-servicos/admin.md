@@ -19,8 +19,8 @@ Atualizar nav do admin e [`../../admin/flow.md`](../../admin/flow.md).
 
 ### Por que no admin
 
-No legado, taxas (−20 médico / −10 terapeuta) e defaults de preço estavam **hardcoded**.  
-No OSS: **fee = 0**, preço padrão = null, **doação não desconta** por default.  
+Antes, taxas (−20 médico / −10 terapeuta) e defaults de preço estavam **hardcoded**. 
+No OSS: **fee = 0**, preço padrão = null, **doação não desconta** por default. 
 Cada associação configura a própria política.
 
 ### UI sugerida

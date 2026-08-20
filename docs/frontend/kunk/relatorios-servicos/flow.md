@@ -56,7 +56,6 @@ Regras de acesso (hard):
 - Um `professional_code` → no máximo **uma** conta portal
 - Reenviar convite: novo token / nova expiração; invalidar o anterior
 
-Referência legada: convite de usuários do sistema + [`systemUserSign.jsx`](../../../../kunksoucannabis/src/components/externalPages/systemUserSign.jsx) (`/cadastro`).  
 Detalhe e-mail: [gaps.md § Integração futura](./gaps.md).
 
 ---
@@ -80,7 +79,7 @@ Serviços **sem** data de consulta são **desconsiderados** (não listar, não s
 
 | Controle | Comportamento |
 |---|---|
-| Mês/Ano | Select com meses do **ano corrente até o mês atual** (legado `getMonthsOfCurrentYear`); opção “Todos” |
+| Mês/Ano | Select com meses do **ano corrente até o mês atual** (histórico `getMonthsOfCurrentYear`); opção “Todos” |
 | Profissional | Autocomplete — esconde quando deep link/`internal_code` fixa um profissional |
 | Atualizar | Refetch |
 | Exportar PDF | Tabela agrupada (Data, Associado, Valor pago, Doação, Valor consulta, Valor a receber) |
@@ -90,7 +89,7 @@ Serviços **sem** data de consulta são **desconsiderados** (não listar, não s
 | Contexto | Exibição |
 |---|---|
 | Profissional selecionado | `Total de registros` + `Valor a receber` (soma dos payables) |
-| Sem profissional | Por mês e por profissional: contagem + soma (legado usava fórmula inconsistente; OSS usa **sempre** a fórmula de `payable` — ver [fields.md](./fields.md)) |
+| Sem profissional | Por mês e por profissional: contagem + soma (histórico usava fórmula inconsistente; OSS usa **sempre** a fórmula de `payable` — ver [fields.md](./fields.md)) |
 
 ### Ações em lote (linhas selecionadas)
 
@@ -103,8 +102,8 @@ Serviços **sem** data de consulta são **desconsiderados** (não listar, não s
 
 ### Resolver contestação de “faltam dados”
 
-Staff vê cards vermelhos sob o nome do profissional (mês filtrado).  
-Botão “resolvido” → remove item de `contest_reports` (PATCH).  
+Staff vê cards vermelhos sob o nome do profissional (mês filtrado). 
+Botão “resolvido” → remove item de `contest_reports` (PATCH). 
 **Sem** WhatsApp no v1.
 
 ---
@@ -131,7 +130,7 @@ Diferenças vs staff:
 | Exportar PDF | Sim | Sim |
 | Shell Theme / sidebar | Sim | Não — página dedicada |
 
-Deep link legado `?p=` no portal: se autenticado e `p ≠ internal_code` → 403 / não autorizado. Staff no `/app` pode usar `?p=` para pré-selecionar.
+Deep link histórico `?p=` no portal: se autenticado e `p ≠ internal_code` → 403 / não autorizado. Staff no `/app` pode usar `?p=` para pré-selecionar.
 
 ---
 
@@ -146,7 +145,7 @@ Profissional clica "Estão faltando dados"
   → staff marca resolvido → remove do array
 ```
 
-Contestações são por **profissional + mês**, não por linha de serviço.  
+Contestações são por **profissional + mês**, não por linha de serviço. 
 Validação por linha (`commission_validation`) é independente.
 
 ---
@@ -189,7 +188,7 @@ price default =
 
 Operador ainda pode editar `price` no serviço depois.
 
-Detalhe UI admin: [admin.md](./admin.md).  
+Detalhe UI admin: [admin.md](./admin.md). 
 Impacto no create de serviços: atualizar [`../servicos/flow.md`](../servicos/flow.md) / fields.
 
 ---

@@ -41,7 +41,7 @@ Envelope padrão: [`../../api/errors.md`](../../api/errors.md). Auth: cookie `as
 
 ### `POST …/publish`
 
-Request: `{ notes?: string }`  
+Request: `{ notes?: string }` 
 Response:
 
 ```json
@@ -137,15 +137,15 @@ Regras:
 
 Server:
 
-1. Valida token / status pending  
-2. `submission.started`  
-3. Persiste `term_signatures` + imagem  
-4. Gera PDF assinado + audit PDF + hashes  
-5. `status=completed`, `submission.completed`  
-6. **Integração cadastro (mesma API):**  
-   - `users.adhesion_term = contract.id` (UUID)  
-   - se `associate_status === 4` → `5`  
-7. Retorna urls do PDF assinado e audit  
+1. Valida token / status pending 
+2. `submission.started` 
+3. Persiste `term_signatures` + imagem 
+4. Gera PDF assinado + audit PDF + hashes 
+5. `status=completed`, `submission.completed` 
+6. **Integração cadastro (mesma API):** 
+ - `users.adhesion_term = contract.id` (UUID) 
+ - se `associate_status === 4` → `5` 
+7. Retorna urls do PDF assinado e audit 
 
 **Sem webhook.** Sem `session_id` no body nem no audit.
 

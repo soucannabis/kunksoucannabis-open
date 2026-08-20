@@ -1,7 +1,7 @@
 # Módulo Loggi
 
 > Integração de cotação de frete, criação de envio/etiqueta e rastreio.
-> Reaproveita a lógica do kunkserver (`routes/loggi.js`, `modules/loggiFreightQuote.js`, `loggiRequest.js`).
+> Reaproveita a lógica do implementação anterior (`routes/loggi.js`, `modules/loggiFreightQuote.js`, `loggiRequest.js`).
 > **Não** portar `loggiContentDeclaration.js` (declaração aleatória) — usar `store.freight.content_declaration` (Loja, compartilhada).
 > Docs oficiais: [API Loggi](https://docs.api.loggi.com/reference/nossa-documenta%C3%A7%C3%A3o).
 
@@ -25,7 +25,7 @@ Desabilitado → `503 MODULE_DISABLED` em todas as rotas abaixo.
 
 Ver [credentials.md](./credentials.md). Campos: `client_id`, `client_secret`, `company_id`, opcional `api_base_url`, `token_url`.
 
-Auth oficial: OAuth 2.0 **client credentials** → `POST https://api.loggi.com/v2/oauth2/token` (legado hardcodava URL e secrets — **corrigir** na portagem).
+Auth oficial: OAuth 2.0 **client credentials** → `POST https://api.loggi.com/v2/oauth2/token` (implementações antigas hardcodavam URL e secrets — **corrigir** na portagem).
 
 Cascata: `system_api_credentials` → env `LOGGI_*`.
 
@@ -39,7 +39,7 @@ Declaração de conteúdo **não** é por módulo. Todos os providers leem:
 
 - Configurável em **Loja → Frete**
 - Usada na cotação (`goodsValue`) e no create-label (`contentDeclaration`)
-- **Proibido** gerar descrição/valor aleatórios (legado SouCannabis)
+- **Proibido** gerar descrição/valor aleatórios (integrações específicas de associação)
 
 Sem `description` + `total_value` > 0 → `CONFIG_INCOMPLETE` em create-label.
 
@@ -49,7 +49,7 @@ Sem `description` + `total_value` > 0 → `CONFIG_INCOMPLETE` em create-label.
 
 A Loggi **não** oferece um endpoint de catálogo do tipo “listar serviços”. As modalidades vêm da **própria cotação**:
 
-**Upstream:** `POST /v1/companies/{company_id}/quotations`  
+**Upstream:** `POST /v1/companies/{company_id}/quotations` 
 Ref: [Criar Cotação](https://docs.api.loggi.com/reference/quote).
 
 Para cada pacote, `packagesQuotations[].quotations[]` pode retornar até duas opções, tipicamente:
@@ -61,7 +61,7 @@ Para cada pacote, `packagesQuotations[].quotations[]` pode retornar até duas op
 
 Também retornam `externalServiceId` (SISU), preço e prazo. Os SISUs oficiais da conta são informados pelo Sales Engineering da Loggi na homologação; podem ser configurados no admin (`store.freight.loggi.external_service_ids`) e enviados no body da cotação (`externalServiceIds`). **Não** misturar `externalServiceIds` com `pickupTypes` na mesma request (regra oficial).
 
-No **carrinho**, o operador escolhe entre as modalidades retornadas (ex.: Econômico vs Expresso), não apenas “Loggi” genérico.  
+No **carrinho**, o operador escolhe entre as modalidades retornadas (ex.: Econômico vs Expresso), não apenas “Loggi” genérico. 
 No **admin**, a favorita pode ser `Loggi > econômico` (ver `store.freight.default_option` em [fields.md](../../frontend/kunk/pedidos/fields.md)).
 
 ---
@@ -106,7 +106,7 @@ Como não há catálogo upstream, a resposta é **derivada** de:
 
 Cotação para o endereço de entrega do associado. **Deve devolver todas as modalidades**, não só a mais barata.
 
-**Upstream Loggi:** `POST /v1/companies/{company_id}/quotations`  
+**Upstream Loggi:** `POST /v1/companies/{company_id}/quotations` 
 Ref: [Criar Cotação](https://docs.api.loggi.com/reference/quote).
 
 Request:
@@ -157,7 +157,7 @@ Response 200:
 }
 ```
 
-Compatibilidade: o legado devolvia um único `price`/`serviceLabel`. O OSS usa `options[]`; o front escolhe a linha (favorita admin ou operador).
+Compatibilidade: respostas antigas devolviam um único `price`/`serviceLabel`. O OSS usa `options[]`; o front escolhe a linha (favorita admin ou operador).
 
 Regras:
 
@@ -174,11 +174,11 @@ Requer `use_for_quote=true`.
 
 ---
 
-### `POST /create-label` (legado: `/create`)
+### `POST /create-label` 
 
 Cria envio assíncrono na Loggi e associa ao pedido. Dimensões: `store.freight.label_package ?? store.freight.package`.
 
-**Upstream:** `POST /v1/companies/{company_id}/async-shipments`  
+**Upstream:** `POST /v1/companies/{company_id}/async-shipments` 
 Ref: [Create async shipment](https://docs.api.loggi.com/reference/createasyncshipment) — `freightType`: `FREIGHT_TYPE_ECONOMIC` \| `FREIGHT_TYPE_EXPRESS`.
 
 Request: corpo do pedido (ou `{ orderId }`) + modalidade escolhida:
@@ -210,21 +210,21 @@ Se omitido, usar `orders.freight_option` persistido no checkout ou o default da 
 
 Response: payload Loggi + echo da declaração usada; server grava `tracking_code`, `tracking_code_date`, status, e snapshot em `dce.loggiDeclaration` (cópia da config no momento do envio, para auditoria).
 
-Requer `use_for_label=true` e declaração configurada.  
-Elegibilidade (legado `getLoggiLabelEligibility`): não aguardando pagamento, sem tracking, endereço completo.
+Requer `use_for_label=true` e declaração configurada. 
+Elegibilidade (histórico `getLoggiLabelEligibility`): não aguardando pagamento, sem tracking, endereço completo.
 
 ---
 
 ### `POST /cancel`
 
-Request: `{ "orderId": 1, "tracking_code": "…" }`  
-Upstream: cancel package Loggi; limpa `tracking_code` no order; status → `Pagamento concluído` (comportamento legado — confirmar se OSS mantém).
+Request: `{ "orderId": 1, "tracking_code": "…" }` 
+Upstream: cancel package Loggi; limpa `tracking_code` no order; status → `Pagamento concluído` (comportamentversões anteriores — confirmar se OSS mantém).
 
 ---
 
 ### `POST /packages`
 
-Request: `{ "trackingCode": "…" }`  
+Request: `{ "trackingCode": "…" }` 
 Merge details + tracking; response `{ packages: [merged], trackingPartial }`.
 
 ---
@@ -275,7 +275,7 @@ Atualiza `last_tested_at` / `last_test_ok` nas rows do serviço.
 
 ## Notas de portagem
 
-| Legado | OSS |
+| Comportamento | Detalhe |
 |---|---|
 | client_id/secret no código | credentials / env |
 | shipFrom Anápolis / CNPJ / phone hardcoded | **`store.ship_from`** no admin Loja |
@@ -285,9 +285,5 @@ Atualiza `last_tested_at` / `last_test_ok` nas rows do serviço.
 | Só a cotação mais barata no cart | Devolver `options[]` (Econômico + Expresso) |
 | Sem catálogo de serviços | `GET /service-options` a partir do enum + SISUs config |
 
-## Referências no repo legado
+## Referências no referências internas
 
-- `kunksoucannabis/kunkserver/routes/loggi.js`
-- `kunksoucannabis/kunkserver/routes/modules/loggiFreightQuote.js`
-- `kunksoucannabis/kunkserver/routes/modules/loggiRequest.js`
-- `kunksoucannabis/src/modules/loggiLabel.js`

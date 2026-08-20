@@ -3,7 +3,7 @@
 > App público de onboarding do associado (`apps/registration`, porta **4255**).
 > Índice: [README.md](./README.md)
 
-**Auth:** sessão de associado (`users`).  
+**Auth:** sessão de associado (`users`). 
 **Testes do app:** só Playwright (`npm run test:e2e`). Sem Vitest.
 
 ## Módulos / páginas

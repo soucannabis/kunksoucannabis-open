@@ -1,7 +1,6 @@
 # Webmaster (observabilidade)
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/webmaster` |
 | **Componente** | `WebmasterPage` |
-| **Arquivo legado** | `src/components/master/webmasterPage.jsx (+ systemErrorsSection, userInsightsSection, webmasterConfigSection)` |
 | **Permissões** | Trio staff; Sidebar admin |
 
 ## Descrição

@@ -1,6 +1,6 @@
 # Pedidos / Carrinho — UI/UX (`apps/kunk`)
 
-> Replicar o layout e a lógica visual do legado `cart.jsx`, sem cupons, comissão e parceiros.
+> Replicar o layout e a lógica visual anteriores `cart.jsx`, sem cupons, comissão e parceiros.
 > Frete passa a integrar o total conforme config da loja.
 
 ## Rota
@@ -36,7 +36,7 @@
 
 ---
 
-## O que manter do legado
+## O que manter anteriores
 
 | Bloco | Detalhe |
 |---|---|
@@ -47,8 +47,8 @@
 | Catálogo | add por input de quantidade |
 | Prescritor | `PrescriberForm` + botão **Novo Prescritor** + `ProfessionalDialog` |
 | Pagamento personalizado | toggle + lista |
-| Desconto (R$) + Doação (R$) | campos manuais do legado (sem cupons) |
-| Informações + Tags | campos manuais do legado; **sem** sync com frete |
+| Desconto (R$) + Doação (R$) | campos manuais anteriores (sem cupons) |
+| Informações + Tags | campos manuais anteriores; **sem** sync com frete |
 | Histórico | tabela + recompra |
 | Frete | lista via facade; favorito; loading; ETA; preço |
 | Create/Update | toast + redirect pedidos; finalizar triagem se aplicável |
@@ -57,7 +57,7 @@
 
 ## O que remover da UI
 
-| Bloco legado | Ação |
+| Blocversões anteriores | Ação |
 |---|---|
 | Seção de cupons | Não renderizar |
 | Checkbox “Não aplicar comissão” | Não renderizar |
@@ -77,13 +77,13 @@
 
 ### Quando `apply_to_total === false`
 
-- Caption: **Valores estimados — não entram no total do pedido.** (legado)
+- Caption: **Valores estimados — não entram no total do pedido.** 
 - Ainda mostra preços e permite escolher opção
 - `delivery_price` persiste no pedido; `total` sem frete
 
 ### Lista de opções (não só 2 radios)
 
-Substituir o radio legado “Loggi | Sedex” por uma **lista de modalidades cotadas**, agrupada por provider:
+Substituir o radiversões anteriores “Loggi | Sedex” por uma **lista de modalidades cotadas**, agrupada por provider:
 
 ```
 Simulação de frete
@@ -114,7 +114,7 @@ Persistir no pedido: `delivery_price`, `freight_carrier`, `freight_option` (JSON
 
 ## Desconto e Doação
 
-Abaixo da tabela de itens (como no legado):
+Abaixo da tabela de itens (em versões anteriores):
 
 - Input **Desconto (R$)**
 - Input **Doação (R$)**
@@ -123,7 +123,7 @@ Linhas no resumo do total quando &gt; 0. Sem bloco de cupons.
 
 ## Informações e Tags
 
-Manter campos manuais do legado:
+Manter campos manuais anteriores:
 
 - **Informações** (`info`) — texto livre
 - **Tags** — seleção/edição manual
@@ -132,7 +132,7 @@ Manter campos manuais do legado:
 
 ## Modal Novo Prescritor
 
-Campos mínimos (legado `emptyProfessional`):
+Campos mínimos (histórico `emptyProfessional`):
 
 `name`, `lastname`, `type`, `phone`, `state`, `city`, `cpf`, `email`, `specialty`, `active`, `is_prescriber=true`, …
 
@@ -142,7 +142,7 @@ Salvar → `POST /items/professionals` → selecionar no form.
 
 ## Histórico
 
-Colunas: data, status, itens (sem frete), total, ação “Comprar novamente”.  
+Colunas: data, status, itens (sem frete), total, ação “Comprar novamente”. 
 Filtrar fora aguardando pagamento.
 
 ---
@@ -158,7 +158,7 @@ Filtrar fora aguardando pagamento.
 
 ## Página Pedidos (etiquetas) — nota de UI
 
-Ações “Gerar etiqueta Loggi” / “Melhor Envio” só se `use_for_label` do provider.  
+Ações “Gerar etiqueta Loggi” / “Melhor Envio” só se `use_for_label` do provider. 
 Default típico: só Loggi. Ver [flow.md](./flow.md) §8.
 
 ---
@@ -167,5 +167,5 @@ Default típico: só Loggi. Ver [flow.md](./flow.md) §8.
 
 - Empty cart: frete oculto; botão criar desabilitado
 - Sem associado: não criar
-- Erro de cotação: mostrar `errorMessage` por carrier; fallback de seleção como no `CartFreightSelector` legado
+- Erro de cotação: mostrar `errorMessage` por carrier; fallback de seleção como no `CartFreightSelector` histórico
 - Aviso pedido devolvido no histórico

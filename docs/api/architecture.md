@@ -2,10 +2,10 @@
 
 ## Objetivo
 
-Substituir o Directus por uma API REST própria, conectada ao PostgreSQL do schema alvo, com:
+Substituir o schema anterior por uma API REST própria, conectada ao PostgreSQL do schema alvo, com:
 
 1. Autenticação segura para **frontend** (sessão) e **integrações** (Bearer)
-2. CRUD genérico no estilo Directus (`/items/:collection`)
+2. CRUD genérico no da API Kunk (`/items/:collection`)
 3. Rotas de domínio para regras de negócio
 4. Módulos opcionais desligados por padrão
 
@@ -58,7 +58,7 @@ schema/          → whitelist de collections + Zod/Joi
 
 | Peça | Tecnologia |
 |---|---|
-| Runtime | Node.js + Express (base do kunkserver) ou Fastify |
+| Runtime | Node.js + Express (base do implementação anterior) ou Fastify |
 | Banco | PostgreSQL + `pg` / Kysely |
 | Validação | Zod |
 | Senhas / tokens | bcrypt ou argon2 |
@@ -67,18 +67,18 @@ schema/          → whitelist de collections + Zod/Joi
 
 ## O que a API **não** é
 
-- Não é um clone completo do Directus (flows, revisions, admin UI)
+- Não replica painéis admin de terceiros (flows, revisions, admin UI)
 - Não expõe o schema inteiro do Postgres
 - Não substitui o frontend; só a camada de dados/auth
 
 Frontends (cadastramento, admin, painel, termos): ver [`../frontend/`](../frontend/).
 
-## Relação com o kunkserver atual
+## Relação com o implementação anterior atual
 
-O kunkserver hoje é um BFF sobre Directus (`/api/directus/*`). A nova API:
+A API Kunk:
 
 - Usa `NEW_API_DATABASE_URL` (Postgres próprio)
-- Substitui `directusRequest` por repositórios SQL
+- Usa repositórios SQL nativos
 - Mantém, quando fizer sentido, a lógica de negócio já existente (orders, services, auth)
 
-Ver [migration-from-directus.md](./migration-from-directus.md).
+Ver .

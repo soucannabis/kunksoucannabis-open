@@ -1,8 +1,6 @@
 # Doc-sign — Documentação do app
 
 > Gerenciador nativo de **termos de adesão e assinaturas eletrônicas**.
-> Substitui o DocuSeal no produto unificado.
-> Referência: DocuSeal ([docs](https://www.docuseal.com/docs))
 
 ## Objetivo
 
@@ -51,15 +49,15 @@ app.     →  kunk                  (Novo Termo)
 | Fazer | Não fazer |
 |---|---|
 | JSONB como fonte do modelo | DOCX canônico + conversor externo |
-| TipTap + nós de variável | Labels manuais em PDF estilo DocuSeal |
+| TipTap + nós de variável | Labels manuais em PDF |
 | PDF na própria `kunk-api` | Container OnlyOffice/LibreOffice |
 | Redirect fase 4 | iframe |
 | Um `completed` vigente por e-mail | Reassinatura livre sem `replace_completed` |
 | `adhesion_term` UUID | path solto em TEXT |
 
-## DocuSeal → OSS
+## Escopo do módulo de termos
 
-| Legado DocuSeal | doc-sign |
+| Conceito | doc-sign |
 |---|---|
 | PDF + labels | TipTap JSON + variáveis |
 | Submitters API | `POST /doc-sign/contracts` |
@@ -67,8 +65,6 @@ app.     →  kunk                  (Novo Termo)
 | Audit Log | `term_events` + PDF |
 | Webhook | Handler interno |
 | DOCX API | Não usado |
-
-**Código DocuSeal:** não clonar; docs + PDFs de exemplo bastam.
 
 ## Status
 

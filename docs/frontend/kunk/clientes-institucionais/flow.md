@@ -4,8 +4,8 @@
 
 1. Menu **Clientes Institucionais** → Criar
 2. Pergunta: **É uma empresa?**
-   - Sim → razão social + CNPJ (+ contatos opcionais da empresa)
-   - Não → só representante
+ - Sim → razão social + CNPJ (+ contatos opcionais da empresa)
+ - Não → só representante
 3. Sempre: representante (nome, CPF, e-mail, celular) + endereço (rua, CEP, …)
 4. Modal de detalhe: editar dados/endereço, anotações, histórico, **Novo pedido**
 

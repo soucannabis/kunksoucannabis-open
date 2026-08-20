@@ -1,7 +1,6 @@
 # Novo pedido (carrinho / checkout)
 
 > Documentação funcional da página legada — base para o produto open-source.
-> Fonte: `kunksoucannabis`.
 > **Spec de implementação OSS:** [`../pedidos/README.md`](../pedidos/README.md).
 
 ## Identificação
@@ -10,30 +9,16 @@
 |---|---|
 | **Rota** | `/app/loja/novo-pedido` |
 | **Componente** | `Cart` |
-| **Arquivo legado** | `src/components/inputs/cart.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção (no Theme) |
 
 ## Descrição
 
 Checkout completo: associado, itens, frete, prescritor e pagamento.
 
-## Funcionalidades (legado)
-
-- Selecionar associado
-- Montar itens e lotes
-- Cotar frete Loggi e Correios (Melhor Envio)
-- Aplicar cupons
-- Vincular parceiro (Beeviral) e prescritor
-- Criar/atualizar pedido no Directus
-- Finalizar triagem vinculada
-- PaymentModal (Pagar.me)
-- Criar delivery
-
 ## Integrações externas e serviços
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus** | orders, users, coupons, partners, professionals, reception |
 | **Loggi** | quote de frete |
 | **Melhor Envio** | correios-quote |
 | **Pagar.me** | `/api/pagarme/orders` |
@@ -51,7 +36,7 @@ Checkout completo: associado, itens, frete, prescritor e pagamento.
 ## Observações
 
 - Duplicata sem auth em `/cart`
-- No legado a cotação **não** entrava no total (“valores estimados”)
+- Antes a cotação **não** entrava no total (“valores estimados”)
 
 ## Decisão open-source
 

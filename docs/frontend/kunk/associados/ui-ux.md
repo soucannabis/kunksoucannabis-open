@@ -1,7 +1,6 @@
 # Associados — UI/UX (`apps/kunk`)
 
-> **Obrigatório:** replicar layout, hierarquia visual e padrões do legado `dash.jsx` + `table.jsx` + `UserModal.jsx`.
-> Fonte: `kunksoucannabis/src/components/master/dash.jsx`, `table.jsx`, `modals/UserModal.jsx`.
+> **Obrigatório:** replicar layout, hierarquia visual e padrões anteriores `dash.jsx` + `table.jsx` + `UserModal.jsx`.
 > Cores alinhadas a Serviços / Triagem (`#5a7a5b`, `#7a5b7a`, …).
 
 ## Rotas
@@ -55,11 +54,11 @@ Modal UserModal (ao clicar avatar / ?a=)
 
 ### Cards de status
 
-Contagens clicáveis que filtram a tabela (como legado). Labels alinhados às fases OSS ([fields.md](./fields.md)).
+Contagens clicáveis que filtram a tabela (comversões anteriores). Labels alinhados às fases OSS ([fields.md](./fields.md)).
 
 ### Menu filtrar
 
-Itens equivalentes ao legado, com labels OSS:
+Itens equivalentes aversões anteriores, com labels OSS:
 
 - Associado
 - Não preencheu os dados
@@ -103,18 +102,18 @@ Pesquisa local: filtra linhas já carregadas (nome, e-mail, telefone, nome de pa
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### Diferenças vs legado (obrigatórias)
+### Diferenças vs histórico (obrigatórias)
 
-| Legado | OSS |
+| Comportamento | Detalhe |
 |---|---|
 | Aba “Prescritor e Parceiro” | Aba **Prescritor** apenas |
 | Tornar Ativo / Remover Ativo | **Remover** da UI |
-| DocuSeal Novo Termo | Stub (toast / 501) — sem side effects |
+| o módulo de termos Novo Termo | Stub (toast / 501) — sem side effects |
 | `?u=` em alguns links | Padronizar deep link painel: `?a=` |
 
 ### Aba Dados Pessoais
 
-Form em grid (legado `Form`), CIAP2, botões Salvar / Excluir.
+Form em grid (histórico `Form`), CIAP2, botões Salvar / Excluir.
 
 ### Aba Pacientes
 
@@ -155,4 +154,4 @@ Dialog simples: e-mail (+ feedback de conta existente / em progresso, alinhado a
 - Cards de métricas no estilo dashboard moderno no hero
 - Drawer genérico no lugar do modal tabbed
 - Reintroduzir Parceiro no modal
-- Implementar DocuSeal “só um pouco”
+- Implementar o módulo de termos “só um pouco”

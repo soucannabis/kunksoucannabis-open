@@ -1,6 +1,6 @@
 # Módulo Geoapify (verificação de endereço)
 
-> Validação composta **ViaCEP (Correios)** + **Geoapify Geocode Search**, portada do kunkserver (`routes/geoapify.js`, `modules/viacepCorreios.js`, `modules/geoapifyCompositeValidation.js`).
+> Validação composta **ViaCEP (Correios)** + **Geoapify Geocode Search**, portada do implementação anterior (`routes/geoapify.js`, `modules/viacepCorreios.js`, `modules/geoapifyCompositeValidation.js`).
 > Docs: [Geoapify Geocoding](https://www.geoapify.com/geocoding-api/), [ViaCEP](https://viacep.com.br/).
 
 ## Ativação
@@ -10,7 +10,7 @@
 | `modules.geoapify.enabled` | Admin (`system_configs`) |
 | `modules.geoapify.use_for_validation` | default `false` — toggle no admin |
 
-Desabilitado → `503 MODULE_DISABLED`.  
+Desabilitado → `503 MODULE_DISABLED`. 
 Flag `use_for_validation=false` → `403 VALIDATION_DISABLED` em `POST /validate-address`.
 
 ## Prefixo
@@ -75,7 +75,7 @@ Request:
 - Com `order_id`, persiste `orders.address_validation` = `válido` | `revisar` | `inválido`.
 - Sem `force`, pedidos já validados retornam `{ skipped: true, status }`.
 
-Response (shape legado):
+Response (formato de resposta):
 
 ```json
 {
@@ -97,5 +97,5 @@ Valida a `api_key` com um geocode de teste.
 
 ## Consumo no Kunk
 
-Listagem de pedidos: se o módulo estiver on + `use_for_validation`, valida automaticamente pedidos da página sem `address_validation`.  
+Listagem de pedidos: se o módulo estiver on + `use_for_validation`, valida automaticamente pedidos da página sem `address_validation`. 
 Após editar endereço no modal de detalhes, revalida com `force: true`.

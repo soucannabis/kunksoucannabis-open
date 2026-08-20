@@ -22,8 +22,8 @@ WHERE professional_id = :session.internal_code
   AND consultation_date IS NOT NULL
 ```
 
-Ignorar / rejeitar tentativas do cliente de ampliar o filtro.  
-`internal_code` inválido ou sem profissional → 403 / lista vazia.  
+Ignorar / rejeitar tentativas do cliente de ampliar o filtro. 
+`internal_code` inválido ou sem profissional → 403 / lista vazia. 
 Staff: mesmos filtros de status + data obrigatória.
 
 Atualizar [`../../api/authorization.md`](../../api/authorization.md): role `Profissional` (colaboradores com portal). **Não** usar role `Prescritor` neste módulo.
@@ -112,8 +112,8 @@ RBAC: update em `services`. Role `Profissional` → **403**.
 | `DELETE /professionals/:id/contest-reports/:index` | Staff | — |
 | ou `PATCH /professionals/:id` | Staff | `{ "contest_reports": [ … ] }` array completo |
 
-Server injeta `date` ISO.  
-Profissional só pode append no próprio registro (`professional_code === internal_code`).  
+Server injeta `date` ISO. 
+Profissional só pode append no próprio registro (`professional_code === internal_code`). 
 `GET`/`PATCH /professionals` e `/items/professionals` no portal filtram o mesmo código. O PATCH do portal **não** aceita `donation_balance`, `contest_reports` nem flags de cadastro — contestação só no POST acima.
 
 ---
@@ -148,7 +148,7 @@ Caminho principal: a partir de `/app/profissionais`.
 | `POST /professionals/:id/portal-access/resend` | **Só staff.** Novo token; invalida o anterior |
 | `PATCH /professionals/:id/donation-balance` | **Só staff.** Portal (role só `Profissional`) recebe 403, inclusive no próprio cadastro |
 | `GET /system-users?filter[internal_code]=` | Status da conta |
-| `GET/POST` aceite em `/cadastro` | Mesma lógica do convite de operadores (legado `systemUserSign`) |
+| `GET/POST` aceite em `/cadastro` | Mesma lógica do convite de operadores (histórico `systemUserSign`) |
 
 Resposta de `portal-access` sugerida:
 
@@ -200,7 +200,7 @@ Já existentes: `professionals.contest_reports`, `professional_code`, `consultat
 
 ## 9. Fora da API v1
 
-| Endpoint legado / ideia | Decisão |
+| Endpoint histórico / ideia | Decisão |
 |---|---|
 | Webhook n8n pagamento | Não |
 | Utalk message | Não |

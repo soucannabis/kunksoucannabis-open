@@ -1,7 +1,6 @@
 # Atualizações (changelog)
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/atualizacoes` |
 | **Componente** | `UpdateLog` |
-| **Arquivo legado** | `src/components/inputs/updateLog.jsx` |
 | **Permissões** | Só gate `/app` |
 
 ## Descrição
@@ -25,7 +23,7 @@ Histórico de changelog do produto exibido aos operadores.
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus changelog** | `/api/directus/changelog/all` |
+| **o schema de origem changelog** | `/api/v1/changelog/all` |
 
 ## Dependências de outras páginas / módulos
 

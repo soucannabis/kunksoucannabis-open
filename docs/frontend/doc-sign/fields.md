@@ -1,12 +1,12 @@
 # Doc-sign — Campos, variáveis e schema
 
-> Variáveis de preenchimento alinhadas ao **schema alvo** (`users`), não aos nomes do DocuSeal.
+> Variáveis de preenchimento alinhadas ao **schema alvo** (`users`), não aos nomes do o módulo de termos.
 > Fonte canônica dos campos: [`../cadastramento/fields.md`](../cadastramento/fields.md) + `target-schema.sql`.
 
 ## 1. Variáveis do termo
 
-No editor TipTap, o operador insere variáveis via picker (nó `variable` com `attrs.name`).  
-Na renderização PDF / preview, o nó vira o valor resolvido.  
+No editor TipTap, o operador insere variáveis via picker (nó `variable` com `attrs.name`). 
+Na renderização PDF / preview, o nó vira o valor resolvido. 
 Os nomes abaixo são os de `attrs.name`; a origem é sempre coluna de `users`.
 
 | Variável (`{{…}}`) | Label (audit / UI) | Coluna `users` | Observação |
@@ -139,7 +139,7 @@ Formato de `content_json`: documento do editor (ex. TipTap). Variáveis e assina
 | `timezone` | TEXT NULL | |
 | `meta` | JSONB NULL | |
 
-**Sem `session_id`** no audit (assinatura por token público não tem sessão confiável equivalente ao DocuSeal).
+**Sem `session_id`** no audit (assinatura por token público não tem sessão confiável equivalente ao o módulo de termos).
 
 Índices: `(contract_id, occurred_at)`, `(user_code)` em contracts.
 

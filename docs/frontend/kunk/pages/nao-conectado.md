@@ -1,7 +1,6 @@
 # Não conectado
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/nao-conectado` |
 | **Componente** | `NaoConectado` |
-| **Arquivo legado** | `src/components/master/naoConectado.jsx` |
 | **Permissões** | Pública |
 
 ## Descrição

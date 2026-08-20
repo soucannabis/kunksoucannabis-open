@@ -62,11 +62,11 @@ Garantir uso ao criar pedido/serviço:
 
 Endpoint auxiliar opcional:
 
-`GET /reception/open-by-email?email=` ou `?associate_code=` — espelha legado `/reception/user?email=`.
+`GET /reception/open-by-email?email=` ou `?associate_code=` — espelha histórico `/reception/user?email=`.
 
 ### 6. Contagens por status
 
-- Client-side: filtrar lista já carregada (legado), **ou**
+- Client-side: filtrar lista já carregada , **ou**
 - `GET /reception/status-counts` → `{ waiting: 12, done: 3, ... }` para sidebar sem baixar tudo.
 
 Preferir counts no server se a fila for grande.

@@ -6,7 +6,7 @@
 
 ## Princípio
 
-Front só fala `/api/v1`. Sessão de **operador** via cookie **`kunk_oss_session`**.  
+Front só fala `/api/v1`. Sessão de **operador** via cookie **`kunk_oss_session`**. 
 Todas as rotas abaixo (exceto login) exigem sessão + role **`Administrador`** (403 `FORBIDDEN` caso contrário).
 
 ---
@@ -19,7 +19,7 @@ Todas as rotas abaixo (exceto login) exigem sessão + role **`Administrador`** (
 | POST | `/auth/logout` | Invalida sessão |
 | GET | `/auth/me` | Operador sem senha; inclui `permissions` |
 
-O front admin, após `/auth/me`, verifica `permissions.includes('Administrador')`.  
+O front admin, após `/auth/me`, verifica `permissions.includes('Administrador')`. 
 A API também deve **autorizar** mutações admin (configs, CRUD amplo) só para essa role — não confiar só no front.
 
 ---
@@ -85,8 +85,8 @@ Detalhe: [`../../api/files.md`](../../api/files.md). Se `GET /files` (lista) nã
 | GET | `/admin/sample-data` | Contagem de linhas com `is_sample = true` por tabela |
 | DELETE | `/admin/sample-data` | Remove só registros sample (preserva operador logado se for sample) |
 
-Resposta do GET: `{ tables: [{ table, label, count }], total }`.  
-Resposta do DELETE: `{ deleted: [{ table, label, count }], skipped, total }`.  
+Resposta do GET: `{ tables: [{ table, label, count }], total }`. 
+Resposta do DELETE: `{ deleted: [{ table, label, count }], skipped, total }`. 
 Erro `409 SAMPLE_DATA_BLOCKED` se FK de dado real impedir a exclusão.
 
 Setup storage: [`../../api/storage-s3-setup.md`](../../api/storage-s3-setup.md), [`../../api/storage-gcs-setup.md`](../../api/storage-gcs-setup.md).
@@ -159,7 +159,7 @@ Para `is_sensitive: true`:
 
 ### Autorização
 
-Só `Administrador`. Não expor via `/items/system_configs` no MVP se a criptografia/máscara não estiver no items layer — preferir rotas `/config/*` acima.  
+Só `Administrador`. Não expor via `/items/system_configs` no MVP se a criptografia/máscara não estiver no items layer — preferir rotas `/config/*` acima. 
 Se incluir na whitelist de items depois, manter as mesmas regras de strip/encrypt.
 
 ---

@@ -2,17 +2,17 @@
 
 ## 1. `services` (domínio)
 
-Nomes OSS (legado entre parênteses quando diferente).
+Nomes OSS (histórico entre parênteses quando diferente).
 
 | Campo | Tipo | Obrigatório | Notas |
 |---|---|---|---|
 | `id` | serial | PK | |
 | `service_code` | uuid | sim | Único por linha (`uuidv4` no create) |
-| `booking_group_code` | varchar/uuid | sim | **Grupo** — legado `code`; compartilhado entre linhas do mesmo associado/sessão |
+| `booking_group_code` | varchar/uuid | sim | **Grupo** — histórico `code`; compartilhado entre linhas do mesmo associado/sessão |
 | `status` | varchar | sim | Ver statuses abaixo |
 | `name` | varchar | não | Label opcional |
 | `type` | varchar | sim | Cópia do `professionals.type` no momento do create |
-| `associate_user_code` | varchar | sim | Legado `associate` — **sempre o responsável** |
+| `associate_user_code` | varchar | sim | Histórico `associate` — **sempre o responsável** |
 | `associate_name` | varchar | sim | Snapshot do responsável |
 | `associate_email` | varchar | não | Snapshot |
 | `patient_user_code` | uuid | não | **Novo** — paciente beneficiário; `null` = atendimento ao responsável |
@@ -20,21 +20,21 @@ Nomes OSS (legado entre parênteses quando diferente).
 | `professional_id` | int/varchar | sim | FK lógica → `professionals.id` |
 | `professional_name` | varchar | sim | Snapshot |
 | `professional_email` | varchar | não | Snapshot |
-| `consultation_date` | timestamptz | não | Legado `date` — data/hora do atendimento |
+| `consultation_date` | timestamptz | não | Histórico `date` — data/hora do atendimento |
 | `price` | numeric | não | Valor da consulta (default do profissional) |
-| `donation` | numeric | não | Legado `donate` |
+| `donation` | numeric | não | Histórico `donate` |
 | `price_paid` | numeric | não | Registro manual do valor pago — **sem** checkout |
 | `observations` | text | não | Template + edição livre |
 | `tags` | json/array | não | |
 | `payment_type` | varchar | não | Enum manual (Pix, Boleto, …) — **sem** `payment_link` |
 | `event_id` | varchar | não | ID do evento Google |
 | `event_link` | varchar | não | HTML link do evento |
-| `created_by_user_code` | varchar | não | Legado `kunk_user` |
+| `created_by_user_code` | varchar | não | Histórico `kunk_user` |
 | `date_created` | timestamptz | sim | |
 
 ### Fora de escopo v1 (não usar na UI / não gerar)
 
-| Campo legado / OSS | Motivo |
+| Campversões anteriores / OSS | Motivo |
 |---|---|
 | `payment_link` | Checkout Pagar.me |
 | `payment_code` | Idem |
@@ -46,16 +46,16 @@ Campos podem existir no schema por compatibilidade; a UI de Serviços **não** c
 
 ### Status (pagamento operacional — sem checkout)
 
-Manter os status de pagamento do legado na UI e no domínio. Toggle manual e comprovante permanecem. Com módulo `pagarme` ativo, PaymentModal / `payment_link` entram conforme [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md) (sem sync Pedidos SC).
+Manter os status de pagamento anteriores na UI e no domínio. Toggle manual e comprovante permanecem. Com módulo `pagarme` ativo, PaymentModal / `payment_link` entram conforme [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md) (sem sync Pedidos SC).
 
 | Status | Uso |
 |---|---|
 | `Aguardando Pagamento` | Default no create |
 | `Pagamento Concluído` | Operador confirma via toggle **ou** ao **enviar comprovante** |
 
-Filtro/toggle pago vs pendente na barra (como no legado) **permanece**.
+Filtro/toggle pago vs pendente na barra (em versões anteriores) **permanece**.
 
-### `payment_type` (manual, igual legado)
+### `payment_type` (manual, igual histórico)
 
 `Pix` · `Boleto` · `Cartão` · `Crédito Associação` · `Permuta` · `Doação integral` · `Serviço gratuito` · `Mudas`
 
@@ -74,14 +74,14 @@ Uma única tabela. Dois papéis via flags (independentes; um registro pode ter a
 |---|---|---|---|
 | `id` | serial | PK | |
 | `name` | varchar | sim | |
-| `last_name` | varchar | não | OSS; legado `lastname` |
+| `last_name` | varchar | não | OSS; histórico `lastname` |
 | `email` | varchar | não | |
 | `phone` | varchar | não | |
 | `cpf` | varchar | não | |
 | `state` / `city` | varchar | não | |
 | `type` | varchar | sim | Especialidade — ver enum |
 | `specialty` | varchar | não | Texto livre complementar |
-| `services_description` | varchar | não | Legado `services` |
+| `services_description` | varchar | não | Histórico `services` |
 | `active` | int/bool | sim | Default 1 |
 | `is_prescriber` | bool | não | Prescritor (receitas / pedidos) |
 | `is_collaborator` | bool | não | Colaborador — **mostrar no input de Serviços** |
@@ -119,7 +119,7 @@ Valores canônicos OSS (labels PT):
 | `dentist` | Dentista |
 | `vet` | Veterinário |
 
-UI de create/edit: select obrigatório. Um profissional = **um** tipo principal (como no legado).
+UI de create/edit: select obrigatório. Um profissional = **um** tipo principal (em versões anteriores).
 
 ### Defaults de preço (create do serviço)
 
@@ -196,7 +196,7 @@ Detalhe: [`../../api/modules/credentials.md`](../../api/modules/credentials.md) 
 
 ## 5. Template de observações (modal Info)
 
-Gerado no open do modal (legado) quando há grupo. Se o serviço tem `patient_user_code`, separar blocos **Responsável** e **Paciente**; senão um único bloco do associado.
+Gerado no open do modal  quando há grupo. Se o serviço tem `patient_user_code`, separar blocos **Responsável** e **Paciente**; senão um único bloco do associado.
 
 ```
 Responsável: {nome do associate}

@@ -89,7 +89,7 @@ Regra de completude fase 3:
 
 ### 5. Módulo de termos (fase 4) — **spec pronta; implementação pendente**
 
-Assinatura real: app **`apps/doc-sign`** + API `/doc-sign/*`.  
+Assinatura real: app **`apps/doc-sign`** + API `/doc-sign/*`. 
 Documentação: [`../doc-sign/`](../doc-sign/README.md).
 
 **Nesta entrega do cadastramento** (já feita): stubs 501 + UI “em desenvolvimento”.
@@ -153,16 +153,6 @@ Atualizar [`../../api/domain-routes.md`](../../api/domain-routes.md) na mesma en
 
 `GET /users/exists?email=` (auth pública rate-limited ou só uso interno do register): retorna `{ exists, state: "none"|"in_progress"|"associado" }` sem dados sensíveis.
 
-### 10. Migração de dados legado → fases 1–5
-
-Script na entrega (ou na migração Directus→OSS), usando o mapa de [flow.md](./flow.md):
-
-- Inteiros antigos → `associate_status` 1–5
-- Strings antigas → `status` / fase
-- `log` → `invalid_fields`
-- `medical_prescription` → `prescription` (já no schema)
-- `contract` → `adhesion_term`
-
 ### 11. Painel / acolhimento
 
 **Na mesma entrega do cadastramento** (mínimo necessário):
@@ -198,8 +188,8 @@ Refino visual completo do acolhimento pode continuar depois; a **leitura correta
 - [x] Fase 4: UI + stub API **“módulo de termos em desenvolvimento”** (sem assinatura real)
 - [x] Fase 5 (acessível após módulo termos ou bypass QA)
 - [x] Hidratação do form pela API
-- [x] Painel: leitura fases 1–5 *(esqueleto `apps/panel` + script SQL de mapa; painel legado não migrado)*
-- [x] Script mapa migração legado (aplicado no schema de instalação)
+- [x] Painel: leitura fases 1–5 *(esqueleto `apps/panel` + script SQL de mapa; painel histórico não migrado)*
+- [x] Script mapa migraçãversões anteriores (aplicado no schema de instalação)
 - [x] Theming + estrutura `apps/registration`
 - [x] Sem `met_us` / `bvid` / `proof_of_address` / `aguardando-aprovacao`
 

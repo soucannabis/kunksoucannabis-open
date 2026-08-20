@@ -14,7 +14,7 @@
 | Associados | Geridos na área **Dados** (`users`), não na área Usuários |
 | Área Usuários | Só operadores (`system_users`) + roles |
 | SQL livre | **Não** — só CRUD whitelist + `/config` + `/files` |
-| Directus | Não depende; substitui a UI admin que o Directus cobria |
+| o schema de origem | Não depende; substitui a UI admin que o schema anterior cobria |
 
 ---
 
@@ -121,10 +121,10 @@ Spec: [`../kunk/servicos/admin.md`](../kunk/servicos/admin.md#3-páginas-do-kunk
 
 ## Ordem sugerida de implementação
 
-1. Gate auth + shell vazio  
-2. Usuários / permissões (menor superfície, desbloqueia operadores)  
-3. System configs (desbloqueia branding dos outros sistemas sem redeploy)  
-4. Browser de dados + arquivos + relações  
+1. Gate auth + shell vazio 
+2. Usuários / permissões (menor superfície, desbloqueia operadores) 
+3. System configs (desbloqueia branding dos outros sistemas sem redeploy) 
+4. Browser de dados + arquivos + relações 
 
 ---
 

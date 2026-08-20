@@ -32,7 +32,7 @@ Response: lista de serviços (shape OSS de [fields.md](./fields.md)).
 
 ### `GET /services/by-group/:bookingGroupCode`
 
-Equivalente legado `GET …/servicecodes?code=`.
+Equivalente histórico `GET …/servicecodes?code=`.
 
 ```json
 { "data": [ /* services com mesmo booking_group_code */ ] }
@@ -202,7 +202,7 @@ Resumo dos endpoints usados pela feature:
 | `GET` | `/oauth/status` | Poll |
 | `POST` | `/test` | Assistente |
 
-Body create event (legado):
+Body create event :
 
 ```json
 {
@@ -215,7 +215,7 @@ Body create event (legado):
 }
 ```
 
-Duração default 1h se só `start` for enviado. Reminders: e-mail 24h + popup 10 min (legado).
+Duração default 1h se só `start` for enviado. Reminders: e-mail 24h + popup 10 min .
 
 ---
 

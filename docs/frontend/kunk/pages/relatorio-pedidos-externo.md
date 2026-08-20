@@ -1,7 +1,6 @@
 # Relatório de pedidos (externo)
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/relatorio/pedidos` |
 | **Componente** | `ReportOrders` |
-| **Arquivo legado** | `src/components/master/reportOrders.jsx` |
 | **Permissões** | Autenticado; destino padrão de Parceiro e Prescritor |
 
 ## Descrição
@@ -27,7 +25,6 @@ Relatório de pedidos para **Parceiro** (`?pa=`) ou **Prescritor** (`?p=`). Dest
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus** | orders, partners, professionals |
 | **Utalk / WhatsApp** | `/api/utalk/message` |
 | **Auth** | logout |
 

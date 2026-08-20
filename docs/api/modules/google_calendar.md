@@ -1,6 +1,6 @@
 # Módulo Google Calendar (agenda de serviços)
 
-> Portar o fluxo do kunkserver (`routes/googleCalendar.js`, `modules/googleCalendar.js`) para `/api/v1/modules/google_calendar`.
+> Portar o fluxo do implementação anterior (`routes/googleCalendar.js`, `modules/googleCalendar.js`) para `/api/v1/modules/google_calendar`.
 > Spec de produto: [`../../frontend/kunk/servicos/README.md`](../../frontend/kunk/servicos/README.md).
 > Docs Google: [Calendar API](https://developers.google.com/calendar/api/guides/overview), [OAuth 2.0](https://developers.google.com/identity/protocols/oauth2).
 
@@ -12,7 +12,7 @@
 | `modules.google_calendar.use_for_scheduling` | default `false` — toggle no admin |
 | `modules.google_calendar.primary_calendar_id` | Calendário principal da aplicação (select no admin) |
 
-Desabilitado → `503 MODULE_DISABLED`.  
+Desabilitado → `503 MODULE_DISABLED`. 
 `use_for_scheduling=false` → `403 SCHEDULING_DISABLED` em create/update/delete de eventos.
 
 ## Prefixo
@@ -136,7 +136,7 @@ Usado por: select do calendário principal (admin) e select de agenda no cadastr
 ```
 
 - Se `end` omitido → `start + 1h`.
-- Reminders (legado): email 24h antes; popup 10 min.
+- Reminders : email 24h antes; popup 10 min.
 - `service_id` opcional: se enviado, API pode PATCH `event_id` / `event_link` no serviço.
 
 Response:
@@ -171,7 +171,7 @@ Após callback: persistir `refresh_token` (e access) criptografados; **somente s
 
 ### `POST /test`
 
-Valida credenciais: refresh access token + `calendarList.list` (ou get primary).  
+Valida credenciais: refresh access token + `calendarList.list` (ou get primary). 
 Usado pelo assistente; falha → **não** persistir secrets novos.
 
 ## Consumo no Kunk

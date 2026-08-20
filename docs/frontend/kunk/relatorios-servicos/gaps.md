@@ -5,7 +5,7 @@
 | # | Decisão |
 |---|---|
 | 1 | **Só** relatório de serviços nesta entrega (pedidos = fora) |
-| 2 | Layout/visual **igual ao legado** `reportServices.jsx` |
+| 2 | Layout/visual **igual aversões anteriores** `reportServices.jsx` |
 | 3 | Só serviços com status `Pagamento Concluído` **e** `consultation_date` preenchida |
 | 4 | Agrupamento por mês de `consultation_date` → profissional → linhas |
 | 5 | `payable = max(0, price − association_fee [− donation se flag])`; **default fee = 0** |
@@ -20,7 +20,7 @@
 | 14 | `role_pages`: Profissional → **somente** `relatorios-servicos` (nunca outras páginas do Kunk) |
 | 15 | Select de tipos no cadastro de profissionais lê o catálogo admin |
 | 16 | Taxa aplica **sempre** conforme admin (não só quando o preço “bate” com o padrão) |
-| 17 | Sistema novo — sem migração/congelamento de taxas do legado |
+| 17 | Sistema novo — sem migração/congelamento de taxas anteriores |
 | 18 | Conta criada em **`/app/profissionais`**: “Criar conta” + convite por e-mail (link com expiração → `/cadastro`) |
 | 19 | E-mail SMTP / envio de convite: **stub** até módulo de e-mail; registrar integração futura |
 | 20 | **Sem** role `Prescritor` neste módulo — só colaboradores com acesso ao relatório |
@@ -43,7 +43,7 @@
 | Dep | Notas |
 |---|---|
 | Módulo Serviços / Profissionais | Dados + create price resolution + botão criar conta |
-| Fluxo `/cadastro` (convite system_users) | Mesma lógica do legado `systemUserSign` |
+| Fluxo `/cadastro` (convite system_users) | Mesma lógica anteriores `systemUserSign` |
 | Módulo de e-mail (SMTP / invite) | **Ainda não implementado** — ver § Integração futura |
 | `role_pages` | Estender role `Profissional` + page id |
 | FileUpload / comprovantes | Coluna Comp se reutilizar viewer |
@@ -52,9 +52,9 @@
 
 | Item | Estado |
 |---|---|
-| Gerar link assinado com expiração (legado ~1h) | Implementar na API mesmo sem SMTP |
+| Gerar link assinado com expiração (histórico ~1h) | Implementar na API mesmo sem SMTP |
 | Persistência do convite / `system_users` pending | Implementar |
-| Tela `/cadastro` (senha + dados) | Implementar (espelho legado) |
+| Tela `/cadastro` (senha + dados) | Implementar (espelhversões anteriores) |
 | `POST` envio de e-mail com o link | **Stub** / `501` ou fila no-op até módulo e-mail |
 | Quando e-mail existir | Conectar o mesmo endpoint sem mudar o fluxo de profissionais |
 
@@ -114,7 +114,7 @@ Não bloquear a criação da conta / link por falta de SMTP: staff deve poder **
 
 - [x] Spec `relatorios-servicos/`
 - [x] Atualizar [`../servicos/fields.md`](../servicos/fields.md) (defaults de preço via catálogo)
-- [x] Atualizar pages legado + índice kunk README
+- [x] Atualizar pages histórico + índice kunk README
 - [x] `authorization.md` / `domain-routes.md` / `admin/flow.md`
 
 ---

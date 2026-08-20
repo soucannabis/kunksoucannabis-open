@@ -3,7 +3,7 @@
 > Administração da instância (`apps/admin`, porta **4256**). Role **Administrador**.
 > Índice: [README.md](./README.md)
 
-**Auth:** operador (`system_users`).  
+**Auth:** operador (`system_users`). 
 **Testes do app:** Playwright (`npm run test:e2e:admin`). Sem Vitest.
 
 ## Dados

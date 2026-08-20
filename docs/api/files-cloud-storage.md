@@ -1,8 +1,8 @@
 # Storage em bucket
 
-> **Status:** implementado (v1) — drivers `local`, `s3`, `gcs`.  
-> Azure fica fora desta versão.  
-> Setup: [storage-s3-setup.md](./storage-s3-setup.md) · [storage-gcs-setup.md](./storage-gcs-setup.md).  
+> **Status:** implementado (v1) — drivers `local`, `s3`, `gcs`. 
+> Azure fica fora desta versão. 
+> Setup: [storage-s3-setup.md](./storage-s3-setup.md) · [storage-gcs-setup.md](./storage-gcs-setup.md). 
 > Contrato HTTP: [files.md](./files.md).
 
 ## Objetivo

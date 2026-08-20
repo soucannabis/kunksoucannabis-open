@@ -14,8 +14,8 @@ Fonte principal: `services` com `status = 'Pagamento Concluído'`.
 | `professional_name` | Agrupamento / label |
 | `type` | Modalidade do atendimento (consulta/retorno/…); **não** define a taxa |
 | `price` | Valor da consulta |
-| `donation` | Coluna Doação (legado `donate`) |
-| `price_paid` | Coluna Valor pago (se exibir; legado calculava `price − donate` em alguns lugares) |
+| `donation` | Coluna Doação (histórico `donate`) |
+| `price_paid` | Coluna Valor pago (se exibir; histórico calculava `price − donate` em alguns lugares) |
 | `tags` | Exibição opcional; **sem** bônus por tag no cálculo OSS |
 | `commission_validation` | `null` \| `approved` \| `contested` |
 | `status` | Filtro fixo: só `Pagamento Concluído` |
@@ -24,7 +24,7 @@ Cálculo **a receber** (server-side): `payable = max(0, price − association_fe
 
 ### `commission_validation` (reintroduzir no schema)
 
-Campo legado `validation` foi removido no alter OSS; o relatório **precisa** dele de volta com nome claro:
+Campversões anteriores `validation` foi removido no alter OSS; o relatório **precisa** dele de volta com nome claro:
 
 | Valor | Significado |
 |---|---|
@@ -65,7 +65,7 @@ SQL sugerido: `ALTER TABLE services ADD COLUMN IF NOT EXISTS commission_validati
 | `date` | sim | ISO — exibição no card |
 | `month` | sim | Label igual ao filtro de mês (`formatMonthYear`) |
 
-Legado: `info_report` → OSS: `contest_reports` (já no `target-schema.sql`).
+Histórico: `info_report` → OSS: `contest_reports` (já no `target-schema.sql`).
 
 ---
 
@@ -214,22 +214,9 @@ Sem data de consulta → **fora** do relatório (não aparece, não soma).
 
 ---
 
-## 6. Nomes legado → OSS
-
-| Legado | OSS |
-|---|---|
-| `date` | `consultation_date` |
-| `donate` | `donation` |
-| `validation` | `commission_validation` |
-| `info_report` | `contest_reports` |
-| `Prescritor` / portal pedidos | Fora deste módulo — só role `Profissional` (colaboradores) |
-| `?p=` = professional_code | `internal_code` / `professional_code` |
-
----
-
 ## 7. Fora do modelo v1
 
-| Conceito legado | Decisão |
+| Conceitversões anteriores | Decisão |
 |---|---|
 | Bônus +10 tags terapeuta | Não modelar |
 | Cupons / `donation_balance` no relatório | Fora |

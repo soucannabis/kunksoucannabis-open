@@ -1,6 +1,6 @@
 # Analytics — API
 
-Base: `/api/v1/analytics/*`  
+Base: `/api/v1/analytics/*` 
 Auth: sessão staff; permissão `reports:read`.
 
 ## Endpoints
@@ -43,7 +43,7 @@ Extras:
 ### Associados
 
 - Default: exclui pacientes (`status IS DISTINCT FROM 'patient'`) — alinhado à lista de Associados
-- Filtro `Associado` aceita `Associado` (legado) e `active` (OSS)
+- Filtro `Associado` aceita `Associado`  e `active` (OSS)
 - KPIs: `total`
 - Séries: `by_date`, `by_state`, `by_age`, `by_gender`
 - Data: `COALESCE(created_date, date_created)`

@@ -87,7 +87,7 @@ Sem webhook.
 
 ## 5. Audit
 
-Hashes filled/signed; IP; UA; timezone; event log.  
+Hashes filled/signed; IP; UA; timezone; event log. 
 Sem Session ID. Eventos: `contract.created`, `email.sent`, `form.viewed`, `submission.started`, `submission.completed`.
 
 ---

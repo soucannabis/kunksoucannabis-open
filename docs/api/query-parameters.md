@@ -6,7 +6,7 @@ Aplicáveis principalmente a `GET /items/:collection` e a listagens de domínio.
 
 | Param | Tipo | Default | Descrição |
 |---|---|---|---|
-| `filter` | object (query) | — | Filtros estilo Directus |
+| `filter` | object (query) | — | Filtros da API Kunk |
 | `sort` | string / array | `-id` ou `id` | Ordenação |
 | `limit` | int | `25` | Máx. por página (cap server-side) |
 | `offset` | int | `0` | Paginação offset |
@@ -15,7 +15,7 @@ Aplicáveis principalmente a `GET /items/:collection` e a listagens de domínio.
 | `search` | string | — | Busca full-text / icontains em campos indexados |
 | `meta` | string | — | Metadados: `filter_count`, `total_count`, `*` |
 
-## Filter (estilo Directus)
+## Filter (da API Kunk)
 
 ### Operadores suportados (v1)
 
@@ -49,7 +49,7 @@ JSON em query (alternativa, se o client preferir):
 GET /items/orders?filter={"status":{"_eq":"Produção Finalizada"}}
 ```
 
-O servidor deve aceitar **um** formato canônico na v1 (recomendado: nested query style Directus) e documentar o outro como opcional.
+O servidor deve aceitar **um** formato canônico na v1 (recomendado: estilo de query aninhada) e documentar o outro como opcional.
 
 ## Sort
 

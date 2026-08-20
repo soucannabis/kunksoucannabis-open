@@ -5,9 +5,9 @@
 
 ## Objetivo
 
-Recriar os frontends sobre a **nova API** (`kunk-api`) e o **schema alvo**, sem Directus no cliente.
+Recriar os frontends sobre a **nova API** (`kunk-api`) e o **schema alvo** no cliente.
 
-O legado (`src/` painel, `cadastramento/`) permanece como **referência funcional e visual** até o cutover. A lógica de negócio do cadastramento está validada em produção (>3000 cadastros) — preservar comportamento; modernizar código, campos e layout.
+Versões anteriores (`src/` painel, `cadastramento/`) permanece como **referência funcional e visual** até o cutover. A lógica de negócio do cadastramento está validada em produção (>3000 cadastros) — preservar comportamento; modernizar código, campos e layout.
 
 ## Apps do produto
 
@@ -52,13 +52,11 @@ O cadastramento precisa de **auth de associado** (`users`), distinta da auth de 
 | [**Mapa de funcionalidades**](../funcionalidades/) | Módulos/páginas por app + status de testes (visão rápida) |
 | [cadastramento/](./cadastramento/) | App de cadastro de associados (detalhe) |
 | [admin/](./admin/) | App de administração da instância (dados, configs, operadores) |
-| [kunk/](./kunk/) | App operacional Kunk + inventário de páginas do legado |
-| [doc-sign/](./doc-sign/) | Termos de adesão e assinaturas (substitui DocuSeal) |
+| [kunk/](./kunk/) | App operacional Kunk + inventário de páginas anteriores |
+| [doc-sign/](./doc-sign/) | Termos de adesão e assinaturas |
 
 ## Fonte legada
 
 | App | Código atual | Notas |
 |---|---|---|
-| Cadastramento | [`cadastramento/`](../../../cadastramento/) | React + Vite + Bootstrap; campos Directus antigos |
-| Kunk (operacional) | [`kunksoucannabis/src/`](../../../kunksoucannabis/src/) → [`apps/kunk/`](../../../apps/kunk/) | React + Vite + MUI Joy; docs em [kunk/](./kunk/) |
-| BFF legado | [`kunksoucannabis/kunkserver/`](../../../kunksoucannabis/kunkserver/) | Proxy Directus + integrações |
+| Cadastramento | [`cadastramento/`](../../../cadastramento/) | React + Vite + Bootstrap; campos o schema de origem antigos |

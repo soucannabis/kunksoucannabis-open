@@ -1,21 +1,19 @@
 # Search global — Documentação de implementação
 
-> Busca unificada no shell do Kunk (`apps/kunk`), espelhando o legado [`GlobalAppSearch.jsx`](../../../../kunksoucannabis/src/components/master/globalSearch/GlobalAppSearch.jsx).
-> API legada: [`kunkserver/routes/directus/search.js`](../../../../kunksoucannabis/kunkserver/routes/directus/search.js).
 > Página de associados: [`../associados/README.md`](../associados/README.md).
 
 ## Objetivo
 
 1. FAB **Pesquisar** fixo (canto superior direito) em todas as rotas autenticadas do shell
 2. Modal com abas/rádios: **Associados · Pedidos · Serviços · Triagem**
-3. Abrir o item na página respectiva (nova aba), com o **mesmo layout** do legado
+3. Abrir o item na página respectiva (nova aba), com o **mesmo layout** anteriores
 4. Em associados: abrir cadastramento **ou** enviar para triagem
 
 ## Fora de escopo
 
 | Item | Motivo |
 |---|---|
-| Busca full-text em arquivos/docs | Não existe no legado |
+| Busca full-text em arquivos/docs | Não existe antes |
 | Substituição da pesquisa local das páginas | Continua existindo (tabela serviços/pedidos/associados) |
 | Beeviral / campos SC | Removidos |
 
@@ -24,7 +22,7 @@
 | Documento | Conteúdo |
 |---|---|
 | [flow.md](./flow.md) | Fluxos por entidade + deep links |
-| [ui-ux.md](./ui-ux.md) | Layout legado do FAB + dialog |
+| [ui-ux.md](./ui-ux.md) | Layout histórico do FAB + dialog |
 | [api.md](./api.md) | `GET /search` |
 | [gaps.md](./gaps.md) | Decisões + checklist |
 

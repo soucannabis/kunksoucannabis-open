@@ -2,7 +2,6 @@
 
 > Dois serviços externos: **Pagar.me** e **Pedidos SouCannabis** (catálogo/tags/pedidos via API do Kunk central).
 > Contrato SC: [`../../external_apps_kunk_doc.md`](../../external_apps_kunk_doc.md) (inclui `external_payment_info`).
-> Legado Pagarme: [`payment.jsx`](../../../../kunksoucannabis/src/components/modals/payment.jsx) + [`pagarme.js`](../../../../kunksoucannabis/kunkserver/routes/pagarme.js).
 
 ## Objetivo
 
@@ -17,8 +16,8 @@
 
 | Item | Motivo |
 |---|---|
-| Beeviral / Pipefy no webhook | Legado |
-| PIX como aba dedicada | Não no PaymentModal legado; opcional depois |
+| Beeviral / Pipefy no webhook | Histórico |
+| PIX como aba dedicada | Não no PaymentModal histórico; opcional depois |
 | Split em serviços / CreateRecipient de profissionais | Fora; `POST /recipients` pode reusar depois |
 | Cartão parcial com SC ativo | Proibido com `split_mode` |
 

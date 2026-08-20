@@ -55,16 +55,16 @@ Reusar `/items/orders` quando suficiente. Rotas de domínio opcionais:
 }
 ```
 
-**Não aceitar** no v1: `coupon_id`, `no_commission`, `bvid`.  
-**Aceitar** `discount` e `donation` (campos manuais do carrinho legado).
+**Não aceitar** no v1: `coupon_id`, `no_commission`, `bvid`. 
+**Aceitar** `discount` e `donation` (campos manuais do carrinhversões anteriores).
 
 Server deve:
 
 1. Recalcular:
-   - `products = Σ (item.amount × item.quantity)` — `amount` = preço unitário legado; **sem** re-lookup de catálogo no v1
-   - `freight = apply_to_total ? delivery_price : 0`
-   - `discount_effective = discount + Σ custom_payment.value`
-   - `expected_total = max(0, products + freight - discount_effective - donation)`
+ - `products = Σ (item.amount × item.quantity)` — `amount` = preço unitáriversões anteriores; **sem** re-lookup de catálogo no v1
+ - `freight = apply_to_total ? delivery_price : 0`
+ - `discount_effective = discount + Σ custom_payment.value`
+ - `expected_total = max(0, products + freight - discount_effective - donation)`
 2. Se `|total_client - expected_total| > 0.01` → **`400 TOTAL_MISMATCH`**; **não gravar**.
 3. Se ok → persistir com `expected_total`, `discount`, `donation`.
 4. **Não** alterar `tags` com base no frete.
@@ -191,22 +191,22 @@ Response:
 |---|---|---|
 | POST | `/modules/loggi/quote-freight` | Cotação (todas modalidades) |
 | GET | `/modules/loggi/service-options` | Catálogo modalidades (favoritos) |
-| POST | `/modules/loggi/create-label` | Etiqueta (legado `/create`) |
+| POST | `/modules/loggi/create-label` | Etiqueta (histórico `/create`) |
 | POST | `/modules/loggi/cancel` | Cancelar pacote |
 | POST | `/modules/loggi/packages` | Tracking / detalhes |
 | POST | `/modules/loggi/test` | Teste de credenciais |
 | POST | `/modules/melhorenvio/quote` | Cotação multi-transportadora |
-| POST | `/modules/melhorenvio/correios-quote` | Alias legado |
+| POST | `/modules/melhorenvio/correios-quote` | Alias histórico |
 | GET | `/modules/melhorenvio/companies` | Transportadoras ME |
 | GET | `/modules/melhorenvio/services` | Serviços ME |
 | GET | `/modules/melhorenvio/service-options` | Catálogo normalizado (favoritos) |
-| POST | `/modules/melhorenvio/create-label` | Etiqueta (legado `/create-delivery`) |
+| POST | `/modules/melhorenvio/create-label` | Etiqueta (histórico `/create-delivery`) |
 | GET | `/modules/melhorenvio/oauth/authorize` | Inicia OAuth |
 | GET | `/modules/melhorenvio/oauth/callback` | Callback |
 | GET | `/modules/melhorenvio/oauth/status` | Status tokens |
 | POST | `/modules/melhorenvio/test` | Teste |
 
-Se módulo disabled → `503 MODULE_DISABLED`.  
+Se módulo disabled → `503 MODULE_DISABLED`. 
 Se credencial ausente → `503 CREDENTIAL_MISSING` ou `CONFIG_INCOMPLETE`.
 
 Payloads e respostas: docs dos módulos.
@@ -259,8 +259,8 @@ Payloads e respostas: docs dos módulos.
 }
 ```
 
-Campos omitidos / string vazia em secret = **não alterar**.  
-`run_test: true` (default): se o teste falhar → **não persiste** o novo valor; responde erro + checks.  
+Campos omitidos / string vazia em secret = **não alterar**. 
+`run_test: true` (default): se o teste falhar → **não persiste** o novo valor; responde erro + checks. 
 Response: metadados (sem secret) + resultado do teste.
 
 ---

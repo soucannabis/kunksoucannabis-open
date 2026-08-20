@@ -1,7 +1,6 @@
 # Dashboard (editor/viewer)
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/dashboard` |
 | **Componente** | `DashboardReports` |
-| **Arquivo legado** | `src/components/master/dashboardReports.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição
@@ -26,7 +24,7 @@ Editor/viewer de dashboard composto por blocos de reports.
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus reports** | run-query, save |
+| **o schema de origem reports** | run-query, save |
 | **PostgreSQL Reports** | execução |
 
 ## Dependências de outras páginas / módulos

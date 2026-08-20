@@ -25,7 +25,7 @@ Toda rota autenticada passa por autorização baseada em **role** (sessão) ou *
 
 Prescritor de receita (`is_prescriber` no cadastro de profissionais) **não** é usuário do sistema e não tem papel de login.
 
-Os nomes podem permanecer compatíveis com o JSON atual de `permissions` no kunkserver.
+Os nomes podem permanecer compatíveis com o JSON atual de `permissions` no implementação anterior.
 
 ## Matriz padrão (proposta v1)
 

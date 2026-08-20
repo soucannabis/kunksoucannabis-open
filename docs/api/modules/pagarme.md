@@ -1,6 +1,6 @@
 # Módulo Pagar.me (pagamentos)
 
-> Portar kunkserver (`routes/pagarme.js`, `pagarmeRequest.js`) + PaymentModal para `/api/v1/modules/pagarme`.
+> Portar implementação anterior (`routes/pagarme.js`, `pagarmeRequest.js`) + PaymentModal para `/api/v1/modules/pagarme`.
 > Spec: [`../../frontend/kunk/pagamentos-soucannabis/README.md`](../../frontend/kunk/pagamentos-soucannabis/README.md).
 > Docs: [Introdução](https://docs.pagar.me/reference/introdu%C3%A7%C3%A3o-1), [Criar pedido](https://docs.pagar.me/reference/criar-pedido-2), [Pedido com split](https://docs.pagar.me/reference/criar-pedido-com-split-1), [Split](https://docs.pagar.me/reference/split-1), [Recebedores](https://docs.pagar.me/reference/criar-recebedor-1), [Payment links](https://docs.pagar.me/reference/criar-link).
 
@@ -20,7 +20,7 @@ Off → `503 MODULE_DISABLED`.
 /api/v1/modules/pagarme
 ```
 
-Upstream v5: `{PAGARME_URL_API}` (default `https://api.pagar.me/core/v5`).  
+Upstream v5: `{PAGARME_URL_API}` (default `https://api.pagar.me/core/v5`). 
 Auth: Basic `Base64(secret_key + ":")`.
 
 **PSP vs Gateway:** a SouCannabis é PSP; a conta da associação **pode não ser**. Split só em conta **PSP**. Antes de ativar `soucannabis_orders` / qualquer cobrança com split, executar **probe PSP** (ver abaixo). Conta Gateway continua válida para Pagarme **standalone**.
@@ -60,9 +60,9 @@ Auth: Basic `Base64(secret_key + ":")`.
 
 Pré-requisitos:
 
-1. Pagarme on + SC on  
-2. Conta associação **PSP** (probe ok)  
-3. `association_recipient_id` + `soucannabis_recipient_id`  
+1. Pagarme on + SC on 
+2. Conta associação **PSP** (probe ok) 
+3. `association_recipient_id` + `soucannabis_recipient_id` 
 4. `payment_percentage` de `/me` **inteiro** em `0–100` (não inteiro → bloqueia)
 
 Split com `type: "percentage"`:
@@ -76,7 +76,7 @@ Split com `type: "percentage"`:
 
 (`amount` SC = `payment_percentage`; associação = `100 - payment_percentage`.)
 
-UI: **sem cartão parcial**. Só cartão e boleto.  
+UI: **sem cartão parcial**. Só cartão e boleto. 
 Total **= 0**: sem Pagarme/split. Serviços: sempre modo A.
 
 ### Probe PSP
@@ -96,10 +96,10 @@ Detalhe: [gaps.md §14–§15](../../frontend/kunk/pagamentos-soucannabis/gaps.m
 
 1. Autenticar (Secret key + teste).
 2. Criar link de pagamento de teste (`POST /webhooks/test-payment` → `KUNK_WH_*`), abrir o link e
-   gerar o boleto sem pagá-lo.
+ gerar o boleto sem pagá-lo.
 3. Webhooks: cadastrar URLs no painel Pagar.me (com Basic Auth); `POST /webhooks/validate`
-   confere se o `order.created` do boleto de teste já chegou. Se ok, ativa
-   `modules.pagarme.enabled`. Módulo efetivo exige secret + webhooks `ready`.
+ confere se o `order.created` do boleto de teste já chegou. Se ok, ativa
+ `modules.pagarme.enabled`. Módulo efetivo exige secret + webhooks `ready`.
 4. `association_recipient_id` / `soucannabis_recipient_id` ficam no onboarding SC.
 
 ## Endpoints
@@ -124,7 +124,7 @@ Body app:
 Regras:
 
 1. Sem split, monta um Payment Link no servidor (`/paymentlinks`) com `order_code`.
-   Com split, monta customer/items/checkout em `/orders`.
+ Com split, monta customer/items/checkout em `/orders`.
 2. **`code` = `order_code`** do pedido (ou code de serviço acordado).
 3. Se split: validar `is_psp` e `payment_percentage` inteiro; senão `PAGARME_NOT_PSP` / `PAYMENT_PERCENTAGE_NOT_INTEGER`.
 4. Se `split_mode` e pedido total > 0 → anexa `payments[].split` (`type: percentage`).
@@ -137,7 +137,7 @@ Proxy criar recebedor (profissionais / uso genérico).
 
 ### Recebedor SouCannabis
 
-Exposto no módulo SC: `POST /modules/soucannabis_orders/outbound/pagarme/recipients`  
+Exposto no módulo SC: `POST /modules/soucannabis_orders/outbound/pagarme/recipients` 
 (payload completo enviado pela SC → cria em Pagarme → grava `soucannabis_recipient_id`).
 
 Admin opcional: `POST /modules/pagarme/recipients/soucannabis` com body (mesmo efeito, role Administrador).
@@ -164,7 +164,7 @@ Comportamento pedidos:
 2. Localiza `orders` onde `order_code` === `hook.data.code` (ou caminho equivalente no payload v5).
 3. Atualiza `payment_form`, `payment_date`, status → `Pagamento concluído`.
 4. Se `split_mode` e ainda sem `soucannabis_order_id` → dispara create na SC com `external_payment_info`.
-5. Sem Pipefy / Beeviral / frete aleatório do legado.
+5. Sem Pipefy / Beeviral / frete aleatório anteriores.
 
 Inbound exige HTTP Basic com `webhook_user` e `webhook_pass` **ambos** preenchidos
 (Admin ou env). Sem credenciais → **401** (fail-closed). A resposta 401 não inclui
@@ -189,7 +189,7 @@ oráculo de senha (`pass_match` / `expected_user`).
 
 ## Seeds
 
-`alter-system-api-credentials-pagarme.sql`, `alter-system-configs-modules-pagarme.sql`.  
+`alter-system-api-credentials-pagarme.sql`, `alter-system-configs-modules-pagarme.sql`. 
 Registrar `pagarme` em `SERVICES` / `MODULE_NAMES`.
 
 ## Arquivos

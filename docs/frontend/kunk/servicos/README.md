@@ -1,17 +1,14 @@
 # Serviços — Documentação de implementação
 
 > Reimplementação da página de serviços (consultas/atendimentos) no produto unificado (`apps/kunk` + `apps/admin` + `kunk-api`).
-> Referência legada: [`services.jsx`](../../../../kunksoucannabis/src/components/master/services.jsx) (`Servicess`).
-> Agenda legada: [`kunkserver/routes/googleCalendar.js`](../../../../kunksoucannabis/kunkserver/routes/googleCalendar.js) + [`modules/googleCalendar.js`](../../../../kunksoucannabis/kunkserver/modules/googleCalendar.js).
-> Profissionais legado: [`ProfessionalsAndPartners.jsx`](../../../../kunksoucannabis/src/components/master/ProfessionalsAndPartners.jsx).
 
 ## Objetivo
 
 Recriar o fluxo de **serviços** com:
 
 1. **Mesmo layout e visual** da página legada (barra de filtros, tabela, cores, modal de infos, modal novo serviço)
-2. **Agrupamento por `booking_group_code`** (legado: `code`) — vários serviços do mesmo associado com profissionais diferentes no mesmo grupo
-3. **Modal de infos do serviço** equivalente ao legado (observações, tags, profissional, telefone, comprovante)
+2. **Agrupamento por `booking_group_code`**  — vários serviços do mesmo associado com profissionais diferentes no mesmo grupo
+3. **Modal de infos do serviço** equivalente aversões anteriores (observações, tags, profissional, telefone, comprovante)
 4. **Gestão de profissionais** (CRUD, valor de consulta, tipo/especialidade, visibilidade no input de serviços, agenda Google)
 5. **Módulo Google Calendar** no admin de serviços externos + assistente de autenticação OAuth
 6. Agendamento na **agenda do profissional** via `calendar_id`
@@ -33,7 +30,7 @@ Campos de valor (`price`, `donation`, `price_paid`), `payment_type` e status `Ag
 |---|---|
 | [flow.md](./flow.md) | Fluxos: triagem → criar → listar → info → agendar → profissionais |
 | [fields.md](./fields.md) | Campos de `services`, `professionals`, configs Google Calendar |
-| [ui-ux.md](./ui-ux.md) | **Layout e visual iguais ao legado** (obrigatório) |
+| [ui-ux.md](./ui-ux.md) | **Layout e visual iguais aversões anteriores** (obrigatório) |
 | [admin.md](./admin.md) | Serviços externos (Google Calendar) + gestão de profissionais |
 | [api.md](./api.md) | Contratos `kunk-api` (services, professionals, google_calendar) |
 | [gaps.md](./gaps.md) | Decisões fechadas + checklist de implementação |
@@ -84,27 +81,12 @@ apps/admin
 |---|---|
 | Replicar layout/cores/estrutura do `services.jsx` | Reinventar a listagem como dashboard novo |
 | Agrupar por `booking_group_code` (UUID compartilhado) | Tratar cada linha como isolada sem vínculo de grupo |
-| Modal Info com template de observações do legado | Remover o modal ou reduzir a um drawer genérico |
+| Modal Info com template de observações anteriores | Remover o modal ou reduzir a um drawer genérico |
 | Só profissionais `is_collaborator` no Autocomplete de serviços | Listar todos os prescritores ativos no input |
 | Valor de consulta default do profissional | Hardcode só por `type` sem campo no profissional |
 | Eventos na agenda cujo `calendar_id` está no profissional | Uma agenda única para todos sem seleção |
 | Secrets só se teste OAuth/API ok | Persistir refresh token inválido |
 | Registrar valores e tipo de pagamento (manual / comprovante) | Beeviral / cupons; PaymentModal só se `pagarme` on ([spec](../pagamentos-soucannabis/README.md)) |
-
-## Comportamento legado → OSS
-
-| Legado | OSS |
-|---|---|
-| `code` (string UUID) no grupo | `booking_group_code` |
-| `date` do atendimento | `consultation_date` |
-| `donate` | `donation` |
-| `professional` (string id) | `professional_id` |
-| `associate` (user_code) | `associate_user_code` |
-| `kunk_user` | `created_by_user_code` |
-| Status OSS | Manter `Aguardando Pagamento` / `Pagamento Concluído` (manual, sem checkout) |
-| `calendar_id` só no Directus | Editável na gestão; = calendário **secundário**; admin define **principal** da associação |
-| Defaults de preço só por `type` | `consultation_price` no profissional + fallback por `type` |
-| Página “Parceiros e Prescritores” misturada | `/app/profissionais` com filtros Colaborador / Prescritor |
 
 ## Status desta documentação
 

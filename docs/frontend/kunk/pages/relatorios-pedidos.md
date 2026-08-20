@@ -1,7 +1,6 @@
 # Relatórios — pedidos (staff)
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/relatorios/pedidos` |
 | **Componente** | `ReportOrders` |
-| **Arquivo legado** | `src/components/master/reportOrders.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição
@@ -24,7 +22,7 @@ Mesmo componente de `/relatorio/pedidos`, dentro do Theme com gate de staff.
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Ver relatório externo** | Directus + Utalk |
+| **Ver relatório externo** | o schema de origem + Utalk |
 
 ## Dependências de outras páginas / módulos
 

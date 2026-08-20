@@ -1,8 +1,8 @@
-# Sync manual legado → OSS
+# Sync manual entrada → OSS
 
-Webhook para o **Kunk legado** enviar atualizações de pedidos à instalação OSS (sync manual / lote).
+Webhook para o **sistema externo** enviar atualizações de pedidos à instalação OSS (sync manual / lote).
 
-**Credenciais:** as mesmas de **outbound** (`client_id` / `client_secret` gerados no Admin OSS → colar no External App do legado).
+**Credenciais:** as mesmas de **outbound** (`client_id` / `client_secret` gerados no Admin OSS → colar no External App anteriores).
 
 **URLs** (Admin → Pedidos SouCannabis → Mostrar URL do webhook):
 
@@ -35,7 +35,7 @@ Auth alternativa no sync: HTTP Basic ou headers `X-Client-Id` + `X-Client-Secret
 ```
 
 - `external_id` = `order_code` no OSS
-- `id` = id do pedido no legado (`soucannabis_order_id` no OSS)
+- `id` = id do pedido antes (`soucannabis_order_id` no OSS)
 
 ## Regras
 

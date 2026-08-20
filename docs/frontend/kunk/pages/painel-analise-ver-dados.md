@@ -1,7 +1,6 @@
 # Painel de análise — ver dados
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/painel-analise/ver-dados` |
 | **Componente** | `PainelAnaliseVerDados → PainelAnalisePage (surface=verDados)` |
-| **Arquivo legado** | `src/components/master/painelAnaliseVerDados.jsx + painelAnalisePage.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição
@@ -25,7 +23,7 @@ Superfície alternativa do mesmo motor de painel, com blocos filtrados por `surf
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Ver painel-analise** | analytics Directus + Beeviral |
+| **Ver painel-analise** | analytics o schema de origem + Beeviral |
 
 ## Dependências de outras páginas / módulos
 

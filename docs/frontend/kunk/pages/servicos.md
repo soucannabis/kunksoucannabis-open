@@ -1,7 +1,6 @@
 # Serviços
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 > **Spec de implementação OSS:** [`../servicos/README.md`](../servicos/README.md).
 
 ## Identificação
@@ -10,7 +9,6 @@
 |---|---|
 | **Rota** | `/app/acolhimento/servicos` |
 | **Componente** | `Services` |
-| **Arquivo legado** | `src/components/master/services.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição
@@ -32,8 +30,8 @@ Agendamento e gestão de serviços (consultas/atendimentos) com calendário. Uma
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus / kunk-api** | services, professionals, users, reception |
-| **Google Calendar** | `/modules/google_calendar/` (legado `/api/googleCalendar/`) |
+| **o schema de origem / kunk-api** | services, professionals, users, reception |
+| **Google Calendar** | `/modules/google_calendar/` (histórico `/api/googleCalendar/`) |
 
 ## Dependências de outras páginas / módulos
 
@@ -45,7 +43,7 @@ Agendamento e gestão de serviços (consultas/atendimentos) com calendário. Uma
 
 | Opção | Escolha |
 |---|---|
-| **Manter** | Lista + filtros + layout legado; agrupamento por código; modal Info; multi-profissional; Google Calendar; tags; comprovante; valores manuais |
+| **Manter** | Lista + filtros + layout histórico; agrupamento por código; modal Info; multi-profissional; Google Calendar; tags; comprovante; valores manuais |
 | **Remover** | Beeviral; cupons; Utalk no v1 |
 | **Modificar** | PaymentModal / `payment_link` quando módulo `pagarme` ativo ([pagamentos-soucannabis](../pagamentos-soucannabis/README.md)); toggle/comprovante permanecem; `consultation_price`; agendas / calendário principal |
 | **Notas** | Spec em [`../servicos/`](../servicos/README.md). Pagamentos: [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md). |

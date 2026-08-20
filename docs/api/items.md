@@ -1,6 +1,6 @@
 # CRUD genérico — `/items/:collection`
 
-Interface inspirada no Directus Items API. Cobre operações simples sobre collections da whitelist.
+Interface CRUD genérica do de origem Items API. Cobre operações simples sobre collections da whitelist.
 
 ## Base
 
@@ -8,7 +8,7 @@ Interface inspirada no Directus Items API. Cobre operações simples sobre colle
 /api/v1/items/{collection}
 ```
 
-`collection` deve estar na whitelist (ver [collections.md](./collections.md)).  
+`collection` deve estar na whitelist (ver [collections.md](./collections.md)). 
 Case: **snake_case** do schema alvo (`orders`, `system_users`, …).
 
 ## Endpoints
@@ -42,7 +42,7 @@ Query: ver [query-parameters.md](./query-parameters.md).
 GET /items/{collection}/{id}
 ```
 
-**200** — `data` é um objeto.  
+**200** — `data` é um objeto. 
 **404** — `NOT_FOUND`.
 
 ### Criar
@@ -69,9 +69,9 @@ Content-Type: application/json
 }
 ```
 
-Campos auto (`id`, `date_created`) gerados pelo servidor.  
-Campos sensíveis de sessão (`session_token`, etc.) são ignorados no write (exceto `password` / `account_password` / `token` onde aplicável).  
-Campos **desconhecidos** (fora do schema da collection, ex. campos removidos do legado) → **400** `VALIDATION_ERROR` com `details.unknown_fields`.
+Campos auto (`id`, `date_created`) gerados pelo servidor. 
+Campos sensíveis de sessão (`session_token`, etc.) são ignorados no write (exceto `password` / `account_password` / `token` onde aplicável). 
+Campos **desconhecidos** (fora do schema da collection, ex. campos removidos anteriores) → **400** `VALIDATION_ERROR` com `details.unknown_fields`.
 
 ### Atualizar (parcial)
 
@@ -83,7 +83,7 @@ PATCH /items/{collection}/{id}
 { "status": "inactive" }
 ```
 
-**200** — item atualizado.  
+**200** — item atualizado. 
 Só campos enviados são alterados. Chaves fora do schema → **400**.
 
 ### Remover
@@ -128,12 +128,3 @@ Usar rotas de domínio ([domain-routes.md](./domain-routes.md)) quando houver:
 
 Exemplos: criar pedido completo, agendar serviço com profissional, login.
 
-## Relação com Directus
-
-| Directus | Kunk API |
-|---|---|
-| `GET /items/Orders` | `GET /items/orders` |
-| `PATCH /items/Users/1` | `PATCH /items/users/1` |
-| `filter[status][_eq]=x` | mesmo estilo (ver query-parameters) |
-| `fields=id,name` | `fields=id,name` |
-| `meta=*` | `meta=*` |

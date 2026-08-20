@@ -1,7 +1,6 @@
 # Financeiro — lançamentos
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,12 +8,11 @@
 |---|---|
 | **Rota** | `/app/financeiro/lancamentos` |
 | **Componente** | `FinancesLaunch` |
-| **Arquivo legado** | `src/components/master/financesLaunch.jsx` |
 | **Permissões** | Só gate `/app` (sem check extra na rota Theme) |
 
 ## Descrição
 
-Conciliação e lançamentos financeiros: importa extratos (ex.: Cora), categoriza e grava no Directus.
+Conciliação e lançamentos financeiros: importa extratos (ex.: Cora), categoriza e grava no o schema de origem.
 
 ## Funcionalidades
 
@@ -27,9 +25,9 @@ Conciliação e lançamentos financeiros: importa extratos (ex.: Cora), categori
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus finances** | `/api/directus/finances/*` |
-| **Cora (banco)** | `/api/directus/finances/cora` — mTLS + certs em S3 |
-| **AWS S3** | certs do Cora no legado SouCannabis |
+| **o schema de origem finances** | `/api/v1/finances/*` |
+| **Cora (banco)** | `/api/v1/finances/cora` — mTLS + certs em S3 |
+| **AWS S3** | certs do Cora no integrações específicas de associação |
 
 ## Dependências de outras páginas / módulos
 

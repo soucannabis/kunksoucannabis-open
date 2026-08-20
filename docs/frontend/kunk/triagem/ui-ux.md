@@ -7,9 +7,9 @@
 | Path | `/app/acolhimento/triagem` |
 | Stub atual | `apps/kunk/src/pages/reception/TriagePage.jsx` |
 | Shell | Theme + Sidebar + QuickNav (já existentes) |
-| Roles | alinhadas ao legado: Administrador \| Acolhimento \| Produção |
+| Roles | alinhadas aversões anteriores: Administrador \| Acolhimento \| Produção |
 
-## Layout (espelhar legado, sem integrações)
+## Layout (espelhar histórico, sem integrações)
 
 ```
 ┌─────────────┬──────────────────────────────────────────────────────┐
@@ -59,7 +59,7 @@
 
 ## Deep link
 
-Suportar `?t={reception.code}` para destacar/filtrar um contato (legado).
+Suportar `?t={reception.code}` para destacar/filtrar um contato .
 
 ## Redirects
 
@@ -75,7 +75,5 @@ Página simples, brandável (pode reutilizar tokens de aparência Kunk ou regist
 - Sucesso: mensagem de confirmação (“entrou na fila”), sem expor painel interno.
 
 ## Referência visual legada
-
-Arquivos: `kunksoucannabis/src/components/master/reception.jsx`, `reception/ReceptionTableRow.jsx`.
 
 Preservar: hierarquia sidebar + tabela + contagens. Não preservar: chrome Utalk/Beeviral/doações.

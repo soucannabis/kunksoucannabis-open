@@ -2,7 +2,7 @@
 
 Sistema open source de gestão associativa para cannabis medicinal.
 
-Aplicações especializadas atendem os diferentes papéis da associação e compartilham uma API central sobre PostgreSQL (sem Directus). Termos e assinaturas fazem parte do próprio produto.
+Aplicações especializadas atendem os diferentes papéis da associação e compartilham uma API central sobre PostgreSQL. Termos e assinaturas fazem parte do próprio produto.
 
 | Sistema | Função |
 |---|---|
@@ -37,7 +37,7 @@ npm install
 npm run dev
 ```
 
-Health check: `http://localhost:8056/api/v1/health`  
+Health check: `http://localhost:8056/api/v1/health` 
 Com Docker da API: `http://localhost:4250/api/v1/health`
 
 Dados de exemplo:

@@ -21,7 +21,7 @@ Aprimorar:
 - Tipografia e espaçamento sem poluir a primeira dobra de cada etapa
 - Componentes reutilizáveis em `packages/ui` / `packages/forms`
 
-## Paleta e atmosfera (legado SouCannabis)
+## Paleta e atmosfera (integrações específicas de associação)
 
 | Elemento | Valor |
 |---|---|
@@ -55,7 +55,7 @@ Tokens: ver [`../theming.md`](../theming.md).
 - Radios de `responsible_type` e opções de `/consulta` como **cards** (`btn-outline-primary`), não lista seca
 - **Assistente de documentos:** escolha RG vs CNH; RG frente+verso; CNH só frente; indica o que falta
 - Upload com área grande tipo botão (`.label-upload`), feedback “enviado”
-- CIAP2 com contador “até 10 motivos”, categorias + busca (como legado) e ajuda contextual
+- CIAP2 com contador “até 10 motivos”, categorias + busca (comversões anteriores) e ajuda contextual
 - Submit com erros: persiste campos válidos; destaca inválidos; alinha a `invalid_fields`
 - CTA de contato sempre acessível (acolhimento)
 
@@ -73,7 +73,7 @@ Tokens: ver [`../theming.md`](../theming.md).
 | Base | React + Vite + TypeScript |
 | CSS | CSS variables (`packages/theme`) + CSS modules ou um único `registration.css` |
 | Componentes | Pode manter Bootstrap 5 no app de cadastro por fidelidade; isolar em wrappers |
-| Ícones | Manter simples (como o legado); evitar librário pesado sem necessidade |
+| Ícones | Manter simples (como versões anteriores); evitar librário pesado sem necessidade |
 
 O painel pode continuar em MUI — **skins diferentes por app são aceitáveis** desde que tokens de marca (logo, nome, verde institucional) venham do mesmo `packages/theme`.
 

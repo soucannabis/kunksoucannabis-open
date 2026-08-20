@@ -20,7 +20,7 @@
 | 12 | Painel “Novo Termo” | Só se não houver `completed` |
 | 13 | `adhesion_term` | UUID (= `term_contracts.id`) |
 | 14 | Audit `session_id` | **Excluído** |
-| 15 | Webhook / DocuSeal / Document Server | **Não** |
+| 15 | Webhook / o módulo de termos / Document Server | **Não** |
 
 ---
 
@@ -67,10 +67,10 @@ Spike curto na implementação: TipTap JSON → docDefinition pdfmake (mapeament
 
 ### A. Conclusão da assinatura (sem webhook)
 
-1. Persistir assinatura + PDFs + eventos  
-2. `users.adhesion_term = contract.id` (UUID)  
-3. Se `associate_status === 4` → `5`  
-4. Responder sucesso  
+1. Persistir assinatura + PDFs + eventos 
+2. `users.adhesion_term = contract.id` (UUID) 
+3. Se `associate_status === 4` → `5` 
+4. Responder sucesso 
 
 ### B. Hashes no audit
 
@@ -81,7 +81,7 @@ Spike curto na implementação: TipTap JSON → docDefinition pdfmake (mapeament
 
 ### C. Unicidade `completed`
 
-Índice único parcial por `user_code` / `signer_email`.  
+Índice único parcial por `user_code` / `signer_email`. 
 `POST /contracts` com completed → `409 CONTRACT_ALREADY_COMPLETED`.
 
 ### D. Token

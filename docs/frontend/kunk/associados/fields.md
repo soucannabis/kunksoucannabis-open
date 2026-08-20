@@ -6,7 +6,7 @@ Mesma tabela. Distinção por `status` / `responsible_code`.
 
 ### Identidade e contato
 
-| Campo OSS | Tipo | Notas | Legado |
+| Campo OSS | Tipo | Notas | Histórico |
 |---|---|---|---|
 | `id` | serial | PK | |
 | `user_code` | uuid | Público, UNIQUE | `user_code` |
@@ -36,7 +36,7 @@ Mesma tabela. Distinção por `status` / `responsible_code`.
 | Campo | Tipo | Notas |
 |---|---|---|
 | `associate_status` | int | Fases **1–5** do app de cadastramento |
-| `status` | varchar | `Associado` · `patient` · (legado migrado) |
+| `status` | varchar | `Associado` · `patient` · (histórico migrado) |
 | `invalid_fields` | text/json | Campos inválidos do funil |
 | `created_date` / `date_created` | timestamp | Coluna “Criado” |
 
@@ -65,13 +65,13 @@ Relação canônica para listar pacientes: `WHERE responsible_code = :associate_
 
 | Campo | Notas |
 |---|---|
-| `annotations` | JSON array — anotações da equipe (legado `anotations`) |
-| `adhesion_term` | Ref do termo — **vazio** até módulo termos (legado `contract`) |
+| `annotations` | JSON array — anotações da equipe (histórico `anotations`) |
+| `adhesion_term` | Ref do termo — **vazio** até módulo termos (histórico `contract`) |
 | `handbook` | Manual / observações livres se existir |
 
 ### Documentos (junction)
 
-Preferir `users_files` + `files`. Campos legado `rg_proof`, `rg_patient_proof`, `documents_folder_id` podem existir por migração; UI nova **não** depende deles.
+Preferir `users_files` + `files`. Campos histórico `rg_proof`, `rg_patient_proof`, `documents_folder_id` podem existir por migração; UI nova **não** depende deles.
 
 ---
 
@@ -126,27 +126,11 @@ Migration: `ALTER TABLE services ADD COLUMN IF NOT EXISTS patient_user_code UUID
 
 ---
 
-## 5. Status UI — mapa legado → OSS
-
-| Legado `status` string | OSS preferido | Label cards/filtros |
-|---|---|---|
-| `published` | `associate_status=cadastro_criado` | Não preencheu os dados |
-| `registered` | `associate_status=dados_pessoais` | Apenas preencheu os dados |
-| (fase docs) | `associate_status=documentos` | Documentos enviados |
-| `proofs` | `associate_status=assinatura_termo` | Termo criado |
-| `signedcontract` / `aguardando-aprovacao` | `status=Associado` | Associado |
-| `formerror` | `invalid_fields` ≠ vazio | Problema no cadastro |
-| `Paciente` / `patient` | `status=patient` | Paciente (fora da lista principal) |
-
-Filtros da página devem funcionar com **dados migrados e novos**.
-
----
-
 ## 6. Fora de escopo / não portar no modal
 
-| Campo / UI legado | Motivo |
+| Campo / UI histórico | Motivo |
 |---|---|
 | `partner` / PartnerForm | Sem aba Parceiro |
 | `bvid` / Beeviral | SC |
-| DocuSeal `contract` payload | Stub |
+| o módulo de termos `contract` payload | Stub |
 | `responsible_for` ativo na UI | Substituído por seleção em Serviços |

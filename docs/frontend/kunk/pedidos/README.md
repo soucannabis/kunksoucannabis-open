@@ -1,14 +1,12 @@
 # Pedidos / Carrinho — Documentação de implementação
 
 > Reimplementação do checkout e da loja no produto unificado (`apps/kunk` + `apps/admin` + `kunk-api`).
-> Referência legada: [`cart.jsx`](../../../../kunksoucannabis/src/components/inputs/cart.jsx) + [`CartFreightSelector.jsx`](../../../../kunksoucannabis/src/components/inputs/CartFreightSelector.jsx).
-> Frete legado: [`kunkserver/routes/loggi.js`](../../../../kunksoucannabis/kunkserver/routes/loggi.js) + [`melhorenvio.js`](../../../../kunksoucannabis/kunkserver/routes/melhorenvio.js).
 
 ## Objetivo
 
 Recriar o fluxo de **novo pedido** com:
 
-1. **Mesma lógica e layout** do carrinho legado (associado, catálogo, itens, soma, prescritor, **desconto + doação**, pagamento personalizado, histórico)
+1. **Mesma lógica e layout** do carrinhversões anteriores (associado, catálogo, itens, soma, prescritor, **desconto + doação**, pagamento personalizado, histórico)
 2. **Sem** cupons, checkbox de comissão, seleção de parceiros e auto-tag de frete
 3. **Simulação de frete** via facade, com modalidades e favorito
 4. **Admin → Loja** (remetente, caixa, declaração compartilhada, frete no total, favorito)
@@ -25,7 +23,7 @@ Recriar o fluxo de **novo pedido** com:
 | Rota pública `/cart` sem auth | Unificar em `/app/loja/novo-pedido` autenticado |
 | Pagar.me no create do carrinho | Pagamento **pós-pedido** via PaymentModal — spec [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md) |
 | Sync Pedidos SouCannabis | Spec [`../pagamentos-soucannabis/`](../pagamentos-soucannabis/README.md) (create remoto só após pago) |
-| Etiqueta no momento do create do pedido | Continua na página Pedidos (como no legado) |
+| Etiqueta no momento do create do pedido | Continua na página Pedidos (em versões anteriores) |
 
 ## Índice
 
@@ -88,19 +86,6 @@ apps/admin
 | Favorito `store.freight.default_option` | Forçar sempre a mais barata |
 | Remetente, dims e declaração **só** via admin (`store.*`, sem hardcode) | Qualquer peso/sede/CNPJ/descrição fixos no código |
 | Secrets só se teste ok | Persistir chave inválida |
-
-## Comportamento legado → OSS
-
-| Legado | OSS |
-|---|---|
-| Frete só simulação; radio Loggi/Sedex | Frete no total por default; lista modalidades via **facade** + favorito |
-| Tag `"correio"` conforme frete | **Não** auto-tag pelo frete; usar `freight_option` JSON |
-| Cupons (podem preencher donation) | Sem cupons; campos **Desconto** e **Doação** manuais mantidos |
-| `no_commission` + auto-check | Removido |
-| `PartnerForm` + `bvid` | Removido |
-| shipFrom / dims / declaração no código | Admin Loja obrigatório — **zero hardcode** de entrega |
-| Create grava total do client | Server recalcula; divergência → `TOTAL_MISMATCH` |
-| `VITE_APP_DELIVERY=loggi` | Flags `use_for_label` / `label_provider` |
 
 ## Status desta documentação
 

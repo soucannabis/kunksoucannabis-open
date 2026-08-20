@@ -1,8 +1,7 @@
-# Kunk — Documentação das páginas (legado + app novo)
+# Kunk — Documentação das páginas
 
-> Inventário funcional das rotas do frontend legado (`kunksoucannabis`) e escopo do app operacional **`apps/kunk`** (porta **4257**).
+> Escopo do app operacional **`apps/kunk`** (porta **4257**).
 >
-> Fonte de rotas legadas: `kunksoucannabis/src/App.jsx` + `theme.jsx`.
 > Implementação nova: [`apps/kunk`](../../../../apps/kunk).
 > Remoções do v1: [removed-from-v1.md](./removed-from-v1.md).
 
@@ -18,8 +17,6 @@ subdomínio app./     →  apps/kunk (:4257)
     PostgreSQL
 ```
 
-Referência legada: [`kunksoucannabis/`](../../../../kunksoucannabis/) + [`kunksoucannabis/kunkserver/`](../../../../kunksoucannabis/kunkserver/).
-
 ## Páginas principais (prioridade de revisão)
 
 | Página | Rota | Doc |
@@ -33,7 +30,6 @@ Referência legada: [`kunksoucannabis/`](../../../../kunksoucannabis/) + [`kunks
 | Search global | shell `/app/*` | **[spec implementação](./search-global/README.md)** |
 
 ## Índice completo por área
-
 
 ### Páginas principais
 
@@ -96,7 +92,6 @@ Referência legada: [`kunksoucannabis/`](../../../../kunksoucannabis/) + [`kunks
 | Financeiro — lançamentos | `/app/financeiro/lancamentos` | [pages/financeiro-lancamentos.md](./pages/financeiro-lancamentos.md) |
 | Financeiro — relatório | `/app/financeiro/relatorio` | [pages/financeiro-relatorio.md](./pages/financeiro-relatorio.md) |
 | Nibo Dashboard | `/app/nibo-dashboard/*` | [pages/nibo-dashboard.md](./pages/nibo-dashboard.md) |
-| Beeviral Analytics | `/app/beeviral-analytics` | [pages/beeviral-analytics.md](./pages/beeviral-analytics.md) |
 
 ### Relatórios e dashboards
 
@@ -123,8 +118,7 @@ Módulos de terceiros devem vir **desabilitados por padrão** no OSS (princípio
 
 | Integração | Páginas típicas | Notas OSS |
 |---|---|---|
-| Directus (legado) | Quase todas | Substituir por `kunk-api` + PostgreSQL |
-| DocuSeal | Cadastramento (contrato) | Substituir por módulo termos nativo |
+| o módulo de termos | Cadastramento (contrato) | Substituir por módulo termos nativo |
 | Utalk / WhatsApp | Triagem, pedidos, serviços, relatórios, pesquisas | Módulo opcional |
 | Pagar.me | Novo pedido, serviços | Módulo opcional — [pagamentos-soucannabis/](./pagamentos-soucannabis/README.md) |
 | Pedidos SouCannabis | Carrinho (catálogo/tags) + sync pós-pago + split | Requer Pagar.me — [pagamentos-soucannabis/](./pagamentos-soucannabis/README.md) |
@@ -143,11 +137,11 @@ Módulos de terceiros devem vir **desabilitados por padrão** no OSS (princípio
 
 | Fazer | Não fazer |
 |---|---|
-| Documentar o comportamento **real** do legado | Inventar features novas nestes arquivos |
+| Documentar o comportamento real do produto | Inventar features fora do escopo |
 | Marcar integrações e acoplamentos SC | Assumir que tudo vai para o OSS |
 | Usar cada MD como checklist de escopo | Implementar páginas antes da revisão |
 | Preservar layout Theme 1:1 na recriação | Redesign do shell sem decisão explícita |
 
 ## Status
 
-`documentado` — inventário das rotas do frontend legado pronto para revisão de escopo.
+`documentado` — inventário das rotas pronto para revisão de escopo.

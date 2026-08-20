@@ -2,7 +2,6 @@
 
 > Documentação funcional da página legada — base para o inventário.
 > **Spec de implementação OSS:** [../associados/README.md](../associados/README.md).
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -10,7 +9,6 @@
 |---|---|
 | **Rota** | `/app/acolhimento/associados` |
 | **Componente** | `Dash` |
-| **Arquivo legado** | `src/components/master/dash.jsx (+ table.jsx, UserModal, createAssociate, contract)` |
 | **Permissões** | Administrador | Acolhimento | Produção (via `role_pages`) |
 
 ## Descrição
@@ -32,7 +30,7 @@ Página principal de gestão de associados: listagem dos últimos cadastros, fil
 | Serviço | Uso nesta página |
 |---|---|
 | **users / users_files** | CRUD associados, pacientes, arquivos |
-| **Módulo termos** | Stub — sem DocuSeal nesta entrega |
+| **Módulo termos** | Stub — nesta entrega |
 | **Search global** | [../search-global/README.md](../search-global/README.md) |
 
 ## Dependências de outras páginas / módulos
@@ -52,7 +50,7 @@ Página principal de gestão de associados: listagem dos últimos cadastros, fil
 | Opção | Escolha |
 |---|---|
 | **Manter** | Lista, modal tabbed, filtros, deep link, criar associado |
-| **Remover** | Parceiro no modal, DocuSeal, Beeviral, Tornar/Remover Ativo |
+| **Remover** | Parceiro no modal, o módulo de termos, Beeviral, Tornar/Remover Ativo |
 | **Modificar** | Fases 1–5; termo stub; beneficiário em serviços |
 | **Notas** | Spec completa em [associados/](../associados/README.md) |
 

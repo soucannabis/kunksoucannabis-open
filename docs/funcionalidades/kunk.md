@@ -3,7 +3,7 @@
 > App operacional (`apps/kunk`, porta **4257**). Roles staff: Administrador, Acolhimento, Produção (+ portal Profissional).
 > Índice: [README.md](./README.md)
 
-**Auth:** operador (`system_users`).  
+**Auth:** operador (`system_users`). 
 **Testes do app:** Vitest parcial (`npm run test:kunk`) + Playwright (`npm run test:e2e:kunk`).
 
 ## Auth e páginas públicas
@@ -61,7 +61,7 @@
 | Web Vitals / error boundary | (transversal) | Telemetria e falhas UI | npm: Não · e2e: Não |
 | Rotas / redirect por role | (router) | Home conforme papel | Vitest: Sim |
 
-## Redirect legado
+## Redirect de compatibilidade
 
 | De | Para |
 |---|---|

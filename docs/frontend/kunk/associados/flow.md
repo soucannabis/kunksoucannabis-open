@@ -40,7 +40,7 @@ Botão "Criar Associado"
   → associado aparece na lista / pode abrir modal
 ```
 
-Espelha o legado `createAssociate.jsx` (só e-mail no painel). O funil completo continua no app `registration`.
+Espelha versões anteriores `createAssociate.jsx` (só e-mail no painel). O funil completo continua no app `registration`.
 
 ### Enviar para triagem
 
@@ -100,7 +100,7 @@ Lista pacientes WHERE responsible_code = associado.user_code
 SEM botões "Tornar Ativo" / "Remover Ativo"
 ```
 
-**Mudança vs legado:** não há mais “paciente ativo” operacional no painel. O vínculo estrutural é `responsible_code` no paciente.
+**Mudança vs histórico:** não há mais “paciente ativo” operacional no painel. O vínculo estrutural é `responsible_code` no paciente.
 
 `users.patient_user_code` no **responsável** continua sendo preenchido pelo **funil** (`responsible_type=another`) — aponta o paciente cadastrado no funil. Uso no painel:
 
@@ -148,12 +148,12 @@ GET serviços do user_code (associate_user_code)
   → lista unificada ou duas seções, mais recente primeiro
 ```
 
-Colunas no espírito do legado (`associateHistory.jsx`).
+Colunas no espírito anteriores (`associateHistory.jsx`).
 
 ### 2.7 Termo de adesão
 
 ```
-UI (igual legado no header):
+UI (igual histórico no header):
   · "Novo Termo"
   · "Copiar link do Termo" (se adhesion_term existir)
 
@@ -170,7 +170,7 @@ Ciclo real (app de assinatura de termos — entrega futura):
 
 ## 3. Serviços — seleção do beneficiário
 
-O legado usava `responsible_for` (OSS: `patient_user_code` no responsável) para montar observações/agenda como Responsável + Paciente.
+Versões anteriores usava `responsible_for` (OSS: `patient_user_code` no responsável) para montar observações/agenda como Responsável + Paciente.
 
 **Novo fluxo:**
 
@@ -203,7 +203,7 @@ Ver atualização em [`../servicos/flow.md`](../servicos/flow.md) (seção benef
 
 Ver [`../search-global/flow.md`](../search-global/flow.md).
 
-Resumo: resultado associado abre `/app/acolhimento/associados?a={code}` (nova aba, como legado) e oferece ação **Triagem**.
+Resumo: resultado associado abre `/app/acolhimento/associados?a={code}` (nova aba, comversões anteriores) e oferece ação **Triagem**.
 
 ---
 

@@ -38,7 +38,7 @@ Cascata: DB criptografado → `env_fallback` → ausente.
 | KUNK_PUBLIC_URL | Convite operador / portal profissional / reset kunk |
 | ADMIN_PUBLIC_URL | Reset senha Admin |
 | REGISTRATION_PUBLIC_URL | Reset senha associado |
-| DOC_SIGN_PUBLIC_URL | Reset doc-sign + links de assinatura (também via env legado) |
+| DOC_SIGN_PUBLIC_URL | Reset doc-sign + links de assinatura (também via env) |
 
 ## Consumidores
 

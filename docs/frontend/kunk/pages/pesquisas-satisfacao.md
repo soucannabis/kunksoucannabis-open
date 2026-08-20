@@ -1,7 +1,6 @@
 # Pesquisas de satisfação
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/acolhimento/pesquisas-satisfacao` |
 | **Componente** | `SatisfactionSurveys` |
-| **Arquivo legado** | `src/components/master/SatisfactionSurveys.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição
@@ -27,7 +25,6 @@ Inbox de pesquisas de satisfação (NPS, tratamento, setores) vinculadas a assoc
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus** | `/api/directus/satisfaction-survey` |
 | **Utalk / WhatsApp** | `/api/utalk/message` |
 | **E-mail** | `/api/email/send-email` |
 

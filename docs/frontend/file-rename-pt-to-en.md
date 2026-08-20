@@ -5,7 +5,7 @@
 >
 > **Status:** rename de arquivos + exports **concluído** (2026-07-17). Rotas de URL em português permanecem (fase opcional abaixo).
 
-**Escopo:** nomes de arquivo e símbolos exportados.  
+**Escopo:** nomes de arquivo e símbolos exportados. 
 **Fora de escopo desta rodada:** textos de UI em português, pastas de docs em `docs/`, nomes de marca (`melhorenvio`, Loggi, etc.).
 
 **Data do inventário:** 2026-07-17
@@ -97,7 +97,7 @@ rg -n 'DadosPages|ArquivosPage|ArmazenamentoPage|AparenciaPage|TriagemPages|Loja
 
 ## 4. Rotas de URL (opcional, breaking)
 
-Hoje várias rotas do admin estão em português. **Renomear arquivo ≠ renomear URL.**  
+Hoje várias rotas do admin estão em português. **Renomear arquivo ≠ renomear URL.** 
 Sugestão para uma fase posterior (com redirects se necessário):
 
 | Rota atual | Sugestão EN |
@@ -130,15 +130,15 @@ Defaults em `lastRoute.js` (`fallback = '/dados'`) devem acompanhar a fase de ro
 
 ## 5. Plano de execução sugerido
 
-1. **PR 1 — arquivos + exports (sem mudar URLs)** ✅ feito  
-   - `git mv` dos 10 pages + 4 specs  
-   - Renomear exports e atualizar `App.jsx`  
-   - Ajustar `VALIDATION.md`  
-   - Rodar e2e do admin
-2. **PR 2 — rotas EN + redirects** (opcional, pendente)  
-   - Novos paths + `Navigate` dos antigos  
-   - Atualizar e2e `page.goto(...)` e `AdminShell` links  
-   - Atualizar `lastRoute` fallbacks
+1. **PR 1 — arquivos + exports (sem mudar URLs)** ✅ feito 
+ - `git mv` dos 10 pages + 4 specs 
+ - Renomear exports e atualizar `App.jsx` 
+ - Ajustar `VALIDATION.md` 
+ - Rodar e2e do admin
+2. **PR 2 — rotas EN + redirects** (opcional, pendente) 
+ - Novos paths + `Navigate` dos antigos 
+ - Atualizar e2e `page.goto(...)` e `AdminShell` links 
+ - Atualizar `lastRoute` fallbacks
 3. **Não incluir** nesta migração: labels visíveis (“Arquivos”, “Loja”, etc.) — produto permanece em português.
 
 ---

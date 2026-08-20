@@ -1,6 +1,5 @@
 # Search global — UI/UX
 
-> Fonte: `kunksoucannabis/src/components/master/globalSearch/GlobalAppSearch.jsx`.
 > **Obrigatório** manter a mesma composição visual.
 
 ## FAB
@@ -10,7 +9,7 @@
 | Posição | `fixed`, top abaixo do header, `right: 54` |
 | Label | Pesquisar + ícone Search |
 | Cor | `#7A5B7A` · hover `#6a4e6a` |
-| z-index | Acima do sidebar (legado ~14000 no dialog) |
+| z-index | Acima do sidebar (histórico ~14000 no dialog) |
 
 Visível em todas as rotas do Theme autenticado.
 
@@ -48,7 +47,7 @@ Visível em todas as rotas do Theme autenticado.
 | Serviços | Associado · Data · Profissional · Abrir |
 | Triagem | Nome · E-mail · Telefone · Criado · Ação · Abrir |
 
-Nomes em title-case pt-BR (como legado `displayNameTitleCase`).
+Nomes em title-case pt-BR (comversões anteriores `displayNameTitleCase`).
 
 ### Loading / erro
 

@@ -1,7 +1,6 @@
 # Cupons (serviço social)
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/servico-social/cupons` |
 | **Componente** | `CouponsPage` |
-| **Arquivo legado** | `src/components/master/coupons.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição
@@ -27,7 +25,6 @@ Gestão de cupons sociais e de prescritor, com histórico de uso.
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus** | coupons, professionals, orders, services |
 
 ## Dependências de outras páginas / módulos
 

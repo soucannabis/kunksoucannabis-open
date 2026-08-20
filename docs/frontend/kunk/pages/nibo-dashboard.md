@@ -1,7 +1,6 @@
 # Nibo Dashboard
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/nibo-dashboard/*` |
 | **Componente** | `NiboDashboardApp` |
-| **Arquivo legado** | `src/components/niboDashboard/NiboDashboardApp.jsx` |
 | **Permissões** | Rota: trio staff; Sidebar tipicamente só Administrador |
 
 ## Descrição

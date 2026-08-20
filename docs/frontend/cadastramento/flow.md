@@ -150,7 +150,7 @@ Igual à regra de produto já acordada: cada submit grava só o que passou na va
 
 ---
 
-## Documentos — assistente (fase 3)  **NOVO vs legado**
+## Documentos — assistente (fase 3) **NOVO vs histórico**
 
 Substituir o upload genérico “RG” por um **assistente** que guia o envio.
 
@@ -173,7 +173,7 @@ O usuário **seleciona o tipo** antes de enviar.
 ### Geração do termo
 
 - **Só após todos os documentos obrigatórios** do caso estarem enviados e válidos → `associate_status = 4`.
-- **Nesta entrega:** a fase 4 exibe que o **módulo de assinatura de termos está em desenvolvimento** (sem DocuSeal/nativo). Não avança sozinho para a fase 5.
+- **Nesta entrega:** a fase 4 exibe que o **módulo de assinatura de termos está em desenvolvimento** (/nativo). Não avança sozinho para a fase 5.
 - Quando o módulo termos for entregue: gerar contrato, usuário assina, webhook/API → fase 5 + `adhesion_term`. Identificador no termo: **`user_code`**.
 
 ### `awaiting_signature`
@@ -182,7 +182,7 @@ Reservado ao módulo nativo de termos (futuro). Não usar nesta entrega.
 
 ### Campos de arquivo (evolução)
 
-O legado usava `rg_proof` / `rg_patient_proof` (um arquivo). No OSS o assistente precisa modelar **frente/verso** e tipo:
+Versões anteriores usava `rg_proof` / `rg_patient_proof` (um arquivo). No OSS o assistente precisa modelar **frente/verso** e tipo:
 
 Proposta (detalhar na API/files na implementação):
 
@@ -218,38 +218,9 @@ Proposta (detalhar na API/files na implementação):
 
 ---
 
-## Mapa legado → OSS
-
-| Legado `associate_status` | OSS `associate_status` | Notas |
-|---:|---:|---|
-| 0 (+ form ok parcial) | 1 ou 2 | 1 = só e-mail; 2 = em dados |
-| 1, 2 | 2 | form |
-| 3 | 3 | docs |
-| 4 | 4 → 5 | assinado → consulta |
-| 5, 6, 7 | 5 + `status=Associado` | finalizado |
-| 9 | (registro filho) | `status=patient` |
-
-| Legado `status` string | OSS |
-|---|---|
-| `signup` | fase 1 |
-| `registered` / `formerror` | fase 2 + `invalid_fields` |
-| `proofs` | fase 3 |
-| `signedcontract` | fase 4→5 |
-| `prescription` | fase 5 + arquivo `prescription` |
-| `aguardando-aprovacao` / `Associado` | `Associado` |
-| `patient` | `patient` |
-
-| Legado campo | OSS |
-|---|---|
-| `log` / `form_error_log` | `invalid_fields` |
-| `medical_prescription` | `prescription` |
-| `contract` | `adhesion_term` |
-
----
-
 ## Sidebar de progresso (UX)
 
-Etapas visuais: **Cadastro → Documentos → Consulta → Concluído** (como o legado).
+Etapas visuais: **Cadastro → Documentos → Consulta → Concluído** (como versões anteriores).
 
 | Etapa UI | Ativa / check quando |
 |---|---|
@@ -262,9 +233,3 @@ Animação/estados (check, atual, bloqueado) seguem `associate_status`, como no 
 
 ---
 
-## Legado não portado
-
-- `bvid` / BeeViral, `met_us`, `proof_of_address`, `aguardando-aprovacao`
-- Geração de termo antes de completar todos os docs (quando `another`)
-
-Ver [gaps.md](./gaps.md) e [fields.md](./fields.md).

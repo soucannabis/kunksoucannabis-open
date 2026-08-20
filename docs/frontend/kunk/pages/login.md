@@ -1,7 +1,6 @@
 # Login
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/login` |
 | **Componente** | `LoginUser` |
-| **Arquivo legado** | `src/components/externalPages/userLogin.jsx` |
 | **Permissões** | Pública |
 
 ## Descrição

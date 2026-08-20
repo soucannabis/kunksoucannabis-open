@@ -43,7 +43,7 @@ Payload create paciente (mínimo): nome, sobrenome, + campos do form; server set
 
 ## 3. Anotações
 
-Opção A (simples, legado): PATCH `users.annotations` com array completo.
+Opção A (simples, histórico): PATCH `users.annotations` com array completo.
 
 Opção B (se preferir):
 

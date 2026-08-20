@@ -19,14 +19,14 @@ Integrações de terceiros **desabilitadas por padrão**, ativáveis apenas pelo
 | `google_calendar` | Admin | Agenda |
 | `beeviral` | Admin | Afiliados |
 | `utalk` | Admin | WhatsApp / chat (triagem: sync + transfer) — [utalk.md](./modules/utalk.md) |
-| `pipefy` | Admin | Workflow externo (legado) |
+| `pipefy` | Admin | Workflow externo  |
 | `brasilnfe` | Admin | NF-e / DCE |
 | `scp` | Admin | Estoque externo |
 | `nibo` | Admin | Financeiro |
 | `geoapify` | Admin | Geocoding / verificação de endereço (ViaCEP + Geoapify) |
 | `email` | Admin | Envio de e-mails — ver [email.md](./modules/email.md) |
 
-Lista alinhada ao kunkserver atual; o OSS pode reduzir o conjunto “core”.
+Lista alinhada ao implementação anterior atual; o OSS pode reduzir o conjunto “core”.
 
 ## Comportamento se desabilitado
 
@@ -73,8 +73,8 @@ Além de enabled, Loggi e Melhor Envio têm flags em `system_configs` (`system=m
 | `modules.melhorenvio.use_for_label` | `false` | Etiqueta ME |
 | `modules.freight.label_provider` | `loggi` | Provider preferido para etiqueta |
 
-Spec do carrinho: [`../frontend/kunk/pedidos/README.md`](../frontend/kunk/pedidos/README.md).  
-Favorito de entrega: `store.freight.default_option` (ex. `Melhor Envio > Correios > PAC`, `Loggi > Econômico`).  
+Spec do carrinho: [`../frontend/kunk/pedidos/README.md`](../frontend/kunk/pedidos/README.md). 
+Favorito de entrega: `store.freight.default_option` (ex. `Melhor Envio > Correios > PAC`, `Loggi > Econômico`). 
 Credenciais: [`modules/credentials.md`](./modules/credentials.md).
 
 ## Catálogo de modalidades (para favoritos)
@@ -91,7 +91,7 @@ Credenciais: [`modules/credentials.md`](./modules/credentials.md).
 | `modules.google_calendar.use_for_scheduling` | `false` | Create/update/delete de eventos a partir de Serviços |
 | `modules.google_calendar.primary_calendar_id` | `null` | Calendário principal da aplicação (admin) |
 
-Spec: [`../frontend/kunk/servicos/README.md`](../frontend/kunk/servicos/README.md).  
+Spec: [`../frontend/kunk/servicos/README.md`](../frontend/kunk/servicos/README.md). 
 Módulo: [`modules/google_calendar.md`](./modules/google_calendar.md).
 
 ## Papéis em pagamentos / Pedidos SouCannabis
@@ -107,8 +107,8 @@ Módulo: [`modules/google_calendar.md`](./modules/google_calendar.md).
 
 Ativar SC exige conta Pagarme da associação **PSP** + `payment_percentage` **inteiro** (ver módulos).
 
-Spec: [`../frontend/kunk/pagamentos-soucannabis/README.md`](../frontend/kunk/pagamentos-soucannabis/README.md).  
-Contrato remoto SC: [`../external_apps_kunk_doc.md`](../external_apps_kunk_doc.md).  
+Spec: [`../frontend/kunk/pagamentos-soucannabis/README.md`](../frontend/kunk/pagamentos-soucannabis/README.md). 
+Contrato remoto SC: [`../external_apps_kunk_doc.md`](../external_apps_kunk_doc.md). 
 Módulos: [`modules/pagarme.md`](./modules/pagarme.md) · [`modules/soucannabis_orders.md`](./modules/soucannabis_orders.md).
 
 ## Documentação por módulo

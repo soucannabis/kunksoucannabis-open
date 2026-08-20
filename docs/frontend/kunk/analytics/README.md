@@ -1,7 +1,6 @@
 # Analytics Dashboard — Documentação
 
 > Página **Relatórios → Dashboard** no Kunk OSS (`apps/kunk`), com agregação no `kunk-api`.
-> Referência legada: Painel Análise (`painelAnalisePage.jsx` + `painelAnalise.layout.json`).
 > **Fora de escopo:** Beeviral, Nibo, dashboards SQL editáveis (`reports` collection).
 
 ## Objetivo

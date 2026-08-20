@@ -9,8 +9,8 @@
 | `items` (JSONB) | Linhas do carrinho (sem linha “Frete” sintética se `delivery_price` separado) |
 | `total` | Total final |
 | `delivery_price` | Frete cotado (sempre persistir o valor simulado) |
-| `discount` | Desconto manual (R$) — campo do carrinho legado |
-| `donation` | Doação (R$) — campo do carrinho legado (reduz o total; **sem** cupons) |
+| `discount` | Desconto manual (R$) — campo do carrinhversões anteriores |
+| `donation` | Doação (R$) — campo do carrinhversões anteriores (reduz o total; **sem** cupons) |
 | `custom_payment` | JSON pagamento personalizado (soma junto ao desconto no total) |
 | `status` | Default create: `Aguardando pagamento` |
 | `address` | Snapshot do endereço de entrega |
@@ -23,7 +23,7 @@
 
 ### Campos **não** usados no checkout OSS v1
 
-| Campo legado | Motivo |
+| Campversões anteriores | Motivo |
 |---|---|
 | `coupon_id` / cupons | Fora de escopo (doação manual permanece) |
 | `no_commission` | Fora de escopo |
@@ -36,7 +36,7 @@
 | `freight_carrier` | `VARCHAR(32)` nullable | `loggi` \| `melhorenvio` |
 | `freight_option` | `JSONB` nullable | Snapshot da modalidade escolhida |
 
-Campo de frete faz parte do schema de instalação.  
+Campo de frete faz parte do schema de instalação. 
 **Não** setar tag `"correio"` automaticamente a partir do frete.
 
 ### Shape de `orders.freight_option`
@@ -78,7 +78,7 @@ Complementos: `freight_carrier` (`loggi` \| `melhorenvio`). Sem auto-tag pelo fr
 
 ## Shape de item do carrinho (`orders.items`)
 
-`amount` = **preço unitário** (legado; nome confuso). `quantity` = quantidade.
+`amount` = **preço unitário** (histórico; nome confuso). `quantity` = quantidade.
 
 ```json
 {
@@ -94,8 +94,8 @@ Complementos: `freight_carrier` (`loggi` \| `melhorenvio`). Sem auto-tag pelo fr
 }
 ```
 
-Subtotal da linha = `amount × quantity` (ex.: 179,80).  
-Mapeamento: `buildOrderItemsFromCheckout` do legado (`amount` ← `price` do checkout).  
+Subtotal da linha = `amount × quantity` (ex.: 179,80). 
+Mapeamento: `buildOrderItemsFromCheckout` anteriores (`amount` ← `price` do checkout). 
 Total do pedido no server: `Σ (amount × quantity)` — sem re-lookup de catálogo no v1.
 
 ---
@@ -106,7 +106,7 @@ Configs da loja / carrinho em `system_configs`.
 
 | Key | `value_type` | Default | Descrição |
 |---|---|---|---|
-| `store.freight.apply_to_total` | `boolean` | **`true`** | Se `true`, o valor do frete cotado entra no `total` do carrinho. Se `false`, simula mas não soma (comportamento legado). |
+| `store.freight.apply_to_total` | `boolean` | **`true`** | Se `true`, o valor do frete cotado entra no `total` do carrinho. Se `false`, simula mas não soma (comportamentversões anteriores). |
 | `store.freight.default_option` | `json` | `null` | Favorito: provider + transportadora + modalidade (ver abaixo) |
 | `store.freight.package` | `json` | — (**obrigatório** no admin) | Dimensões/peso da caixa — cotação e etiqueta |
 | `store.ship_from` | `json` | — (**obrigatório** no admin) | Remetente / quem envia os pedidos |
@@ -174,7 +174,7 @@ Opção pré-selecionada no carrinho sempre que a cotação a devolver. Exemplos
 
 ### `store.freight.package` — dimensões da caixa (admin Loja)
 
-**Obrigatório.** Sem valor no admin → cotação e etiqueta retornam `CONFIG_INCOMPLETE`.  
+**Obrigatório.** Sem valor no admin → cotação e etiqueta retornam `CONFIG_INCOMPLETE`. 
 **Proibido** hardcode de peso/dims no código (nem 290 g, nem 500 g, nem medidas “de exemplo” usadas em runtime).
 
 Shape (valores **inseridos pela associação**):
@@ -193,15 +193,15 @@ Shape (valores **inseridos pela associação**):
 | `weight_g` | &gt; 0, informado no admin |
 | `length_cm`, `width_cm`, `height_cm` | &gt; 0, informados no admin |
 
-Seed da key: `is_required=true`, `allow_hardcoded=false`, `value` vazio / nulls até o admin salvar.  
-Opcional: `store.freight.label_package` — só create-label; se vazio, usa `package`.  
+Seed da key: `is_required=true`, `allow_hardcoded=false`, `value` vazio / nulls até o admin salvar. 
+Opcional: `store.freight.label_package` — só create-label; se vazio, usa `package`. 
 `dims_etiqueta = label_package ?? package`.
 
-Legado usava 500 g (quote) / 290 g (label) no código — **não portar** esses números.
+Histórico usava 500 g (quote) / 290 g (label) no código — **não portar** esses números.
 
 ### `store.ship_from` — quem envia (admin Loja)
 
-**Obrigatório.** Sem hardcode de cidade/CNPJ/telefone/CEP (legado Anápolis etc. **não** entra no código).  
+**Obrigatório.** Sem hardcode de cidade/CNPJ/telefone/CEP (histórico Anápolis etc. **não** entra no código). 
 Incompleto → `CONFIG_INCOMPLETE`.
 
 ```json
@@ -250,7 +250,7 @@ Completude mínima: `name`, `phone`, `federal_tax_id`, `street`, `number`, `neig
 | `description` | `contentDeclaration.description` | Conteúdo do volume quando aplicável |
 | `total_value` | `contentDeclaration.totalValue` + `goodsValue` | `insurance` / `insurance_value` |
 
-Regras: obrigatório para etiqueta; cotação usa `total_value`; sem aleatório legado; snapshot `dce` no create-label; UI em `/servicos-externos/envio`.  
+Regras: obrigatório para etiqueta; cotação usa `total_value`; sem aleatóriversões anteriores; snapshot `dce` no create-label; UI em `/servicos-externos/envio`. 
 Seed: `is_required=true`, `allow_hardcoded=false`, value vazio até o admin salvar.
 
 ---
@@ -269,7 +269,7 @@ Além do enable no Admin (`modules.*.enabled`), cada serviço externo tem flags 
 | `modules.melhorenvio.use_for_label` | `false` | Default off |
 | `modules.freight.label_provider` | `loggi` | Quem gera etiqueta quando ambos poderiam |
 
-Regra: se `use_for_label` de um serviço for `false`, a UI de Pedidos não oferece criar etiqueta por aquele provider.  
+Regra: se `use_for_label` de um serviço for `false`, a UI de Pedidos não oferece criar etiqueta por aquele provider. 
 Se nenhum label provider ativo → ocultar ações de etiqueta.
 
 > **Não** existe `modules.{service}.content_declaration` — conteúdo fica em `store.freight.content_declaration`.
@@ -311,7 +311,7 @@ CREATE TABLE IF NOT EXISTS system_api_credentials (
 
 \* `company_id` não é “senha”, mas tratar como write-once na UI se preferir; pode ser `is_secret=false` e ainda assim **não** misturar com `/config/public`.
 
-Docs oficiais: [Loggi API](https://docs.api.loggi.com/reference/nossa-documenta%C3%A7%C3%A3o) — OAuth client credentials; cotação [`/quotations`](https://docs.api.loggi.com/reference/quote); etiquetas [`/labels`](https://docs.api.loggi.com/reference/criaretiqueta-1); envios `async-shipments` (usado no legado).
+Docs oficiais: [Loggi API](https://docs.api.loggi.com/reference/nossa-documenta%C3%A7%C3%A3o) — OAuth client credentials; cotação [`/quotations`](https://docs.api.loggi.com/reference/quote); etiquetas [`/labels`](https://docs.api.loggi.com/reference/criaretiqueta-1); envios `async-shipments` (usado antes).
 
 #### Melhor Envio
 
@@ -326,7 +326,7 @@ Docs oficiais: [Loggi API](https://docs.api.loggi.com/reference/nossa-documenta%
 
 Docs oficiais: [Autenticação OAuth2](https://docs.melhorenvio.com.br/docs/autenticacao) · [Cálculo de fretes](https://docs.melhorenvio.com.br/reference/calculo-de-fretes-por-produtos) · scopes `shipping-calculate`, `shipping-generate`, etc.
 
-Tokens OAuth do Melhor Envio **não** ficam em arquivo JSON (legado). Ficam em `system_api_credentials` criptografados.
+Tokens OAuth do Melhor Envio **não** ficam em arquivo JSON . Ficam em `system_api_credentials` criptografados.
 
 ---
 

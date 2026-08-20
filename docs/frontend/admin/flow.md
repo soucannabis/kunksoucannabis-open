@@ -53,7 +53,7 @@ Operadores com só `Acolhimento`, `Produção`, etc. usam o **painel** (`app.`),
 
 ## Área 1 — Dados (CRUD)
 
-Substitui a necessidade de um “admin Directus” para o schema alvo.
+Substitui a necessidade de um “admin o schema de origem” para o schema alvo.
 
 ### Comportamento
 
@@ -77,7 +77,7 @@ O admin deve tornar FKs navegáveis, não só IDs soltos:
 | Junction | `users_files`, `orders_files`, `services_files` | Aba “Arquivos” no detalhe do pai; CRUD da junction |
 | `include` | onde a API já expande | Painel “relacionados” no detalhe |
 
-Fonte de verdade das relações: schema alvo + [`../../directus/relations.md`](../../directus/relations.md) (legado) + FKs em [`../../../sql/target-schema.sql`](../../../sql/target-schema.sql).
+Fonte de verdade das relações: schema alvo + [`../../schema-origem/relations.md`](../../schema-origem/relations.md)  + FKs em [`../../../sql/target-schema.sql`](../../../sql/target-schema.sql).
 
 Não inventar SQL livre: só collections whitelist + params documentados em [`../../api/query-parameters.md`](../../api/query-parameters.md).
 

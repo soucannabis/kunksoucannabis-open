@@ -12,7 +12,7 @@
 
 - DC-e, WhatsApp, BeeViral, SCP no pagamento
 - Modal de documentos completo do pedido (pode vir depois)
-- Filtro avançado por produtos / avatars de criadores (legado parcial)
+- Filtro avançado por produtos / avatars de criadores (histórico parcial)
 
 ## Aberto
 

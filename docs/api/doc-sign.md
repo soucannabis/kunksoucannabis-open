@@ -11,15 +11,15 @@
 
 Aliases de transição (deprecados): `/api/v1/terms/...` → mesmos handlers.
 
-**Não** é módulo opcional (`MODULE_*`). Faz parte do núcleo (substitui DocuSeal).
+**Não** é módulo opcional (`MODULE_*`). Faz parte do núcleo .
 
 ## Responsabilidades
 
-1. CRUD/versionamento de **2** templates: `content_json` (TipTap/JSONB) + snapshot PDF gerado na própria API  
-2. Geração de contratos a partir de `users` (+ paciente `associate_cpf`)  
-3. Assinatura por token (draw/type/upload) + audit (IP, UA, timezone — sem session_id)  
-4. Conclusão: PDF assinado + `users.adhesion_term` (UUID) + `associate_status` 4→5  
-5. Bloqueio: no máximo um contrato `completed` por associado/e-mail  
+1. CRUD/versionamento de **2** templates: `content_json` (TipTap/JSONB) + snapshot PDF gerado na própria API 
+2. Geração de contratos a partir de `users` (+ paciente `associate_cpf`) 
+3. Assinatura por token (draw/type/upload) + audit (IP, UA, timezone — sem session_id) 
+4. Conclusão: PDF assinado + `users.adhesion_term` (UUID) + `associate_status` 4→5 
+5. Bloqueio: no máximo um contrato `completed` por associado/e-mail 
 
 **Sem** Document Server, LibreOffice ou DOCX canônico — ver [`../frontend/doc-sign/gaps.md`](../frontend/doc-sign/gaps.md).
 
@@ -50,5 +50,5 @@ users.associate_status = 5  (se estava 4)
 
 ## Status até a entrega
 
-Stubs atuais em `kunk-api/src/routes/terms.js` retornam `TERMS_MODULE_IN_DEVELOPMENT`.  
+Stubs atuais em `kunk-api/src/routes/terms.js` retornam `TERMS_MODULE_IN_DEVELOPMENT`. 
 Esta entrega os substitui pelos handlers reais.

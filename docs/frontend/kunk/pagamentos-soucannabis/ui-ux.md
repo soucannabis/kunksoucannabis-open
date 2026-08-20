@@ -2,7 +2,7 @@
 
 ## 1. PaymentModal
 
-Referência: `payment.jsx` legado.
+Referência: `payment.jsx` histórico.
 
 ### Entrada
 
@@ -16,10 +16,10 @@ Referência: `payment.jsx` legado.
 | Boleto | sim | sim |
 | Cartão parcial | sim | **ocultar** |
 
-Banner em split: “Pagamento com split SouCannabis (X%)”.  
+Banner em split: “Pagamento com split SouCannabis (X%)”. 
 Se `!split_ready` e SC on: disabled + “Configure no Admin”.
 
-Só pagamento (sem botão etiqueta do legado).
+Só pagamento (sem botão etiqueta anteriores).
 
 ### Serviços
 

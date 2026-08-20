@@ -1,7 +1,6 @@
 # Relatórios de serviços — UI/UX (`apps/kunk`)
 
-> **Obrigatório:** replicar layout, hierarquia visual e padrões do legado `reportServices.jsx`.
-> Fonte: `kunksoucannabis/src/components/master/reportServices.jsx` + classes `pageContainerOptions` / `pageContainerTable`.
+> **Obrigatório:** replicar layout, hierarquia visual e padrões anteriores `reportServices.jsx`.
 > **Não** portar cupons, cadastrar recebedor, botão Pagamento (n8n), Utalk.
 
 ## Rotas
@@ -11,12 +10,12 @@
 | Staff | `/app/relatorios/servicos` | Theme (sidebar) |
 | Profissional | `/relatorio/servicos` | Página dedicada (sem menu staff) |
 
-Permissões staff: conforme `kunk.role_pages` (incluir id `relatorios-servicos`).  
+Permissões staff: conforme `kunk.role_pages` (incluir id `relatorios-servicos`). 
 Profissional: role `Profissional` → só esta página.
 
 ---
 
-## Tokens visuais (legado)
+## Tokens visuais 
 
 | Token | Valor | Uso |
 |---|---|---|
@@ -70,7 +69,7 @@ Manter composição “opções em cima / tabela agrupada embaixo” — **não*
 ### Opções de mês
 
 - Lista: meses do ano corrente até o mês atual (`janeiro 2026` …)
-- Label format: `mês longo + ano` sem “de” (legado)
+- Label format: `mês longo + ano` sem “de” 
 - Default ao abrir: **mês civil anterior**
 
 ---
@@ -88,9 +87,9 @@ Manter composição “opções em cima / tabela agrupada embaixo” — **não*
 | Valor da consulta | `price` |
 | Valor a receber | `payable` (price − association_fee) |
 
-Indicador visual de `commission_validation` (ícone approved/contested) na linha ou na coluna Selecionar — espelhar legado.
+Indicador visual de `commission_validation` (ícone approved/contested) na linha ou na coluna Selecionar — espelhar histórico.
 
-Ordenação: Data, Associado, valores (como legado `TableSortLabel`).
+Ordenação: Data, Associado, valores (comversões anteriores `TableSortLabel`).
 
 ---
 
@@ -110,7 +109,7 @@ Totais usam **sempre** a fórmula `payable` ([fields.md](./fields.md)) — staff
 
 Botão warning **“Estão faltando dados”** (oculto em `/app`):
 
-- Abre dialog “Contestar Serviço” (título legado; texto = motivo livre)
+- Abre dialog “Contestar Serviço” (títulversões anteriores; texto = motivo livre)
 - Envia append em `contest_reports` com `month` = mês selecionado
 
 ### Staff — listar / resolver

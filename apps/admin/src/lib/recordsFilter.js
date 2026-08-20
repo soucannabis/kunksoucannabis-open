@@ -101,7 +101,7 @@ export function mergeFacetOptions(prev, next) {
   return out;
 }
 
-/** Monta objeto filter estilo Directus a partir dos filtros da UI. */
+/** Monta objeto filter da API Kunk a partir dos filtros da UI. */
 export function buildApiFilter(filters) {
   const parts = [];
   for (const f of filters || []) {

@@ -4,7 +4,7 @@
 
 | # | Decisão |
 |---|---|
-| 1 | Layout/visual **igual ao legado** (`dash` + `table` + `UserModal`) |
+| 1 | Layout/visual **igual aversões anteriores** (`dash` + `table` + `UserModal`) |
 | 2 | Rota principal `/app/acolhimento/associados`; `/app/associados` = redirect opcional ou omitir na v1 |
 | 3 | Deep link `?a={user_code}` abre o modal |
 | 4 | Abas: Dados Pessoais · Pacientes · **Prescritor** · Anotações · Documentos · Histórico |
@@ -15,9 +15,9 @@
 | 9 | Pacientes via `responsible_code`; **sem** Tornar/Remover Ativo no painel |
 | 10 | `users.patient_user_code` no responsável = ponteiro do **funil** (`another`); **não** é “paciente ativo” operacional |
 | 11 | Serviços: escolher beneficiário; gravar `patient_user_code` **no serviço** |
-| 12 | Fases OSS `associate_status` 1–5 + `status` Associado/patient; mapa de compat legado |
+| 12 | Fases OSS `associate_status` 1–5 + `status` Associado/patient; mapa de compat histórico |
 | 13 | Search global em spec separada |
-| 14 | Sem Beeviral / Utalk / DocuSeal no painel nesta entrega |
+| 14 | Sem Beeviral / Utalk / o módulo de termos no painel nesta entrega |
 | 15 | **Tornar associado** manual no header do modal — mantido |
 | 16 | Ciclo do termo (gerar → “não assinado” → assinado) = **app de assinatura de termos** (futuro) |
 | 17 | **Exclusão com bloqueio por vínculo** (ver § Exclusão) |
@@ -29,7 +29,7 @@
 | Tema | Decisão |
 |---|---|
 | Limite lista | 60 + carregar mais; lista “todos” = limite alto se houver atalho |
-| Criar no painel | E-mail (mínimo), como legado |
+| Criar no painel | E-mail (mínimo), comversões anteriores |
 | Stack UI | MUI + `pageContainerOptions` / `pageContainerTable` |
 | Termo stub (painel) | Toast / 501; **zero** side effect até o módulo |
 | Anotações API | PATCH `annotations` (Option A) |
@@ -55,7 +55,7 @@ Não gera termo. Não preenche `adhesion_term`. Confirmação explícita na UI.
 Quando o módulo/app de termos existir — spec [`../../doc-sign/`](../../doc-sign/README.md):
 
 1. **Gerar termo** → associado fica com status/label **Termo criado** (`associate_status=assinatura_termo` / contrato `pending`)
-2. **Assinar** → `adhesion_term` + `associate_status=5` (handler interno na API; sem webhook DocuSeal)
+2. **Assinar** → `adhesion_term` + `associate_status=5` (handler interno na API; sem webhook o módulo de termos)
 
 No painel v1 atual: botões “Novo Termo” / “Copiar link” **não** alteram banco (stub).
 
@@ -140,7 +140,7 @@ Detalhamento do que a implementação deve fazer. Defaults já valem como decis�
 
 ### B) Deep link de pedidos `?p=`
 
-| Legado / search | Destino |
+| Histórico / search | Destino |
 |---|---|
 | Abrir pedido | `/app/loja/pedidos?p={order_code}` |
 
@@ -155,10 +155,10 @@ Detalhamento do que a implementação deve fazer. Defaults já valem como decis�
 | Param | Papel |
 |---|---|
 | `s` | Texto = `associate_name` (já usado como `q` inicial na ServicesPage) |
-| `h` | ISO datetime do serviço (legado: `date` / `date_created`) para **destacar** a linha certa quando há vários do mesmo nome |
+| `h` | ISO datetime do serviço  para **destacar** a linha certa quando há vários do mesmo nome |
 | `u` | Pré-abre Novo Serviço com associado (triagem) — independente do search |
 
-**Implementar:** além de setar `q` com `s`, se `h` presente → após load, scroll/highlight na linha cuja `consultation_date` ou `date_created` case com `h` (tolerância de parse ISO). Search global monta `?s=…&h=…` como no legado.
+**Implementar:** além de setar `q` com `s`, se `h` presente → após load, scroll/highlight na linha cuja `consultation_date` ou `date_created` case com `h` (tolerância de parse ISO). Search global monta `?s=…&h=…` em versões anteriores.
 
 ---
 
@@ -169,7 +169,7 @@ Menu OSS já usa `/app/acolhimento/associados` (`PATHS.registration`).
 **Implementar (escolher um):**
 
 1. **Preferido:** não criar rota `/app/associados`; ou
-2. Redirect `Navigate` → cadastramento (compat bookmarks legado).
+2. Redirect `Navigate` → cadastramento (compat bookmarks histórico).
 
 Não manter segunda cópia da página com `limit=-1` separado — se precisar “lista completa”, botão/filtro na mesma tela.
 

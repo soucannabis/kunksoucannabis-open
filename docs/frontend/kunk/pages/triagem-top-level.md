@@ -1,7 +1,6 @@
 # Triagem (rota top-level)
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/triagem` |
 | **Componente** | `Reception` |
-| **Arquivo legado** | `src/components/master/reception.jsx` |
 | **Permissões** | Acolhimento | Administrador | Produção |
 
 ## Descrição
@@ -24,7 +22,7 @@ Mesma tela de triagem/acolhimento de `/app/acolhimento/triagem`, porém **fora d
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Ver triagem** | Utalk, Directus Reception, Beeviral, e-mail |
+| **Ver triagem** | Utalk, o schema de origem Reception, Beeviral, e-mail |
 
 ## Dependências de outras páginas / módulos
 

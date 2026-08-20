@@ -1,17 +1,15 @@
 # Páginas e seções removidas do Kunk v1
 
-> Estas rotas/seções existiam no legado (`kunksoucannabis`) mas **não** entram no app operacional `apps/kunk` nesta primeira entrega.
 > Motivo: fora do escopo inicial, migradas para outro app, ou específicas SouCannabis.
 
-App operacional: [`apps/kunk`](../../../../apps/kunk) · Inventário legado completo: [pages/](./pages/)
+App operacional: [`apps/kunk`](../../../../apps/kunk) · Inventáriversões anteriores completo: [pages/](./pages/)
 
 ## Removidas do menu / rotas v1
 
-| Item legado | Rota legada | Destino / nota OSS |
+| Item histórico | Rota legada | Destino / nota OSS |
 |---|---|---|
 | **Dashboard (seção)** | — | Seção inteira removida do app operacional |
 | Painel geral | `/app/painel-analise` | Analytics institucional — fora do v1 |
-| Beeviral Analytics | `/app/beeviral-analytics` | Afiliados SC — fora do v1 |
 | Webmaster | `/app/webmaster` | Observabilidade — futuro / ops |
 | Nibo Dashboard | `/app/nibo-dashboard` | Módulo financeiro externo — opcional futuro |
 | Pesquisa de satisfação | `/app/acolhimento/pesquisas-satisfacao` | Fora do acolhimento v1; reavaliar depois |

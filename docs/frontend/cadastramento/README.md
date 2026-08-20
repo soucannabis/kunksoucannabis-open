@@ -8,9 +8,9 @@
 
 Recriar o fluxo de inscrição de associados com:
 
-1. **Mesma lógica de negócio** do app legado (etapas, status, paciente, documentos, consulta)
-2. **Campos do schema alvo** (não Directus / typos antigos)
-3. **API `kunk-api`** (não `/api/directus/*`)
+1. **Mesma lógica de negócio** do app histórico (etapas, status, paciente, documentos, consulta)
+2. **Campos do schema alvo** (não o schema de origem / typos antigos)
+3. **API `kunk-api`** (não `/api/v1/*`)
 4. **Identidade visual preservada**, layout aprimorado (ver [ui-ux.md](./ui-ux.md))
 5. Estrutura compatível com painel e termos (ver [`../structure.md`](../structure.md))
 
@@ -25,7 +25,7 @@ Recriar o fluxo de inscrição de associados com:
 | Documento | Conteúdo |
 |---|---|
 | [flow.md](./flow.md) | Fases 1–5, guards, docs assistente, Associado/patient |
-| [fields.md](./fields.md) | Campos legado → schema (`prescription`, `invalid_fields`, …) |
+| [fields.md](./fields.md) | Campos origem → schema (`prescription`, `invalid_fields`, …) |
 | [ui-ux.md](./ui-ux.md) | Estilo visual a preservar e o que aprimorar |
 | [api.md](./api.md) | Contratos de API necessários ao fluxo |
 | [gaps.md](./gaps.md) | Decisões fechadas + checklist da entrega |
@@ -50,7 +50,7 @@ subdomínio cad./     →  este app (registration)
 | Usar nomes novos de campo no cliente | Manter `emiiter_rg_associate`, `name_associate`, etc. |
 | Extrair forms/API para `packages/` | Criar um silo só de cadastro |
 | Melhorar responsividade e acessibilidade | Trocar a paleta verde / sidebar de progresso por um look genérico |
-| Tratar termos via API de domínio | Embutir DocuSeal SDK como núcleo permanente |
+| Tratar termos via API de domínio | Embutir o módulo de termos SDK como núcleo permanente |
 
 ## Status desta documentação
 

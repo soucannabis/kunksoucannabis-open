@@ -15,7 +15,7 @@
 | 9 | Tags SouCannabis: **somente leitura** na UI (envio pelo texto correto da SC) |
 | 10 | PaymentModal: cartão + boleto; **sem cartão parcial** quando `split_mode` |
 | 11 | Serviços: Pagarme standalone (sem sync SC / sem split SC) |
-| 12 | Não portar Beeviral/Pipefy/frete aleatório do webhook legado |
+| 12 | Não portar Beeviral/Pipefy/frete aleatório do webhook histórico |
 | 13 | Recebedor associação: **ID informado no Admin** (cadastro feito no painel Pagar.me). Recebedor SC: **SouCannabis envia payload via API** outbound e o OSS cria/grava `soucannabis_recipient_id` |
 | 14 | API Pagarme v5; webhook é a fonte de verdade para pagamento via link; **ativar split só se conta associação for PSP** (probe) |
 | 15 | Com `split_mode`: **não cotar frete**; **ignorar estoque** local |
@@ -30,7 +30,7 @@
 
 | Contexto | Como vira “Pagamento concluído” | Depois |
 |---|---|---|
-| Pagarme **sem** SC (standalone) | Webhook e/ou fluxo legado (comprovante / operação) | Só local |
+| Pagarme **sem** SC (standalone) | Webhook e/ou fluxversões anteriores (comprovante / operação) | Só local |
 | `split_mode` + total **> 0** | **Webhook** Pagarme **ou** upload de **comprovante** | `POST` pedido na SC + `external_payment_info` |
 | `split_mode` + total **= 0** | Toggle/manual permitido | `POST` SC **sem** split / sem Pagarme |
 | Qualquer + reverter → aguardando | Operador (regra de permissão) | `PATCH` status na SC se já sincronizado |

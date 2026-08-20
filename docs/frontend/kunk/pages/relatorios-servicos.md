@@ -1,7 +1,6 @@
 # Relatórios — serviços (staff)
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 > **Spec de implementação OSS:** [`../relatorios-servicos/README.md`](../relatorios-servicos/README.md).
 
 ## Identificação
@@ -10,7 +9,6 @@
 |---|---|
 | **Rota** | `/app/relatorios/servicos` |
 | **Componente** | `ReportService` |
-| **Arquivo legado** | `src/components/master/reportServices.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção | Financeiro (via `role_pages`) |
 
 ## Descrição
@@ -30,9 +28,9 @@ Mesmo componente de `/relatorio/servicos`, dentro do Theme com gate de staff: vi
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus** (legado) | services, professionals |
-| **Utalk** (legado) | Ao resolver contestação — **não portar no OSS v1** |
-| **n8n** (legado) | Botão Pagamento — **não portar** |
+| **o schema de origem**  | services, professionals |
+| **Utalk**  | Ao resolver contestação — **não portar no OSS v1** |
+| **n8n**  | Botão Pagamento — **não portar** |
 
 ## Dependências de outras páginas / módulos
 

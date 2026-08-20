@@ -2,9 +2,9 @@
 
 No OSS o módulo sincroniza/transfere atendentes na triagem e, opcionalmente, envia uma **mensagem automática** quando o formulário público cria um contato.
 
-## Diferença do legado
+## Notas de comportamento
 
-| Legado | OSS |
+| Comportamento | Detalhe |
 |---|---|
 | Tokens por atendente para `POST /messages/simplified` | **Não** envia mensagem pelo Kunk |
 | `UTALK_KEY` no env (token de um usuário) | Um `api_token` em Serviços externos (qualquer usuário Utalk) |

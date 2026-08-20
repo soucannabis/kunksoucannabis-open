@@ -1,7 +1,6 @@
 # Carrinho (rota top-level)
 
 > Documentação funcional da página legada.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/cart` |
 | **Componente** | `Cart` |
-| **Arquivo legado** | `src/components/inputs/cart.jsx` |
 | **Permissões** | **Nenhuma** no App.jsx (risco de segurança) |
 
 ## Descrição

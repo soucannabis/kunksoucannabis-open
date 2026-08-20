@@ -20,7 +20,7 @@ Criar um app de administração que permita à associação (ou ao operador com 
 - Fluxos operacionais de acolhimento, produção, pedidos, etc. → isso é o **painel** (`apps/panel` / `app.`)
 - Funil público de associados → **cadastramento** (`apps/registration` / `cad.`)
 - Assinatura de termos → **doc-sign** (`apps/doc-sign` / `termos.`)
-- Clone de features Directus (flows, revisions, SQL livre do cliente)
+- Clone de features o schema de origem (flows, revisions, SQL livre do cliente)
 
 ## Índice
 

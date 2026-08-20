@@ -28,7 +28,7 @@ Fluxo OAuth2 (obrigatório para cotação/etiqueta):
 2. Usuário autoriza no Melhor Envio (scopes: `shipping-calculate`, `shipping-companies`, `shipping-generate`, `shipping-cancel`, `shipping-tracking`, `cart-write`, …)
 3. Callback `GET /oauth/callback?code=` troca por tokens
 4. `access_token` / `refresh_token` salvos criptografados em `system_api_credentials`
-5. Refresh automático se expira em &lt; 5 min (legado)
+5. Refresh automático se expira em &lt; 5 min 
 
 **Não** usar arquivo `melhorenvio_tokens.json`.
 
@@ -49,7 +49,7 @@ Header obrigatório ME: `User-Agent: Kunk (contato@associacao)` + `Accept: appli
 
 - Mesma declaração usada pela Loggi (compartilhada)
 - `total_value` → `insurance` / `insurance_value` na cotação e na etiqueta
-- **Não** usar lista aleatória de “Brinde Aroma…” do legado
+- **Não** usar lista aleatória de “Brinde Aroma…” anteriores
 
 Sem declaração válida → `CONFIG_INCOMPLETE` em create-label.
 
@@ -86,7 +86,7 @@ Persistida em `store.freight.default_option` (ver [fields.md](../../frontend/kun
 
 ### Cotação no carrinho
 
-`POST /shipment/calculate` devolve preço/prazo **por serviço** disponível para o CEP. O carrinho lista **todas** as opções retornadas (não só Correios/Sedex como no legado), agrupadas por transportadora quando fizer sentido na UI.
+`POST /shipment/calculate` devolve preço/prazo **por serviço** disponível para o CEP. O carrinho lista **todas** as opções retornadas (não só Correios/Sedex em versões anteriores), agrupadas por transportadora quando fizer sentido na UI.
 
 ---
 
@@ -173,11 +173,11 @@ Normaliza companies/services no mesmo shape usado pelo favorito e pelo carrinho:
 
 ---
 
-### `POST /quote` (preferido) / `POST /correios-quote` (legado)
+### `POST /quote` (preferido) / `POST /correios-quote` 
 
 Cotação multi-serviço. O alias `/correios-quote` permanece por compat, mas no OSS o carrinho usa `/quote` (ou a facade `/freight/quote`).
 
-**Upstream:** `POST /api/v2/me/shipment/calculate`  
+**Upstream:** `POST /api/v2/me/shipment/calculate` 
 Ref: [Cálculo de fretes](https://docs.melhorenvio.com.br/reference/calculo-de-fretes-por-produtos).
 
 Request:
@@ -190,7 +190,7 @@ Request:
 ```
 
 - Se `services` omitido: cotar os IDs habilitados em `store.freight.melhorenvio.enabled_service_ids`, ou **todos** retornados pelo catálogo `/services` (com cuidado de payload).
-- Legado filtrava só `company.id === 1` (Correios). **OSS não restringe a Correios** — devolve Azul, Jadlog, etc., quando a API retornar.
+- Histórico filtrava só `company.id === 1` (Correios). **OSS não restringe a Correios** — devolve Azul, Jadlog, etc., quando a API retornar.
 
 Response 200:
 
@@ -241,16 +241,16 @@ Response 200:
 }
 ```
 
-Pacote: **`store.freight.package`** (admin; obrigatório). Etiqueta: `label_package ?? package`. Origem CEP: **`store.ship_from.cep`**.  
-Insurance / valor segurado: `store.freight.content_declaration.total_value`.  
-Sem remetente ou pacote → `CONFIG_INCOMPLETE`.  
+Pacote: **`store.freight.package`** (admin; obrigatório). Etiqueta: `label_package ?? package`. Origem CEP: **`store.ship_from.cep`**. 
+Insurance / valor segurado: `store.freight.content_declaration.total_value`. 
+Sem remetente ou pacote → `CONFIG_INCOMPLETE`. 
 Erros: 503 se não autenticado; 502 se nenhuma opção.
 
 Requer `use_for_quote=true`.
 
 ---
 
-### `POST /create-label` (legado: `/create-delivery`)
+### `POST /create-label` 
 
 Insere frete no carrinho ME / gera etiqueta com o **serviço escolhido** (`service_id` do pedido / default).
 
@@ -263,7 +263,7 @@ Insere frete no carrinho ME / gera etiqueta com o **serviço escolhido** (`servi
 
 Conteúdo / insurance: `store.freight.content_declaration` (admin Loja, compartilhada). Snapshot opcional no pedido para auditoria.
 
-Requer `use_for_label=true` e declaração configurada.  
+Requer `use_for_label=true` e declaração configurada. 
 Default OSS: **desligado** — quem gera etiqueta é a Loggi.
 
 ---
@@ -352,9 +352,5 @@ Mesmo shape do Loggi (`enabled`, flags quote/label, credentials).
 
 Configurável no admin Serviços externos. Favorito de entrega (ex. `Melhor Envio > Correios > PAC`) no admin Loja — ver [admin.md](../../frontend/kunk/pedidos/admin.md).
 
-## Referências no repo legado
+## Referências no referências internas
 
-- `kunksoucannabis/kunkserver/routes/melhorenvio.js`
-- `kunksoucannabis/kunkserver/routes/modules/melhorEnvioFreightQuote.js`
-- `kunksoucannabis/kunkserver/routes/modules/melhorenvioAuth.js`
-- `kunksoucannabis/src/components/inputs/CartFreightSelector.jsx`

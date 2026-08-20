@@ -1,7 +1,6 @@
 # Relatórios (catálogo)
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/relatorios` |
 | **Componente** | `Reports` |
-| **Arquivo legado** | `src/components/master/reports.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição
@@ -25,7 +23,7 @@ Catálogo de relatórios salvos (exclui type=dashboard).
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus reports** | `/api/directus/reports` |
+| **o schema de origem reports** | `/api/v1/reports` |
 | **PostgreSQL Reports** | execução via backend |
 
 ## Dependências de outras páginas / módulos

@@ -4,7 +4,7 @@ Persistência de erros inesperados do backend (`kunk-api`) e dos frontends (kunk
 
 ## Schema
 
-Migration: [`../../sql/alter-system-errors.sql`](../../sql/alter-system-errors.sql)  
+Migration: [`../../sql/alter-system-errors.sql`](../../sql/alter-system-errors.sql) 
 Também em [`../../sql/target-schema.sql`](../../sql/target-schema.sql).
 
 | Tabela | Papel |

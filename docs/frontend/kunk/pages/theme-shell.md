@@ -1,7 +1,6 @@
 # Shell Theme (`/app/*`)
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/*` |
 | **Componente** | `Theme (JoyOrderDashboardTemplate)` |
-| **Arquivo legado** | `src/components/master/theme/theme.jsx (+ Sidebar, Header, QuickNavMenu, …)` |
 | **Permissões** | Gate App: Administrador | Acolhimento | Produção |
 
 ## Descrição
@@ -30,7 +28,7 @@ Layout operacional do Kunk: sidebar, header, changelog, busca global e rotas int
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus changelog** | `/api/directus/changelog/last` |
+| **o schema de origem changelog** | `/api/v1/changelog/last` |
 | **System errors** | captura global → `/api/system-errors` |
 | **Auth** | logout via Sidebar |
 
@@ -40,7 +38,7 @@ Layout operacional do Kunk: sidebar, header, changelog, busca global e rotas int
 
 ## Observações
 
-- Preservar layout/visual exatamente como no legado
+- Preservar layout/visual exatamente em versões anteriores
 - Estrutura de theme.jsx e componentes de theme devem ser copiados
 
 ## Decisão open-source

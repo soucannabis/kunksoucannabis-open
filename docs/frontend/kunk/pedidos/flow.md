@@ -8,10 +8,10 @@
 | `?u={user_code}` | Carrega associado e fecha o modal |
 | `?p={order_id}` | Modo edição: carrega pedido + associado; itens (exceto frete); restaura `freight_option`/`delivery_price`; **re-cota** e pré-seleciona por `option_key` (se indisponível → cheapest + aviso) |
 
-Rota canônica: `/app/loja/novo-pedido` (autenticada).  
+Rota canônica: `/app/loja/novo-pedido` (autenticada). 
 **Não** expor `/cart` público no OSS.
 
-Permissões: `Administrador` | `Acolhimento` | `Produção` (igual legado Theme).
+Permissões: `Administrador` | `Acolhimento` | `Produção` (igual histórico Theme).
 
 ---
 
@@ -30,7 +30,7 @@ modal FormAssociate ──seleciona──► painel do associado
 1. Endereço de entrega: `address_delivery` se tiver `street`; senão endereço cadastral.
 2. Banner de prescrição: verde se `date_prescription` válida (&lt; 1 ano); vermelho se ausente/vencida.
 3. Modal de aviso de prescrição vencida (informativo; não bloqueia operador admin).
-4. Ao trocar associado: limpar itens? **Não** (legado mantém itens); limpar histórico e recarregar pedidos do novo user.
+4. Ao trocar associado: limpar itens? **Não** (histórico mantém itens); limpar histórico e recarregar pedidos do novo user.
 
 ### APIs
 
@@ -60,7 +60,7 @@ subtotal = Σ priceCart
 
 Cada item: `{ id, code/cod, name, qntProductCart, price, priceCart, … }`.
 
-Remoção por id.  
+Remoção por id. 
 Ao reabrir pedido, filtrar itens cujo código seja frete (`isFreightOrderItem`).
 
 ---
@@ -113,7 +113,7 @@ freight  = apply_to_total ? deliveryPrice : 0
 total    = products + freight - discount - donation
 ```
 
-Se `total <= 0`, legado seta `payment_date` no create — manter.
+Se `total <= 0`, histórico seta `payment_date` no create — manter.
 
 ---
 
@@ -134,7 +134,7 @@ Sem `PartnerForm`. Sem auto-match Beeviral.
 
 ## 6. Desconto, doação, pagamento personalizado + histórico
 
-### Desconto e Doação (legado)
+### Desconto e Doação 
 
 Manter os dois campos do `cart.jsx`:
 
@@ -147,12 +147,12 @@ Ambos reduzem o total. **Sem** cupons (não preencher `donation` via cupom).
 
 ### Pagamento personalizado
 
-Toggle → lista `customPayments[]` `{ item, qnt, value }`.  
+Toggle → lista `customPayments[]` `{ item, qnt, value }`. 
 Soma no desconto efetivo do total. Persistido em `orders.custom_payment`.
 
 ### Histórico
 
-Tabela abaixo do checkout. Excluir status `Aguardando pagamento` / `awaiting-payment`.  
+Tabela abaixo do checkout. Excluir status `Aguardando pagamento` / `awaiting-payment`. 
 “Comprar novamente” → `addCart({ recoveryOrder: order.items })`.
 
 ---
@@ -195,7 +195,7 @@ tracking_code + status "Adicionado no sistema"
 
 Cancelamento Loggi: `POST /modules/loggi/cancel`.
 
-Default sugerido (legado SouCannabis): **cotação** Loggi + Melhor Envio; **etiqueta** só Loggi. Configurável no admin de módulos/serviços externos.
+Default sugerido (integrações específicas de associação): **cotação** Loggi + Melhor Envio; **etiqueta** só Loggi. Configurável no admin de módulos/serviços externos.
 
 ---
 

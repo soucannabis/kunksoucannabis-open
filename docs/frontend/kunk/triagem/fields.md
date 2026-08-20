@@ -18,11 +18,11 @@ Colunas relevantes (snake_case). Fonte: `target-schema.sql` / collection Recepti
 | `associate_name`, `associate_code` | Vínculo com `users.user_code` |
 | `avatar_url`, `patient_name`, `attendant` | UI operacional |
 | `tags` | JSONB — tags + **custom_fields** do form |
-| `completion_reason` | `Pedido` \| `Serviço` \| `Agendamento` (legado `action`) |
+| `completion_reason` | `Pedido` \| `Serviço` \| `Agendamento` (histórico `action`) |
 | `is_prescriber` | Flags auxiliares |
 | `chat_id` | **Não usar** no v1 (Utalk fora de escopo); coluna pode permanecer null |
 
-Campos legado **não portados**: `bvid` (Beeviral).
+Campos histórico **não portados**: `bvid` (Beeviral).
 
 ---
 
@@ -178,7 +178,7 @@ Regras:
 | Menu avatar | Lista todos com `is_terminal` ou não — todos selecionáveis, inclusive Espera e Concluído |
 | Sidebar | Ordem = `order`; contagem por `reception.status === value` |
 
-Compatibilidade legado (opcional na migração de dados): mapear strings antigas (`""` / null → `waiting`; `Finalizado` → `done`; `Aguardando Retorno` → status custom criado no seed de migração).
+Compatibilida (opcional na migração de dados): mapear strings antigas (`""` / null → `waiting`; `Finalizado` → `done`; `Aguardando Retorno` → status custom criado no seed de migração).
 
 ---
 

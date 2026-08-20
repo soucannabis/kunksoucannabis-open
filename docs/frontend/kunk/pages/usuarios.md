@@ -1,7 +1,6 @@
 # Usuários do sistema
 
 > Documentação funcional da página legada — base para decidir o que manter, remover ou modificar no Kunk open-source.
-> Fonte: `kunksoucannabis`.
 
 ## Identificação
 
@@ -9,7 +8,6 @@
 |---|---|
 | **Rota** | `/app/usuarios` |
 | **Componente** | `SystemUsers` |
-| **Arquivo legado** | `src/components/master/systemUsers.jsx` |
 | **Permissões** | Administrador | Acolhimento | Produção |
 
 ## Descrição
@@ -26,7 +24,7 @@ Gestão de operadores do Kunk (`Kunk_Users` / system_users).
 
 | Serviço | Uso nesta página |
 |---|---|
-| **Directus kunk-user** | `/api/directus/kunk-user/all` |
+| **o schema de origem kunk-user** | `/api/v1/kunk-user/all` |
 | **E-mail** | `/api/email/invite-user` |
 
 ## Dependências de outras páginas / módulos
