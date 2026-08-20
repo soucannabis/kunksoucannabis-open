@@ -67,13 +67,7 @@ npm run docker:kunk
 
 ## Documentação
 
-A documentação técnica fica em [`docs/`](./docs/):
-
-| Área | Pasta |
-|---|---|
-| API | [`docs/api/`](./docs/api/) |
-| Frontends | [`docs/frontend/`](./docs/frontend/) |
-| Funcionalidades | [`docs/funcionalidades/`](./docs/funcionalidades/) |
+A documentação pública do produto fica no repositório [soucannabis/kunk-soucannabis-docs](https://github.com/soucannabis/kunk-soucannabis-docs).
 
 READMEs por app: `apps/*/README.md` e [`kunk-api/README.md`](./kunk-api/README.md).
 
@@ -87,7 +81,6 @@ READMEs por app: `apps/*/README.md` e [`kunk-api/README.md`](./kunk-api/README.m
 | `apps/admin/` | Área Admin |
 | `kunk-api/` | API REST (PostgreSQL) |
 | `packages/` | UI, tema, auth, forms, api-client, etc. |
-| `docs/` | Documentação técnica |
 | `deploy/spa/` | Empacotamento/deploy dos frontends |
 | `docker-compose.kunk.yml` | Stack local unificada |
 
