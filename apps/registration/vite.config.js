@@ -36,7 +36,7 @@ export default defineConfig({
     proxy: {
       // Same-origin /api so associate_session cookie persists across reloads
       '/api': {
-        target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:4250',
+        target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:8056',
         changeOrigin: true,
       },
     },

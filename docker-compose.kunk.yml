@@ -15,7 +15,8 @@ services:
       NODE_ENV: development
       STORAGE_PATH: /app/storage
       # URL pública da API (OAuth redirect). Nunca use o hostname Docker (kunk-api).
-      PUBLIC_API_URL: "https://stallion-hot-weasel.ngrok-free.app"
+      # No deploy, sobrescreva com a URL pública real. Localhost não recebe webhooks Pagar.me.
+      PUBLIC_API_URL: "http://localhost:4250"
       CORS_ORIGIN: "http://localhost:4255,http://localhost:4256,http://localhost:4257,http://localhost:4258,http://admin:4256,http://kunk:4257,http://doc-sign:4258"
       CHOKIDAR_USEPOLLING: "true"
       CHOKIDAR_INTERVAL: "1000"

@@ -297,13 +297,13 @@ async function sendTestEmail({ to }, credsOverride = null) {
 function publicAppUrl(app) {
   const key = String(app || '').toLowerCase();
   const map = {
-    kunk: process.env.KUNK_PUBLIC_URL || process.env.PUBLIC_APP_URL || 'http://localhost:4255',
+    kunk: process.env.KUNK_PUBLIC_URL || process.env.PUBLIC_APP_URL || 'http://localhost:4257',
     admin: process.env.ADMIN_PUBLIC_URL || 'http://localhost:4256',
     'doc-sign': process.env.DOC_SIGN_PUBLIC_URL || process.env.VITE_DOC_SIGN_URL || 'http://localhost:4258',
     registration:
       process.env.REGISTRATION_PUBLIC_URL ||
       process.env.CADASTRO_PUBLIC_URL ||
-      'http://localhost:4257',
+      'http://localhost:4255',
   };
   return String(map[key] || map.kunk).replace(/\/$/, '');
 }

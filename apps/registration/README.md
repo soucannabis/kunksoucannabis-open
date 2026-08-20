@@ -4,7 +4,7 @@ App de **cadastramento** (funil de associados) — React + Vite + JavaScript.
 
 ## Subir local (sem Docker)
 
-1. API em `http://localhost:4250` (`cd kunk-api && npm run dev` ou Docker).
+1. API em `http://localhost:8056` (`cd kunk-api && npm run dev`). Com Docker da API, use `:4250` e `VITE_API_PROXY_TARGET=http://localhost:4250`.
 2. Na raiz do monorepo: `npm install`
 3. `npm run dev:registration` → [http://localhost:4255](http://localhost:4255)
 
@@ -37,7 +37,7 @@ Sessão: cookie HttpOnly `associate_session` na API (não no localStorage).
 
 ## Testes E2E (Playwright)
 
-Pré-requisitos: API em `http://localhost:4250` e (opcional) front já em `:4255`.
+Pré-requisitos: API em `http://localhost:8056` (ou Docker `:4250`) e (opcional) front já em `:4255`.
 
 ```bash
 # na raiz

@@ -4,7 +4,7 @@ Painel de **administração da instância** — React + Vite + JavaScript.
 
 ## Subir local (sem Docker)
 
-1. API em `http://localhost:4250` (`cd kunk-api && npm run dev`).
+1. API em `http://localhost:8056` (`cd kunk-api && npm run dev`). Com Docker da API, use `:4250` e `VITE_API_PROXY_TARGET=http://localhost:4250`.
 2. Na raiz: `npm install`
 3. `npm run dev:admin` → [http://localhost:4256](http://localhost:4256)
 

@@ -13,7 +13,8 @@ services:
       HOST: "0.0.0.0"
       NODE_ENV: development
       STORAGE_PATH: /app/storage
-      PUBLIC_API_URL: "https://stallion-hot-weasel.ngrok-free.app"
+      # OAuth/webhooks: sobrescreva com URL pública no deploy. Localhost não recebe Pagar.me.
+      PUBLIC_API_URL: "http://localhost:4250"
       # Polling garante reload com bind mount
       CHOKIDAR_USEPOLLING: "true"
       CHOKIDAR_INTERVAL: "1000"

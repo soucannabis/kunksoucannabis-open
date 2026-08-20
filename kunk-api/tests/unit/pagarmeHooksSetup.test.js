@@ -11,7 +11,6 @@ const {
   friendlyListError,
   isApiCreateUnsupported,
   getWebhookUrls,
-  DEFAULT_WEBHOOK_PUBLIC_BASE,
 } = require('../../src/services/pagarme/hooksSetup');
 
 describe('pagarme hooksSetup helpers', () => {
@@ -86,18 +85,33 @@ describe('pagarme hooksSetup helpers', () => {
     );
   });
 
-  it('defaults webhook URLs to ngrok when PUBLIC_API_URL is localhost', () => {
+  it('returns empty webhook URLs when PUBLIC_API_URL is localhost', () => {
     const prevPublic = process.env.PUBLIC_API_URL;
     const prevHook = process.env.PAGARME_WEBHOOK_PUBLIC_URL;
     process.env.PUBLIC_API_URL = 'http://localhost:4250';
     delete process.env.PAGARME_WEBHOOK_PUBLIC_URL;
     try {
       const urls = getWebhookUrls();
-      assert.equal(urls.base, DEFAULT_WEBHOOK_PUBLIC_BASE);
-      assert.equal(
-        urls.orders,
-        `${DEFAULT_WEBHOOK_PUBLIC_BASE}/api/v1/modules/pagarme/webhook`
-      );
+      assert.equal(urls.base, '');
+      assert.equal(urls.orders, '');
+      assert.equal(urls.services, '');
+    } finally {
+      if (prevPublic === undefined) delete process.env.PUBLIC_API_URL;
+      else process.env.PUBLIC_API_URL = prevPublic;
+      if (prevHook === undefined) delete process.env.PAGARME_WEBHOOK_PUBLIC_URL;
+      else process.env.PAGARME_WEBHOOK_PUBLIC_URL = prevHook;
+    }
+  });
+
+  it('uses PAGARME_WEBHOOK_PUBLIC_URL when set', () => {
+    const prevPublic = process.env.PUBLIC_API_URL;
+    const prevHook = process.env.PAGARME_WEBHOOK_PUBLIC_URL;
+    process.env.PUBLIC_API_URL = 'http://localhost:4250';
+    process.env.PAGARME_WEBHOOK_PUBLIC_URL = 'https://api.example.com';
+    try {
+      const urls = getWebhookUrls();
+      assert.equal(urls.base, 'https://api.example.com');
+      assert.match(urls.orders, /^https:\/\/api\.example\.com\/api\/v1\/modules\/pagarme\/webhook/);
     } finally {
       if (prevPublic === undefined) delete process.env.PUBLIC_API_URL;
       else process.env.PUBLIC_API_URL = prevPublic;

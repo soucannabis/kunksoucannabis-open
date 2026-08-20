@@ -95,8 +95,8 @@ export function CachePage({ api }) {
         </p>
         <h2 style={{ marginTop: 0 }}>Cache operacional</h2>
         <p className="muted" style={{ margin: 0 }}>
-          Controla o memoryCache do servidor (tags, catálogo de produtos local e remoto
-          SouCannabis, atendentes da triagem). Com o cache ligado, listagens estáveis usam TTL.
+          Controla o memoryCache do servidor (tags, catálogo de produtos local e remoto,
+          atendentes da triagem). Com o cache ligado, listagens estáveis usam TTL.
           Desligar limpa imediatamente o cache do servidor; os apps Kunk passam a buscar dados
           frescos. No Kunk, clicar no logo da sidebar também limpa o cache.
         </p>

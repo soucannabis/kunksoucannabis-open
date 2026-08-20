@@ -228,7 +228,7 @@ export function SupportCredentialsPage({ api }) {
     <div className="support-credentials-page">
       <h1 style={{ marginTop: 0 }}>Credenciais de suporte</h1>
       <p className="muted">
-        Cria um operador com acesso total (Administrador) para atendimento da SouCannabis. A senha é
+        Cria um operador com acesso total (Administrador) para suporte da instância. A senha é
         gerada automaticamente e só aparece uma vez, no momento da criação.
       </p>
 

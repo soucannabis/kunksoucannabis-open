@@ -82,13 +82,13 @@ const env = {
   configEncryptKey: process.env.CONFIG_ENCRYPT_KEY || '',
   /** Public app URLs for e-mail links */
   publicUrls: {
-    kunk: String(process.env.KUNK_PUBLIC_URL || process.env.PUBLIC_APP_URL || 'http://localhost:4255').replace(
+    kunk: String(process.env.KUNK_PUBLIC_URL || process.env.PUBLIC_APP_URL || 'http://localhost:4257').replace(
       /\/$/,
       ''
     ),
     admin: String(process.env.ADMIN_PUBLIC_URL || 'http://localhost:4256').replace(/\/$/, ''),
     registration: String(
-      process.env.REGISTRATION_PUBLIC_URL || process.env.CADASTRO_PUBLIC_URL || 'http://localhost:4257'
+      process.env.REGISTRATION_PUBLIC_URL || process.env.CADASTRO_PUBLIC_URL || 'http://localhost:4255'
     ).replace(/\/$/, ''),
     docSign: String(process.env.DOC_SIGN_PUBLIC_URL || process.env.VITE_DOC_SIGN_URL || 'http://localhost:4258').replace(
       /\/$/,

@@ -57,7 +57,8 @@ npm run dev:kunk           # app — :4257
 npm run dev:doc-sign       # termos — :4258
 ```
 
-Os apps falam com `/api/v1` no próprio host (proxy Vite).
+Os apps falam com `/api/v1` no próprio host (proxy Vite → API em `:8056` por padrão).
+Se a API estiver no Docker (`:4250`), exporte `VITE_API_PROXY_TARGET=http://localhost:4250`.
 
 Stack unificada (API + apps):
 

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-/** Proporção da logo horizontal SouCannabis (300×100). */
+/** Proporção sugerida da logo horizontal (300×100). */
 export const TERM_LOGO_ASPECT = 3; // width / height
 export const TERM_LOGO_STAGE_W = 360;
 export const TERM_LOGO_STAGE_H = 120;

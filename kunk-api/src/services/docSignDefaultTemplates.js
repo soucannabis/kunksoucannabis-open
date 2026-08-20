@@ -323,7 +323,7 @@ function buildDoc(kind) {
 }
 
 function defaultTitle(associationFullName) {
-  const name = (associationFullName || 'SouCannabis').trim() || 'SouCannabis';
+  const name = (associationFullName || 'Kunk').trim() || 'Kunk';
   return `Termo de Adesão à ${name}`;
 }
 

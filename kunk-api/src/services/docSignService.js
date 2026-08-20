@@ -213,7 +213,7 @@ async function resolveTemplateLogoFileId(templateLogoFileId) {
 
 async function getAssociationProfile() {
   const defaults = {
-    name: process.env.VITE_ASSOCIATION_NAME || 'SouCannabis',
+    name: process.env.VITE_ASSOCIATION_NAME || 'Kunk',
     fullName: process.env.VITE_ASSOCIATION_FULL_NAME || '',
     email: process.env.VITE_ASSOCIATION_EMAIL || '',
     phone: process.env.VITE_ASSOCIATION_PHONE || '',
@@ -254,13 +254,13 @@ async function getAssociationProfile() {
 
 async function getAssociationName() {
   const profile = await getAssociationProfile();
-  return profile.name || 'SouCannabis';
+  return profile.name || 'Kunk';
 }
 
 /** Nome usado no título padrão do termo (preferência: nome completo). */
 async function getAssociationTitleName() {
   const profile = await getAssociationProfile();
-  return (profile.fullName || profile.name || 'SouCannabis').trim() || 'SouCannabis';
+  return (profile.fullName || profile.name || 'Kunk').trim() || 'Kunk';
 }
 
 async function loadLogoDataUrl(fileId) {

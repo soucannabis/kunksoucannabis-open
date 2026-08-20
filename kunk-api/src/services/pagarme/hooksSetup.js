@@ -14,8 +14,6 @@ const VALIDATED_KEY = 'modules.pagarme.webhooks_validated';
 const RECEIPT_KEY = 'modules.pagarme.webhooks_validation_receipt';
 const TEST_PAYMENT_KEY = 'modules.pagarme.webhook_test_payment';
 const VALIDATION_ORDER_PREFIX = 'KUNK_WH_';
-/** localhost não recebe webhook da Pagar.me — padrão de túnel para testes locais. */
-const DEFAULT_WEBHOOK_PUBLIC_BASE = 'https://stallion-hot-weasel.ngrok-free.app';
 const DASHBOARD_HINT =
   'Obrigatório: no painel da Pagar.me o webhook precisa de autenticação HTTP Basic (usuário e senha iguais aos desta tela). Sem isso a API responde 401 e o pagamento não é confirmado. Conta → Configurações → Webhooks → Criar webhook; cole as URLs abaixo; ative HTTP Basic — não deixe o webhook anônimo. Eventos: order.created (obrigatório) e order.paid. Depois abra o link do passo 2, gere o boleto sem pagá-lo e clique em Validar (o order.created pode levar até 1 minuto).';
 
@@ -39,7 +37,8 @@ function isLocalPublicBase(base) {
 
 /**
  * Base pública dos webhooks. Preferência:
- * PAGARME_WEBHOOK_PUBLIC_URL → PUBLIC_API_URL (se não-local) → ngrok padrão de teste.
+ * PAGARME_WEBHOOK_PUBLIC_URL → PUBLIC_API_URL (se não-local).
+ * Sem URL pública não há fallback de túnel — quem desenvolve configura o ambiente.
  */
 function getWebhookPublicBase(req) {
   const fromWebhookEnv = String(process.env.PAGARME_WEBHOOK_PUBLIC_URL || '')
@@ -52,11 +51,14 @@ function getWebhookPublicBase(req) {
     .replace(/\/$/, '');
   if (fromPublic && !isLocalPublicBase(fromPublic)) return fromPublic;
 
-  return DEFAULT_WEBHOOK_PUBLIC_BASE.replace(/\/$/, '');
+  return '';
 }
 
 function getWebhookUrls(req) {
   const base = getWebhookPublicBase(req);
+  if (!base) {
+    return { base: '', orders: '', services: '' };
+  }
   const paths = webhookPaths();
   return {
     base,
@@ -283,12 +285,12 @@ function localWebhookUrls() {
 function classifyProbeFailure(res) {
   if (res?.error) {
     if (/abort|timeout|ETIMEDOUT|ECONNREFUSED|ENOTFOUND|fetch failed/i.test(res.error)) {
-      return 'rede/túnel: URL inacessível a partir da API (confira se o ngrok aponta para esta API)';
+      return 'rede: URL inacessível a partir da API (confira PUBLIC_API_URL / PAGARME_WEBHOOK_PUBLIC_URL)';
     }
     return res.error;
   }
   if (res?.ngrok_interstitial) {
-    return 'ngrok devolveu página de aviso (interstitial) em vez do JSON da API';
+    return 'túnel devolveu página de aviso (interstitial) em vez do JSON da API';
   }
   if (res?.http_status === 401) {
     return 'HTTP 401 — usuário/senha do webhook não conferem';
@@ -404,7 +406,7 @@ function buildValidationReason({ ready, basicAuthConfigured, probes, localProbes
       continue;
     }
     let msg = `${name}: ${pub?.detail || 'falhou'}`;
-    if (loc?.ok) msg += ' (local OK — problema no túnel/ngrok público)';
+    if (loc?.ok) msg += ' (local OK — problema na URL pública)';
     else if (loc && !loc.ok) msg += ` · local: ${loc.detail || 'falhou'}`;
     parts.push(msg);
   }
@@ -629,7 +631,7 @@ async function validateWebhooks(req, { persist = false } = {}) {
       reason =
         `Ainda não recebemos o webhook do link ${testPayment.order.id} (code ${testPayment.code}). ` +
         `A entrega na Pagar.me pode levar até 1 minuto — tente Validar de novo em breve. ` +
-        `Confirme order.created na URL de Pedidos, com Basic Auth, e o ngrok.`;
+        `Confirme order.created na URL de Pedidos, com Basic Auth, e a URL pública da API.`;
     } else if (receiptForTest.auth_ok === false) {
       reason =
         `Webhook "${receiptForTest.type}" do code ${receiptForTest.code} chegou, ` +
@@ -842,7 +844,7 @@ async function ensureWebhooks(req, { generateAuth = true } = {}) {
     throw new AppError(
       400,
       'PUBLIC_API_URL_MISSING',
-      'Defina PUBLIC_API_URL para a API ser alcançável pela Pagar.me'
+      'Defina PUBLIC_API_URL (não-local) ou PAGARME_WEBHOOK_PUBLIC_URL para a Pagar.me alcançar os webhooks'
     );
   }
 
@@ -960,7 +962,6 @@ module.exports = {
   HOOK_EVENTS,
   SETUP_KEY,
   VALIDATED_KEY,
-  DEFAULT_WEBHOOK_PUBLIC_BASE,
   isLocalPublicBase,
   getWebhookPublicBase,
   getWebhookUrls,
