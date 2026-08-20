@@ -3,7 +3,7 @@
 /**
  * Política composta sobre os primeiros N features da Geoapify Geocode Search.
  * UF/estado não é comparado — apenas CEP, confiança de rua, cidade e número.
- * Port fiel de kunkserver/routes/modules/geoapifyCompositeValidation.js
+ * Validação composta de endereço (Geoapify)
  */
 
 const MAX_FEATURES = 5;

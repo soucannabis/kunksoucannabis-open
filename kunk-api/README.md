@@ -1,8 +1,8 @@
 # Kunk API
 
-API REST nativa do Kunk open source (PostgreSQL, sem Directus).
+API REST nativa do Kunk open source (PostgreSQL).
 
-Documentação do contrato: [`../project-tools/docs/api/`](../project-tools/docs/api/).
+Documentação do contrato: [`../docs/api/`](../docs/api/).
 
 ## Desenvolvimento
 
@@ -13,7 +13,7 @@ npm install
 npm run dev
 ```
 
-Base URL local (npm): `http://localhost:8056/api/v1`  
+Base URL local (npm): `http://localhost:8056/api/v1` 
 Base URL Docker: `http://localhost:4250/api/v1`
 
 ## Docker (hot reload)
@@ -71,6 +71,3 @@ Também é necessário ter o módulo ativo no Admin, credenciais (`system_api_cr
 (`store.ship_from`, `store.freight.package`, `store.freight.content_declaration`) preenchidas.
 Módulos permanecem **desabilitados** por default (só Admin ativa via `system_configs`).
 
-## Relação com kunkserver
-
-`kunkserver/` permanece intacto como referência da API antiga (BFF Directus). Este pacote é o substituto.

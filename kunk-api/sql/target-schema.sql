@@ -2,7 +2,7 @@
 -- Gerado/ajustado para importação: ordem de FKs corrigida; coluna "user" entre aspas.
 -- Não executar em produção sem revisão.
 
--- Substitui directus_files no produto unificado
+-- Tabela de arquivos do produto
 CREATE TABLE IF NOT EXISTS files (
   id UUID PRIMARY KEY,
   filename VARCHAR(512),

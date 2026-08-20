@@ -85,7 +85,6 @@ function resolveSchemaSqlPath() {
   const candidates = [
     process.env.SCHEMA_SQL_PATH,
     path.join(__dirname, '../../sql/target-schema.sql'),
-    path.join(__dirname, '../../../project-tools/sql/target-schema.sql'),
   ].filter(Boolean);
 
   for (const candidate of candidates) {

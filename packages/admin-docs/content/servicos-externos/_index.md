@@ -61,4 +61,4 @@ Para **notificar sua própria API** quando dados mudam (associados, pedidos, etc
 
 ## Documentação técnica (desenvolvedores)
 
-A especificação interna da API Kunk para cada módulo fica em `project-tools/docs/api/modules/` no repositório. No dia a dia do Admin, use os guias desta central e os links oficiais de cada fornecedor.
+A especificação interna da API Kunk para cada módulo fica em `docs/api/modules/` no repositório. No dia a dia do Admin, use os guias desta central e os links oficiais de cada fornecedor.

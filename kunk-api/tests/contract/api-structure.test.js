@@ -46,7 +46,7 @@ function collectRoutes(app) {
 describe('contract/api-structure', () => {
   it('collections match target-schema.sql', () => {
     const sql = fs.readFileSync(
-      path.join(__dirname, '../../../project-tools/sql/target-schema.sql'),
+      path.join(__dirname, '../../sql/target-schema.sql'),
       'utf8'
     );
     const fromSql = [...sql.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]);

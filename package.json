@@ -10,7 +10,6 @@
     "dev:admin": "npm run dev -w @kunk/admin",
     "dev:kunk": "npm run dev -w @kunk/kunk",
     "dev:doc-sign": "npm run dev -w @kunk/doc-sign",
-    "dev:website": "npm run dev -w @kunk/website",
     "test:api": "npm test --prefix kunk-api",
     "seed:load": "npm run seed:load --prefix kunk-api",
     "clean:local-files": "npm run clean:local-files --prefix kunk-api",
@@ -28,8 +27,7 @@
     "docker:admin": "docker compose -f apps/admin/docker-compose.yml up --build",
     "docker:kunk-app": "docker compose -f apps/kunk/docker-compose.yml up --build",
     "docker:doc-sign": "docker compose -f apps/doc-sign/docker-compose.yml up --build",
-    "docker:kunk": "docker compose -f docker-compose.kunk.yml up --build",
-    "checklist": "node project-tools/roadmap/server.mjs"
+    "docker:kunk": "docker compose -f docker-compose.kunk.yml up --build"
   },
   "engines": {
     "node": ">=18"

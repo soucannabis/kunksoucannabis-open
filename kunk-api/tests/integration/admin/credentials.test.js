@@ -14,7 +14,7 @@ describe('admin/credentials', () => {
 
   before(async () => {
     const sql = fs.readFileSync(
-      path.join(__dirname, '../../../../project-tools/sql/create-system-api-credentials.sql'),
+      path.join(__dirname, '../../../sql/create-system-api-credentials.sql'),
       'utf8'
     );
     await query(sql);
