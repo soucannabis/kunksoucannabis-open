@@ -93,6 +93,6 @@ Este projeto é distribuído sob a [GNU Affero General Public License v3.0](./LI
 
 ## Contribuição
 
-Veja [CONTRIBUTING.md](./CONTRIBUTING.md). Para vulnerabilidades, use [SECURITY.md](./SECURITY.md).
+Veja [CONTRIBUTING.md](./CONTRIBUTING.md) e o [Código de Conduta](./CODE_OF_CONDUCT.md). Para vulnerabilidades, use [SECURITY.md](./SECURITY.md).
 
 Abra issues e pull requests em [soucannabis/kunksoucannabis-open](https://github.com/soucannabis/kunksoucannabis-open). Preferência: mudanças pequenas, com testes na API (`npm test` em `kunk-api`) quando o comportamento mudar.

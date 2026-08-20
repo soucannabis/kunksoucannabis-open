@@ -934,7 +934,7 @@ function parseContestReports(raw) {
  * limpa contestações e reseta validações/preço usados na gravação.
  */
 export async function prepareServicesReportDemo({
-  professionalEmail = process.env.DEMO_PROFESSIONAL_EMAIL || 'profissional@soucannabis.ong.br',
+  professionalEmail = process.env.DEMO_PROFESSIONAL_EMAIL || 'profissional@example.test',
   associateName = 'Iris Yamamoto',
   secondAssociateName = 'Karen Esteves',
   contestText = DEMO_CONTEST_TEXT,
@@ -1220,7 +1220,7 @@ export async function ensureDemoTriageAttendants(pool) {
  */
 export async function prepareTriageConcluidoDemo({
   attendantCode = 'ADMIN-TEST',
-  associateEmail = process.env.DEMO_ASSOCIATE_EMAIL || 'associado@soucannabis.ong.br',
+  associateEmail = process.env.DEMO_ASSOCIATE_EMAIL || 'associado@example.test',
 } = {}) {
   const pool = requirePool();
   if (!pool) return null;

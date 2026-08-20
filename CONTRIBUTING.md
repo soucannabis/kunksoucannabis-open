@@ -58,3 +58,7 @@ Altere ou adicione testes quando o comportamento da API ou da UI mudar.
 ## Licença
 
 Ao contribuir, você concorda que o código entra sob a [GNU Affero General Public License v3.0](./LICENSE) (AGPL-3.0).
+
+## Código de Conduta
+
+Participação neste projeto está sujeita ao [Código de Conduta](./CODE_OF_CONDUCT.md).

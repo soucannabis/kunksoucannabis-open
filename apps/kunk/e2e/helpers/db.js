@@ -110,7 +110,7 @@ export async function ensureAdminUser() {
 
 export async function ensureDemoAdminUser() {
   return upsertUser({
-    email: 'admin@soucannabis.ong.br',
+    email: 'admin@example.test',
     password: 'Admin@2026!',
     permissions: ['Administrador'],
     name: 'Administrador',
@@ -243,7 +243,7 @@ export async function ensureFinanceiroUser() {
  * via `system_users.internal_code` (portal /relatorio/servicos).
  */
 export async function ensureProfessionalUser({
-  email = process.env.DEMO_PROFESSIONAL_EMAIL || 'profissional@soucannabis.ong.br',
+  email = process.env.DEMO_PROFESSIONAL_EMAIL || 'profissional@example.test',
   password = process.env.DEMO_PROFESSIONAL_PASSWORD || 'Marina@2026!',
   name = 'Marina',
   lastName = 'Oliveira',
