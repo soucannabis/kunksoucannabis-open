@@ -9,7 +9,6 @@ let ensuring = null;
 
 function resolveAlterSqlPath() {
   const candidates = [
-    path.join(__dirname, '../../../project-tools/sql/alter-webhooks.sql'),
     path.join(__dirname, '../../sql/alter-webhooks.sql'),
   ];
   for (const candidate of candidates) {

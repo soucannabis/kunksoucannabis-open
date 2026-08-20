@@ -8,4 +8,4 @@ npm run dev:kunk
 npm run docker:kunk-app
 ```
 
-Ver documentação em `project-tools/docs/frontend/kunk/`.
+Ver documentação em `docs/frontend/kunk/`.

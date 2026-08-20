@@ -1,0 +1,428 @@
+openapi: 3.0.3
+info:
+  title: Kunk API
+  version: 1.0.0
+  description: |
+    API REST do Kunk open source (substitui Directus).
+    Documentação normativa em Markdown em docs/api/.
+servers:
+  - url: http://localhost:8056/api/v1
+    description: Desenvolvimento local
+  - url: https://{host}/api/v1
+    description: Produção
+    variables:
+      host:
+        default: api.example.com
+
+tags:
+  - name: Auth
+  - name: Items
+  - name: Files
+  - name: Domain
+  - name: Modules
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login (sessão cookie)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        "200":
+          description: Autenticado; Set-Cookie session_token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Sessão invalidada
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Usuário da sessão
+      security:
+        - SessionCookie: []
+        - BearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /items/{collection}:
+    parameters:
+      - $ref: "#/components/parameters/Collection"
+    get:
+      tags: [Items]
+      summary: Listar items
+      security:
+        - SessionCookie: []
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Filter"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+        - $ref: "#/components/parameters/Fields"
+        - $ref: "#/components/parameters/Meta"
+        - $ref: "#/components/parameters/Search"
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessList"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Items]
+      summary: Criar item
+      security:
+        - SessionCookie: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessItem"
+
+  /items/{collection}/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Collection"
+      - $ref: "#/components/parameters/ItemId"
+    get:
+      tags: [Items]
+      summary: Obter item
+      security:
+        - SessionCookie: []
+        - BearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessItem"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Items]
+      summary: Atualizar item (parcial)
+      security:
+        - SessionCookie: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessItem"
+    delete:
+      tags: [Items]
+      summary: Remover item
+      security:
+        - SessionCookie: []
+        - BearerAuth: []
+      responses:
+        "204":
+          description: Removido
+
+  /files:
+    post:
+      tags: [Files]
+      summary: Upload
+      security:
+        - SessionCookie: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                filename:
+                  type: string
+      responses:
+        "201":
+          description: Arquivo criado
+
+  /files/{id}:
+    get:
+      tags: [Files]
+      summary: Metadados do arquivo
+      security:
+        - SessionCookie: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags: [Files]
+      summary: Remover arquivo
+      security:
+        - SessionCookie: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Removido
+
+  /files/{id}/download:
+    get:
+      tags: [Files]
+      summary: Download
+      security:
+        - SessionCookie: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Stream do arquivo
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /health:
+    get:
+      tags: [Domain]
+      summary: Healthcheck
+      security: []
+      responses:
+        "200":
+          description: OK
+
+  /modules/{module}/{path}:
+    get:
+      tags: [Modules]
+      summary: Proxy genérico de módulo (documentação ilustrativa)
+      parameters:
+        - name: module
+          in: path
+          required: true
+          schema: { type: string }
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Depende do módulo
+        "503":
+          description: Módulo desabilitado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+
+components:
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: session_token
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+
+  parameters:
+    Collection:
+      name: collection
+      in: path
+      required: true
+      schema:
+        type: string
+        enum:
+          - users
+          - system_users
+          - orders
+          - orders_files
+          - products
+          - professionals
+          - reception
+          - reports
+          - services
+          - services_files
+          - tags
+          - users_files
+          - files
+          - users_api
+    ItemId:
+      name: id
+      in: path
+      required: true
+      schema:
+        oneOf:
+          - type: integer
+          - type: string
+    Filter:
+      name: filter
+      in: query
+      schema: { type: object, additionalProperties: true }
+      style: deepObject
+    Sort:
+      name: sort
+      in: query
+      schema: { type: string }
+      example: "-date_created"
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 250, default: 25 }
+    Offset:
+      name: offset
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+    Fields:
+      name: fields
+      in: query
+      schema: { type: string }
+      example: "id,status,associate_name"
+    Meta:
+      name: meta
+      in: query
+      schema: { type: string }
+      example: "filter_count,total_count"
+    Search:
+      name: search
+      in: query
+      schema: { type: string }
+
+  schemas:
+    ErrorItem:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details: {}
+    ErrorBody:
+      type: object
+      properties:
+        data: { nullable: true }
+        meta: { nullable: true }
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorItem"
+    SuccessItem:
+      type: object
+      properties:
+        data: { type: object, additionalProperties: true }
+        meta: { nullable: true }
+        errors: { nullable: true }
+    SuccessList:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { type: object, additionalProperties: true }
+        meta:
+          type: object
+          nullable: true
+          properties:
+            filter_count: { type: integer }
+            total_count: { type: integer }
+        errors: { nullable: true }
+    SuccessUser:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            user:
+              type: object
+              properties:
+                id: { type: integer }
+                user_code: { type: string, format: uuid }
+                name: { type: string }
+                last_name: { type: string }
+                email: { type: string }
+                permissions:
+                  type: array
+                  items: { type: string }
+        meta: { nullable: true }
+        errors: { nullable: true }
+
+  responses:
+    Unauthorized:
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+    Forbidden:
+      description: Sem permissão
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+    NotFound:
+      description: Não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"

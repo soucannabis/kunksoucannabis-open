@@ -71,3 +71,15 @@ graphify-out/
 /entrypoint.sh
 /nginx.conf
 .dockerignore
+
+# Fora do OSS no main (dev / tooling / site de docs)
+/.cursor/
+/docuseal/
+/storage/
+/tmp/
+/todo.md
+/tests/smoke/
+/project-tools/
+/apps/website/
+/deploy/website/
+/MANIFESTO.md

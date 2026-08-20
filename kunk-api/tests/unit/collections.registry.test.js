@@ -27,7 +27,7 @@ const NON_ITEMS_TABLES = new Set([
 describe('collections.registry', () => {
   it('TARGET_TABLES matches items tables from target-schema.sql', () => {
     const sql = fs.readFileSync(
-      path.join(__dirname, '../../../project-tools/sql/target-schema.sql'),
+      path.join(__dirname, '../../sql/target-schema.sql'),
       'utf8'
     );
     const fromSql = [...sql.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]);

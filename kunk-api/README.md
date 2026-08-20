@@ -2,7 +2,7 @@
 
 API REST nativa do Kunk open source (PostgreSQL, sem Directus).
 
-Documentação do contrato: [`../project-tools/docs/api/`](../project-tools/docs/api/).
+Documentação do contrato: [`../docs/api/`](../docs/api/).
 
 ## Desenvolvimento
 
