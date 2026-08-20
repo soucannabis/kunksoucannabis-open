@@ -36,4 +36,4 @@ Os eventos não bloqueiam a tela do operador: entram numa fila (outbox) no Postg
 
 ## Documentação técnica
 
-Contrato HTTP, headers e payload: ver [kunk-soucannabis-docs](https://github.com/soucannabis/kunk-soucannabis-docs) (`docs-source/api/modules/webhooks.md`).
+Contrato HTTP, headers e payload: [documentação oficial](https://kunksoucannabis.ong.br/) (API / webhooks).

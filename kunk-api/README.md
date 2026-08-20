@@ -2,7 +2,7 @@
 
 API REST nativa do Kunk open source (PostgreSQL).
 
-Documentação do contrato: [soucannabis/kunk-soucannabis-docs](https://github.com/soucannabis/kunk-soucannabis-docs) (`docs-source/api/`).
+Documentação do contrato: [https://kunksoucannabis.ong.br/](https://kunksoucannabis.ong.br/) (código em [kunk-soucannabis-docs](https://github.com/soucannabis/kunk-soucannabis-docs)).
 
 ## Desenvolvimento
 
