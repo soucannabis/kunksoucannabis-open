@@ -1,6 +1,6 @@
 /**
- * Guias de credenciais compartilhados entre a home de docs e as telas de
- * Serviços externos. Passos em Markdown (renderizar com react-markdown).
+ * Guias de credenciais das telas de Serviços externos.
+ * Passos em Markdown (renderizar com react-markdown).
  */
 export const CREDENTIAL_SETUP_GUIDES = {
   loggi: {

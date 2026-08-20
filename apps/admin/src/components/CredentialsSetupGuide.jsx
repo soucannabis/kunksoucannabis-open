@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { CREDENTIAL_SETUP_GUIDES } from '@kunk/admin-docs';
+import { CREDENTIAL_SETUP_GUIDES } from '../lib/credentialGuides.js';
 
 const CREDENTIAL_GUIDE_BOX_STYLE = {
   marginTop: 0,
@@ -36,7 +36,7 @@ const mdComponents = {
 };
 
 /**
- * Guia “Como obter as credenciais” — conteúdo em @kunk/admin-docs.
+ * Guia “Como obter as credenciais” — conteúdo em lib/credentialGuides.js.
  */
 export function CredentialsSetupGuide({ service }) {
   const guide = CREDENTIAL_SETUP_GUIDES[service];
