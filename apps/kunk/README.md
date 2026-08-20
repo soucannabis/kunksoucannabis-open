@@ -8,4 +8,4 @@ npm run dev:kunk
 npm run docker:kunk-app
 ```
 
-Documentação: [soucannabis/kunk-soucannabis-docs](https://github.com/soucannabis/kunk-soucannabis-docs).
+Documentação: [https://kunksoucannabis.ong.br/](https://kunksoucannabis.ong.br/).

@@ -61,4 +61,4 @@ Para **notificar sua própria API** quando dados mudam (associados, pedidos, etc
 
 ## Documentação técnica (desenvolvedores)
 
-A especificação interna da API Kunk para cada módulo fica no repositório [kunk-soucannabis-docs](https://github.com/soucannabis/kunk-soucannabis-docs) (`docs-source/api/modules/`). No dia a dia do Admin, use os guias desta central e os links oficiais de cada fornecedor.
+A especificação interna da API Kunk para cada módulo está na [documentação oficial](https://kunksoucannabis.ong.br/). No dia a dia do Admin, use os guias desta central e os links oficiais de cada fornecedor.

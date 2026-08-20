@@ -67,7 +67,9 @@ npm run docker:kunk
 
 ## Documentação
 
-A documentação pública do produto fica no repositório [soucannabis/kunk-soucannabis-docs](https://github.com/soucannabis/kunk-soucannabis-docs).
+Site oficial: [https://kunksoucannabis.ong.br/](https://kunksoucannabis.ong.br/)
+
+Código-fonte do site: [soucannabis/kunk-soucannabis-docs](https://github.com/soucannabis/kunk-soucannabis-docs).
 
 READMEs por app: `apps/*/README.md` e [`kunk-api/README.md`](./kunk-api/README.md).
 
