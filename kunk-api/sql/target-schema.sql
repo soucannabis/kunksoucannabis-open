@@ -541,6 +541,7 @@ CREATE TABLE IF NOT EXISTS users_api (
   email VARCHAR(255),
   token VARCHAR(255),
   token_prefix VARCHAR(32),
+  scopes JSONB NOT NULL DEFAULT '["*"]'::jsonb,
   is_sample BOOLEAN NOT NULL DEFAULT false
 );
 

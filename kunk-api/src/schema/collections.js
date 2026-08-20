@@ -39,7 +39,7 @@ const READONLY_FIELDS = {
   services: ['id', 'is_sample'],
   services_files: ['id', 'is_sample'],
   tags: ['id', 'is_sample'],
-  users_api: ['id', 'is_sample', 'token_prefix'],
+  users_api: ['id', 'is_sample', 'token_prefix', 'scopes'],
   users_files: ['id', 'is_sample'],
 };
 
@@ -153,7 +153,7 @@ const COLUMNS = {
   ],
   services_files: ['id', 'service_id', 'file_id', 'is_sample'],
   tags: ['id', 'tag', 'contexts', 'color', 'is_sample'],
-  users_api: ['id', 'email', 'token', 'token_prefix', 'is_sample'],
+  users_api: ['id', 'email', 'token', 'token_prefix', 'scopes', 'is_sample'],
   users_files: ['id', 'user_id', 'file_id', 'doc_type', 'side', 'subject', 'doc_kind', 'is_sample'],
 };
 

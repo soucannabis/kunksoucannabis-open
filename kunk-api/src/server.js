@@ -73,9 +73,9 @@ async function main() {
   try {
     const { ensureUsersApiTokenPrefix } = require('./db/ensureUsersApiTokenPrefix');
     await ensureUsersApiTokenPrefix();
-    console.log('Schema: users_api.token_prefix ok');
+    console.log('Schema: users_api.token_prefix / scopes ok');
   } catch (err) {
-    console.warn('Schema: não foi possível garantir users_api.token_prefix:', err.message);
+    console.warn('Schema: não foi possível garantir users_api.token_prefix/scopes:', err.message);
   }
 
   try {

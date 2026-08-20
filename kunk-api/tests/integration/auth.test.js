@@ -200,6 +200,43 @@ describe('auth', { concurrency: false }, () => {
     assert.equal(res.body.errors[0].code, 'VALIDATION_ERROR');
   });
 
+  it('creates token with full expanded scopes list', async () => {
+    await refreshSession();
+    await setApiAccessEnabled(true);
+    const { API_TOKEN_COLLECTIONS } = require('../../src/schema/rbac');
+    const scopes = API_TOKEN_COLLECTIONS.flatMap((c) => [
+      `items:${c}:read`,
+      `items:${c}:write`,
+      `items:${c}:delete`,
+    ]);
+    assert.ok(scopes.length > 20, 'expected a large scopes list');
+
+    const created = await request(app)
+      .post('/api/v1/auth/tokens')
+      .set('Cookie', cookie)
+      .set('X-Kunk-App', 'admin')
+      .send({ label: 'full-matrix', scopes });
+    assert.equal(created.status, 201, JSON.stringify(created.body));
+    assert.ok(created.body.data.token.startsWith('kunk_live_'));
+    assert.equal(created.body.data.label, 'full-matrix');
+    assert.deepEqual(created.body.data.scopes, scopes);
+
+    const list = await request(app)
+      .get('/api/v1/auth/tokens')
+      .set('Cookie', cookie)
+      .set('X-Kunk-App', 'admin');
+    assert.equal(list.status, 200);
+    const row = list.body.data.find((t) => t.id === created.body.data.id);
+    assert.ok(row);
+    assert.equal(row.label, 'full-matrix');
+    assert.deepEqual(row.scopes, scopes);
+
+    await request(app)
+      .delete(`/api/v1/auth/tokens/${created.body.data.id}`)
+      .set('Cookie', cookie)
+      .set('X-Kunk-App', 'admin');
+  });
+
   it('bearer auth works when API enabled', async () => {
     await refreshSession();
     const token = await createBearerToken(cookie);
@@ -281,8 +318,8 @@ describe('auth', { concurrency: false }, () => {
     const plain = `kunk_live_plain${'a'.repeat(40)}`;
     const prefix = apiTokenLookupPrefix(plain);
     const inserted = await query(
-      `INSERT INTO users_api (email, token, token_prefix) VALUES ($1, $2, $3) RETURNING id`,
-      [JSON.stringify({ label: 'plain-leftover', scopes: ['*'] }), plain, prefix]
+      `INSERT INTO users_api (email, token, token_prefix, scopes) VALUES ($1, $2, $3, $4::jsonb) RETURNING id`,
+      [JSON.stringify({ label: 'plain-leftover', scopes: ['*'] }), plain, prefix, JSON.stringify(['*'])]
     );
     try {
       const rejected = await request(app)

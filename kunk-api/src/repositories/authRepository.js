@@ -175,12 +175,40 @@ async function resolveSession(sessionToken) {
   return publicUser(user);
 }
 
-function parseStoredTokenMeta(emailField) {
-  let label = emailField || 'api-token';
+function parseScopesValue(raw) {
+  if (Array.isArray(raw)) return raw.length ? raw : ['*'];
+  if (raw == null) return ['*'];
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    } catch {
+      /* ignore */
+    }
+  }
+  return ['*'];
+}
+
+/** Prefer dedicated scopes column; fall back to legacy JSON-in-email. */
+function tokenMetaFromRow(row) {
+  if (row.scopes != null) {
+    let label = row.email || 'api-token';
+    if (typeof label === 'string' && label.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(label);
+        if (parsed && typeof parsed === 'object' && parsed.label) label = parsed.label;
+      } catch {
+        /* plain */
+      }
+    }
+    return { label: String(label || 'api-token'), scopes: parseScopesValue(row.scopes) };
+  }
+
+  let label = row.email || 'api-token';
   let scopes = ['*'];
   try {
-    const parsed = JSON.parse(emailField);
-    label = parsed.label || emailField;
+    const parsed = JSON.parse(row.email);
+    label = parsed.label || row.email;
     scopes = parsed.scopes || ['*'];
   } catch {
     /* plain label */
@@ -189,7 +217,7 @@ function parseStoredTokenMeta(emailField) {
 }
 
 function publicTokenRow(row) {
-  const { label, scopes } = parseStoredTokenMeta(row.email);
+  const { label, scopes } = tokenMetaFromRow(row);
   return { id: row.id, email: label, label, scopes };
 }
 
@@ -210,13 +238,13 @@ async function createApiToken({ email, label: labelIn, scopes = ['*'] }) {
   const plaintext = `kunk_live_${crypto.randomBytes(24).toString('hex')}`;
   const tokenPrefix = apiTokenLookupPrefix(plaintext);
   const hash = await bcrypt.hash(plaintext, SALT_ROUNDS);
-  const label = String(labelIn || email || 'api-token').trim() || 'api-token';
-  // Store scopes in email field as JSON prefix for v1 schema (email + token only)
-  const storedEmail = JSON.stringify({ label, scopes: normalizedScopes });
+  const label = String(labelIn || email || 'api-token').trim().slice(0, 255) || 'api-token';
 
   const result = await query(
-    `INSERT INTO users_api (email, token, token_prefix) VALUES ($1, $2, $3) RETURNING id, email`,
-    [storedEmail, hash, tokenPrefix]
+    `INSERT INTO users_api (email, token, token_prefix, scopes)
+     VALUES ($1, $2, $3, $4::jsonb)
+     RETURNING id, email, scopes`,
+    [label, hash, tokenPrefix, JSON.stringify(normalizedScopes)]
   );
 
   return {
@@ -229,20 +257,20 @@ async function createApiToken({ email, label: labelIn, scopes = ['*'] }) {
 }
 
 async function listApiTokens() {
-  const result = await query(`SELECT id, email FROM users_api ORDER BY id DESC`);
+  const result = await query(`SELECT id, email, scopes FROM users_api ORDER BY id DESC`);
   return result.rows.map(publicTokenRow);
 }
 
 async function updateApiToken(id, { email, label: labelIn, scopes } = {}) {
   const { normalizeApiTokenScopes } = require('../schema/rbac');
-  const existing = await query(`SELECT id, email FROM users_api WHERE id = $1`, [id]);
+  const existing = await query(`SELECT id, email, scopes FROM users_api WHERE id = $1`, [id]);
   if (!existing.rows[0]) {
     throw new AppError(404, 'NOT_FOUND', 'Token não encontrado');
   }
-  const current = parseStoredTokenMeta(existing.rows[0].email);
+  const current = tokenMetaFromRow(existing.rows[0]);
   const label =
     labelIn !== undefined || email !== undefined
-      ? String(labelIn || email || '').trim() || current.label
+      ? String(labelIn || email || '').trim().slice(0, 255) || current.label
       : current.label;
   let nextScopes = current.scopes;
   if (scopes !== undefined) {
@@ -252,10 +280,9 @@ async function updateApiToken(id, { email, label: labelIn, scopes } = {}) {
       throw new AppError(400, err.code || 'VALIDATION_ERROR', err.message);
     }
   }
-  const storedEmail = JSON.stringify({ label, scopes: nextScopes });
   const result = await query(
-    `UPDATE users_api SET email = $2 WHERE id = $1 RETURNING id, email`,
-    [id, storedEmail]
+    `UPDATE users_api SET email = $2, scopes = $3::jsonb WHERE id = $1 RETURNING id, email, scopes`,
+    [id, label, JSON.stringify(nextScopes)]
   );
   return publicTokenRow(result.rows[0]);
 }
@@ -274,14 +301,14 @@ async function resolveBearer(token) {
   if (!prefix) return null;
   await ensureApiTokenPrefixColumn();
   const result = await query(
-    `SELECT id, email, token FROM users_api WHERE token_prefix = $1 LIMIT 1`,
+    `SELECT id, email, token, scopes FROM users_api WHERE token_prefix = $1 LIMIT 1`,
     [prefix]
   );
   const row = result.rows[0];
   if (!row?.token || !String(row.token).startsWith('$2')) return null;
   const match = await bcrypt.compare(token, row.token);
   if (!match) return null;
-  const { label, scopes } = parseStoredTokenMeta(row.email);
+  const { label, scopes } = tokenMetaFromRow(row);
   return {
     id: row.id,
     email: label,

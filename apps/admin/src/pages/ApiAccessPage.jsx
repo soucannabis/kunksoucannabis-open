@@ -125,12 +125,22 @@ export function ApiAccessPage({ api }) {
     }));
   }
 
+  function selectAllScopes() {
+    const next = emptyScopeMatrix(API_TOKEN_COLLECTIONS);
+    for (const collection of API_TOKEN_COLLECTIONS) {
+      for (const a of API_TOKEN_ACTIONS) {
+        next[collection][a.key] = true;
+      }
+    }
+    setMatrix(next);
+  }
+
   function startEdit(token) {
     setEditingId(token.id);
     setLabel(token.label || token.email || '');
     setMatrix({
       ...emptyScopeMatrix(API_TOKEN_COLLECTIONS),
-      ...matrixFromScopes(token.scopes),
+      ...matrixFromScopes(token.scopes, API_TOKEN_COLLECTIONS),
     });
     setMessage('');
     setError('');
@@ -163,7 +173,7 @@ export function ApiAccessPage({ api }) {
 
   async function onCreateOrUpdate(e) {
     e.preventDefault();
-    const scopes = scopesFromMatrix(matrix);
+    const scopes = scopesFromMatrix(matrix, API_TOKEN_COLLECTIONS);
     if (!scopes.length) {
       setError('Selecione ao menos uma permissão.');
       return;
@@ -275,6 +285,17 @@ export function ApiAccessPage({ api }) {
                 <p className="api-scope-block__hint muted">
                   Permissões por tabela (Ler / Escrever / Excluir). Escrever cobre criar e atualizar.
                 </p>
+
+                <div className="api-scope-block__toolbar">
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={selectAllScopes}
+                    data-testid="api-scope-select-all"
+                  >
+                    Selecionar tudo
+                  </button>
+                </div>
 
                 <div className="api-scope-matrix" data-testid="api-scope-matrix">
                   <table className="api-scope-matrix__table">

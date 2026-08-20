@@ -71,22 +71,32 @@ export async function saveApiAccess(api, nextValues, baselineValues, itemsByKey)
 }
 
 /** Build scopes array from collection → { read, write, delete } matrix. */
-export function scopesFromMatrix(matrix) {
+export function scopesFromMatrix(matrix, collections = Object.keys(matrix || {})) {
   const scopes = [];
-  for (const [collection, actions] of Object.entries(matrix || {})) {
-    if (!actions) continue;
+  let allSelected = collections.length > 0;
+  for (const collection of collections) {
+    const actions = matrix?.[collection];
     for (const action of ['read', 'write', 'delete']) {
-      if (actions[action]) scopes.push(`items:${collection}:${action}`);
+      if (actions?.[action]) scopes.push(`items:${collection}:${action}`);
+      else allSelected = false;
     }
   }
+  if (allSelected) return ['*'];
   return scopes;
 }
 
 /** Parse scopes into collection → actions matrix. */
-export function matrixFromScopes(scopes) {
+export function matrixFromScopes(scopes, collections = []) {
+  if ((scopes || []).includes('*')) {
+    const matrix = emptyScopeMatrix(collections);
+    for (const collection of collections) {
+      matrix[collection] = { read: true, write: true, delete: true };
+    }
+    return matrix;
+  }
+
   const matrix = {};
   for (const scope of scopes || []) {
-    if (scope === '*') continue;
     const match = /^items:([a-z0-9_]+):(read|write|delete|\*)$/.exec(scope);
     if (!match) continue;
     const [, collection, action] = match;

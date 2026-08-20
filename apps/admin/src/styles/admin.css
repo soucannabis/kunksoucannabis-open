@@ -3800,6 +3800,12 @@ div.triage-options-cell {
   line-height: 1.45;
 }
 
+.api-scope-block__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 0.65rem;
+}
+
 .api-scope-matrix {
   border: 1px solid var(--admin-border);
   border-radius: 10px;
