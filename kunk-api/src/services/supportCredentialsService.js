@@ -9,9 +9,9 @@ const systemUsersService = require('./systemUsersService');
 const authRepository = require('../repositories/authRepository');
 
 const SUPPORT_INTERNAL_CODE = 'support';
-const DEFAULT_SUPPORT_EMAIL = 'webmaster@soucannabis.ong.br';
+const DEFAULT_SUPPORT_EMAIL = 'support@example.com';
 const DEFAULT_SUPPORT_NAME = 'Suporte';
-const DEFAULT_SUPPORT_LAST_NAME = 'SouCannabis';
+const DEFAULT_SUPPORT_LAST_NAME = 'Kunk';
 
 function adminLoginUrl() {
   const { env } = require('../config/env');

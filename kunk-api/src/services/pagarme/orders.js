@@ -8,6 +8,7 @@ const { AppError } = require('../../utils/response');
 const itemsRepository = require('../../repositories/itemsRepository');
 const { isModuleEnabled } = require('../moduleFlags');
 const systemConfigService = require('../systemConfigService');
+const { env } = require('../../config/env');
 
 function onlyDigits(v) {
   return String(v || '').replace(/\D/g, '');
@@ -259,7 +260,7 @@ async function createCheckout(body = {}) {
         billing_address: billing,
         customer_editable: true,
         accepted_payment_methods: accepted.length ? accepted : ['credit_card'],
-        success_url: cfg.success_url || 'https://soucannabis.ong.br',
+        success_url: cfg.success_url || env.publicUrls.kunk,
         boleto: {
           due_at: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
         },

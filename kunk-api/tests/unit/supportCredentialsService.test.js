@@ -11,7 +11,7 @@ const { assertOperatorPassword } = require('../../src/repositories/authRepositor
 
 describe('supportCredentialsService', () => {
   it('exposes default email and internal code', () => {
-    assert.equal(DEFAULT_SUPPORT_EMAIL, 'webmaster@soucannabis.ong.br');
+    assert.equal(DEFAULT_SUPPORT_EMAIL, 'support@example.com');
     assert.equal(SUPPORT_INTERNAL_CODE, 'support');
   });
 
