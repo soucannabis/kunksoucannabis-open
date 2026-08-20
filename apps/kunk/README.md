@@ -1,6 +1,6 @@
 # Kunk — app operacional
 
-Superfície `app.` / porta **4257**. Layout e menu alinhados ao legado `kunksoucannabis`.
+Superfície `app.` / porta **4257**.
 
 ```bash
 npm run dev:kunk
@@ -8,4 +8,4 @@ npm run dev:kunk
 npm run docker:kunk-app
 ```
 
-Ver documentação em `docs/frontend/kunk/`.
+Documentação: [soucannabis/kunk-soucannabis-docs](https://github.com/soucannabis/kunk-soucannabis-docs).
