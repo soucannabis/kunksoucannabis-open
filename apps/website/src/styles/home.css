@@ -230,6 +230,179 @@
       background: rgba(255, 255, 255, 0.08);
     }
 
+    .hero .btn-demo {
+      background: var(--accent-warm);
+      color: var(--white);
+      border: 1px solid transparent;
+    }
+
+    .hero .btn-demo:hover {
+      background: #a84c1e;
+    }
+
+    /* —— Demo modal —— */
+    .demo-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+
+    .demo-modal.open {
+      display: flex;
+    }
+
+    .demo-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(20, 40, 25, 0.55);
+      backdrop-filter: blur(4px);
+    }
+
+    .demo-modal-panel {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 26rem);
+      max-height: min(92dvh, 40rem);
+      overflow: auto;
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 0.5rem;
+      padding: 1.75rem 1.5rem 1.5rem;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+      animation: rise 0.35s var(--ease);
+    }
+
+    .demo-modal-close {
+      position: absolute;
+      top: 0.85rem;
+      right: 0.85rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-muted);
+      border-radius: 0.3rem;
+    }
+
+    .demo-modal-close:hover { color: var(--ink); background: var(--paper-2); }
+    .demo-modal-close svg { width: 1.15rem; height: 1.15rem; }
+
+    .demo-modal-panel h2 {
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+      padding-right: 2rem;
+    }
+
+    .demo-modal-lead {
+      color: var(--ink-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.35rem;
+      line-height: 1.45;
+    }
+
+    .demo-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .demo-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .demo-field input {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 0.35rem;
+      background: var(--white);
+      color: var(--ink);
+      font: inherit;
+      font-weight: 400;
+    }
+
+    .demo-field input:focus {
+      outline: 2px solid color-mix(in srgb, var(--forest) 45%, transparent);
+      outline-offset: 1px;
+      border-color: var(--forest);
+    }
+
+    .demo-field input[aria-invalid="true"] {
+      border-color: #b42318;
+    }
+
+    .demo-password {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .demo-password input {
+      padding-right: 2.75rem;
+    }
+
+    .demo-password-toggle {
+      position: absolute;
+      right: 0.35rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-muted);
+      border-radius: 0.25rem;
+    }
+
+    .demo-password-toggle:hover { color: var(--ink); }
+    .demo-password-toggle svg { width: 1.15rem; height: 1.15rem; }
+
+    .demo-field-hint {
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: var(--ink-muted);
+      line-height: 1.35;
+    }
+
+    .demo-field-error {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #b42318;
+      min-height: 0;
+    }
+
+    .demo-field-error:empty { display: none; }
+
+    .demo-form-status {
+      font-size: 0.88rem;
+      line-height: 1.4;
+      min-height: 1.25rem;
+    }
+
+    .demo-form-status.is-pending { color: var(--ink-muted); }
+    .demo-form-status.is-success { color: var(--forest); }
+    .demo-form-status.is-error { color: #b42318; }
+
+    .demo-submit {
+      width: 100%;
+      margin-top: 0.25rem;
+    }
+
+    .demo-submit:disabled {
+      opacity: 0.65;
+      cursor: wait;
+      transform: none;
+    }
+
     @keyframes rise {
       from { opacity: 0; transform: translateY(1.1rem); }
       to { opacity: 1; transform: translateY(0); }
