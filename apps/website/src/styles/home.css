@@ -306,10 +306,27 @@
       line-height: 1.45;
     }
 
+    .demo-modal-success .demo-success-message {
+      color: var(--ink);
+      margin-bottom: 1.5rem;
+    }
+
+    .demo-modal-success .demo-submit {
+      text-align: center;
+    }
+
     .demo-form {
       display: flex;
       flex-direction: column;
       gap: 1rem;
+    }
+
+    .demo-form .demo-submit {
+      margin-top: -0.15rem;
+    }
+
+    .demo-form .demo-form-status {
+      margin-top: -0.35rem;
     }
 
     .demo-field {
@@ -351,6 +368,21 @@
       padding-right: 2.75rem;
     }
 
+    /* Hide browser-native reveal so only our toggle shows */
+    .demo-password input::-ms-reveal,
+    .demo-password input::-ms-clear {
+      display: none;
+    }
+
+    .demo-password input::-webkit-credentials-auto-fill-button,
+    .demo-password input::-webkit-strong-password-auto-fill-button {
+      visibility: hidden;
+      display: none !important;
+      pointer-events: none;
+      position: absolute;
+      right: 0;
+    }
+
     .demo-password-toggle {
       position: absolute;
       right: 0.35rem;
@@ -361,10 +393,16 @@
       justify-content: center;
       color: var(--ink-muted);
       border-radius: 0.25rem;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+      z-index: 1;
     }
 
     .demo-password-toggle:hover { color: var(--ink); }
-    .demo-password-toggle svg { width: 1.15rem; height: 1.15rem; }
+    .demo-password-toggle svg { width: 1.15rem; height: 1.15rem; display: block; }
+    .demo-password-toggle svg[hidden] { display: none; }
 
     .demo-field-hint {
       font-size: 0.78rem;
@@ -385,22 +423,45 @@
     .demo-form-status {
       font-size: 0.88rem;
       line-height: 1.4;
-      min-height: 1.25rem;
     }
 
-    .demo-form-status.is-pending { color: var(--ink-muted); }
-    .demo-form-status.is-success { color: var(--forest); }
+    .demo-form-status:empty { display: none; }
+
     .demo-form-status.is-error { color: #b42318; }
 
     .demo-submit {
       width: 100%;
       margin-top: 0.25rem;
+      position: relative;
+      gap: 0.55rem;
+    }
+
+    .demo-submit-spinner {
+      display: none;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: demo-spin 0.7s linear infinite;
+    }
+
+    .demo-submit.is-loading .demo-submit-label {
+      opacity: 0.85;
+    }
+
+    .demo-submit.is-loading .demo-submit-spinner {
+      display: inline-block;
     }
 
     .demo-submit:disabled {
-      opacity: 0.65;
+      opacity: 0.8;
       cursor: wait;
       transform: none;
+    }
+
+    @keyframes demo-spin {
+      to { transform: rotate(360deg); }
     }
 
     @keyframes rise {

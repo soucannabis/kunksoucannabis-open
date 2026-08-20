@@ -102,10 +102,11 @@ import "../styles/home.css";
             </svg>
           </button>
           <h2 id="demoModalTitle">Acessar demonstração</h2>
-          <p class="demo-modal-lead">
-            Defina os dados para acessar o sistema de demonstração.
-          </p>
-          <form class="demo-form" id="demoForm" novalidate>
+          <div class="demo-modal-form-view" id="demoFormView">
+            <p class="demo-modal-lead">
+              Defina os dados para acessar o sistema de demonstração.
+            </p>
+            <form class="demo-form" id="demoForm" novalidate>
             <label class="demo-field">
               <span>Nome completo</span>
               <input
@@ -195,11 +196,28 @@ import "../styles/home.css";
               </div>
               <span class="demo-field-error" data-error-for="senhaConfirmacao"></span>
             </label>
-            <p class="demo-form-status" id="demoFormStatus" role="status" aria-live="polite"></p>
             <button class="btn btn-primary demo-submit" type="submit" id="demoSubmit">
-              Criar acesso
+              <span class="demo-submit-label">Criar acesso</span>
+              <span class="demo-submit-spinner" aria-hidden="true"></span>
             </button>
-          </form>
+            <p class="demo-form-status" id="demoFormStatus" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+          <div class="demo-modal-success" id="demoSuccessView" hidden>
+            <p class="demo-modal-lead demo-success-message">
+              Seu cadastro de demonstração foi criado com sucesso, clique abaixo para acessar o
+              Painel Administrativo, informe seu e-mail e senha definidos.
+            </p>
+            <a
+              class="btn btn-primary demo-submit"
+              id="demoAdminLogin"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Acessar Painel Administrativo
+            </a>
+          </div>
         </div>
       </div>
 
@@ -407,8 +425,12 @@ import "../styles/home.css";
 
       const demoModal = document.getElementById("demoModal");
       const demoForm = document.getElementById("demoForm");
+      const demoFormView = document.getElementById("demoFormView");
+      const demoSuccessView = document.getElementById("demoSuccessView");
+      const demoAdminLogin = document.getElementById("demoAdminLogin");
       const demoStatus = document.getElementById("demoFormStatus");
       const demoSubmit = document.getElementById("demoSubmit");
+      const demoModalTitle = document.getElementById("demoModalTitle");
       let lastFocus = null;
 
       function setFieldError(name, message) {
@@ -428,9 +450,41 @@ import "../styles/home.css";
         demoStatus.className = "demo-form-status";
       }
 
+      function showDemoForm() {
+        demoFormView.hidden = false;
+        demoSuccessView.hidden = true;
+        demoModalTitle.textContent = "Acessar demonstração";
+        demoAdminLogin.href = "#";
+      }
+
+      function adminLoginHref(rawUrl) {
+        try {
+          const u = new URL(String(rawUrl || "").trim());
+          if (u.pathname === "/" || u.pathname === "") u.pathname = "/login";
+          return u.toString();
+        } catch {
+          return String(rawUrl || "").trim();
+        }
+      }
+
+      function showDemoSuccess(adminUrl) {
+        demoFormView.hidden = true;
+        demoSuccessView.hidden = false;
+        demoModalTitle.textContent = "Acesso criado";
+        demoAdminLogin.href = adminLoginHref(adminUrl);
+        demoAdminLogin.focus();
+      }
+
+      function setDemoSubmitting(busy) {
+        demoSubmit.disabled = busy;
+        demoSubmit.classList.toggle("is-loading", busy);
+        demoSubmit.setAttribute("aria-busy", busy ? "true" : "false");
+      }
+
       function openDemo() {
         lastFocus = document.activeElement;
         clearErrors();
+        showDemoForm();
         demoModal.hidden = false;
         demoModal.classList.add("open");
         document.body.style.overflow = "hidden";
@@ -442,6 +496,8 @@ import "../styles/home.css";
         demoModal.classList.remove("open");
         demoModal.hidden = true;
         document.body.style.overflow = "";
+        showDemoForm();
+        demoForm.reset();
         if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
       }
 
@@ -512,9 +568,9 @@ import "../styles/home.css";
         const data = validateDemoForm();
         if (!data) return;
 
-        demoSubmit.disabled = true;
-        demoStatus.className = "demo-form-status is-pending";
-        demoStatus.textContent = "Enviando…";
+        setDemoSubmitting(true);
+        demoStatus.textContent = "";
+        demoStatus.className = "demo-form-status";
 
         try {
           const res = await fetch(DEMO_WEBHOOK, {
@@ -529,16 +585,18 @@ import "../styles/home.css";
 
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-          demoStatus.className = "demo-form-status is-success";
-          demoStatus.textContent =
-            "Dados enviados com sucesso. Em breve você receberá o acesso à demonstração.";
+          const payload = await res.json().catch(() => ({}));
+          const adminUrl = payload?.url || payload?.data?.url;
+          if (!adminUrl) throw new Error("URL ausente na resposta");
+
           demoForm.reset();
+          showDemoSuccess(adminUrl);
         } catch {
           demoStatus.className = "demo-form-status is-error";
           demoStatus.textContent =
             "Não foi possível enviar os dados. Tente novamente em instantes.";
         } finally {
-          demoSubmit.disabled = false;
+          setDemoSubmitting(false);
         }
       });
     </script>
