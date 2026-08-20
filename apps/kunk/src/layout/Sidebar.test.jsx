@@ -23,7 +23,7 @@ function renderSidebar(props = {}) {
 describe('Sidebar', () => {
   it('renders brand and kept sections', () => {
     renderSidebar();
-    expect(screen.getByText('Kunk SouCannabis')).toBeInTheDocument();
+    expect(screen.getByText('Kunk')).toBeInTheDocument();
     expect(screen.getByText('Acolhimento')).toBeInTheDocument();
     expect(screen.getByText('Loja')).toBeInTheDocument();
     expect(screen.getAllByText('Profissionais').length).toBeGreaterThanOrEqual(1);

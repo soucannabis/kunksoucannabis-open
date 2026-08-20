@@ -472,7 +472,7 @@ export function resolveActiveBrandingLogo(opts = {}) {
 
 /** Hardcoded defaults for Kunk appearance (mirrors SQL seed). */
 export const KUNK_APPEARANCE_DEFAULTS = {
-  title: 'Kunk SouCannabis',
+  title: 'Kunk',
   logo: '',
   logoFormat: LOGO_FORMAT_SQUARE,
   logoSquare: '',

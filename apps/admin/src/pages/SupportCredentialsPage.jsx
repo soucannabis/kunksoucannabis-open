@@ -142,15 +142,15 @@ export function SupportCredentialsPage({ api }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [defaultEmail, setDefaultEmail] = useState('webmaster@soucannabis.ong.br');
-  const [email, setEmail] = useState('webmaster@soucannabis.ong.br');
+  const [defaultEmail, setDefaultEmail] = useState('support@example.com');
+  const [email, setEmail] = useState('support@example.com');
   const [user, setUser] = useState(null);
   const [revealed, setRevealed] = useState(null);
 
   async function refresh() {
     const res = await api.getSupportCredentials();
     const data = res.data || {};
-    const nextDefault = data.default_email || 'webmaster@soucannabis.ong.br';
+    const nextDefault = data.default_email || 'support@example.com';
     setDefaultEmail(nextDefault);
     setUser(data.user || null);
     if (!data.user) {

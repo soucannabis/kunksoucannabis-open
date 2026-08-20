@@ -226,7 +226,7 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
       <Box sx={{ alignItems: 'center' }}>
         {!collapsed && (
           <Typography sx={{ color: menuText, textAlign: 'center' }} level="title-lg">
-            {config.title || 'Kunk SouCannabis'}
+            {config.title || 'Kunk'}
           </Typography>
         )}
       </Box>
